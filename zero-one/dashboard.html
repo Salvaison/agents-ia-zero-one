@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BENJAMIN OS // V1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Space Mono', 'Courier New', monospace; background: #1a1815; color: #e2d5bc; min-height: 100vh; font-size: 13px; }
+#header-bar { height: 34px; background: #141210; border-bottom: 1px solid #2b2820; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+#header-bar span { font-size: 11px; color: #7a6f5e; letter-spacing: 0.05em; }
+#greeting-section { padding: 24px 20px 16px; border-bottom: 1px solid #2b2820; display: flex; justify-content: space-between; align-items: flex-start; }
+#session-label { font-size: 10px; color: #7a6f5e; letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; }
+#main-greeting { font-size: 44px; line-height: 1; color: #e2d5bc; }
+#main-greeting .time-of-day { font-weight: 400; }
+#main-greeting .name-part { font-style: italic; font-weight: 700; }
+#date-line { font-size: 11px; color: #7a6f5e; margin-top: 10px; letter-spacing: 0.03em; }
+#greeting-right { text-align: right; }
+#live-clock { font-size: 52px; font-weight: 700; color: #e2d5bc; letter-spacing: -0.02em; line-height: 1; }
+#clock-sub { font-size: 10px; color: #7a6f5e; margin-top: 6px; text-align: right; }
+#grid { padding: 16px 20px; gap: 14px; display: grid; grid-template-columns: 23% 50% 27%; }
+.panel { background: #1e1c18; border: 1px solid #2b2820; border-top: 2px solid #2e2c28; padding: 14px 16px; transition: border-top-color 0.2s ease; }
+.panel:hover { border-top-color: #4a4640; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #2b2820; }
+.panel-title { font-size: 10px; color: #7a6f5e; letter-spacing: 0.12em; text-transform: uppercase; }
+.panel-status { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #7a6f5e; }
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.dot-green { background: #5c9e5c; }
+.dot-amber { background: #c49a2a; }
+.priority-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #2b2820; }
+.priority-row:last-child { border-bottom: none; }
+.checkbox { color: #7a6f5e; font-size: 12px; flex-shrink: 0; }
+.priority-text { color: #e2d5bc; font-size: 12px; flex: 1; }
+.priority-tag { font-size: 9px; color: #7a6f5e; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #2b2820; padding: 2px 5px; }
+.ticker-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #2b2820; font-size: 12px; }
+.ticker-row:last-child { border-bottom: none; }
+.ticker-name { color: #7a6f5e; letter-spacing: 0.08em; min-width: 55px; }
+.ticker-price { color: #e2d5bc; }
+.ticker-change-pos { color: #5c9e5c; }
+.ticker-change-neg { color: #c44a3a; }
+.ticker-muted { color: #7a6f5e; font-size: 11px; }
+.news-card { padding: 8px 0; border-bottom: 1px solid #2b2820; }
+.news-card:last-child { border-bottom: none; }
+.news-headline { color: #e2d5bc; font-size: 11px; line-height: 1.4; margin-bottom: 4px; }
+.news-meta { font-size: 10px; color: #7a6f5e; }
+#center-col { display: flex; flex-direction: column; gap: 14px; }
+</style>
+</head>
+<body>
+<div id="header-bar">
+  <span>BENJAMIN OS // V1.0 · INTERNAL // LA CHAPELLE AUX LYS · CET</span>
+  <span id="header-time">◌ REFRESH SYNCED 00:00</span>
+</div>
+<div id="greeting-section">
+  <div id="greeting-left">
+    <div id="session-label">00 // SESSION · BENJAMIN OS V1.0</div>
+    <div id="main-greeting">
+      <span class="time-of-day" id="greeting-text">Good evening, </span><span class="name-part">Benjamin.</span>
+    </div>
+    <div id="date-line">Loading...</div>
+  </div>
+  <div id="greeting-right">
+    <div id="live-clock">00:00:00</div>
+    <div id="clock-sub">SYNCED -- · CET · LA CHAPELLE AUX LYS</div>
