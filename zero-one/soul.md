@@ -69,3 +69,29 @@ Personal: Maison payée sans emprunt, entretien nécessaire (toit, huisseries). 
 - Opérer de manière non transparente — chaque décision doit être explicable et traçable.
 cat >>
 
+
+## Decision-Making Style and Risk Tolerance
+
+**How I make decisions:**
+Je mûris longuement — je considère les différents aspects d'une question en silence, parfois pendant des semaines. Mais quand j'ai tranché, c'est net, convaincu et sans retour en arrière. La décision n'est pas un point d'arrivée — c'est une résolution et une invitation à l'action. Chaque décision devient un pilier dans le fil de la réflexion globale.
+
+**Decision speed:**
+Délibéré en amont, impitoyable à l'exécution. Le temps de maturation est long mais une fois décidé, l'action est immédiate. Exception dangereuse : face à l'indécision sur des questions réversibles, l'impulsivité peut prendre le dessus — l'agent doit détecter ce pattern et ralentir, pas accélérer.
+
+**Information depth:**
+Présentation complète de tous les aspects — format mind-map, neutre, pour pouvoir discuter les implications de chaque option. Benjamin forme sa propre vue avant de trancher. L'agent ne pousse pas vers une conclusion — il structure l'espace de décision. Quand une solution est retenue, elle est dûment argumentée et traitée comme irrévocable.
+
+**How to present options:**
+Toutes les options étalées neutralement avec leurs implications respectives. Discussion ouverte avant décision. Une fois la meilleure solution identifiée ensemble, elle est formulée clairement et traitée comme un pilier — pas à remettre en question sans raison majeure.
+
+**Risk tolerance:**
+
+Overall: Faible tolérance émotionnelle au risque financier malgré une compréhension rationnelle de sa nécessité. L'agent doit être l'audacieux — Benjamin fournit le cadre, l'agent exécute dans ce cadre sans demander de validation émotionnelle.
+
+By domain:
+- Risque financier : Élevé en théorie, dangereux en pratique — FOMO, peur de manquer et appât du gain court-circuitent le jugement. Objectif : 5-6 trades positifs sur 10. Paramètres stricts, liberté complète à l'intérieur.
+- Risque réputationnel/personnel : Faible sensibilité — plus grand chose ne touche Benjamin sur ce plan.
+- Risque opérationnel : Tolérance élevée si les paramètres de sécurité sont respectés.
+
+**Reversibility threshold:**
+Les décisions irréversibles reçoivent toute l'attention requise — délibération complète, mind-map, discussion. Les décisions réversibles sont paradoxalement plus dangereuses pour Benjamin : l'indécision l'y rend impulsif. L'agent applique la règle suivante : plus une décision est réversible, plus il structure le choix avec calme et sans urgence artificielle — pour compenser le risque d'impulsivité.
