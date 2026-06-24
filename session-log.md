@@ -85,3 +85,48 @@ ip route | grep default
 ```
 
 Then update `CDP_HOST` and the portproxy `listenaddress` accordingly. The firewall rule does not need to change.
+WIN LIST — Major Milestones Achieved
+🏗️ Infrastructure
+
+✅ WSL2 + Ubuntu configured on Windows PC
+✅ Claude Code v2.1.177 installed and authenticated
+✅ TradingView MCP connected — BYBIT:BTCUSD.P 4H live (tv_health_check green)
+✅ CDP bridge WSL→Windows configured (portproxy + firewall rule)
+✅ DigitalOcean VPS deployed — Ubuntu 24.04, NYC1, IP 67.205.179.77, $4/month
+✅ VPS accessible from Chromebook via DigitalOcean Web Console
+✅ GitHub repo live — github.com/Salvaison/agents-ia-zero-one
+✅ Git identity + token configured on VPS (persistent)
+✅ Startup script start-trading.sh created and pushed
+
+🔑 API & Exchange
+
+✅ MEXC API keys created and stored in .env on VPS
+✅ .gitignore protecting .env from GitHub exposure
+✅ MEXC Spot account verified — 165$ USDT visible via API
+✅ Futures permissions enabled on API keys
+
+📚 ZeroOne Course — Days Completed
+
+✅ Day 3 — Agent context seed
+✅ Day 5 — Personality profile (INFP-A)
+✅ Day 6 — Documentary transcript (Lavaux, 7-year cycles, Cardano trade)
+✅ Day 7 — Transcript analysis
+✅ Day 8 — soul.md blueprint
+✅ Day 9 — soul.md Section 1: Values and Philosophy
+✅ Day 10 — soul.md Section 2: Communication Preferences
+✅ Day 11 — soul.md Section 3: Goals, Anti-Goals, Constraints
+✅ Day 12 — soul.md Section 4: Decision-Making and Risk Tolerance
+✅ Day 13 — soul.md Section 5: Expertise and Knowledge Areas
+✅ Day 14 — soul.md v1.0 Complete Assembly
+
+📖 Knowledge Base
+
+✅ 14 Jayson Casper trading course transcriptions compiled and analysed
+✅ Shlong hedging strategy (25/50/25 structure) conceptualised
+
+🧠 Agent Soul
+
+✅ soul.md v1.0 — complete, pushed to GitHub and VPS
+✅ documentary-transcript.md — raw interview material
+✅ transcript-analysis.md — pattern analysis
+✅ personality.md — INFP-A profile
