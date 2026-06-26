@@ -37,3 +37,4 @@ Minimum 3/5 alignés pour agir. Pondération dynamique selon le contexte.
 1. **Divergences MCB** — signal primaire. Confluence multi-timeframes requise. Élément le plus fiable.
 2. **Volume** — confirmation de l'engagement réel du marché. Potentiellement décideur ultime dans certains contextes.
 3. **S/R** — zone, pas niveau précis. Pourcentage autour
+## Module MCB - Notes implementation : Valeurs MCB courante accessibles via MCP. Historique non accessible. Solution : bot enregistre chaque signal imprime avec timestamp, prix, Blue Wave, Money Flow pour construire son propre historique progressivement.
