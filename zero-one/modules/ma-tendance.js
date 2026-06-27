@@ -45,3 +45,29 @@ async function analyzeTimeframe(symbol, interval, label) {
 
   const ema9   = calcEMA(closes, 9);
   const ema21  = calcEMA(closes, 21);
+  const ema50  = calcEMA(closes, 50);
+  const ema200 = calcEMA(closes, 200);
+  const price  = closes[closes.length - 1];
+
+  let trend = 'neutre';
+  if (ema9 > ema21 && ema21 > ema50 && price > ema200) trend = 'bull';
+  if (ema9 < ema21 && ema21 < ema50 && price < ema200) trend = 'bear';
+
+  return { label, interval, price, ema9, ema21, ema50, ema200, trend };
+}
+
+async function runMATendance(symbol = 'BTCUSDT') {
+  console.log(`\n=== Module MA/Tendance — ${symbol} ===\n`);
+  for (const [label, interval] of Object.entries(TIMEFRAMES)) {
+    try {
+      const r = await analyzeTimeframe(symbol, interval, label);
+      console.log(`[${label.toUpperCase()}] ${r.trend.toUpperCase()}`);
+      console.log(`  Prix: ${r.price}`);
+      console.log(`  EMA9: ${r.ema9.toFixed(2)} | EMA21: ${r.ema21.toFixed(2)} | EMA50: ${r.ema50.toFixed(2)} | EMA200: ${r.ema200.toFixed(2)}\n`);
+    } catch (e) {
+      console.log(`[${label.toUpperCase()}] Erreur: ${e.message}\n`);
+    }
+  }
+}
+
+runMATendance();
