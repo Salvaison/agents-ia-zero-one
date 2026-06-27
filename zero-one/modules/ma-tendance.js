@@ -1,10 +1,10 @@
 const https = require('https');
 
 const TIMEFRAMES = {
-  scalp:  '1h',
+  scalp:  '60m',
   day:    '4h',
   swing:  '1d',
-  weekly: '1w',
+  weekly: '1W',
   macro:  '1M'
 };
 
