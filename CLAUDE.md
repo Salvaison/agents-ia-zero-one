@@ -14,4 +14,6 @@ API keys are stored at ~/.api-keys.env. Load this file when any tool or service 
 - Knowledge base map: ./zero-one/knowledge/knowledge-base-map.md
 - API keys: ~/.api-keys.env
 - Memory: ./zero-one/memory/
+- Strategy: ./zero-one/knowledge/strategy-boono.md
+- Modules: ./zero-one/modules/
 
