@@ -1,41 +1,36 @@
-Business Context
-What I'm Building
-Automated crypto trading bot — un agent de trading autonome sur les marchés crypto (BTC/USDT Bybit perpetual, 4H timeframe) utilisant la stratégie Jayson Casper et Market Cipher B comme signaux principaux. Exécution sur MEXC, paper trading d'abord. Le bot génère un flux de revenu passif via 3 modules parallèles (Scalp/Day/Swing) avec une supervision humaine de 30-60 minutes par jour. Succès = couvrir les dépenses mensuelles (~3000€/mois) sans intervention active quotidienne.
-Portefeuille de réserves — métaux précieux (or napoléon, Buffalo, argent 1oz) et crypto (~30K$) comme capital de préservation et de croissance organique à long terme. Pas un business actif — une fondation patrimoniale.
-Current Activities
+# Business Context
 
-Completion du cours ZeroOne Systems (Day 15/60) — construction de l'infrastructure agent
-Configuration VPS DigitalOcean + MEXC API + MCP TradingView
-Rédaction du soul.md et des knowledge bases de l'agent
-Conceptualisation de la stratégie Shlong (hedging 25/50/25)
-Paper trading en préparation sur MEXC Futures
+## What I'm Building
+Bot de trading crypto autonome sur BTC/USDT (Bybit perpetual) utilisant Market Cipher B et DBSI comme signaux principaux, stratégie Casper, exécution sur MEXC. 3 modules : Scalp/Day/Swing. Supervision 30-60 min/jour. Objectif : revenu passif suffisant pour couvrir les besoins sans intervention active.
 
-Constraints
+Portefeuille de réserves — métaux précieux et crypto (~30K$) comme fondation patrimoniale. Pas un business actif.
 
-Temps : 30-60 min/jour supervision, max un après-midi/semaine pour ajustements techniques. 3-5 semaines/an déconnecté (Le Sentier).
-Capital : ~6000€ liquide aujourd'hui, zéro prévu en octobre 2026. Réserves non-liquides (or, argent, crypto). Dette fiscale suédoise ~7500€.
-Équipe : solo — aucun collaborateur, aucun budget externe.
-Compétences : autodidacte en trading et technique. Dépendance à l'agent pour l'exécution audacieuse que Benjamin ne peut pas assurer émotionnellement.
-Matériel : Chromebook comme interface principale, VPS comme cerveau permanent. PC Windows rendu.
+## Current Activities
+- Collecteur MCB+DBSI opérationnel sur iMac (6 CSV : 3m/15m/1H/4H/1D/1W, format OHLC)
+- Sync automatique iMac → VPS toutes les 5 minutes via rsync
+- mcb-analyzer.js déployé — détection de divergences en attente de données suffisantes
+- ZeroOne Systems Day 29/60 — CLAUDE.md complété
+- Paper trading MEXC — à activer (erreur 602 API Futures non résolue)
 
-Current Goals
+## Constraints
+- Solo, autodidacte, sans budget externe
+- Capital liquide épuisé début automne 2026 — premier seuil critique
+- iMac doit rester allumé pour la collecte MCB (launchd + watchdog)
+- Plan TradingView gratuit — 2 onglets max, 1 session active
 
-Octobre 2026 — premier seuil critique : le bot doit générer suffisamment pour éviter de piocher dans les réserves
-Décembre 2026 — bot en trading live sur MEXC avec paramètres validés en paper trading
-Juin 2027 — équilibre économique complet : 3000€/mois revenus passifs couvrant impôts + dépenses + capitalisation minimale
-En cours — terminer les 60 jours ZeroOne et avoir un agent opérationnel avec knowledge bases complètes
+## Current Goals
+- Août 2026 — paper trading validé, bot en production
+- Automne 2026 — revenus couvrent les dépenses (3000€/mois)
+- 2027 — application clé en main vendable à d'autres traders
 
-State of Play
-Ce qui fonctionne :
+## State of Play
+**Ce qui fonctionne :**
+- Infrastructure complète : iMac Monterey, Claude Code, TradingView MCP, VPS
+- Collecte MCB+DBSI temps réel sur 6 timeframes avec OHLC
+- Modules VPS : ma-tendance.js, volume-analyzer.js, mcb-analyzer.js opérationnels
+- Cerveau central : structure en place, score MCB à connecter
 
-Infrastructure solide — VPS, GitHub, MEXC API, MCP TradingView connecté
-soul.md v1.0 complet — agent aura un contexte précis dès le départ
-Stratégie Casper bien documentée — 14 transcriptions analysées
-Motivation et discipline de travail — progression constante malgré les obstacles techniques
-
-Ce qui est bloqué :
-
-Signature API MEXC Futures — erreur 602 non résolue, paper trading pas encore actif
-Knowledge bases vides — l'agent n'a pas encore les règles de trading encodées
-Stratégie Shlong — conceptualisée mais pas encore formalisée ni testée
-Revenus = zéro pour l'instant — pression temporelle réelle sur octobre 2026
+**Ce qui est bloqué :**
+- Paper trading MEXC — erreur API 602 Futures non résolue
+- mcb-analyzer.js — données insuffisantes (collecteur démarré ce jour)
+- cerveau-central.js — MCB/DBSI pas encore connectés aux vrais CSV
