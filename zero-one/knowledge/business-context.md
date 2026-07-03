@@ -1,36 +1,26 @@
 # Business Context
 
 ## What I'm Building
-Bot de trading crypto autonome sur BTC/USDT (Bybit perpetual) utilisant Market Cipher B et DBSI comme signaux principaux, stratégie Casper, exécution sur MEXC. 3 modules : Scalp/Day/Swing. Supervision 30-60 min/jour. Objectif : revenu passif suffisant pour couvrir les besoins sans intervention active.
-
-Portefeuille de réserves — métaux précieux et crypto (~30K$) comme fondation patrimoniale. Pas un business actif.
+Bot de trading crypto autonome sur BTC/USDT utilisant Market Cipher B et DBSI, strategie Casper, execution MEXC. 3 modules : Scalp/Day/Swing. Supervision 30-60 min/jour.
 
 ## Current Activities
-- Collecteur MCB+DBSI opérationnel sur iMac (6 CSV : 3m/15m/1H/4H/1D/1W, format OHLC)
-- Sync automatique iMac → VPS toutes les 5 minutes via rsync
-- mcb-analyzer.js déployé — détection de divergences en attente de données suffisantes
-- ZeroOne Systems Day 29/60 — CLAUDE.md complété
-- Paper trading MEXC — à activer (erreur 602 API Futures non résolue)
+- Collecteur MCB+DBSI operationnel sur iMac (6 CSV : 3m/15m/1H/4H/1D/1W, format OHLC)
+- Sync automatique iMac vers VPS toutes les 5 minutes via rsync
+- mcb-analyzer.js deploye sur VPS
+- ZeroOne Systems Day 29/60 en cours
+- Paper trading MEXC a activer (erreur 602 non resolue)
 
 ## Constraints
 - Solo, autodidacte, sans budget externe
-- Capital liquide épuisé début automne 2026 — premier seuil critique
-- iMac doit rester allumé pour la collecte MCB (launchd + watchdog)
-- Plan TradingView gratuit — 2 onglets max, 1 session active
+- Capital liquide epuise debut automne 2026
+- iMac doit rester allume pour collecte MCB
+- Plan TradingView gratuit, 2 onglets max
 
 ## Current Goals
-- Août 2026 — paper trading validé, bot en production
-- Automne 2026 — revenus couvrent les dépenses (3000€/mois)
-- 2027 — application clé en main vendable à d'autres traders
+- Aout 2026 : paper trading valide, bot en production
+- Automne 2026 : 3000 EUR/mois revenus passifs
+- 2027 : application vendable a d autres traders
 
 ## State of Play
-**Ce qui fonctionne :**
-- Infrastructure complète : iMac Monterey, Claude Code, TradingView MCP, VPS
-- Collecte MCB+DBSI temps réel sur 6 timeframes avec OHLC
-- Modules VPS : ma-tendance.js, volume-analyzer.js, mcb-analyzer.js opérationnels
-- Cerveau central : structure en place, score MCB à connecter
-
-**Ce qui est bloqué :**
-- Paper trading MEXC — erreur API 602 Futures non résolue
-- mcb-analyzer.js — données insuffisantes (collecteur démarré ce jour)
-- cerveau-central.js — MCB/DBSI pas encore connectés aux vrais CSV
+Ce qui fonctionne : infrastructure complete, collecte MCB+DBSI temps reel, modules VPS operationnels.
+Ce qui est bloque : paper trading MEXC (erreur 602), mcb-analyzer manque de donnees, cerveau-central pas encore connecte aux CSV live.
