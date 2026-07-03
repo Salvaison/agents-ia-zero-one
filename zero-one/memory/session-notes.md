@@ -1,0 +1,1 @@
+[2026-07-03] Infrastructure complete : iMac Monterey operationnel, collecteur MCB 6 CSV en production, sync iMac->VPS via rsync, OHLC ajoute aux CSV. CLAUDE.md complete Days 26-28. mcb-analyzer.js deploye sur VPS.
