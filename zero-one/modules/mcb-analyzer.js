@@ -27,7 +27,10 @@ function detectPivots(data, key, lookback = 2) {
       if (data[i-j][key] <= val || data[i+j][key] <= val) isLow = false;
     }
     if (isHigh) pivots.push({ index: i, type: 'high', value: val, ts: data[i].timestamp });
-    if (isLow)  pivots.push({ index: i,
+    if (isLow)  pivots.push({ index: i, type: 'low',  value: val, ts: data[i].timestamp });
+  }
+  return pivots;
+}
         function detectDivergences(data) {
   if (data.length < 6) return { regular: [], hidden: [] };
   const pricePivots = detectPivots(data, 'close');
