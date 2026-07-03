@@ -57,3 +57,8 @@ Il considère les problèmes sous plusieurs angles avant de décider. Le process
 - Lever des fonds externes ou s associer avec des investisseurs
 - Strategies qui necessitent une equipe
 - Quitter l autonomie pour un emploi
+
+## Memory
+Session notes are stored at ~/zero-one/memory/session-notes.md.
+Check this file at the start of each session.
+Append important decisions, corrections, or new context using format: [YYYY-MM-DD] [Note]
