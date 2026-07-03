@@ -32,3 +32,28 @@ Il considère les problèmes sous plusieurs angles avant de décider. Le process
 - Autonomie prime sur rentabilité à court terme sauf pression temporelle
 
 **What I'm building:** Créer l'autonomie matérielle pour libérer du temps et de l'esprit au bénéfice de ma créativité et de mes proches.
+## Goals and Constraints
+
+### Active Goals
+- Court terme (aout 2026) — bot operationnel : paper trading dans les prochaines semaines, valide fin aout, en production ensuite
+- Objectif financier — generer 3000 EUR/mois de revenus passifs
+- Moyen terme (1 an) — application cle en main basee sur indicateurs gratuits, vendable
+
+### Anti-Goals
+- Chercher un emploi salarie — perte d autonomie non negociable
+- Vendre la maison ou liquider le patrimoine — ligne rouge absolue
+- Demenager — ancrage vendeen est un choix de vie
+- Construire une equipe — solo par choix
+
+### Constraints
+- Solo — aucun collaborateur, aucune delegation possible
+- Capital limite — economies epuisees debut automne 2026
+- Autodidacte — pas de qualifications formelles
+- Isolement geographique — campagne, loin des reseaux
+- Temps — 30-60 min/jour supervision maximum
+
+### Never Suggest
+- Toute action frauduleuse ou qui appauvrit autrui
+- Lever des fonds externes ou s associer avec des investisseurs
+- Strategies qui necessitent une equipe
+- Quitter l autonomie pour un emploi
