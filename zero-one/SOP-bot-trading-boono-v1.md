@@ -1,18 +1,72 @@
 SOP — Bot Trading Boono
 
-Version 1.0 — 8 juillet 2026
+Version 1.1 — 9 juillet 2026
 
 
 1. TRIGGERS
 
 Trigger A — Daily brief (9h00)
 
+Phase 1 — Transition et bilan (15-20 min)
 
-Analyse top-down des marchés : Weekly → Daily → 4H → 1H
-Pause scalp pendant toute la durée de la TA
-Peut attendre la résolution d'un trade en cours avant de démarrer
-Commande REBOOT pour reprendre la collecte après la TA
-Durée estimée : 30-60 minutes
+
+Bot suspend le scalp-trading
+Bot présente état des positions scalp en cours
+Décision commune : liquider les scalps dépassés TP1 ou attendre
+Lecture et analyse du rapport quotidien (veille)
+Succès et échecs — rédaction de nouvelles recommandations
+
+
+Phase 2 — TA manuelle (20-40 min)
+
+
+Bot indique les niveaux clés à surveiller avant de rendre la main
+Bot passe en mode aveugle — Benjamin surveille le marché
+Benjamin fait la TA multi-timeframes top-down :
+
+Supprimer les niveaux obsolètes
+Identifier S/R sur chaque timeframe
+Tracer les Fibonacci
+Identifier le range actuel et les ranges potentiels
+Programmer les alarmes TradingView (lignes de tendance notamment)
+
+
+
+Benjamin saisit les niveaux dans le formulaire selon syntaxe :
+
+DS"prix" — Daily Support
+WR"prix" — Weekly Resistance
+MR"prix" — Monthly Resistance
+fib0"prix"/fib1"prix" — niveaux Fibonacci
+
+
+
+Formulaire = liste d'éléments cliquables + copier/coller du prix
+
+
+Phase 3 — Reprise et scénarios (10-15 min)
+
+
+Benjamin rend la main au bot via commande REBOOT
+Benjamin transmet le document S/R au bot
+Bot analyse et commente les niveaux — compte rendu et appréciation
+Identification des confluences entre niveaux
+Établissement des scénarios selon syntaxe préformatée :
+
+
+if reaching S/R "prix" with at least 2 timeframes in divergence,
+then ask if dbsi and ticker detect a trend change,
+then enter trade if volume score >= X
+
+
+30-60 minutes après le début → bot indépendant pour la journée
+
+
+Alertes :
+
+
+Bot peut envoyer SMS en cas de situation inhabituelle
+Alarmes TradingView sur lignes de tendance pour événements non horizontaux
 
 
 Trigger B — Signal automatique (continu)
@@ -48,16 +102,16 @@ Permanents (continus) :
 CSV MCB — LBW, BW, Money Flow, Buy/Sell, DBSI (6 timeframes)
 Prix temps réel — WebSocket MEXC tick par tick
 EMA multi-timeframes — MA/Tendance
-Volume MEXC — force, vélocité, spike
+Volume MEXC — force, vélocité, spike (3 groupes : Momentum / Engagement / Trigger)
 État du portefeuille — capital disponible, positions ouvertes, P&L
 
 
 Quotidiens (daily brief) :
 
 
-Niveaux S/R saisis manuellement dans formulaire
-Niveaux Fibonacci (entrée et sortie) saisis manuellement
-Scénarios préétablis (haussier / baissier / neutre)
+Niveaux S/R saisis via formulaire cliquable
+Niveaux Fibonacci entrée/sortie
+Scénarios préformatés avec valeurs variables
 
 
 Optionnels :
@@ -78,11 +132,11 @@ Comparaison prix live avec S/R préétablis
 
 
 
-Daily brief (9h)
+Daily brief (9h) — voir Trigger A
 
-Analyse top-down des timeframes
-Saisie S/R, Fibonacci, scénarios
-Pause scalp pendant cette phase
+Phase 1 : bilan et positions
+Phase 2 : TA manuelle
+Phase 3 : scénarios et reboot
 
 
 
@@ -90,7 +144,7 @@ Pause scalp pendant cette phase
 
 Score divergences MCB multi-timeframes
 Vérification zone S/R ±250$
-Validation 3 groupes volume (Momentum / Engagement / Trigger)
+Validation 3 groupes volume
 Score final ≥ seuil → entrée autorisée
 
 
@@ -179,6 +233,12 @@ Rapport quotidien : trades, P&L, justification par confluence
 Mise à jour session-notes.md
 
 
+Alertes :
+
+
+SMS en cas de situation inhabituelle
+
+
 Hebdomadaire :
 
 
@@ -192,13 +252,13 @@ Connexion :
 
 
 Perte WebSocket → pas de nouveau trade, trades en cours maintenus
-CSV non mis à jour depuis >15 min → alerte, pause nouveaux trades
+CSV non mis à jour depuis >15 min → alerte SMS, pause nouveaux trades
 
 
 Exécution :
 
 
-Erreur API MEXC → pas d'ordre, log, alerte
+Erreur API MEXC → pas d'ordre, log, alerte SMS
 Score incohérent → confirmation humaine requise avant action
 
 
@@ -209,7 +269,7 @@ Conflit entre règles → toujours favoriser la protection du capital
 Ne pas devenir contradictoire avec les règles de trading
 
 
-Note : error handling à compléter en paper trading — le système nous montrera où ça casse
+Note : error handling à compléter en paper trading
 
 
 Notes
@@ -217,6 +277,7 @@ Notes
 
 Structure 25/50/25 à valider en paper trading
 Scores non calibrés — attendre accumulation de données
-S/R saisis manuellement — interface à développer
+Interface formulaire S/R — à développer
 Rapport quotidien — à coder
+SMS alertes — à configurer
 Paper trading MEXC — erreur 602 Futures non résolue
