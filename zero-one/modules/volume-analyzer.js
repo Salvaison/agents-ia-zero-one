@@ -1,5 +1,21 @@
 const fs = require('fs');
 const path = require('path');
+const priceStream = require('./price-stream');
+
+// --- Trigger group tick buffer ---
+// price-stream.js emits individual 'price' ticks and does not buffer them itself.
+// volume-analyzer.js maintains its own rolling window here so analyzeTrigger()
+// has recent data to compare against.
+const TICK_BUFFER_MAX = 200; // rolling window size — arbitrary, not yet calibrated
+let tickBuffer = [];
+
+priceStream.on('price', (tick) => {
+  tickBuffer.push(tick);
+  if (tickBuffer.length > TICK_BUFFER_MAX) tickBuffer.shift();
+});
+
+// start() is idempotent — safe to call even if cerveau-central.js already started the stream.
+priceStream.start();
 
 // Real production CSVs — 6 timeframes, synced from iMac every 5 min
 const CSV_FILES = {
@@ -104,20 +120,25 @@ function analyzeEngagement(timeframe, lookback = 20) {
 // price-stream.js already provides tick-by-tick price data — duplicating the
 // connection here would waste a resource and risk MEXC rate limits.
 //
-// This function expects to receive recent tick data already captured by
-// price-stream.js (e.g. via a shared buffer or an event listener registered
-// elsewhere) rather than fetching it itself. Wiring the actual EventEmitter
-// subscription is an integration step against price-stream.js's real interface —
-// not yet done here, since this file doesn't have price-stream.js's exports in scope.
-function analyzeTrigger(recentTicks) {
-  if (!recentTicks || recentTicks.length < 3) {
-    return { group: 'trigger', status: 'insufficient_data', count: recentTicks ? recentTicks.length : 0 };
+// IMPORTANT — this only produces meaningful results if the process stays alive
+// long enough for tickBuffer to fill. This is the same constraint already flagged
+// for Day 46 (PM2/persistence): cerveau-central.js currently runs as a one-shot
+// script that exits immediately, which means the tick buffer never has time to
+// accumulate. This function will return 'insufficient_data' every time until
+// cerveau-central.js (and by extension this module) run as a persistent process.
+function analyzeTrigger() {
+  if (tickBuffer.length < 3) {
+    return { group: 'trigger', status: 'insufficient_data', count: tickBuffer.length };
   }
 
-  const prices = recentTicks.map(t => t.price);
+  const prices = tickBuffer.map(t => t.price);
   const lastPrice = prices[prices.length - 1];
   const firstPrice = prices[0];
   const variation = ((lastPrice - firstPrice) / firstPrice) * 100;
+
+  // Buy/sell pressure from tick side (1 = achat, 2 = vente) — raw count, not yet scored
+  const buys = tickBuffer.filter(t => t.side === 1).length;
+  const sells = tickBuffer.filter(t => t.side === 2).length;
 
   let force = 'normal';
   if (Math.abs(variation) > 0.5) force = 'fort'; // TBD — threshold not yet calibrated
@@ -127,6 +148,8 @@ function analyzeTrigger(recentTicks) {
     group: 'trigger',
     lastPrice,
     variationPct: variation.toFixed(3),
+    buyTickCount: buys,
+    sellTickCount: sells,
     force,
     // TBD — scoring weight per group not yet defined (pending calibration decision)
     score: null,
@@ -145,10 +168,10 @@ function analyzeTrigger(recentTicks) {
 //     partially compensate for a weaker scenario score.
 //   - This scheme is NOT implemented below. Do not treat it as decided — it is a
 //     candidate to test once real data accumulates.
-function analyzeVolume(timeframe, recentTicks = null) {
+function analyzeVolume(timeframe) {
   const momentum = analyzeMomentum(timeframe);
   const engagement = analyzeEngagement(timeframe);
-  const trigger = analyzeTrigger(recentTicks);
+  const trigger = analyzeTrigger();
 
   return {
     timeframe,
@@ -188,5 +211,15 @@ function runVolumeAnalyzer() {
 module.exports = { analyzeVolume, analyzeMomentum, analyzeEngagement, analyzeTrigger };
 
 if (require.main === module) {
-  runVolumeAnalyzer();
+  // NOTE: requiring this file now opens a live price-stream.js websocket connection
+  // (for the Trigger group). Running this standalone will keep the process alive
+  // rather than exit immediately like the old version did. This demo run waits
+  // 10s to let a few ticks arrive, prints one pass, then stops the stream and exits —
+  // useful for manual testing, not representative of production behavior (which
+  // needs the process to stay alive continuously — see Day 46 note above).
+  setTimeout(() => {
+    runVolumeAnalyzer();
+    priceStream.stop();
+    process.exit(0);
+  }, 10000);
 }
