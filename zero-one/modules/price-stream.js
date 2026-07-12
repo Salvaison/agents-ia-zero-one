@@ -113,20 +113,22 @@ class PriceStream extends EventEmitter {
       return;
     }
 
-    /* Flux tick-par-tick (transactions) */
+    /* Flux tick-par-tick (transactions) — msg.data est un TABLEAU de deals, */
+    /* parfois plusieurs transactions dans le même message push */
     if (msg.channel === 'push.deal' && msg.data) {
-      console.log('[DEBUG] raw push.deal:', JSON.stringify(msg.data));
-      const d = msg.data;
-      const tick = {
-        symbol: msg.symbol || SYMBOL,
-        price: parseFloat(d.p),
-        volume: d.v,
-        side: d.T, /* 1 = achat, 2 = vente */
-        ts: d.t || msg.ts,
-      };
-      this.lastPrice = tick.price;
-      this.lastUpdateTs = tick.ts;
-      this.emit('price', tick);
+      const deals = Array.isArray(msg.data) ? msg.data : [msg.data];
+      for (const d of deals) {
+        const tick = {
+          symbol: msg.symbol || SYMBOL,
+          price: parseFloat(d.p),
+          volume: d.v,
+          side: d.T, /* 1 = achat, 2 = vente */
+          ts: d.t || msg.ts,
+        };
+        this.lastPrice = tick.price;
+        this.lastUpdateTs = tick.ts;
+        this.emit('price', tick);
+      }
       return;
     }
 
