@@ -20,14 +20,18 @@ const WS_URL = 'wss://contract.mexc.com/edge';
 const SYMBOL = 'BTC_USDT';
 const PING_INTERVAL_MS = 15000; /* doit rester < 60s (limite serveur) */
 const RECONNECT_DELAY_MS = 3000;
+const DATA_STALE_MS = 60000; /* si aucun message reçu depuis ce délai, la connexion est jugée zombie */
+const STALE_CHECK_INTERVAL_MS = 15000;
 
 class PriceStream extends EventEmitter {
   constructor() {
     super();
     this.ws = null;
     this.pingTimer = null;
+    this.staleCheckTimer = null;
     this.lastPrice = null;
     this.lastUpdateTs = null;
+    this.lastMessageReceivedAt = null; /* horloge murale — mise à jour sur TOUT message reçu, pas juste à l'ouverture */
     this._shouldRun = false;
   }
 
@@ -40,6 +44,7 @@ class PriceStream extends EventEmitter {
   stop() {
     this._shouldRun = false;
     clearInterval(this.pingTimer);
+    clearInterval(this.staleCheckTimer);
     if (this.ws) this.ws.close();
   }
 
@@ -50,21 +55,25 @@ class PriceStream extends EventEmitter {
   _connect() {
     console.log('[price-stream] Connexion à', WS_URL);
     this.ws = new WebSocket(WS_URL);
+    this.lastMessageReceivedAt = Date.now(); /* évite un faux positif immédiat avant le premier message */
 
     this.ws.on('open', () => {
       console.log('[price-stream] Connecté. Abonnement à push.deal pour', SYMBOL);
       this._subscribe();
       this._startPing();
+      this._startStaleCheck();
       this.emit('connected');
     });
 
     this.ws.on('message', (raw) => {
+      this.lastMessageReceivedAt = Date.now();
       this._handleMessage(raw);
     });
 
     this.ws.on('close', () => {
       console.warn('[price-stream] Connexion fermée.');
       clearInterval(this.pingTimer);
+      clearInterval(this.staleCheckTimer);
       this.emit('disconnected');
       this._scheduleReconnect();
     });
@@ -73,6 +82,24 @@ class PriceStream extends EventEmitter {
       console.error('[price-stream] Erreur WS:', err.message);
       this.emit('error', err);
     });
+  }
+
+  /* Détecte une connexion "zombie" : ws.readyState reste OPEN mais plus aucun
+   * message n'arrive (ni tick, ni pong). Sans ce contrôle, une connexion figée
+   * silencieusement ne serait jamais rechargée — elle reste "ouverte" indéfiniment. */
+  _startStaleCheck() {
+    clearInterval(this.staleCheckTimer);
+    this.staleCheckTimer = setInterval(() => {
+      if (!this.lastMessageReceivedAt) return;
+      const silentMs = Date.now() - this.lastMessageReceivedAt;
+      if (silentMs > DATA_STALE_MS) {
+        console.warn(`[price-stream] Aucune donnée reçue depuis ${Math.round(silentMs / 1000)}s — connexion jugée zombie, fermeture forcée.`);
+        clearInterval(this.staleCheckTimer);
+        clearInterval(this.pingTimer);
+        try { this.ws.terminate(); } catch (e) {} /* terminate() coupe immédiatement, sans attendre le handshake de close */
+        this._scheduleReconnect();
+      }
+    }, STALE_CHECK_INTERVAL_MS);
   }
 
   _subscribe() {
