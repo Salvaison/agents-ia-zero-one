@@ -15,12 +15,14 @@
  * if the last completed bar's MCB values are in cache and not yet written,
  * they are flushed immediately without waiting for a live close event.
  *
- * FIX 2026-07-14: the WS absence watchdog previously skipped its staleness
- * check entirely whenever wsMap had any entry ("if (wsMap.size > 0) return").
- * A websocket that stays technically open but stops delivering frames (a
- * "zombie" connection) was therefore never detected or reloaded — this caused
- * a ~16h silent data gap on 2026-07-14. The watchdog now checks time since the
- * last frame regardless of whether a connection object still exists in wsMap.
+ * FIX 2026-07-14 (insuffisant) : le watchdog sautait sa verification des que
+ * wsMap contenait une entree ("if (wsMap.size > 0) return") — un websocket
+ * ouvert mais muet passait inapercu. Trou silencieux de ~16h le 14/07.
+ *
+ * FIX 2026-07-15 : le correctif du 14/07 ne suffisait pas. Il mesurait le temps
+ * depuis la derniere FRAME, or les heartbeats TradingView le rafraichissaient
+ * en continu — le watchdog ne se declenchait donc jamais. Trou de 6h30 le 15/07.
+ * On mesure desormais le temps depuis la derniere BOUGIE ECRITE sur le TF actif.
  *
  * Usage:
  *   node scripts/tab2-collector.js \
@@ -571,21 +573,16 @@ async function runSession() {
   }
 
   // ── WS absence watchdog ───────────────────────────────────────────────────
-  // FIX 2026-07-14: removed the early "if (wsMap.size > 0) return" check.
-  // That check meant a websocket entry still present in wsMap (i.e. never
-  // explicitly closed) blocked the staleness check forever — even if zero
-  // frames had arrived in hours. Now the watchdog always compares elapsed
-  // time since the last frame, regardless of whether a connection object
-  // still exists. A zombie connection (open but silent) is now correctly
-  // detected and forces a reload, same as a fully closed one.
+  // FIX 2026-07-15: le critère "temps depuis la derniere frame" ne marchait pas —
+  // les heartbeats TradingView le rafraichissaient en permanence, donc le watchdog
+  // ne se declenchait jamais (6h30 de trou le 15/07). On mesure maintenant le temps
+  // depuis la derniere bougie ECRITE sur le TF actif, seuil = 2x sa periode (min 5min).
+  // Action: process.exit(1) — launchd relance, le rattrapage retroactif recupere la bougie.
   const wsAbsenceTimer = setInterval(async () => {
-    const silentMs = Date.now() - lastWsActivityAt;
-    if (silentMs < WS_TIMEOUT_MS) return;
+    const activeTf = TF_BY_CODE[currentTfCode ?? "15"]; const staleLimitMs = Math.max(activeTf.minutes * 60 * 2, 300) * 1000; const silentMs = Date.now() - (detectors[currentTfCode ?? "15"]?.lastCloseAt ?? Date.now());
+    if (silentMs < staleLimitMs) return;
     const tfLabel = TF_BY_CODE[currentTfCode ?? '15']?.label ?? '?';
-    log(`No WS activity for ${Math.round(silentMs / 1000)}s on ${tfLabel} (wsMap size=${wsMap.size}) — reloading…`);
-    try { await switchToTf(currentTfCode ?? TF_SCHEDULE[0].code); } catch (e) {
-      log(`Reload failed: ${e.message}`);
-    }
+    log(`FATAL: no close written on ${tfLabel} for ${Math.round(silentMs / 1000)}s — exiting so launchd restarts us.`); process.exit(1);
   }, 15_000);
 
   // ── Rotation scheduler ────────────────────────────────────────────────────
