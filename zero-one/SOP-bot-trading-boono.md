@@ -1,6 +1,5 @@
 SOP — Bot Trading Boono
-
-Version 1.1 — 9 juillet 2026
+Version 1.1 — 9 juillet 2026 (dernière modification : 16 juillet 2026)
 
 
 1. TRIGGERS

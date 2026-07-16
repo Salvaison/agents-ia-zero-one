@@ -1,6 +1,6 @@
 # Agent Spec — Bot Trading Boono
-Version: 1.0 (draft — translated from SOP v1.1)
-Date: 12 juillet 2026
+Version: 1.1 (draft — translated from SOP v1.1)
+Date: 12 juillet 2026 (dernière modification : 16 juillet 2026)
 
 ## Purpose
 Cet agent surveille en continu le marché BTC/USDT (Market Cipher B + DBSI, 6 timeframes), calcule un score de confluence, et exécute des trades sur MEXC Futures selon 3 modules (Scalp/Day/Swing) — avec un daily brief quotidien à 9h piloté conjointement avec Benjamin.
