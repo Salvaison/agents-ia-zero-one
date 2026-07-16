@@ -18,6 +18,21 @@
  *   v[6]  = buy signal (0 = no signal, non-zero = signal value)
  *   v[7]  = WT1 cross UP   (null/1e+100 = no cross)
  *   v[8]  = WT1 cross DOWN (null/1e+100 = no cross)
+ *   v[11]-v[14] = niveaux fixes tracés (60 / -60 / 53 / -53) — décor, pas des données
+ *   v[15], v[16] = deux séries continues, rôle inconnu (varient en temps réel)
+ *   v[17] = petit entier stable (2 ou 3) — rôle inconnu
+ *   v[18], v[19] = bornes de la bande basse (-93 / -103) — constantes
+ *   v[20]-v[23] = duplication exacte de v[5]-v[8] — raison inconnue
+ *
+ * DÉCOUVERTE 2026-07-16 (sniff live, ws-sniffer.js) :
+ *   Le gros point vert de la bande basse s'imprime quand la Blue Wave (v[2])
+ *   entre dans la zone -93/-103. À cet instant, et seulement là, v[6] passe à 1
+ *   et v[7] cesse d'être na. C'est pourquoi v[6] est resté à 0 sur 284 bougies
+ *   consécutives : le signal est RARE, pas cassé. La bande n'est pas décorative,
+ *   c'est la zone de survente extrême qui déclenche le signal.
+ *   NON RÉSOLU : v[5] vaut 1 en quasi-permanence — un "flag" toujours actif dont
+ *   le sens reste inconnu. Le cas symétrique (point rouge ? v[8] ?) n'a pas été
+ *   observé.
  *
  * DBSI (MarketCipher DBSI, WS key S8XNwk — identified via ws-sniffer.js on 2026-07-01):
  *   Not a plot v[] series — it draws two label.new() values per candle via Pine

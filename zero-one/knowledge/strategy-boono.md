@@ -74,17 +74,46 @@ Shlong terminé
 
 ---
 
-## Structure de position 25/50/25
+## Structure de position — 25 / 65 / 10
 
-Cadre théorique de départ — les pourcentages seront dynamiques en pratique.
+Cadre de départ. Les pourcentages seront dynamiques en pratique.
 
-- 25% → TP1 : verrouillage (couvre frais + petit profit)
-- 50% → TP2 : cœur du mouvement (profit principal)
-- 25% → laissé courir / hedge trade suivant
+- **25% → TP1** : verrouillage (couvre frais + petit profit)
+- **65% → TP2** : déclenché à l'amorce du mouvement inverse détectée par le système
+  — PAS au simple contact du 0.618. Le Fib est une référence, pas le déclencheur.
+- **10% → maintenus pendant le shlong** : ce n'est pas un pari sur la queue de
+  mouvement, c'est une assurance.
 
-À optimiser par l'expérimentation en paper trading.
+### Rôle réel des 10% (clarifié le 16/07/2026)
 
----
+Le shlong n'est pas une sortie en trois paliers sur un même mouvement — c'est une
+bascule entre deux positions. Long et short coexistent par construction.
+
+Les 10% du long se déprécient volontairement à mesure que le short s'affirme.
+Deux issues, et ils jouent un rôle dans chacune :
+
+- Short gagnant : le long est clos quand le short atteint son TP1. Les 10% ont
+  perdu de la valeur, mais le PNL global reste positif — le long était déjà en
+  bénéfice, et le PNL continue en positif à travers le short.
+- Short perdant : le prix est reparti dans le sens du long, donc les 10% ont pris
+  de la valeur. Ils couvrent la perte du short (plafonnée à ~1%) et servent de
+  hedge pour la tentative suivante.
+
+Conséquence : 10% suffit. La valeur de cette tranche ne dépend pas de sa taille
+mais de son rôle de couverture d'une perte plafonnée.
+
+### Correction d'une analyse erronée (12/07/2026)
+
+Une note antérieure affirmait que le ratio 25/50/25 était structurellement mal
+pensé, au motif que fermer 25% à TP1 (mouvement court) rapporte moins que 25% en
+tranche finale (mouvement ample). Ce raisonnement est FAUX : il suppose que les
+trois tranches jouent sur le même mouvement, comme une sortie en paliers. Ce
+n'est pas le cas — la dernière tranche appartient à la mécanique de bascule, pas
+à la sortie du long.
+
+### À voir
+
+Lors d'une 2e tentative de shlong, prendre un TP3 à 5%. Non tranché.
 
 ## Règles absolues
 
@@ -133,3 +162,31 @@ SI signal imprimé détecté :
 
 **Limite :**
 Au démarrage, quelques sessions nécessaires avant historique suffisant.
+
+Cette section décrivait une approche par MCP TradingView, abandonnée depuis.
+Le collecteur CDP (real-time-collector.js / tab2-collector.js) capture désormais
+les valeurs MCB à CHAQUE clôture de bougie, signal ou non — pas seulement quand
+un signal imprime, contrairement à ce qui est écrit plus haut.
+
+## Signal MCB — mécanique réelle (établi le 16/07/2026 par sniff live)
+
+Le gros point vert de la bande basse s'imprime quand la Blue Wave entre dans la
+zone -93/-103. La bande n'est pas décorative : c'est la zone de survente extrême
+qui déclenche le signal.
+
+Conséquence importante : ce signal est RARE par nature. Sur 284 bougies 15m
+consécutives, la colonne buy est restée à 0 — non pas parce que la capture est
+cassée, mais parce qu'aucun signal ne s'est déclenché sur cette période. Une
+colonne buy vide sur plusieurs centaines de bougies est donc NORMALE, pas un bug.
+
+Mécanisme de préavis : un point s'affiche d'abord en préavis sur la bougie en
+cours, puis se confirme ou disparaît à la bougie suivante. Cela permet de
+détecter à l'avance la formation éventuelle d'une divergence — mais implique
+qu'un point capté à la clôture peut être un préavis non confirmé.
+
+Non résolu à ce jour :
+- Le "sell flag" est actif en quasi-permanence — sens inconnu, probablement pas
+  un point rouge.
+- Le cas symétrique (survente haute / point rouge) n'a jamais été observé en live.
+- Les gros points verts ne sont visibles que dans la fenêtre de rendu du chart :
+  une bougie récupérée rétroactivement peut arriver sans ses valeurs DBSI.

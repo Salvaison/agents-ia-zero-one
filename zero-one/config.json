@@ -1,19 +1,16 @@
 {
   "_comment": "Paramètres de stratégie centralisés — Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le détail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une décision non encore prise, pas une valeur par défaut de zéro.",
-  "_lastUpdated": "2026-07-14",
-
+  "_lastUpdated": "2026-07-16",
   "confluenceThresholds": {
     "scalp": null,
     "day": null,
     "swing": null,
     "_status": "NON UTILISABLE EN L'ÉTAT — 5/9, 6/9, 7/9 étaient posés dans le SOP mais jamais validés contre des données réelles. Traité comme non tranché, au même titre que le barème volume, plutôt que comme une valeur décidée par défaut."
   },
-
   "srZone": {
     "toleranceUsd": 250,
     "_note": "identique pour les 3 modules actuellement — pas encore vérifié si ça devrait varier par module"
   },
-
   "fibonacci": {
     "tp1Ratio": 0.382,
     "tp2Ratio": 0.618,
@@ -23,37 +20,63 @@
       "swing": "1d"
     }
   },
-
   "timeframes": {
-    "scalp": { "signal": "60m", "context": "4h", "_status": "NON TRANCHÉ — candidat alternatif 15m/1h en attente de vérification visuelle sur le Mac" },
-    "day":   { "signal": "4h",  "context": "1d" },
-    "swing": { "signal": "1d",  "context": "1W" }
+    "scalp": {
+      "signal": "60m",
+      "context": "4h",
+      "_status": "NON TRANCHÉ — candidat alternatif 15m/1h en attente de vérification visuelle sur le Mac"
+    },
+    "day": {
+      "signal": "4h",
+      "context": "1d"
+    },
+    "swing": {
+      "signal": "1d",
+      "context": "1W"
+    }
   },
-
   "positionSizing": {
     "maxCapitalPercentPerTrade": 1
   },
-
   "leverage": {
-    "scalp": { "min": 20, "max": 75 },
-    "day":   { "min": 5,  "max": 10 },
-    "swing": { "min": 5,  "max": 10 }
+    "scalp": {
+      "min": 20,
+      "max": 75
+    },
+    "day": {
+      "min": 5,
+      "max": 10
+    },
+    "swing": {
+      "min": 5,
+      "max": 10
+    }
   },
-
   "shlongStructure": {
-    "tp1Percent": null,
-    "tp2Percent": null,
-    "hedgePercent": null,
-    "_status": "NON TRANCHÉ — l'ancien 25/50/25 est structurellement remis en question (tranches non proportionnelles à la valeur $ attendue par étape). Ne pas réintroduire 25/50/25 par défaut sans validation explicite."
+    "tp1Percent": 25,
+    "tp2Percent": 65,
+    "hedgePercent": 10,
+    "_note": "TP2 se declenche a l'amorce du mouvement inverse detectee par le systeme, PAS au contact du 0.618. Les 10% ne sont pas un pari sur la queue de mouvement mais une assurance dans la mecanique de bascule long/short. Voir strategy-boono.md pour le detail.",
+    "_status": "Cadre de depart, a valider en paper trading. La reserve structurelle notee le 12/07 etait fondee sur une analyse erronee (elle supposait une sortie en paliers sur un meme mouvement) et est levee."
   },
-
   "volumeScoring": {
-    "momentum": { "weight": null, "forteThreshold": null, "faibleThreshold": null },
-    "engagement": { "weight": null, "forteThreshold": null, "faibleThreshold": null },
-    "trigger": { "weight": null, "forteThresholdPercent": null, "faibleThresholdPercent": null },
+    "momentum": {
+      "weight": null,
+      "forteThreshold": null,
+      "faibleThreshold": null
+    },
+    "engagement": {
+      "weight": null,
+      "forteThreshold": null,
+      "faibleThreshold": null
+    },
+    "trigger": {
+      "weight": null,
+      "forteThresholdPercent": null,
+      "faibleThresholdPercent": null
+    },
     "_status": "NON TRANCHÉ — en cours de réflexion. Piste discutée (non validée) : 5 indicateurs bruts notés 1-5, max 25, poids visé équivalent à divergences+scénarios combinés (20-25)."
   },
-
   "circuitBreakers": {
     "dynamicStopProfitPercent": 2,
     "sharpReversalThresholdPercent": null,
