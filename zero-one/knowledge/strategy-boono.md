@@ -67,15 +67,17 @@ fois seulement la confluence validée.
 Tous les seuils de volume, de Trigger et de sensibilité MA s'expriment en
 **pourcentage du prix courant**. Un mouvement de 60 $ ne pèse pas pareil à 64k, à
 120k ou à 200k. Figer des dollars absolus ne survivrait pas à un doublement de BTC.
-
-Conversion des seuils Trigger (base ~64 500 $) :
-
-| Niveau | $ d'origine | % retenu | à 120k | à 200k |
+Seuils Trigger, exprimés en % du prix courant. Point de départ **permissif** —
+à resserrer en paper trading. Ces valeurs valent pour une tranche de **50 ticks**
+(~5 s en séance active), pas pour la fenêtre de 30 s du tableau initial : une
+fenêtre 6× plus courte capture mécaniquement moins de mouvement, d'où des seuils
+divisés par trois par rapport à l'estimation d'origine (< 20 $ / > 60 $ / > 120 $ / > 360 $).
+| Niveau | % du prix | à 64,5k | à 120k | à 200k |
 |---|---|---|---|---|
-| faible | < 20 $ | 0,03 % | 36 $ | 60 $ |
-| moyen | > 60 $ | 0,10 % | 120 $ | 200 $ |
-| fort | > 120 $ | 0,20 % | 240 $ | 400 $ |
-| puissant | > 360 $ | 0,55 % | 660 $ | 1 100 $ |
+| faible | 0,01 % | 6,45 $ | 12 $ | 20 $ |
+| moyen | 0,033 % | 21 $ | 40 $ | 66 $ |
+| fort | 0,066 % | 43 $ | 79 $ | 132 $ |
+| puissant | 0,18 % | 118 $ | 216 $ | 360 $ |
 
 La zone S/R ±250 $ vaut 0,39 % au prix actuel — à convertir également.
 
