@@ -196,9 +196,9 @@ Lors d'une 2e tentative de shlong, prendre un TP3 à 5%. Non tranché.
 
 ## Règles absolues
 
-- TP1 n'est jamais optionnel
 - Risque max 1% du capital par trade (10$ sur 1000$)
-- L'agent n'agit jamais sans confluence minimum 3/5
+- TP1 n'est jamais optionnel
+- L'agent n'agit jamais sans que le score de confluence atteigne le seuil de son module (voir « Structure de décision — trois étages »). Les seuils eux-mêmes sont non tranchés à ce jour — statut null dans config.json.
 - Transparence totale — chaque décision est explicable et traçable
 - Journée négative → rapport immédiat
 - 3 jours consécutifs négatifs → analyse obligatoire
