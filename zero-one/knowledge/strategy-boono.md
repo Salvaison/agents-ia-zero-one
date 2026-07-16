@@ -1,5 +1,5 @@
 # strategy-boono.md
-*Version 0.2 — 25 juin 2026*
+*Version 0.3 — 16 juillet 2026*
 
 ---
 
@@ -180,15 +180,6 @@ Deux issues, et ils jouent un rôle dans chacune :
 
 Conséquence : 10% suffit. La valeur de cette tranche ne dépend pas de sa taille
 mais de son rôle de couverture d'une perte plafonnée.
-
-### Correction d'une analyse erronée (12/07/2026)
-
-Une note antérieure affirmait que le ratio 25/50/25 était structurellement mal
-pensé, au motif que fermer 25% à TP1 (mouvement court) rapporte moins que 25% en
-tranche finale (mouvement ample). Ce raisonnement est FAUX : il suppose que les
-trois tranches jouent sur le même mouvement, comme une sortie en paliers. Ce
-n'est pas le cas — la dernière tranche appartient à la mécanique de bascule, pas
-à la sortie du long.
 
 ### À voir
 
