@@ -31,9 +31,6 @@
 ---
 
 ## Structure de décision — trois étages (arrêtée le 16/07/2026)
-
-Remplace le modèle « minimum 3/5 alignés » du SOP, abandonné : ce seuil n'a jamais
-été validé contre des données réelles. Statut dans config.json : null.
 *« When score confluence for a certain trade is reached, let trigger find a good
 entry and execute. »*
 

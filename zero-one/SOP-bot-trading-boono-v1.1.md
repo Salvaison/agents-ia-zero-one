@@ -73,7 +73,7 @@ Trigger B — Signal automatique (continu)
 
 
 Confluence : divergences MCB multi-timeframes + prix dans zone S/R ±250$ + volume favorable
-Score ≥ seuil (Scalp 5/9, Day 6/9, Swing 7/9) → entrée autorisée
+Score ≥ seuil du module → entrée autorisée. **Seuils non définis à ce jour** — null dans config.json, à calibrer en paper trading. Les anciennes valeurs 5/9, 6/9, 7/9 n'ont jamais été validées.
 Exception : spike volume exceptionnel → entrée scalp immédiate sans scénario préétabli
 Fibonacci calculé par le bot sur dernier pivot (15m scalp / 4H day / 1D swing)
 

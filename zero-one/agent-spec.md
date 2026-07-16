@@ -28,7 +28,7 @@ If any of these checks fail, do not proceed to trading steps — go directly to 
 At 09:00, suspend scalp-trading (Trigger B/C logic) and begin the 3-phase daily brief (see Steps).
 
 **Trigger B — Automatic signal (continuous)**
-Every 5 minutes, recalculate the confluence score. If score ≥ threshold for the relevant module (Scalp 5/9, Day 6/9, Swing 7/9), proceed to trade evaluation.
+Every 5 minutes, recalculate the confluence score. If score ≥ the threshold for the relevant module, proceed to trade evaluation. **Thresholds are not yet defined** — they are null in config.json and must be calibrated in paper trading. The former 5/9, 6/9, 7/9 values were never validated against real data and must not be reintroduced as defaults.
 Exception: if a sudden exceptional volume spike is detected, bypass the score threshold and enter a scalp trade immediately without a pre-established scenario. If MCB divergence confirmation arrives afterward, open an **additional day trade** alongside the existing scalp position — not a conversion of the scalp itself. This day trade follows Day-module rules distinctly: leverage 5-10x (not the scalp's 20-75x), its own liquidation price calculation, and its own TP1/TP2 (4H pivot Fibonacci, not the scalp's 15m pivot).
 
 **Trigger C — Exit**
