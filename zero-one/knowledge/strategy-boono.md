@@ -30,17 +30,96 @@
 
 ---
 
-## Hiérarchie de confluence — conditions d'entrée
+## Structure de décision — trois étages (arrêtée le 16/07/2026)
 
-Minimum 3/5 alignés pour agir. Pondération dynamique selon le contexte.
+Remplace le modèle « minimum 3/5 alignés » du SOP, abandonné : ce seuil n'a jamais
+été validé contre des données réelles. Statut dans config.json : null.
+*« When score confluence for a certain trade is reached, let trigger find a good
+entry and execute. »*
 
-1. **Divergences MCB** — signal primaire. Confluence multi-timeframes requise. Élément le plus fiable.
-2. **Volume** — confirmation de l'engagement réel du marché. Potentiellement décideur ultime dans certains contextes.
-3. **S/R** — zone, pas niveau précis. Pourcentage autour du niveau identifié. Fort élément de confluence mais non absolu — un événement macro peut l'invalider.
-4. **Tendance** — lecture EMA sur timeframe supérieur.
-5. **Macro** — signal périphérique, jamais déclencheur.
+Le Trigger ne juge pas S'IL faut trader — il juge QUAND entrer. C'est pourquoi il
+ne s'additionne pas au score sommé : il a son propre seuil, et prend la main une
+fois seulement la confluence validée.
 
----
+### Ce qui reste vrai du modèle précédent
+- **Divergence MCB** : signal primaire, confluence multi-timeframes requise.
+- **S/R** : une zone, pas un niveau précis. Un événement macro peut l'invalider.
+- **MA / Trend** : les moyennes mobiles sont aussi des lignes S/R, bien respectées.
+  Logique en cascade — le prix touche le 20MA, il est soit rejeté (résistance
+  confirmée, probablement doublée d'un point rouge MCB), soit il traverse
+  (résistance flip) et la question se repose sur la ligne suivante.
+
+### Trigger — mécanique
+- Buffer de ticks. **Un tick = une transaction exécutée**, pas une seconde. 200
+  ticks peuvent représenter 20 secondes en séance active et plusieurs minutes la
+  nuit — la fenêtre respire avec l'activité du marché.
+- Découpage en **4 tranches de 50 ticks**, notées individuellement. Chaque tranche
+  mesure « 50 décisions de traders », normalisée par l'activité.
+- **Agrégation pondérée, pas sommée.** La somme écrase une information réelle :
+  +4/+4/+4 (poussée régulière) et +4/-4/+4 (marché chahuté) ne veulent pas dire la
+  même chose, et +2/+1/+1 donne le même total que le second. La régularité entre
+  tranches porte du sens.
+- **La cadence est un signal en soi.** 200 ticks en 20s contre 200 ticks en 200s,
+  c'est un facteur 10 d'activité. L'horodatage de chaque tick est déjà dans le
+  buffer (price-stream.js) — la donnée existe, elle n'est simplement pas exploitée.
+
+### Unité de mesure — pourcentage, jamais dollars
+Tous les seuils de volume, de Trigger et de sensibilité MA s'expriment en
+**pourcentage du prix courant**. Un mouvement de 60 $ ne pèse pas pareil à 64k, à
+120k ou à 200k. Figer des dollars absolus ne survivrait pas à un doublement de BTC.
+
+Conversion des seuils Trigger (base ~64 500 $) :
+
+| Niveau | $ d'origine | % retenu | à 120k | à 200k |
+|---|---|---|---|---|
+| faible | < 20 $ | 0,03 % | 36 $ | 60 $ |
+| moyen | > 60 $ | 0,10 % | 120 $ | 200 $ |
+| fort | > 120 $ | 0,20 % | 240 $ | 400 $ |
+| puissant | > 360 $ | 0,55 % | 660 $ | 1 100 $ |
+
+La zone S/R ±250 $ vaut 0,39 % au prix actuel — à convertir également.
+
+### Péremption du signal
+Entre le moment où la confluence est atteinte et celui où le Trigger trouve son
+entrée, le marché peut s'inverser. Trois options ont été examinées :
+
+1. **Re-demander la permission aux scores** — le plus juste, mais coûteux : il faut
+   relire les 6 CSV et rejouer le scoring à chaque tentative, sur un VPS à 512 Mo.
+2. **Le DBSI comme arbitre** — écarté. Sa sémantique est inconnue (indicateur
+   protégé, colonnes nommées par position à l'écran seulement) et il n'est rendu
+   que sur ~25 bougies visibles. Un arbitre qu'on ne comprend pas et qui a des trous.
+3. **Date de péremption par module** — RETENU. Un signal scalp qui n'a pas trouvé
+   son entrée en quelques minutes n'est plus un signal scalp ; un swing peut
+   attendre. Mécanique, ne suppose rien, réglable depuis config.json (`signalTtl`).
+
+Si le paper trading montre que des trades périmés auraient été bons, on saura quoi
+ajouter — avec des données plutôt qu'une intuition.
+
+### Calibration — permissif d'abord, resserrer ensuite
+Démarrer le paper trading avec des seuils larges, puis resserrer progressivement
+jusqu'à trouver les limites, puis relâcher un peu pour rester dans une zone sûre.
+
+Raison : en partant large, on VOIT les trades qu'un seuil serré aurait rejetés et
+on peut juger si le rejet aurait été bon. En partant serré, on ne les voit jamais.
+
+**Condition impérative** : le log doit enregistrer le détail complet du score de
+chaque trade, pas seulement passé/refusé. Sans cela, impossible de rejouer a
+posteriori ce qu'un seuil plus strict aurait donné — on resserrerait à l'intuition.
+
+### Log de trade — deux couches
+- **Couche 1, la ligne de trade** : LONG/SHORT, prix d'entrée/sortie, et les quatre
+  scores de module (DIV / S-R / VOL / TRIGGER).
+- **Couche 2, derrière un bouton** : tous les paramètres composant chaque module
+  (Momentum, Money Flow, DBSI, les 4 tranches du Trigger, etc.).
+
+agent-spec.md ne prévoit aujourd'hui que « timestamp, entry price, confluence
+score, contributing modules » — insuffisant pour la rétro-ingénierie. À corriger :
+c'est une spec d'interface, pas seulement de log.
+
+### Skills — reporté
+Des API de sondage de cycles (Pi-cycle et autres) pourraient servir de référence
+pour une décision commune avec l'agent. **Contexte, jamais décideur de trade.**
+Non intégré : l'ajouter reconfigurerait toute la structure du score.
 
 ## Structure Shlong — 1 unité = 1 long + 1 short
 
