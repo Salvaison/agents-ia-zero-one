@@ -72,31 +72,26 @@ function log(msg) {
   process.stdout.write(`[${new Date().toISOString().slice(11, 19)}] [cerveau] ${msg}\n`);
 }
 // ── Notation ──────────────────────────────────────────────────────────────────
-// NOTE D'HONNÊTETÉ : ces fonctions rendent null, et ce n'est pas un oubli.
-// volume-analyzer.js ne fournit pas de note 1-5 — il rend une force qualitative
-// ('fort' / 'faible' / 'normal') et score: null. La table de conversion
-// force → note n'existe pas encore, et l'inventer ici reviendrait à fabriquer
-// un barème que personne n'a validé.
-
+// Ces fonctions lisent les scores 1-5 calcules par volume-analyzer.js
+// (branche le 17/07/2026 -- avant cela, volume-analyzer.js ne rendait que
+// score: null et une force qualitative).
 function scoreMomentum(volResult) {
-  if (volResult.momentum && volResult.momentum.status === 'insufficient_data') return null;
-  return null; // TODO: brancher quand volume-analyzer sait noter 1-5
+  if (!volResult.momentum || volResult.momentum.status === 'insufficient_data') return null;
+  return volResult.momentum.score;
 }
-
 function scoreMoneyFlow(volResult) {
-  if (volResult.engagement && volResult.engagement.status === 'insufficient_data') return null;
-  return null; // TODO: idem — Money Flow est dans le groupe engagement
+  if (!volResult.moneyFlow || volResult.moneyFlow.status === 'insufficient_data') return null;
+  return volResult.moneyFlow.score;
 }
-
 function scoreDbsi(volResult) {
-  if (volResult.engagement && volResult.engagement.status === 'insufficient_data') return null;
-  return null; // TODO: idem
+  if (!volResult.dbsi || volResult.dbsi.status === 'insufficient_data') return null;
+  return volResult.dbsi.score;
+}
+function scoreTrigger(volResult) {
+  if (!volResult.trigger || volResult.trigger.status === 'insufficient_data') return null;
+  return volResult.trigger.score;
 }
 
-function scoreTrigger(volResult) {
-  if (volResult.trigger && volResult.trigger.status === 'insufficient_data') return null;
-  return null; // TODO: 4 tranches de 50 ticks, pondérées par cohérence
-}
 
 function scoreDivergence(module) {
   return null; // TODO: implémenter la détection — divergence entre 2 signaux consécutifs
@@ -155,22 +150,23 @@ function evaluate(module) {
     dbsi:       scoreDbsi(primaryVol),
     trigger:    scoreTrigger(primaryVol),
   };
-
   for (const t of signalTfs) {
     const v = volByTf[t];
     const m = (v.momentum && v.momentum.status === 'insufficient_data')
       ? `donnees insuffisantes (${v.momentum.count})`
-      : `force=${v.momentum && v.momentum.force}`;
-    const e = (v.engagement && v.engagement.status === 'insufficient_data')
-      ? `donnees insuffisantes (${v.engagement.count})`
-      : `force=${v.engagement && v.engagement.force}`;
-    details.push(`[${t}] Momentum: ${m} | Engagement: ${e}`);
+      : `score=${v.momentum && v.momentum.score}`;
+    const mf = (v.moneyFlow && v.moneyFlow.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.moneyFlow.count})`
+      : `score=${v.moneyFlow && v.moneyFlow.score}`;
+    const d = (v.dbsi && v.dbsi.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.dbsi.count})`
+      : `score=${v.dbsi && v.dbsi.score}`;
+    details.push(`[${t}] Momentum: ${m} | MoneyFlow: ${mf} | DBSI: ${d}`);
   }
   const trig = primaryVol.trigger;
   details.push((trig && trig.status === 'insufficient_data')
     ? `Trigger: ${trig.count} ticks en buffer (min ${MIN_TICKS})`
-    : `Trigger: force=${trig && trig.force}`);
-
+    : `Trigger: score=${trig && trig.score} coherence=${trig && trig.coherence}`);
   const ma = evalMaTrend(module);
   details.push(`MA/Tendance: ${ma === null ? 'non branche' : ma}`);
 const rules = config.entryRules[module];
