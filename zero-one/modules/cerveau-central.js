@@ -1,93 +1,263 @@
+/**
+ * cerveau-central.js — Boucle d'évaluation persistante.
+ *
+ * RÉÉCRIT LE 17/07/2026. La version précédente était one-shot : elle appelait
+ * runAll() une fois et le process mourait. Conséquence : le tickBuffer de
+ * volume-analyzer.js n'avait jamais le temps de se remplir (le WebSocket met
+ * ~1s à se connecter, le script avait déjà rendu insufficient_data). Le groupe
+ * Trigger n'a donc JAMAIS produit une seule mesure depuis sa création.
+ *
+ * Autres bugs corrigés :
+ *   - tfMap disait scalp: signal '60m' — cette clé n'existe dans AUCUN CSV_FILES
+ *     de volume-analyzer.js ('3m','15m','1h','4h','1d','1w'). Le module scalp
+ *     cherchait un fichier inexistant à chaque appel.
+ *   - Le scalp lit TROIS timeframes (3m + 15m + 1h), pas un seul.
+ *   - Les seuils 5/9, 6/9, 7/9 étaient codés en dur alors qu'ils sont abandonnés
+ *     (jamais validés). Tout vient maintenant de config.json.
+ *   - MCB / S/R / MA étaient des `const = 0`, ce qui les faisait compter comme
+ *     "aucun signal" dans le total au lieu de "pas encore branché". Ils sont
+ *     maintenant null, et un score contenant un null n'est PAS comparé à un seuil.
+ *
+ * Ce que ce fichier NE fait pas encore (et le dit) :
+ *   - La notation 1-5 de Momentum/MoneyFlow/DBSI n'existe pas dans
+ *     volume-analyzer.js : il rend une force qualitative et score: null.
+ *   - La détection de divergence (comparaison de deux signaux consécutifs pour
+ *     en déduire 1tf/2tf/3tf) n'est implémentée nulle part.
+ *   - S/R et MA/Tendance ne sont branchés à aucune source.
+ *   Tant que ces trois points sont ouverts, aucune décision de trade ne peut
+ *   être émise. Le fichier le signale explicitement plutôt que d'inventer un
+ *   nombre.
+ *
+ * Usage :
+ *   node cerveau-central.js              # boucle persistante (pour PM2)
+ *   node cerveau-central.js --once       # une seule évaluation puis sortie
+ */
+
+const fs = require('fs');
+const path = require('path');
 const { analyzeVolume } = require('./volume-analyzer');
+const priceStream = require('./price-stream');
 
-function getTrendScore(trend) {
-  if (trend === 'bull') return 2;
-  if (trend === 'neutre') return 1;
-  return 0;
+// ── Config ────────────────────────────────────────────────────────────────────
+const CONFIG_PATH = path.join(__dirname, '../config.json');
+
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 }
 
-// TFMAP NOTE — NOT YET DECIDED, pending paper trading validation.
-// Benjamin is unsure which pair is correct for the scalp module without direct
-// access to the Mac/TradingView to check visually. Two candidates on the table:
-//   (a) signal: 15m, context: 1h  — matches the 15m pivot used for Fib calc in agent-spec.md
-//   (b) signal: 1h,  context: 4h  — the original pairing, possibly also valid
-// Current default below is left at the original 60m/4h. DO NOT treat this as
-// resolved — revisit once real chart access allows a visual check.
-const tfMap = {
-  scalp: { signal: '60m', context: '4h' },
-  day:   { signal: '4h',  context: '1d' },
-  swing: { signal: '1d',  context: '1W' }
-};
+let config;
+try {
+  config = loadConfig();
+} catch (e) {
+  console.error(`[cerveau] FATAL: impossible de lire ${CONFIG_PATH} — ${e.message}`);
+  process.exit(1);
+}
 
-async function cerebroCentral(module = 'scalp') {
-  console.log(`\n=== Cerveau Central — Module ${module.toUpperCase()} ===\n`);
+fs.watchFile(CONFIG_PATH, { interval: 5000 }, () => {
+  try {
+    config = loadConfig();
+    log('config.json rechargé');
+  } catch (e) {
+    log(`config.json illisible, on garde l'ancienne version — ${e.message}`);
+  }
+});
 
-  const tf = tfMap[module] || tfMap.scalp;
+const EVAL_INTERVAL_MS = 60000;
+const WARMUP_MS        = 30000;
+const MIN_TICKS        = 50;
 
-  let score = 0;
-  let details = [];
+const ONCE = process.argv.includes('--once');
 
-  // --- Module Volume — 3 groupes (Momentum / Engagement / Trigger) ---
-  // IMPORTANT: analyzeVolume() no longer returns a single {status, score} pair.
-  // It returns 3 raw group results (momentum, engagement, trigger), each with
-  // score: null, because the scoring weights are not yet calibrated (pending
-  // paper trading data). Do NOT invent a numeric contribution here — report
-  // the raw group data and mark the volume contribution as TBD explicitly,
-  // rather than silently treating it as 0 (which would misrepresent it as a
-  // calibrated "no signal" rather than "not yet scored").
-  const vol = analyzeVolume(tf.signal);
+function log(msg) {
+  process.stdout.write(`[${new Date().toISOString().slice(11, 19)}] [cerveau] ${msg}\n`);
+}
+// ── Notation ──────────────────────────────────────────────────────────────────
+// NOTE D'HONNÊTETÉ : ces fonctions rendent null, et ce n'est pas un oubli.
+// volume-analyzer.js ne fournit pas de note 1-5 — il rend une force qualitative
+// ('fort' / 'faible' / 'normal') et score: null. La table de conversion
+// force → note n'existe pas encore, et l'inventer ici reviendrait à fabriquer
+// un barème que personne n'a validé.
 
-  if (vol.momentum.status === 'insufficient_data') {
-    details.push(`Volume/Momentum: données insuffisantes (${vol.momentum.count} entrées)`);
-  } else {
-    details.push(`Volume/Momentum: force=${vol.momentum.force} (score TBD — non calibré)`);
+function scoreMomentum(volResult) {
+  if (volResult.momentum && volResult.momentum.status === 'insufficient_data') return null;
+  return null; // TODO: brancher quand volume-analyzer sait noter 1-5
+}
+
+function scoreMoneyFlow(volResult) {
+  if (volResult.engagement && volResult.engagement.status === 'insufficient_data') return null;
+  return null; // TODO: idem — Money Flow est dans le groupe engagement
+}
+
+function scoreDbsi(volResult) {
+  if (volResult.engagement && volResult.engagement.status === 'insufficient_data') return null;
+  return null; // TODO: idem
+}
+
+function scoreTrigger(volResult) {
+  if (volResult.trigger && volResult.trigger.status === 'insufficient_data') return null;
+  return null; // TODO: 4 tranches de 50 ticks, pondérées par cohérence
+}
+
+function scoreDivergence(module) {
+  return null; // TODO: implémenter la détection — divergence entre 2 signaux consécutifs
+}
+
+function scoreRangeSR(module) {
+  return null; // TODO: dépend de l'interface S/R, non construite
+}
+
+function evalMaTrend(module) {
+  return null; // TODO: filtre de direction, ma-tendance.js jamais revu
+}
+
+// ── Bypass volume ─────────────────────────────────────────────────────────────
+function checkVolumeBypass(module, scores) {
+  const bp = config.volumeBypass;
+  if (!bp || !bp.enabled) return { applies: false, reason: 'désactivé' };
+  if (!bp.appliesTo || !bp.appliesTo.includes(module)) {
+    return { applies: false, reason: `ne s'applique pas à ${module}` };
   }
 
-  if (vol.engagement.status === 'insufficient_data') {
-    details.push(`Volume/Engagement: données insuffisantes (${vol.engagement.count} entrées)`);
-  } else {
-    details.push(`Volume/Engagement: force=${vol.engagement.force} (score TBD — non calibré)`);
+  const missing = [];
+  for (const k of Object.keys(bp.requires)) {
+    const min = bp.requires[k];
+    if (scores[k] === null || scores[k] === undefined) {
+      return { applies: false, reason: `${k} non calculable (non branché)` };
+    }
+    if (scores[k] < min) missing.push(`${k}=${scores[k]}<${min}`);
+  }
+  if (missing.length) return { applies: false, reason: missing.join(', ') };
+  return { applies: true, reason: 'les 4 minimums simultanés sont atteints' };
+}
+// ── Évaluation d'un module ────────────────────────────────────────────────────
+function evaluate(module) {
+  const tf = config.timeframes[module];
+  if (!tf) {
+    log(`module inconnu: ${module}`);
+    return null;
   }
 
-  if (vol.trigger.status === 'insufficient_data') {
-    details.push(`Volume/Trigger: en attente de ticks price-stream.js (${vol.trigger.count} reçus)`);
-  } else {
-    details.push(`Volume/Trigger: force=${vol.trigger.force}, prix=${vol.trigger.lastPrice} (score TBD — non calibré)`);
+  const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
+  const details = [];
+
+  const volByTf = {};
+  for (const t of signalTfs) {
+    volByTf[t] = analyzeVolume(t);
   }
 
-  // No numeric score added for volume yet — score stays as-is until calibration.
-  // The /9 total below is therefore INCOMPLETE by design, not a real total.
+  const primaryVol = volByTf[signalTfs[0]];
 
-  // Placeholders — seront remplis par MCB et MA/Tendance
-  const mcbScore = 0;
-  details.push(`MCB: en attente MCP (+${mcbScore})`);
-  score += mcbScore;
+  const scores = {
+    divergence: scoreDivergence(module),
+    rangeSR:    scoreRangeSR(module),
+    momentum:   scoreMomentum(primaryVol),
+    moneyFlow:  scoreMoneyFlow(primaryVol),
+    dbsi:       scoreDbsi(primaryVol),
+    trigger:    scoreTrigger(primaryVol),
+  };
 
-  const srScore = 0;
-  details.push(`S/R: non configuré (+${srScore})`);
-  score += srScore;
+  for (const t of signalTfs) {
+    const v = volByTf[t];
+    const m = (v.momentum && v.momentum.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.momentum.count})`
+      : `force=${v.momentum && v.momentum.force}`;
+    const e = (v.engagement && v.engagement.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.engagement.count})`
+      : `force=${v.engagement && v.engagement.force}`;
+    details.push(`[${t}] Momentum: ${m} | Engagement: ${e}`);
+  }
+  const trig = primaryVol.trigger;
+  details.push((trig && trig.status === 'insufficient_data')
+    ? `Trigger: ${trig.count} ticks en buffer (min ${MIN_TICKS})`
+    : `Trigger: force=${trig && trig.force}`);
 
-  const maScore = 0;
-  details.push(`MA/Tendance: non connecté (+${maScore})`);
-  score += maScore;
+  const ma = evalMaTrend(module);
+  details.push(`MA/Tendance: ${ma === null ? 'non branche' : ma}`);
+const rules = config.entryRules[module];
+  const notScored = Object.keys(scores).filter(k => scores[k] === null);
 
-  const seuil = module === 'swing' ? 7 : module === 'day' ? 6 : 5;
+  if (notScored.length) {
+    return {
+      module,
+      decision: 'INDISPONIBLE',
+      reason: `categories non calculables: ${notScored.join(', ')}`,
+      scores,
+      details,
+    };
+  }
 
-  console.log(`Score partiel (hors volume — non calibré): ${score}/9`);
-  console.log(`Seuil ${module}: ${seuil}/9`);
-  console.log(`Décision: ⚠️  NON DISPONIBLE — volume, MCB, S/R et MA/Tendance ne sont pas encore tous scorés numériquement. Ne pas engager de trade sur cette base.\n`);
-  details.forEach(d => console.log(`  • ${d}`));
-  console.log('');
+  if (rules.reading === 'C') {
+    for (const b of (rules.blocking || [])) {
+      const required = config.scoring[b] && config.scoring[b].min[module];
+      if (scores[b] < required) {
+        return {
+          module,
+          decision: 'REFUS',
+          reason: `${b}=${scores[b]} < ${required} (bloquant)`,
+          scores,
+          details,
+        };
+      }
+    }
+  }
+
+  const summed = ['divergence', 'rangeSR', 'momentum', 'moneyFlow', 'dbsi']
+    .reduce((a, k) => a + scores[k], 0);
+
+  const bypass = checkVolumeBypass(module, scores);
+  const threshold = rules.totalThreshold;
+  const passes = bypass.applies || (threshold !== null && summed >= threshold);
+
+  return {
+    module,
+    decision: passes ? 'CONFLUENCE ATTEINTE' : 'REFUS',
+    reason: bypass.applies
+      ? `bypass volume: ${bypass.reason}`
+      : `total=${summed} vs seuil=${threshold}`,
+    summed,
+    threshold,
+    scores,
+    details,
+  };
 }
 
-async function runAll() {
-  await cerebroCentral('scalp');
-  await cerebroCentral('day');
-  await cerebroCentral('swing');
+function report(r) {
+  if (!r) return;
+  log(`-- ${r.module.toUpperCase()} : ${r.decision} -- ${r.reason}`);
+  r.details.forEach(d => log(`     ${d}`));
 }
 
-if (require.main === module) {
-  runAll();
+function tick() {
+  ['scalp', 'day', 'swing'].forEach(m => report(evaluate(m)));
 }
 
-module.exports = { cerebroCentral };
+async function main() {
+  log('demarrage');
+  log(`config: ${CONFIG_PATH}`);
+  priceStream.start();
+
+  log(`warmup ${WARMUP_MS / 1000}s`);
+  await new Promise(r => setTimeout(r, WARMUP_MS));
+
+  tick();
+
+  if (ONCE) {
+    priceStream.stop();
+    return;
+  }
+
+  setInterval(tick, EVAL_INTERVAL_MS);
+  log(`boucle active -- evaluation toutes les ${EVAL_INTERVAL_MS / 1000}s`);
+}
+
+function shutdown() {
+  log('arret');
+  try { priceStream.stop(); } catch (e) {}
+  process.exit(0);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+main();
+
+module.exports = { evaluate, checkVolumeBypass };
