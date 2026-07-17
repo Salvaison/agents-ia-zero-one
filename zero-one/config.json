@@ -1,15 +1,9 @@
 {
   "_comment": "Paramètres de stratégie centralisés — Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le détail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une décision non encore prise, pas une valeur par défaut de zéro.",
-  "_lastUpdated": "2026-07-16",
-  "confluenceThresholds": {
-    "scalp": null,
-    "day": null,
-    "swing": null,
-    "_status": "NON UTILISABLE EN L'ÉTAT — 5/9, 6/9, 7/9 étaient posés dans le SOP mais jamais validés contre des données réelles. Traité comme non tranché, au même titre que le barème volume, plutôt que comme une valeur décidée par défaut."
-  },
+  "_lastUpdated": "2026-07-17",
   "srZone": {
-    "toleranceUsd": 250,
-    "_note": "identique pour les 3 modules actuellement — pas encore vérifié si ça devrait varier par module"
+    "tolerancePercent": 0.39,
+    "_note": "Etait 250 $ en absolu. Converti le 17/07 : un ecart fixe en dollars ne survit pas a un doublement de BTC. 0,39 % = 250 $ au prix de reference ~64 500 $."
   },
   "fibonacci": {
     "tp1Ratio": 0.382,
@@ -22,16 +16,24 @@
   },
   "timeframes": {
     "scalp": {
-      "signal": "60m",
+      "signal": [
+        "3m",
+        "15m",
+        "1h"
+      ],
       "context": "4h",
-      "_status": "NON TRANCHÉ — candidat alternatif 15m/1h en attente de vérification visuelle sur le Mac"
+      "_note": "TROIS timeframes de signal, pas un. Une divergence sur UN SEUL suffit a atteindre le minimum (5 pts). Les 3 alignes montent le score, ils ne conditionnent pas l'ouverture. Corrige le 16/07 : l'ancien '60m' n'existait dans aucune cle de volume-analyzer.js — le module scalp ne pouvait pas fonctionner."
     },
     "day": {
-      "signal": "4h",
+      "signal": [
+        "4h"
+      ],
       "context": "1d"
     },
     "swing": {
-      "signal": "1d",
+      "signal": [
+        "1d"
+      ],
       "context": "1W"
     }
   },
@@ -59,24 +61,6 @@
     "_note": "TP2 se declenche a l'amorce du mouvement inverse detectee par le systeme, PAS au contact du 0.618. Les 10% ne sont pas un pari sur la queue de mouvement mais une assurance dans la mecanique de bascule long/short. Voir strategy-boono.md pour le detail.",
     "_status": "Cadre de depart, a valider en paper trading. La reserve structurelle notee le 12/07 etait fondee sur une analyse erronee (elle supposait une sortie en paliers sur un meme mouvement) et est levee."
   },
-  "volumeScoring": {
-    "momentum": {
-      "weight": null,
-      "forteThreshold": null,
-      "faibleThreshold": null
-    },
-    "engagement": {
-      "weight": null,
-      "forteThreshold": null,
-      "faibleThreshold": null
-    },
-    "trigger": {
-      "weight": null,
-      "forteThresholdPercent": null,
-      "faibleThresholdPercent": null
-    },
-    "_status": "NON TRANCHÉ — en cours de réflexion. Piste discutée (non validée) : 5 indicateurs bruts notés 1-5, max 25, poids visé équivalent à divergences+scénarios combinés (20-25)."
-  },
   "circuitBreakers": {
     "dynamicStopProfitPercent": 2,
     "sharpReversalThresholdPercent": null,
@@ -84,5 +68,124 @@
     "retracementInvalidationPercent": null,
     "volumeInvalidationThreshold": null,
     "_status": "dynamicStopProfitPercent est décidé (SOP). Les 4 autres n'ont aucune valeur numérique définie à ce jour."
+  },
+  "scoring": {
+    "_note": "Table v5.2. Lecture B pour scalp et day (somme des categories contre un seuil total). Lecture C pour swing (le scenario S/R est bloquant, le reste se somme).",
+    "divergence": {
+      "points": {
+        "1tf": 5,
+        "2tf": 10,
+        "3tf": 15,
+        "multidiv": 20
+      },
+      "min": {
+        "scalp": 5,
+        "day": 10,
+        "swing": 15
+      }
+    },
+    "rangeSR": {
+      "points": {
+        "non": 0,
+        "oui": 15,
+        "confluenceScenario": 25
+      },
+      "min": {
+        "scalp": 15,
+        "day": 15,
+        "swing": 25
+      },
+      "_note": "Pour le swing, 25 est BLOQUANT : pas de scenario, pas de trade."
+    },
+    "momentum": {
+      "range": [
+        1,
+        5
+      ],
+      "min": {
+        "scalp": 3,
+        "day": 3,
+        "swing": 2
+      },
+      "_note": "BW + LBW sur 3 bougies"
+    },
+    "moneyFlow": {
+      "range": [
+        1,
+        5
+      ],
+      "min": {
+        "scalp": 4,
+        "day": 3,
+        "swing": 2
+      }
+    },
+    "dbsi": {
+      "range": [
+        1,
+        5
+      ],
+      "min": {
+        "scalp": 4,
+        "day": 3,
+        "swing": 3
+      }
+    },
+    "trigger": {
+      "range": [
+        1,
+        4
+      ],
+      "min": {
+        "scalp": 3,
+        "day": 2,
+        "swing": 2
+      },
+      "_note": "Ne s'additionne PAS au score somme. Seuil propre, prend la main une fois la confluence validee : il juge QUAND entrer, pas SI trader."
+    },
+    "maTrend": {
+      "points": null,
+      "_status": "NON TRANCHE — filtre de direction, ne score pas. Logique en cascade : le prix touche le 20MA, soit rejet (resistance confirmee), soit traversee (resistance flip) et la question se repose sur la ligne suivante. Sensibilite a definir en % du prix."
+    }
+  },
+  "entryRules": {
+    "scalp": {
+      "reading": "B",
+      "totalThreshold": 30,
+      "_note": "Somme des minimums = 34. Abaisse a 30 pour rester permissif au depart : permet des scalps avec un score volume un peu plus bas. A resserrer en paper."
+    },
+    "day": {
+      "reading": "B",
+      "totalThreshold": 36,
+      "_status": "36 = somme mecanique des minimums, donc presque aussi strict qu'exiger toutes les conditions. A revoir — le scalp a ete abaisse, le day ne l'a pas ete."
+    },
+    "swing": {
+      "reading": "C",
+      "blocking": [
+        "rangeSR"
+      ],
+      "_note": "Le scenario S/R (25) est la seule condition bloquante. Le reste se somme."
+    }
+  },
+  "volumeBypass": {
+    "enabled": true,
+    "appliesTo": [
+      "scalp"
+    ],
+    "requires": {
+      "momentum": 4,
+      "moneyFlow": 4,
+      "dbsi": 4,
+      "trigger": 3
+    },
+    "mode": "simultaneous_minimums",
+    "_note": "QUATRE minimums simultanes, pas une somme. C'est la FORME de la configuration qui compte : 5+5+4+1=15 atteint le total mais avec un Trigger a 1, le prix ne bouge pas — le raisonnement tombe. Momentum/MF/DBSI hauts signalent une pression qui n'a pas encore atteint le prix ; le Trigger a 3 montre que ca commence a ceder. On entre dans cette fenetre, avant l'acceleration. Le Trigger n'est PAS contourne — il est une des quatre conditions. Formalise le 17/07 une regle qui existait qualitativement dans le SOP (Trigger B, 'sudden exceptional volume spike').",
+    "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite — on ne couvrira jamais toutes les exceptions de marche."
+  },
+  "signalTtl": {
+    "scalp": null,
+    "day": null,
+    "swing": null,
+    "_status": "NON TRANCHE — duree de validite d'une confluence avant peremption. Entre le moment ou le score est atteint et celui ou le Trigger trouve son entree, le marche peut s'inverser. Le DBSI a ete ecarte comme arbitre (semantique inconnue, rendu sur ~25 bougies seulement). Valeurs a fixer en paper."
   }
 }
