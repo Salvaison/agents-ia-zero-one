@@ -53,173 +53,144 @@ function readCSV(timeframe) {
 }
 
 // --- Group 1: Momentum (Blue Wave + Lt Blue Wave) — TradingView / MCB source ---
+function loadConfig() {
+  const configPath = path.join(__dirname, '../config.json');
+  return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+}
+
+function toScore(value, thresholds) {
+  const v = Math.abs(value);
+  if (v >= thresholds[3]) return 5;
+  if (v >= thresholds[2]) return 4;
+  if (v >= thresholds[1]) return 3;
+  if (v >= thresholds[0]) return 2;
+  return 1;
+}
+
 function analyzeMomentum(timeframe, lookback = 20) {
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
-
   const recent = data.slice(-lookback);
-  const bwSeries = recent.map(r => r.blue_wave);
-  const lbwSeries = recent.map(r => r.lt_blue_wave);
-
-  const avgBW = bwSeries.reduce((a, b) => a + b, 0) / bwSeries.length;
-  const avgLBW = lbwSeries.reduce((a, b) => a + b, 0) / lbwSeries.length;
-  const lastBW = bwSeries[bwSeries.length - 1];
-  const lastLBW = lbwSeries[lbwSeries.length - 1];
-
-  let force = 'normal';
-  const combined = lastBW + lastLBW;
-  const avgCombined = avgBW + avgLBW;
-  if (combined > avgCombined * 1.5) force = 'fort';
-  if (combined < avgCombined * 0.5) force = 'faible';
-
+  const last3 = recent.slice(-3);
+  const combinedLast3 = last3.map(r => Math.abs(r.blue_wave) + Math.abs(r.lt_blue_wave));
+  const avgCombined = combinedLast3.reduce((a, b) => a + b, 0) / combinedLast3.length;
+  const score = toScore(avgCombined, [10, 30, 50, 70]);
   return {
     group: 'momentum',
     timeframe,
-    lastBW: lastBW.toFixed(2),
-    lastLBW: lastLBW.toFixed(2),
-    force,
-    // TBD — scoring weight per group not yet defined (pending calibration decision)
-    score: null,
+    avgCombined: avgCombined.toFixed(2),
+    score,
   };
 }
 
-// --- Group 2: Engagement (Money Flow + DBSI) — TradingView / MCB source ---
-function analyzeEngagement(timeframe, lookback = 20) {
+function analyzeMoneyFlow(timeframe, lookback = 20) {
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
-
   const recent = data.slice(-lookback);
-  const mfSeries = recent.map(r => r.money_flow);
-  const dbsiTopSeries = recent.map(r => r.dbsi_top);
-  const dbsiBottomSeries = recent.map(r => r.dbsi_bottom);
-
-  const avgMF = mfSeries.reduce((a, b) => a + b, 0) / mfSeries.length;
-  const lastMF = mfSeries[mfSeries.length - 1];
-  const lastDbsiTop = dbsiTopSeries[dbsiTopSeries.length - 1];
-  const lastDbsiBottom = dbsiBottomSeries[dbsiBottomSeries.length - 1];
-
-  let force = 'normal';
-  if (lastMF > avgMF * 1.5) force = 'fort';
-  if (lastMF < avgMF * 0.5) force = 'faible';
-
+  const last3 = recent.slice(-3);
+  const avgMF = last3.reduce((a, r) => a + Math.abs(r.money_flow), 0) / last3.length;
+  const score = toScore(avgMF, [20, 40, 60, 80]);
   return {
-    group: 'engagement',
+    group: 'moneyFlow',
     timeframe,
-    lastMF: lastMF.toFixed(2),
-    dbsiTop: lastDbsiTop.toFixed(2),
-    dbsiBottom: lastDbsiBottom.toFixed(2),
-    force,
-    // TBD — scoring weight per group not yet defined (pending calibration decision)
-    score: null,
+    avgMF: avgMF.toFixed(2),
+    score,
   };
 }
-
-// --- Group 3: Trigger (Ticker) — MEXC source ---
-// DECIDED: reads from the existing price-stream.js EventEmitter connection
-// (wss://contract.mexc.com/edge) rather than opening a second MEXC websocket.
-// price-stream.js already provides tick-by-tick price data — duplicating the
-// connection here would waste a resource and risk MEXC rate limits.
-//
-// IMPORTANT — this only produces meaningful results if the process stays alive
-// long enough for tickBuffer to fill. This is the same constraint already flagged
-// for Day 46 (PM2/persistence): cerveau-central.js currently runs as a one-shot
-// script that exits immediately, which means the tick buffer never has time to
-// accumulate. This function will return 'insufficient_data' every time until
-// cerveau-central.js (and by extension this module) run as a persistent process.
+function analyzeDbsi(timeframe, lookback = 20) {
+  const data = readCSV(timeframe);
+  if (data.length < 3) return { status: 'insufficient_data', count: data.length };
+  const recent = data.slice(-lookback);
+  const last = recent[recent.length - 1];
+  if (isNaN(last.dbsi_top) || isNaN(last.dbsi_bottom)) {
+    return { status: 'insufficient_data', count: 0, note: 'dbsi manquant sur la derniere bougie' };
+  }
+  const diff = last.dbsi_top - last.dbsi_bottom;
+  const score = toScore(diff, [5, 10, 15, 20]);
+  return {
+    group: 'dbsi',
+    timeframe,
+    diff: diff.toFixed(2),
+    dbsiTop: last.dbsi_top.toFixed(2),
+    dbsiBottom: last.dbsi_bottom.toFixed(2),
+    score,
+  };
+}
 function analyzeTrigger() {
-  if (tickBuffer.length < 3) {
+  if (tickBuffer.length < 50) {
     return { group: 'trigger', status: 'insufficient_data', count: tickBuffer.length };
   }
 
-  const prices = tickBuffer.map(t => t.price);
-  const lastPrice = prices[prices.length - 1];
-  const firstPrice = prices[0];
-  const variation = ((lastPrice - firstPrice) / firstPrice) * 100;
+  const PCT_THRESHOLDS = [0.0001, 0.00033, 0.00066, 0.0018];
 
-  // Buy/sell pressure from tick side (1 = achat, 2 = vente) — raw count, not yet scored
-  const buys = tickBuffer.filter(t => t.side === 1).length;
-  const sells = tickBuffer.filter(t => t.side === 2).length;
+  const slices = [];
+  for (let i = 0; i < 4; i++) {
+    const start = tickBuffer.length - (4 - i) * 50;
+    const slice = tickBuffer.slice(Math.max(0, start), start + 50);
+    if (slice.length < 2) { slices.push(null); continue; }
+    const p0 = slice[0].price;
+    const p1 = slice[slice.length - 1].price;
+    const pctMove = (p1 - p0) / p0;
+    slices.push({ pctMove, score: toScore(pctMove, PCT_THRESHOLDS) });
+  }
 
-  let force = 'normal';
-  if (Math.abs(variation) > 0.5) force = 'fort'; // TBD — threshold not yet calibrated
-  if (Math.abs(variation) < 0.1) force = 'faible'; // TBD — threshold not yet calibrated
+  const validSlices = slices.filter(s => s !== null);
+  if (validSlices.length === 0) {
+    return { group: 'trigger', status: 'insufficient_data', count: tickBuffer.length };
+  }
+
+  const signs = validSlices.map(s => Math.sign(s.pctMove));
+  const sameSignCount = signs.filter(s => s === signs[0] && s !== 0).length;
+  const coherence = sameSignCount / validSlices.length;
+
+  const avgScore = validSlices.reduce((a, s) => a + s.score, 0) / validSlices.length;
+  const weightedScore = Math.round(avgScore * (0.5 + 0.5 * coherence));
+
+  const windowTicks = tickBuffer.slice(-200);
+  const cadence = windowTicks.length >= 2
+    ? (windowTicks.length / ((windowTicks[windowTicks.length - 1].ts - windowTicks[0].ts) / 1000 || 1)).toFixed(2)
+    : null;
+
+  const lastPrice = tickBuffer[tickBuffer.length - 1].price;
 
   return {
     group: 'trigger',
     lastPrice,
-    variationPct: variation.toFixed(3),
-    buyTickCount: buys,
-    sellTickCount: sells,
-    force,
-    // TBD — scoring weight per group not yet defined (pending calibration decision)
-    score: null,
+    slices: validSlices.map(s => ({ pctMove: (s.pctMove * 100).toFixed(4) + '%', score: s.score })),
+    coherence: coherence.toFixed(2),
+    cadenceTicksPerSec: cadence,
+    score: weightedScore,
   };
 }
-
-// Aggregates the 3 groups into a single volume assessment for a given timeframe.
-// Final scoring weights are TBD — this returns the 3 raw group results without
-// summing them into a single number, to avoid silently inventing a weighting scheme.
-//
-// PROPOSED (not validated — discussed 2026-07, pending paper trading calibration):
-//   - Each of the 5 raw indicators (Ticker, Blue Wave, Lt Blue Wave, DBSI, Money Flow)
-//     graded 1-5, combined score max 25.
-//   - Volume score intended to carry weight roughly equal to divergence + scenario
-//     scores combined (proposed range 20-25), such that a high volume score could
-//     partially compensate for a weaker scenario score.
-//   - This scheme is NOT implemented below. Do not treat it as decided — it is a
-//     candidate to test once real data accumulates.
 function analyzeVolume(timeframe) {
   const momentum = analyzeMomentum(timeframe);
-  const engagement = analyzeEngagement(timeframe);
+  const moneyFlow = analyzeMoneyFlow(timeframe);
+  const dbsi = analyzeDbsi(timeframe);
   const trigger = analyzeTrigger();
-
   return {
     timeframe,
     momentum,
-    engagement,
+    moneyFlow,
+    dbsi,
     trigger,
-    // TBD — no aggregate score computed yet; cerveau-central.js should not
-    // assume a combined score exists until the weighting scheme is decided.
-    aggregateScore: null,
   };
 }
 
 function runVolumeAnalyzer() {
-  console.log('\n=== Module Volume — 3 groupes (Momentum / Engagement / Trigger) ===\n');
+  console.log('=== Module Volume - Momentum / MoneyFlow / DBSI / Trigger ===');
   for (const tf of ['3m', '15m', '1h', '4h', '1d', '1w']) {
     const result = analyzeVolume(tf);
     console.log(`[${tf}]`);
-    if (result.momentum.status === 'insufficient_data') {
-      console.log(`  Momentum: données insuffisantes (${result.momentum.count} entrées)`);
-    } else {
-      console.log(`  Momentum: force=${result.momentum.force} | BW=${result.momentum.lastBW} LBW=${result.momentum.lastLBW} | score=TBD`);
+    for (const g of ['momentum', 'moneyFlow', 'dbsi']) {
+      const r = result[g];
+      console.log(r.status === 'insufficient_data'
+        ? `  ${g}: donnees insuffisantes (${r.count} entrees)`
+        : `  ${g}: score=${r.score}`);
     }
-    if (result.engagement.status === 'insufficient_data') {
-      console.log(`  Engagement: données insuffisantes (${result.engagement.count} entrées)`);
-    } else {
-      console.log(`  Engagement: force=${result.engagement.force} | MF=${result.engagement.lastMF} DBSI top/bottom=${result.engagement.dbsiTop}/${result.engagement.dbsiBottom} | score=TBD`);
-    }
-    if (result.trigger.status === 'insufficient_data') {
-      console.log(`  Trigger: en attente de données tick (price-stream.js) — ${result.trigger.count} ticks reçus`);
-    } else {
-      console.log(`  Trigger: force=${result.trigger.force} | prix=${result.trigger.lastPrice} | variation=${result.trigger.variationPct}% | score=TBD`);
-    }
-    console.log('');
+    console.log(result.trigger.status === 'insufficient_data'
+      ? `  trigger: ${result.trigger.count} ticks en buffer`
+      : `  trigger: score=${result.trigger.score} coherence=${result.trigger.coherence}`);
   }
 }
 
-module.exports = { analyzeVolume, analyzeMomentum, analyzeEngagement, analyzeTrigger };
-
-if (require.main === module) {
-  // NOTE: requiring this file now opens a live price-stream.js websocket connection
-  // (for the Trigger group). Running this standalone will keep the process alive
-  // rather than exit immediately like the old version did. This demo run waits
-  // 10s to let a few ticks arrive, prints one pass, then stops the stream and exits —
-  // useful for manual testing, not representative of production behavior (which
-  // needs the process to stay alive continuously — see Day 46 note above).
-  setTimeout(() => {
-    runVolumeAnalyzer();
-    priceStream.stop();
-    process.exit(0);
-  }, 10000);
-}
+module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeTrigger };
