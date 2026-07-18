@@ -37,6 +37,7 @@ const fs = require('fs');
 const path = require('path');
 const { analyzeVolume } = require('./volume-analyzer');
 const priceStream = require('./price-stream');
+const { scoreDivergence: computeDivergenceScore } = require('./divergence');
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CONFIG_PATH = path.join(__dirname, '../config.json');
@@ -94,7 +95,11 @@ function scoreTrigger(volResult) {
 
 
 function scoreDivergence(module) {
-  return null; // TODO: implémenter la détection — divergence entre 2 signaux consécutifs
+  const tf = config.timeframes[module];
+  if (!tf) return null;
+  const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
+  const result = computeDivergenceScore(signalTfs);
+  return result.score;
 }
 
 function scoreRangeSR(module) {
