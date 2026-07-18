@@ -1,6 +1,6 @@
 {
   "_comment": "Paramètres de stratégie centralisés — Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le détail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une décision non encore prise, pas une valeur par défaut de zéro.",
-  "_lastUpdated": "2026-07-17",
+  "_lastUpdated": "2026-07-18",
   "srZone": {
     "tolerancePercent": 0.39,
     "_note": "Etait 250 $ en absolu. Converti le 17/07 : un ecart fixe en dollars ne survit pas a un doublement de BTC. 0,39 % = 250 $ au prix de reference ~64 500 $."
@@ -62,12 +62,16 @@
     "_status": "Cadre de depart, a valider en paper trading. La reserve structurelle notee le 12/07 etait fondee sur une analyse erronee (elle supposait une sortie en paliers sur un meme mouvement) et est levee."
   },
   "circuitBreakers": {
-    "dynamicStopProfitPercent": 2,
+    "dynamicStopProfitPercent": {
+      "scalp": null,
+      "day": null,
+      "swing": null
+    },
     "sharpReversalThresholdPercent": null,
     "sharpReversalWindowSeconds": null,
     "retracementInvalidationPercent": null,
     "volumeInvalidationThreshold": null,
-    "_status": "dynamicStopProfitPercent est décidé (SOP). Les 4 autres n'ont aucune valeur numérique définie à ce jour."
+    "_status": "dynamicStopProfitPercent eclate par module le 18/07/2026 (un seul chiffre etait trop grossier : 2% de mouvement ne pese pas pareil a 20-75x qu'a 5-10x de levier). Toutes les valeurs sont null en attente de reflexion. Les 4 breakers restent a eprouver en paper trading -- possible redondance entre sharpReversal et retracementInvalidation, a observer plutot qu'a trancher aujourd'hui."
   },
   "scoring": {
     "_note": "Table v5.2. Lecture B pour scalp et day (somme des categories contre un seuil total). Lecture C pour swing (le scenario S/R est bloquant, le reste se somme).",
