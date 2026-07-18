@@ -1,5 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8'));
+}
+const _config = loadConfig();
 const priceStream = require('./price-stream');
 
 // --- Trigger group tick buffer ---
@@ -74,7 +79,7 @@ function analyzeMomentum(timeframe, lookback = 20) {
   const last3 = recent.slice(-3);
   const combinedLast3 = last3.map(r => Math.abs(r.blue_wave) + Math.abs(r.lt_blue_wave));
   const avgCombined = combinedLast3.reduce((a, b) => a + b, 0) / combinedLast3.length;
-  const score = toScore(avgCombined, [10, 30, 50, 70]);
+  const score = toScore(avgCombined, _config.scoring.momentum.thresholds.values);
   return {
     group: 'momentum',
     timeframe,
@@ -89,7 +94,7 @@ function analyzeMoneyFlow(timeframe, lookback = 20) {
   const recent = data.slice(-lookback);
   const last3 = recent.slice(-3);
   const avgMF = last3.reduce((a, r) => a + Math.abs(r.money_flow), 0) / last3.length;
-  const score = toScore(avgMF, [20, 40, 60, 80]);
+  const score = toScore(avgMF, _config.scoring.moneyFlow.thresholds.values);
   return {
     group: 'moneyFlow',
     timeframe,
@@ -106,7 +111,7 @@ function analyzeDbsi(timeframe, lookback = 20) {
     return { status: 'insufficient_data', count: 0, note: 'dbsi manquant sur la derniere bougie' };
   }
   const diff = last.dbsi_top - last.dbsi_bottom;
-  const score = toScore(diff, [5, 10, 15, 20]);
+  const score = toScore(diff, _config.scoring.dbsi.thresholds.values);
   return {
     group: 'dbsi',
     timeframe,
@@ -121,7 +126,7 @@ function analyzeTrigger() {
     return { group: 'trigger', status: 'insufficient_data', count: tickBuffer.length };
   }
 
-  const PCT_THRESHOLDS = [0.0001, 0.00033, 0.00066, 0.0018];
+  const PCT_THRESHOLDS = _config.scoring.trigger.thresholds.values;
 
   const slices = [];
   for (let i = 0; i < 4; i++) {

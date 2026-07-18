@@ -111,7 +111,17 @@
         "day": 3,
         "swing": 2
       },
-      "_note": "BW + LBW sur 3 bougies"
+      "_note": "BW + LBW sur 3 bougies",
+      "thresholds": {
+        "values": [
+          10,
+          30,
+          50,
+          70
+        ],
+        "unit": "amplitude combinee BW+LBW (valeur absolue, moyenne des 3 dernieres bougies)",
+        "_note": "seuils bas de chaque palier -- en dessous de 10 = note 1, >=70 = note 5"
+      }
     },
     "moneyFlow": {
       "range": [
@@ -122,6 +132,15 @@
         "scalp": 4,
         "day": 3,
         "swing": 2
+      },
+      "thresholds": {
+        "values": [
+          20,
+          40,
+          60,
+          80
+        ],
+        "unit": "valeur absolue du Money Flow, moyenne des 3 dernieres bougies"
       }
     },
     "dbsi": {
@@ -133,6 +152,15 @@
         "scalp": 4,
         "day": 3,
         "swing": 3
+      },
+      "thresholds": {
+        "values": [
+          5,
+          10,
+          15,
+          20
+        ],
+        "unit": "ecart absolu |dbsi_top - dbsi_bottom| de la derniere bougie"
       }
     },
     "trigger": {
@@ -145,7 +173,17 @@
         "day": 2,
         "swing": 2
       },
-      "_note": "Ne s'additionne PAS au score somme. Seuil propre, prend la main une fois la confluence validee : il juge QUAND entrer, pas SI trader."
+      "_note": "Ne s'additionne PAS au score somme. Seuil propre, prend la main une fois la confluence validee : il juge QUAND entrer, pas SI trader.",
+      "thresholds": {
+        "values": [
+          0.0001,
+          0.00033,
+          0.00066,
+          0.0018
+        ],
+        "unit": "mouvement de prix en % sur une tranche de 50 ticks",
+        "_note": "divise par 3 par rapport a l'estimation d'origine (fenetre 50 ticks ~5s, pas 30s)"
+      }
     },
     "maTrend": {
       "points": null,
@@ -191,5 +229,17 @@
     "day": null,
     "swing": null,
     "_status": "NON TRANCHE — duree de validite d'une confluence avant peremption. Entre le moment ou le score est atteint et celui ou le Trigger trouve son entree, le marche peut s'inverser. Le DBSI a ete ecarte comme arbitre (semantique inconnue, rendu sur ~25 bougies seulement). Valeurs a fixer en paper."
+  },
+  "divergence": {
+    "maxChainHours": {
+      "3m": 48,
+      "15m": 48,
+      "1h": 48,
+      "4h": 96,
+      "1d": 240,
+      "1w": 720
+    },
+    "waveScale": 200,
+    "_note": "Duree max d'une chaine de divergence avant expiration (heures), et echelle de normalisation de la Blue Wave (-100/+100). Etaient en dur dans divergence.js, remontes ici le 18/07/2026."
   }
 }

@@ -28,6 +28,11 @@
 const fs = require('fs');
 const path = require('path');
 
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../config.json'), 'utf8'));
+}
+const _config = loadConfig();
+
 const CSV_FILES = {
   '3m':  path.join(__dirname, '../../data/mcb-live/mcb_3m.csv'),
   '15m': path.join(__dirname, '../../data/mcb-live/mcb_15m.csv'),
@@ -37,7 +42,7 @@ const CSV_FILES = {
   '1w':  path.join(__dirname, '../../data/mcb-live/mcb_1w.csv'),
 };
 
-const WAVE_SCALE = 200;
+const WAVE_SCALE = _config.divergence.waveScale;
 
 function readSignals(timeframe) {
   const filePath = CSV_FILES[timeframe];
@@ -138,9 +143,7 @@ module.exports = { detectDivergenceChains, readSignals, diverges, scoreDivergenc
 // le nombre de signaux qu'elle contient. Valeur de depart (18/07/2026) :
 // 48h pour les TF rapides, a affiner en paper trading. Day/swing pas encore
 // definis -- fallback large en attendant.
-const MAX_CHAIN_HOURS = {
-  '3m': 48, '15m': 48, '1h': 48, '4h': 96, '1d': 240, '1w': 720,
-};
+const MAX_CHAIN_HOURS = _config.divergence.maxChainHours;
 
 function isExpired(chainPoints, timeframe) {
   if (chainPoints.length < 2) return false;
