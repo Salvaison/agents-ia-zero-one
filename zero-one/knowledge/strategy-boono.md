@@ -259,3 +259,60 @@ Non résolu à ce jour :
 - Le cas symétrique (survente haute / point rouge) n'a jamais été observé en live.
 - Les gros points verts ne sont visibles que dans la fenêtre de rendu du chart :
   une bougie récupérée rétroactivement peut arriver sans ses valeurs DBSI.
+
+## MA200 (DBSI) comme source S/R — établi le 20/07/2026
+
+Le DBSI (indicateur "MC DBSI") porte une moyenne mobile longue integree,
+nommee "Long Term Trend" dans ses parametres (periode 200). Confirme par
+sniff live et par les parametres de l'indicateur sur TradingView.
+
+**Localisation dans les donnees :** `v[1]` de la serie `S8XNwk.st` (la meme
+serie que les labels top/bottom du DBSI, mais un champ different, jamais lu
+jusqu'ici par les collecteurs). Se met a jour en continu, comme un prix.
+
+**Role :** ce n'est PAS un score separe "MA/Trend". La MA200 est une source
+de niveau S/R au meme titre que DS/DR/WS/WR/MS/MR — sa touche score dans
+`scoring.rangeSR`, pas dans un module a part.
+
+**Une seule ligne suffit.** Contrairement a une cascade EMA 8/13/21/55 ou
+SMA 15/30/100/200 evoquee par ailleurs (Jayson Casper), on a choisi de ne
+pas construire de cascade multi-lignes : le MA est un indicateur tardif,
+utile en confirmation mais peu reactif — une seule ligne de contexte (200)
+suffit a son role ici.
+
+### Mecanique touch / reject / retest
+
+Regle observee, PAS une loi universelle — une heuristique de marche :
+
+1. Le prix touche un niveau S/R (y compris la MA200).
+2. Deux issues possibles : rejet (le prix repart dans son sens d'origine,
+   le niveau agit comme support/resistance confirme) ou traversee ("flip",
+   le niveau change de role).
+3. **La confirmation fiable vient du RETEST**, pas du premier contact : le
+   prix revient tester le niveau une seconde fois, et sa reaction a ce
+   retest est le signal d'entree solide.
+4. Si le retest ne se produit pas immediatement : "wait for further
+   confirmation" — ne pas forcer une lecture, attendre le signal suivant.
+
+Cette regle s'applique a tous les niveaux S/R, pas seulement la MA200.
+Elle fera probablement l'objet d'un skill dedie plus tard (patterns de
+reaction du prix aux niveaux), une fois l'interface S/R construite.
+
+### Barème progressif (config.json : scoring.rangeSR.points)
+
+| Etat | Points |
+|---|---|
+| Hors zone | 0 |
+| Touche simple (prix au niveau, rien confirme) | 10 |
+| Retest confirme (reaction attendue au second passage) | 15 |
+| Confluence avec un scenario etabli | 25 |
+
+La touche simple donne deja 10 points exploitables immediatement — pas de
+blocage `null` en attendant une confirmation qui peut ne jamais arriver.
+
+### Circuit breaker envisage (piste, non implementee)
+
+`circuitBreakers.retracementInvalidationPercent` est reste `null` faute de
+critere objectif. La MA200 pourrait le fournir : si le prix retraverse la
+MA200 dans le sens oppose a une position ouverte, ce serait un signal
+d'invalidation/sortie a envisager. Non code, a explorer en paper trading.
