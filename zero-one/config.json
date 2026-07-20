@@ -3,7 +3,9 @@
   "_lastUpdated": "2026-07-20",
   "srZone": {
     "tolerancePercent": 0.39,
-    "_note": "Etait 250 $ en absolu. Converti le 17/07 : un ecart fixe en dollars ne survit pas a un doublement de BTC. 0,39 % = 250 $ au prix de reference ~64 500 $."
+    "_note": "Etait 250 $ en absolu. Converti le 17/07 : un ecart fixe en dollars ne survit pas a un doublement de BTC. 0,39 % = 250 $ au prix de reference ~64 500 $. Ajout du 20/07/2026 : ma200TolerancePercent (0.1%) est distinct et plus strict que tolerancePercent (0.39%) -- la MA200 bouge en continu, une tolerance identique aux niveaux S/R fixes la ferait declencher trop souvent. ma200MinDeviationPercent (0.2%) : seuil d'eloignement minimum entre une touche et un retest pour distinguer un vrai aller-retour du bruit autour de la ligne. Valeur de depart, a ajuster en paper trading.",
+    "ma200TolerancePercent": 0.1,
+    "ma200MinDeviationPercent": 0.2
   },
   "fibonacci": {
     "tp1Ratio": 0.382,
