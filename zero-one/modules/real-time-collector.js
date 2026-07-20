@@ -184,7 +184,7 @@ writeFileSync(PID_FILE, String(process.pid), 'utf8');
 process.on('exit', () => { try { unlinkSync(PID_FILE); } catch {} });
 
 // ── CSV ───────────────────────────────────────────────────────────────────────
-const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom\n';
+const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200\n';
 
 function initCsv() {
   if (!existsSync(CSV_PATH)) {
@@ -208,7 +208,7 @@ function fmt(v) {
 
 function writeClose(barTs, v, dbsi, ohlc) {
   const isoTs = new Date(barTs * 1000).toISOString();
-  const row   = [isoTs, fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close), fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]), fmt(dbsi?.top), fmt(dbsi?.bottom)].join(",") + "\n";
+  const row   = [isoTs, fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close), fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]), fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200)].join(",") + "\n";
   // Secondary dedup guard: skip if last CSV line already has this timestamp.
   try {
     const existing = readFileSync(CSV_PATH, 'utf8');
@@ -287,6 +287,7 @@ class CloseDetector {
     this.lastCloseAt    = Date.now();
     this.dbsiIndexToTs  = new Map(); // DBSI study bar index (i) → bar timestamp
     this.dbsiCache      = new Map(); // barTs → { top, bottom }
+    this.dbsiMaCache    = new Map(); // barTs → MA200 (v[1] de la serie DBSI, "Long Term Trend")
     this.ohlcCache      = new Map(); // barTs → { open, high, low, close }
   }
 
@@ -299,6 +300,7 @@ class CloseDetector {
       for (const bar of dbsiSeries.st) {
         if (typeof bar?.i !== 'number' || typeof bar?.v?.[0] !== 'number') continue;
         this.dbsiIndexToTs.set(bar.i, bar.v[0]);
+        if (typeof bar.v[1] === 'number') this.dbsiMaCache.set(bar.v[0], bar.v[1]);
       }
       if (this.dbsiIndexToTs.size > 200) {
         const sorted = [...this.dbsiIndexToTs.entries()].sort((a, b) => a[0] - b[0]);
@@ -335,6 +337,10 @@ class CloseDetector {
     if (this.dbsiCache.size > 40) {
       const sorted = [...this.dbsiCache.keys()].sort((a, b) => a - b);
       for (let i = 0; i < sorted.length - 40; i++) this.dbsiCache.delete(sorted[i]);
+    }
+    if (this.dbsiMaCache.size > 40) {
+      const sortedMa = [...this.dbsiMaCache.keys()].sort((a, b) => a - b);
+      for (let i = 0; i < sortedMa.length - 40; i++) this.dbsiMaCache.delete(sortedMa[i]);
     }
   }
 
@@ -374,7 +380,9 @@ class CloseDetector {
       if (!this.pendingFlush.has(barTs)) return; // was cancelled by reset()
       this.pendingFlush.delete(barTs);
       this.lastCloseAt = Date.now();
-      const dbsi = this.dbsiCache.get(barTs);
+      const dbsi = this.dbsiCache.get(barTs) ?? {};
+      dbsi.ma200 = this.dbsiMaCache.get(barTs);
+      this.dbsiMaCache.delete(barTs);
       this.dbsiCache.delete(barTs);
       const ohlc = this.ohlcCache.get(barTs);
       this.ohlcCache.delete(barTs);
@@ -396,6 +404,7 @@ class CloseDetector {
     this.lastCloseAt = Date.now();
     this.dbsiIndexToTs.clear();
     this.dbsiCache.clear();
+    this.dbsiMaCache.clear();
     this.ohlcCache.clear();
   }
 
