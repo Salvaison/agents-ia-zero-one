@@ -38,6 +38,7 @@ const path = require('path');
 const { analyzeVolume } = require('./volume-analyzer');
 const priceStream = require('./price-stream');
 const { scoreDivergence: computeDivergenceScore } = require('./divergence');
+const { scoreRangeSR: computeRangeSRScore } = require('./sr-detector');
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CONFIG_PATH = path.join(__dirname, '../config.json');
@@ -103,7 +104,12 @@ function scoreDivergence(module) {
 }
 
 function scoreRangeSR(module) {
-  return null; // TODO: dépend de l'interface S/R, non construite
+  const tf = config.timeframes[module];
+  if (!tf) return null;
+  const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
+  const mainTf = signalTfs[0];
+  const result = computeRangeSRScore(module, mainTf);
+  return result.score;
 }
 
 function evalMaTrend(module) {
