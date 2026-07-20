@@ -54,7 +54,8 @@ function readSignals(timeframe) {
     const close = parseFloat(parts[4]);
     const blue_wave = parseFloat(parts[6]);
     const buy = parseFloat(parts[8]);
-    return { timestamp, close, blue_wave, buy };
+    const ma200 = parseFloat(parts[12]);
+    return { timestamp, close, blue_wave, buy, ma200 };
   }).filter(r => !isNaN(r.close) && !isNaN(r.blue_wave));
   return rows.filter(r => !isNaN(r.buy) && r.buy !== 0);
 }

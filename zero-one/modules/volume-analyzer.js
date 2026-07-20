@@ -39,7 +39,7 @@ function readCSV(timeframe) {
 
   const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
   return lines.slice(1).map(line => {
-    const [timestamp, open, high, low, close, lt_blue_wave, blue_wave, money_flow, buy, sell, dbsi_top, dbsi_bottom] = line.split(',');
+    const [timestamp, open, high, low, close, lt_blue_wave, blue_wave, money_flow, buy, sell, dbsi_top, dbsi_bottom, ma200] = line.split(',');
     return {
       timestamp,
       open: parseFloat(open),
@@ -53,6 +53,7 @@ function readCSV(timeframe) {
       sell: parseFloat(sell),
       dbsi_top: parseFloat(dbsi_top),
       dbsi_bottom: parseFloat(dbsi_bottom),
+      ma200: parseFloat(ma200),
     };
   }).filter(r => !isNaN(r.close));
 }
