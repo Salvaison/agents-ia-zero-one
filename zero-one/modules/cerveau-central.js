@@ -235,7 +235,10 @@ function report(r) {
 }
 
 function tick() {
-  ['scalp', 'day', 'swing'].forEach(m => report(evaluate(m)));
+  const results = ['scalp', 'day', 'swing'].map(m => evaluate(m));
+  results.forEach(report);
+  const snapshot = { updatedAt: new Date().toISOString(), results };
+  fs.writeFileSync(path.join(__dirname, '../data/latest-evaluation.json'), JSON.stringify(snapshot, null, 2));
 }
 
 async function main() {
