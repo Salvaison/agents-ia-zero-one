@@ -287,6 +287,12 @@ app.get('/', requireAuth, (req, res) => {
       .ledger-block .ledger-row:last-child { border-bottom: none; }
       .ledger-block .ledger-row .ledger-del { display: none; }
       .ledger-block-del { position: absolute; top: 4px; right: 4px; background: none; border: none; color: var(--faint); font-size: 14px; cursor: pointer; padding: 2px 5px; line-height: 1; }
+      .fib-info-btn { position: absolute; top: 4px; right: 24px; background: var(--accent); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: 700; cursor: pointer; line-height: 16px; padding: 0; }
+      .fib-info-panel { display: none; margin-top: 6px; padding: 6px 8px; background: #eef2ff; border: 1px solid #c7d7fe; border-radius: 6px; font-size: 11px; font-family: "SF Mono", "Menlo", "Consolas", monospace; }
+      .fib-info-panel.open { display: block; }
+      .fib-info-panel div { display: flex; justify-content: space-between; padding: 1px 0; }
+      .fib-info-panel .fib-ratio { color: var(--muted); }
+
       .ledger-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
       .ledger-row:last-child { border-bottom: none; }
       .ledger-badge { font-family: "SF Mono", "Menlo", "Consolas", monospace; font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; width: 80px; text-align: center; }
@@ -433,6 +439,7 @@ app.get('/', requireAuth, (req, res) => {
           <div class="token-group">
             <span class="token" data-cond="MA200">MA200</span>
             <span class="token" data-cond="Momentum">Momentum</span>
+            <span class="token" data-cond="VWAP">VWAP</span>
             <span class="token" data-cond="MoneyFlow">MoneyFlow</span>
             <span class="token" data-cond="DBSI">DBSI</span>
             <span class="token" data-cond="Trigger">Trigger</span>
@@ -649,8 +656,24 @@ function renderLedger() {
     if (u.type === 'group') {
       const groupEntries = u.idx.map(idx => ({ ...entries[idx], idx }));
       groupEntries.sort((a, b) => (domainOrder[a.token] ?? 99) - (domainOrder[b.token] ?? 99));
+      const isFibGroup = groupEntries.some(ge => ge.token === 'fib0') && groupEntries.some(ge => ge.token === 'fib1');
+      let fibInfoHtml = '';
+      if (isFibGroup) {
+        const fib0 = groupEntries.find(ge => ge.token === 'fib0').price;
+        const fib1 = groupEntries.find(ge => ge.token === 'fib1').price;
+        // Miroir de config.json fibonacci.tp1Ratio/tp2Ratio -- pas synchronise automatiquement,
+        // a mettre a jour manuellement ici si ces valeurs changent dans config.json.
+        const ratios = [0, 0.382, 0.618, 0.65, 1];
+        const rows = ratios.map(r => {
+          const p = fib0 + (fib1 - fib0) * r;
+          return '<div><span class="fib-ratio">' + r + '</span><span>' + p.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '</span></div>';
+        }).join('');
+        fibInfoHtml = '<button class="fib-info-btn" data-fib-toggle="' + u.groupId + '" aria-label="Voir les niveaux Fibonacci">i</button>' +
+          '<div class="fib-info-panel" id="fib-info-' + u.groupId + '">' + rows + '</div>';
+      }
       html += '<div class="ledger-block">' +
         '<button class="ledger-block-del" data-group="' + u.groupId + '" aria-label="Supprimer le groupe">&times;</button>' +
+        fibInfoHtml +
         groupEntries.map(ge => renderRow(ge, ge.idx)).join('') + '</div>';
     } else { html += renderRow(entries[u.idx], u.idx); }
   });
@@ -666,6 +689,12 @@ function renderLedger() {
       const gid = parseInt(btn.dataset.group);
       for (let i = entries.length - 1; i >= 0; i--) { if (entries[i].groupId === gid) entries.splice(i, 1); }
       renderLedger(); updateScenarioOptions();
+    });
+  });
+  ledger.querySelectorAll('.fib-info-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = document.getElementById('fib-info-' + btn.dataset.fibToggle);
+      if (panel) panel.classList.toggle('open');
     });
   });
 }
