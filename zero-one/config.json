@@ -190,8 +190,9 @@
       }
     },
     "maTrend": {
-      "points": null,
-      "_status": "NON TRANCHE — filtre de direction, ne score pas. Logique en cascade : le prix touche le 20MA, soit rejet (resistance confirmee), soit traversee (resistance flip) et la question se repose sur la ligne suivante. Sensibilite a definir en % du prix."
+      "coherenceThreshold": 0.75,
+      "cadenceScoreThreshold": 3,
+      "_note": "MA/Tendance branche le 24/07/2026 sur Trigger (coherence + cadenceScore) plutot que sur MA200. Seuils PROVISOIRES -- a calibrer. haussier/baissier si coherence>=coherenceThreshold ET cadenceScore>=cadenceScoreThreshold, sinon neutre."
     },
     "vwap": {
       "thresholds": {

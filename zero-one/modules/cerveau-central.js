@@ -112,8 +112,20 @@ function scoreRangeSR(module) {
   return result.score;
 }
 
-function evalMaTrend(module) {
-  return null; // TODO: filtre de direction, ma-tendance.js jamais revu
+function evalMaTrend(module, trig) {
+  // Branche le 24/07/2026 sur Trigger (coherence + cadenceScore) plutot que MA200.
+  // Voir config.json scoring.maTrend._note. Seuils PROVISOIRES.
+  if (!trig || trig.status === 'insufficient_data' || trig.cadenceScore == null) return null;
+  const cfg = config.scoring.maTrend;
+  const coherence = parseFloat(trig.coherence);
+  const cadenceScore = trig.cadenceScore;
+  if (coherence < cfg.coherenceThreshold || cadenceScore < cfg.cadenceScoreThreshold) {
+    return 'neutre';
+  }
+  const signs = trig.slices.map(s => Math.sign(parseFloat(s.pctMove)));
+  const upCount = signs.filter(s => s > 0).length;
+  const downCount = signs.filter(s => s < 0).length;
+  return upCount > downCount ? 'haussier' : (downCount > upCount ? 'baissier' : 'neutre');
 }
 
 // ── Bypass volume ─────────────────────────────────────────────────────────────
@@ -178,7 +190,7 @@ function evaluate(module) {
   details.push((trig && trig.status === 'insufficient_data')
     ? `Trigger: ${trig.count} ticks en buffer (min ${MIN_TICKS})`
     : `Trigger: score=${trig && trig.score} coherence=${trig && trig.coherence}`);
-  const ma = evalMaTrend(module);
+  const ma = evalMaTrend(module, trig);
   details.push(`MA/Tendance: ${ma === null ? 'non branche' : ma}`);
 const rules = config.entryRules[module];
   const notScored = Object.keys(scores).filter(k => scores[k] === null);

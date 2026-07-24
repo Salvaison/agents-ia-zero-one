@@ -827,6 +827,9 @@ const FIELDS = [
   { group: 'Unite de score', key: 'scoring.moneyFlow.thresholds.values.0', label: 'MoneyFlow seuil 1', unit: '', info: 'Seuil bas de palier pour la notation MoneyFlow (1-5)' },
   { group: 'Unite de score', key: 'scoring.dbsi.thresholds.values.0', label: 'DBSI seuil 1', unit: '', info: 'Seuil bas de palier pour la notation DBSI (1-5)' },
   { group: 'Unite de score', key: 'scoring.trigger.thresholds.values.0', label: 'Trigger seuil 1', unit: '%', info: 'Seuil bas de palier pour la notation Trigger (1-4)' },
+  { group: 'Unite de score', key: 'scoring.vwap.thresholds.values.0', label: 'VWAP seuil 1', unit: '', info: 'Seuil bas de palier pour la force de retournement VWAP (LBW-BW)' },
+  { group: 'Unite de score', key: 'scoring.vwap.nearZeroThreshold', label: 'VWAP proximite zero', unit: '', info: 'Seuil en dessous duquel le VWAP est considere proche de zero (retournement en cours)' },
+  { group: 'Unite de score', key: 'scoring.cadence.thresholds.values.0', label: 'Cadence seuil 1', unit: 'ticks/s', info: 'Seuil bas de palier pour la densite temporelle du Trigger' },
   { group: 'Unite de score', key: 'divergence.maxChainHours.3m', label: 'Expiration divergence 3m', unit: 'h', info: 'Duree max d une chaine de divergence avant expiration (3m)' },
 
   { group: 'Seuils par module', key: 'entryRules.scalp.totalThreshold', label: 'Seuil total scalp', unit: 'pts', info: 'Score total minimum pour valider un scalp' },
