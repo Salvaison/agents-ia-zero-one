@@ -74,17 +74,19 @@ function toScore(value, thresholds) {
 }
 
 function analyzeMomentum(timeframe, lookback = 20) {
+  // Modifie le 24/07/2026 : LBW seul (velocite/amplitude immediate).
+  // Auparavant |BW|+|LBW| combines -- la moyenne noyait le signal de
+  // convergence que le VWAP (LBW-BW) capture desormais separement.
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
   const recent = data.slice(-lookback);
   const last3 = recent.slice(-3);
-  const combinedLast3 = last3.map(r => Math.abs(r.blue_wave) + Math.abs(r.lt_blue_wave));
-  const avgCombined = combinedLast3.reduce((a, b) => a + b, 0) / combinedLast3.length;
-  const score = toScore(avgCombined, _config.scoring.momentum.thresholds.values);
+  const avgLbw = last3.reduce((a, r) => a + Math.abs(r.lt_blue_wave), 0) / last3.length;
+  const score = toScore(avgLbw, _config.scoring.momentum.thresholds.values);
   return {
     group: 'momentum',
     timeframe,
-    avgCombined: avgCombined.toFixed(2),
+    avgLbw: avgLbw.toFixed(2),
     score,
   };
 }
@@ -122,6 +124,39 @@ function analyzeDbsi(timeframe, lookback = 20) {
     score,
   };
 }
+function analyzeVwap(timeframe, lookback = 20) {
+  // VWAP = LBW - BW, confirme le 24/07/2026 (voir config.json scoring.vwap._note).
+  // Proche de zero = retournement en cours. L'amplitude de la traversee
+  // (ecart entre les deux valeurs qui encadrent le passage par zero) mesure
+  // la force du retournement.
+  const data = readCSV(timeframe);
+  if (data.length < 2) return { status: 'insufficient_data', count: data.length };
+  const recent = data.slice(-lookback);
+  const withVwap = recent.map(r => ({ ts: r.timestamp, vwap: r.lt_blue_wave - r.blue_wave }));
+  const last = withVwap[withVwap.length - 1];
+  const prev = withVwap[withVwap.length - 2];
+
+  const crossedZero = Math.sign(last.vwap) !== Math.sign(prev.vwap) && prev.vwap !== 0;
+  const reversalMagnitude = crossedZero ? Math.abs(last.vwap - prev.vwap) : null;
+  const nearZero = Math.abs(last.vwap) < _config.scoring.vwap.nearZeroThreshold;
+
+  const score = toScore(
+    crossedZero ? reversalMagnitude : Math.abs(last.vwap),
+    _config.scoring.vwap.thresholds.values
+  );
+
+  return {
+    group: 'vwap',
+    timeframe,
+    current: last.vwap.toFixed(2),
+    previous: prev.vwap.toFixed(2),
+    crossedZero,
+    reversalMagnitude: reversalMagnitude !== null ? reversalMagnitude.toFixed(2) : null,
+    nearZero,
+    score,
+  };
+}
+
 function analyzeTrigger() {
   if (tickBuffer.length < 50) {
     return { group: 'trigger', status: 'insufficient_data', count: tickBuffer.length };
@@ -172,12 +207,14 @@ function analyzeVolume(timeframe) {
   const momentum = analyzeMomentum(timeframe);
   const moneyFlow = analyzeMoneyFlow(timeframe);
   const dbsi = analyzeDbsi(timeframe);
+  const vwap = analyzeVwap(timeframe);
   const trigger = analyzeTrigger();
   return {
     timeframe,
     momentum,
     moneyFlow,
     dbsi,
+    vwap,
     trigger,
   };
 }
@@ -187,7 +224,7 @@ function runVolumeAnalyzer() {
   for (const tf of ['3m', '15m', '1h', '4h', '1d', '1w']) {
     const result = analyzeVolume(tf);
     console.log(`[${tf}]`);
-    for (const g of ['momentum', 'moneyFlow', 'dbsi']) {
+    for (const g of ['momentum', 'moneyFlow', 'dbsi', 'vwap']) {
       const r = result[g];
       console.log(r.status === 'insufficient_data'
         ? `  ${g}: donnees insuffisantes (${r.count} entrees)`
@@ -199,4 +236,4 @@ function runVolumeAnalyzer() {
   }
 }
 
-module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeTrigger };
+module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeVwap, analyzeTrigger };

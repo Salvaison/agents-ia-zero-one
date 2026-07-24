@@ -1,6 +1,6 @@
 {
   "_comment": "Paramètres de stratégie centralisés — Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le détail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une décision non encore prise, pas une valeur par défaut de zéro.",
-  "_lastUpdated": "2026-07-20",
+  "_lastUpdated": "2026-07-24",
   "srZone": {
     "tolerancePercent": 0.39,
     "_note": "Etait 250 $ en absolu. Converti le 17/07 : un ecart fixe en dollars ne survit pas a un doublement de BTC. 0,39 % = 250 $ au prix de reference ~64 500 $. Ajout du 20/07/2026 : ma200TolerancePercent (0.1%) est distinct et plus strict que tolerancePercent (0.39%) -- la MA200 bouge en continu, une tolerance identique aux niveaux S/R fixes la ferait declencher trop souvent. ma200MinDeviationPercent (0.2%) : seuil d'eloignement minimum entre une touche et un retest pour distinguer un vrai aller-retour du bruit autour de la ligne. Valeur de depart, a ajuster en paper trading.",
@@ -115,7 +115,7 @@
         "day": 3,
         "swing": 2
       },
-      "_note": "BW + LBW sur 3 bougies",
+      "_note": "Modifie le 24/07/2026 : mesure desormais LBW seul (velocite/amplitude immediate), et non plus |BW|+|LBW| combines -- la moyenne noyait le signal de convergence detecte par le VWAP. Seuils existants conserves tels quels en attendant recalibration (prochain chantier).",
       "thresholds": {
         "values": [
           10,
@@ -192,6 +192,18 @@
     "maTrend": {
       "points": null,
       "_status": "NON TRANCHE — filtre de direction, ne score pas. Logique en cascade : le prix touche le 20MA, soit rejet (resistance confirmee), soit traversee (resistance flip) et la question se repose sur la ligne suivante. Sensibilite a definir en % du prix."
+    },
+    "vwap": {
+      "thresholds": {
+        "values": [
+          3,
+          6,
+          12,
+          20
+        ]
+      },
+      "nearZeroThreshold": 3,
+      "_note": "VWAP = LBW - BW, confirme le 24/07/2026 par comparaison chiffre-pour-chiffre avec l'affichage MarketCipher (ecart LBW/BW < 0.05). Proximite de zero (< nearZeroThreshold) = signal de retournement en cours. L'amplitude de la traversee (difference entre les deux valeurs qui encadrent le passage par zero) mesure la force du retournement, sur une echelle observee entre ~2 et ~20. Seuils PROVISOIRES, a calibrer par observation lors du prochain chantier de reequilibrage des scores."
     }
   },
   "entryRules": {
