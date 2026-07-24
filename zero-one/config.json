@@ -204,6 +204,17 @@
       },
       "nearZeroThreshold": 3,
       "_note": "VWAP = LBW - BW, confirme le 24/07/2026 par comparaison chiffre-pour-chiffre avec l'affichage MarketCipher (ecart LBW/BW < 0.05). Proximite de zero (< nearZeroThreshold) = signal de retournement en cours. L'amplitude de la traversee (difference entre les deux valeurs qui encadrent le passage par zero) mesure la force du retournement, sur une echelle observee entre ~2 et ~20. Seuils PROVISOIRES, a calibrer par observation lors du prochain chantier de reequilibrage des scores."
+    },
+    "cadence": {
+      "thresholds": {
+        "values": [
+          0.5,
+          1,
+          2,
+          4
+        ]
+      },
+      "_note": "Cadence = ticks/seconde sur les 200 derniers ticks du Trigger. Seuils PROVISOIRES (aucune observation reelle encore) -- a calibrer. Ajoute le 24/07/2026 pour exposer la densite temporelle comme condition de scenario, distincte du score Trigger lui-meme."
     }
   },
   "entryRules": {

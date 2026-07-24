@@ -443,6 +443,7 @@ app.get('/', requireAuth, (req, res) => {
             <span class="token" data-cond="MoneyFlow">MoneyFlow</span>
             <span class="token" data-cond="DBSI">DBSI</span>
             <span class="token" data-cond="Trigger">Trigger</span>
+            <span class="token" data-cond="Cadence">Cadence</span>
           </div>
 
           <div class="scenario-composer">

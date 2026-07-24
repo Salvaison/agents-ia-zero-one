@@ -191,6 +191,11 @@ function analyzeTrigger() {
   const cadence = windowTicks.length >= 2
     ? (windowTicks.length / ((windowTicks[windowTicks.length - 1].ts - windowTicks[0].ts) / 1000 || 1)).toFixed(2)
     : null;
+  // Cadence exposee comme condition de scenario a part entiere (24/07/2026).
+  // Seuils provisoires dans config.json scoring.cadence -- voir _note.
+  const cadenceScore = cadence !== null
+    ? toScore(parseFloat(cadence), _config.scoring.cadence.thresholds.values)
+    : null;
 
   const lastPrice = tickBuffer[tickBuffer.length - 1].price;
 
@@ -200,6 +205,7 @@ function analyzeTrigger() {
     slices: validSlices.map(s => ({ pctMove: (s.pctMove * 100).toFixed(4) + '%', score: s.score })),
     coherence: coherence.toFixed(2),
     cadenceTicksPerSec: cadence,
+    cadenceScore,
     score: weightedScore,
   };
 }
