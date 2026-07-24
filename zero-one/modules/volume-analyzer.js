@@ -106,12 +106,24 @@ function analyzeMoneyFlow(timeframe, lookback = 20) {
   };
 }
 function analyzeDbsi(timeframe, lookback = 20) {
+  // Modifie le 24/07/2026 : le DBSI se recalcule en continu tant qu'une bougie
+  // est ouverte (valeur vide dans le CSV jusqu'a cloture). On retombe sur la
+  // derniere bougie CLOTUREE avec un DBSI valide plutot que de bloquer
+  // pendant toute la duree de la bougie en cours.
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
   const recent = data.slice(-lookback);
-  const last = recent[recent.length - 1];
-  if (isNaN(last.dbsi_top) || isNaN(last.dbsi_bottom)) {
-    return { status: 'insufficient_data', count: 0, note: 'dbsi manquant sur la derniere bougie' };
+  let last = null;
+  let staleCandles = 0;
+  for (let i = recent.length - 1; i >= 0; i--) {
+    if (!isNaN(recent[i].dbsi_top) && !isNaN(recent[i].dbsi_bottom)) {
+      last = recent[i];
+      break;
+    }
+    staleCandles++;
+  }
+  if (!last) {
+    return { status: 'insufficient_data', count: 0, note: 'aucune bougie recente avec dbsi valide' };
   }
   const diff = last.dbsi_top - last.dbsi_bottom;
   const score = toScore(diff, _config.scoring.dbsi.thresholds.values);
@@ -122,6 +134,8 @@ function analyzeDbsi(timeframe, lookback = 20) {
     dbsiTop: last.dbsi_top.toFixed(2),
     dbsiBottom: last.dbsi_bottom.toFixed(2),
     score,
+    stale: staleCandles > 0,
+    staleCandles,
   };
 }
 function analyzeVwap(timeframe, lookback = 20) {
