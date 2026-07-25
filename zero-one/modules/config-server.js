@@ -132,6 +132,48 @@ app.post('/api/config', requireAuth, (req, res) => {
   }
 });
 
+// ── API niveaux (persistance NIVEAUX/fib/range) ─────────────────────────────────
+const LEVELS_PATH = path.join(__dirname, '../data/levels.json');
+app.get('/api/levels', requireAuth, (req, res) => {
+  try {
+    if (!fs.existsSync(LEVELS_PATH)) return res.json([]);
+    const data = fs.readFileSync(LEVELS_PATH, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.post('/api/levels', requireAuth, (req, res) => {
+  try {
+    const incoming = req.body;
+    JSON.stringify(incoming);
+    fs.writeFileSync(LEVELS_PATH, JSON.stringify(incoming, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+// ── API scenarios (persistance des scenarios enregistres) ───────────────────────
+const SCENARIOS_PATH = path.join(__dirname, '../data/scenarios.json');
+app.get('/api/scenarios', requireAuth, (req, res) => {
+  try {
+    if (!fs.existsSync(SCENARIOS_PATH)) return res.json([]);
+    const data = fs.readFileSync(SCENARIOS_PATH, 'utf8');
+    res.json(JSON.parse(data));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.post('/api/scenarios', requireAuth, (req, res) => {
+  try {
+    const incoming = req.body;
+    JSON.stringify(incoming);
+    fs.writeFileSync(SCENARIOS_PATH, JSON.stringify(incoming, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
 // ── API diagnostic ────────────────────────────────────────────────────────────
 app.get('/api/diagnostic', requireAuth, (req, res) => {
   try {
@@ -539,6 +581,27 @@ const tokenFam = {
 };
 const domainOrder = { VAH: 0, POC: 1, VAL: 2, fib0: 0, fib1: 1 };
 const entries = [];
+async function saveLevels() {
+  try {
+    await fetch('/api/levels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entries),
+    });
+  } catch (e) { console.error('saveLevels a echoue:', e); }
+}
+async function loadLevels() {
+  try {
+    const res = await fetch('/api/levels');
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      entries.push(...data);
+      groupCounter = Math.max(0, ...entries.map(e => e.groupId || 0));
+      renderLedger();
+      updateScenarioOptions();
+    }
+  } catch (e) { console.error('loadLevels a echoue:', e); }
+}
 let activeScope = 'daily-range';
 let groupCounter = 0;
 
@@ -639,6 +702,7 @@ function startEdit(idx) {
   input.addEventListener('keydown', ev => { if (ev.key === 'Enter') input.blur(); });
 }
 function renderLedger() {
+  saveLevels();
   const ledger = document.getElementById('ledger');
   if (entries.length === 0) { ledger.innerHTML = '<div class="ledger-empty">Aucun niveau soumis</div>'; return; }
   const rendered = new Set();
@@ -703,6 +767,25 @@ function renderLedger() {
 let scenarioModule = 'scalp';
 let scenarioDirection = 'long';
 const scenarios = [];
+async function saveScenarios() {
+  try {
+    await fetch('/api/scenarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(scenarios),
+    });
+  } catch (e) { console.error('saveScenarios a echoue:', e); }
+}
+async function loadScenarios() {
+  try {
+    const res = await fetch('/api/scenarios');
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      scenarios.push(...data);
+      renderScenarios();
+    }
+  } catch (e) { console.error('loadScenarios a echoue:', e); }
+}
 document.querySelectorAll('#scenarioModule .token').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('#scenarioModule .token').forEach(t => t.removeAttribute('data-active'));
@@ -738,6 +821,7 @@ document.getElementById('scenarioSubmit').addEventListener('click', () => {
   updateScenarioSubmitState();
 });
 function renderScenarios() {
+  saveScenarios();
   const list = document.getElementById('scenarioList');
   if (scenarios.length === 0) { list.innerHTML = '<div class="ledger-empty">Aucun scenario enregistre</div>'; return; }
   list.innerHTML = scenarios.map((s, i) => {
@@ -897,6 +981,8 @@ async function saveParams() {
     loadParams();
   } catch (e) { statusEl.textContent = 'Erreur: ' + e.message; statusEl.style.color = 'var(--resistance)'; }
 }
+loadLevels();
+loadScenarios();
   `);
 });
 
