@@ -103,12 +103,12 @@ function scoreDivergence(module) {
   return result.score;
 }
 
-function scoreRangeSR(module) {
+function scoreRangeSR(module, volByTf) {
   const tf = config.timeframes[module];
   if (!tf) return null;
   const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
   const mainTf = signalTfs[0];
-  const result = computeRangeSRScore(module, mainTf);
+  const result = computeRangeSRScore(module, mainTf, volByTf);
   return result.score;
 }
 
@@ -167,7 +167,7 @@ function evaluate(module) {
 
   const scores = {
     divergence: scoreDivergence(module),
-    rangeSR:    scoreRangeSR(module),
+    rangeSR:    scoreRangeSR(module, volByTf),
     momentum:   scoreMomentum(primaryVol),
     moneyFlow:  scoreMoneyFlow(primaryVol),
     dbsi:       scoreDbsi(primaryVol),

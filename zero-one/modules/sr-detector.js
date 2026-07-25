@@ -98,29 +98,163 @@ function detectTouchRetest(candles, toleranceP, minDeviationP) {
   return { status: 'hors_zone', lastTouchTs: candles[lastTouchIdx].timestamp };
 }
 /**
- * Calcule le score S/R pour un module (scalp/day/swing), base uniquement
- * sur la MA200 pour l'instant (les niveaux DS/DR/WS/WR dependent de
- * l'interface S/R, non construite).
+ * Lit les closes seuls (sans exiger ma200), pour comparer a des niveaux fixes.
  */
-function scoreRangeSR(module, mainTimeframe) {
-  const config = loadConfig();
-  const tolerance = config.srZone.ma200TolerancePercent;
-  const minDeviation = config.srZone.ma200MinDeviationPercent;
-  const points = config.scoring.rangeSR.points;
-
-  const candles = readCloses(mainTimeframe, 50);
-  if (candles.length < 3) {
-    return { status: 'insufficient_data', count: candles.length, score: null };
-  }
-
-  const result = detectTouchRetest(candles, tolerance, minDeviation);
-
-  let score;
-  if (result.status === 'retest_confirme') score = points.retestConfirme;
-  else if (result.status === 'touche_simple') score = points.toucheSimple;
-  else score = points.non;
-
-  return { ...result, score, timeframe: mainTimeframe, source: 'ma200' };
+function readClosesOnly(timeframe, limit = 50) {
+  const filePath = CSV_FILES[timeframe];
+  if (!filePath || !fs.existsSync(filePath)) return [];
+  const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
+  const rows = lines.slice(1).map(line => {
+    const parts = line.split(',');
+    return { timestamp: parts[0], close: parseFloat(parts[4]) };
+  }).filter(r => !isNaN(r.close));
+  return rows.slice(-limit);
 }
 
-module.exports = { scoreRangeSR, detectTouchRetest, readCloses, pctGap };
+/**
+ * Score S/R base sur les niveaux fixes soumis via l'interface (data/levels.json:
+ * DS/DR/WS/WR/MS/MR, fib0/fib1, VAH/POC/VAL). Reutilise detectTouchRetest en
+ * substituant le prix fixe du niveau a la place de la ma200 mobile -- meme
+ * machine a etats, source differente. Ajoute le 25/07/2026.
+ */
+function scoreFixedLevels(mainTimeframe) {
+  const levelsPath = path.join(__dirname, '../data/levels.json');
+  if (!fs.existsSync(levelsPath)) return { status: 'hors_zone', matchedLevel: null };
+  let levels;
+  try { levels = JSON.parse(fs.readFileSync(levelsPath, 'utf8')); } catch (e) { return { status: 'hors_zone', matchedLevel: null }; }
+  if (!Array.isArray(levels) || levels.length === 0) return { status: 'hors_zone', matchedLevel: null };
+
+  const config = loadConfig();
+  const tolerance = config.srZone.tolerancePercent;
+  const minDeviation = config.srZone.ma200MinDeviationPercent;
+  const closes = readClosesOnly(mainTimeframe, 50);
+  if (closes.length < 3) return { status: 'insufficient_data' };
+
+  const rank = { hors_zone: 0, touche_simple: 1, retest_confirme: 2 };
+  let best = { status: 'hors_zone', matchedLevel: null };
+  for (const lvl of levels) {
+    const candles = closes.map(c => ({ timestamp: c.timestamp, close: c.close, ma200: lvl.price }));
+    const result = detectTouchRetest(candles, tolerance, minDeviation);
+    if ((rank[result.status] || 0) > (rank[best.status] || 0)) {
+      best = { ...result, matchedLevel: lvl.label, matchedPrice: lvl.price };
+    }
+  }
+  return best;
+}
+
+/**
+ * Evaluateur minimal de scenario -- gere uniquement les conditions ET
+ * (separateur ':' cote interface) avec un operateur explicite (>=,<=,>,<,=).
+ * Tokens supportes : Momentum, MoneyFlow, DBSI, VWAP, Trigger, Cadence.
+ * DIV, S/R, MA200, Volume, SCORE ne sont PAS supportes ici (risque de
+ * circularite avec le calcul de rangeSR lui-meme, ou pas encore de source
+ * claire) -- un scenario les utilisant sera considere invalide (jamais actif).
+ * Pas de OU, pas d'actions : seulement de quoi determiner si un scenario est
+ * actif, pour la confluence. Grammaire complete SI/SINON/OU/actions laissee
+ * a un chantier dedie ulterieur.
+ */
+function parseCondition(cond) {
+  const m = String(cond).trim().match(/^([A-Za-z]+)\s*(>=|<=|>|<|=)\s*(-?\d+(\.\d+)?)$/);
+  if (!m) return null;
+  return { token: m[1], op: m[2], value: parseFloat(m[3]) };
+}
+
+function getConditionValue(token, vol) {
+  switch (token) {
+    case 'Momentum': return vol.momentum && vol.momentum.score;
+    case 'MoneyFlow': return vol.moneyFlow && vol.moneyFlow.score;
+    case 'DBSI': return vol.dbsi && vol.dbsi.score;
+    case 'VWAP': return vol.vwap && vol.vwap.score;
+    case 'Trigger': return vol.trigger && vol.trigger.score;
+    case 'Cadence': return vol.trigger && vol.trigger.cadenceScore;
+    default: return null;
+  }
+}
+
+function compareOp(actual, op, target) {
+  if (actual === null || actual === undefined || isNaN(actual)) return false;
+  switch (op) {
+    case '>=': return actual >= target;
+    case '<=': return actual <= target;
+    case '>': return actual > target;
+    case '<': return actual < target;
+    case '=': return actual === target;
+    default: return false;
+  }
+}
+
+function evaluateScenario(scenario, volByTf, config) {
+  const tf = config.timeframes[scenario.module];
+  if (!tf) return false;
+  const mainTf = Array.isArray(tf.signal) ? tf.signal[0] : tf.signal;
+  const vol = volByTf[mainTf];
+  if (!vol) return false;
+  if (!Array.isArray(scenario.conditions) || scenario.conditions.length === 0) return false;
+  for (const condStr of scenario.conditions) {
+    const parsed = parseCondition(condStr);
+    if (!parsed) return false;
+    const actual = getConditionValue(parsed.token, vol);
+    if (!compareOp(actual, parsed.op, parsed.value)) return false;
+  }
+  return true;
+}
+
+function loadScenarios() {
+  const scenariosPath = path.join(__dirname, '../data/scenarios.json');
+  if (!fs.existsSync(scenariosPath)) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(scenariosPath, 'utf8'));
+    return Array.isArray(data) ? data : [];
+  } catch (e) { return []; }
+}
+
+/**
+ * Calcule le score S/R pour un module (scalp/day/swing). Combine deux
+ * sources independantes -- MA200 (mobile) et niveaux fixes soumis (data/
+ * levels.json) -- et verifie la confluence avec un scenario actif pour
+ * atteindre le palier superieur (25 pts). Ajoute le 25/07/2026 : avant
+ * cette date, seule la MA200 etait une source active.
+ */
+function scoreRangeSR(module, mainTimeframe, volByTf) {
+  const config = loadConfig();
+  const points = config.scoring.rangeSR.points;
+
+  const ma200Candles = readCloses(mainTimeframe, 50);
+  const ma200Result = ma200Candles.length >= 3
+    ? detectTouchRetest(ma200Candles, config.srZone.ma200TolerancePercent, config.srZone.ma200MinDeviationPercent)
+    : { status: 'insufficient_data' };
+
+  const fixedResult = scoreFixedLevels(mainTimeframe);
+
+  if (ma200Result.status === 'insufficient_data' && fixedResult.status === 'insufficient_data') {
+    return { status: 'insufficient_data', score: null, timeframe: mainTimeframe };
+  }
+
+  // Confluence : un niveau fixe touche/retestE, ET un scenario du meme module
+  // referencant ce meme niveau (par label), dont toutes les conditions sont
+  // actives en ce moment.
+  if (volByTf && (fixedResult.status === 'touche_simple' || fixedResult.status === 'retest_confirme')) {
+    const scenarios = loadScenarios();
+    const matchingScenarios = scenarios.filter(s => s.module === module && s.levelLabel === fixedResult.matchedLevel);
+    for (const s of matchingScenarios) {
+      if (evaluateScenario(s, volByTf, config)) {
+        return { status: 'confluence_scenario', score: points.confluenceScenario, timeframe: mainTimeframe, matchedLevel: fixedResult.matchedLevel, scenario: s };
+      }
+    }
+  }
+
+  // Sinon : meilleur des deux resultats (MA200 vs niveaux fixes).
+  const rank = { insufficient_data: -1, hors_zone: 0, touche_simple: 1, retest_confirme: 2 };
+  const best = (rank[fixedResult.status] || 0) >= (rank[ma200Result.status] || 0)
+    ? { ...fixedResult, source: 'niveaux' }
+    : { ...ma200Result, source: 'ma200' };
+
+  let score;
+  if (best.status === 'retest_confirme') score = points.retestConfirme;
+  else if (best.status === 'touche_simple') score = points.toucheSimple;
+  else score = points.non;
+
+  return { ...best, score, timeframe: mainTimeframe };
+}
+
+module.exports = { scoreRangeSR, detectTouchRetest, readCloses, readClosesOnly, scoreFixedLevels, evaluateScenario, parseCondition, pctGap };
