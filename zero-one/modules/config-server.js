@@ -174,6 +174,122 @@ app.post('/api/scenarios', requireAuth, (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+// ── API chat consultatif (DeepSeek) ─────────────────────────────────────────────
+function addVwapColumn(lines) {
+  return lines.map(line => {
+    const cols = line.split(',');
+    const lbw = parseFloat(cols[5]);
+    const bw = parseFloat(cols[6]);
+    const vwap = (Number.isFinite(lbw) && Number.isFinite(bw)) ? (lbw - bw).toFixed(2) : '';
+    return line + ',' + vwap;
+  });
+}
+
+function readLastCandles(timeframe, n) {
+  const filePath = path.join(__dirname, '../../data/mcb-live/mcb_' + timeframe + '.csv');
+  if (!fs.existsSync(filePath)) return [];
+  const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
+  return addVwapColumn(lines.slice(1).slice(-n));
+}
+function readCandlesInRange(timeframe, debut, fin) {
+  const filePath = path.join(__dirname, '../../data/mcb-live/mcb_' + timeframe + '.csv');
+  if (!fs.existsSync(filePath)) return [];
+  const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
+  return addVwapColumn(lines.slice(1).filter(line => {
+    const ts = line.split(',')[0];
+    return ts >= debut && ts <= fin;
+  }).slice(0, 300));
+}
+const chatTools = [{
+  type: 'function',
+  function: {
+    name: 'lire_bougies',
+    description: 'Lit les bougies MCB pour une plage de dates precise sur un timeframe donne. A utiliser pour analyser un evenement passe hors de la fenetre de contexte fournie par defaut (100 dernieres bougies).',
+    parameters: {
+      type: 'object',
+      properties: {
+        timeframe: { type: 'string', enum: ['3m', '15m', '1h', '4h', '1d', '1w'], description: 'Le timeframe a consulter' },
+        debut: { type: 'string', description: 'Date/heure de debut, format ISO 8601 UTC, ex: 2026-07-24T08:30:00' },
+        fin: { type: 'string', description: 'Date/heure de fin, format ISO 8601 UTC, ex: 2026-07-24T18:30:00' },
+      },
+      required: ['timeframe', 'debut', 'fin'],
+    },
+  },
+}];
+
+app.post('/api/chat', requireAuth, async (req, res) => {
+  try {
+    const userMessage = req.body.message;
+    if (!userMessage || typeof userMessage !== 'string') {
+      return res.status(400).json({ error: 'message manquant' });
+    }
+    let diagnostic = null;
+    const diagPath = path.join(__dirname, '../data/latest-evaluation.json');
+    if (fs.existsSync(diagPath)) diagnostic = JSON.parse(fs.readFileSync(diagPath, 'utf8'));
+
+    const candles15m = readLastCandles('15m', 100);
+    const candles4h = readLastCandles('4h', 100);
+
+    const contextBlock = 'Diagnostic actuel (JSON):\n' + JSON.stringify(diagnostic, null, 2) +
+      '\n\n100 dernieres bougies 15m (timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200,vwap):\n' +
+      candles15m.join('\n') +
+      '\n\n100 dernieres bougies 4h (timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200,vwap):\n' +
+      candles4h.join('\n');
+
+    const systemPrompt = 'Tu es un assistant consultatif pour un bot de trading BTC/USDT. ' +
+      'Tu analyses et discutes les conditions de marche avec l\'utilisateur a partir des donnees fournies. ' +
+      'Tu ne dois JAMAIS suggerer d\'executer un ordre reel ni pretendre en avoir passe un -- tu es purement consultatif. ' +
+      'Si l\'utilisateur demande un evenement passe hors de la fenetre fournie, utilise l\'outil lire_bougies. ' +
+      'IMPORTANT sur les fuseaux horaires : les CSV sont en UTC. Si l\'utilisateur donne une heure francaise ' +
+      '(heure d\'ete, UTC+2 actuellement), CONVERTIS en UTC (soustrais 2h) avant d\'appeler l\'outil. ' +
+      'IMPORTANT sur le VWAP : la derniere colonne de chaque ligne de bougie, nommee "vwap" dans l\'en-tete, ' +
+      'est DEJA CALCULEE pour toi (lt_blue_wave moins blue_wave). Pour toute question sur le VWAP, LIS cette ' +
+      'valeur directement dans les donnees fournies -- ne la recalcule JAMAIS toi-meme et ne l\'estime jamais ' +
+      'depuis lt_blue_wave/blue_wave. Si la colonne semble absente ou vide pour une bougie donnee, dis-le ' +
+      'explicitement plutot que d\'inventer une valeur. ' +
+      'Reponds en francais, de maniere concise.';
+
+    const messages = [
+      { role: 'system', content: systemPrompt + '\n\n' + contextBlock },
+      { role: 'user', content: userMessage },
+    ];
+
+    async function callDeepSeek(msgs, withTools) {
+      const body = { model: 'deepseek-v4-flash', messages: msgs };
+      if (withTools) { body.tools = chatTools; body.tool_choice = 'auto'; }
+      const r = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.DEEPSEEK_API_KEY },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ? d.error.message : ('HTTP ' + r.status));
+      return d;
+    }
+
+    let data = await callDeepSeek(messages, true);
+    let message = data.choices && data.choices[0] && data.choices[0].message;
+
+    if (message && message.tool_calls && message.tool_calls.length > 0) {
+      messages.push({ role: 'assistant', content: message.content || null, tool_calls: message.tool_calls });
+      for (const tc of message.tool_calls) {
+        let result = [];
+        try {
+          const args = JSON.parse(tc.function.arguments);
+          result = readCandlesInRange(args.timeframe, args.debut, args.fin);
+        } catch (e) { result = ['erreur lecture: ' + e.message]; }
+        messages.push({ role: 'tool', tool_call_id: tc.id, content: result.join('\n') || 'aucune bougie trouvee sur cette plage' });
+      }
+      data = await callDeepSeek(messages, false);
+      message = data.choices && data.choices[0] && data.choices[0].message;
+    }
+
+    const reply = message ? (message.content || 'Reponse vide.') : 'Reponse vide.';
+    res.json({ reply });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 // ── API diagnostic ────────────────────────────────────────────────────────────
 app.get('/api/diagnostic', requireAuth, (req, res) => {
   try {
@@ -334,6 +450,19 @@ app.get('/', requireAuth, (req, res) => {
       .fib-info-panel.open { display: block; }
       .fib-info-panel div { display: flex; justify-content: space-between; padding: 1px 0; }
       .fib-info-panel .fib-ratio { color: var(--muted); }
+      #chatToggle { position: fixed; bottom: 16px; right: 16px; width: 48px; height: 48px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000; }
+      #chatPanel { display: none; position: fixed; bottom: 0; right: 0; left: 0; top: 15%; background: var(--page); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -2px 12px rgba(0,0,0,0.25); z-index: 1001; flex-direction: column; }
+      #chatPanel.open { display: flex; }
+      #chatPanelHead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
+      #chatPanelHead button { background: none; border: none; font-size: 18px; color: var(--faint); cursor: pointer; }
+      #chatMessages { flex: 1; overflow-y: auto; padding: 10px 14px; font-size: 12px; }
+      #chatMessages .msg-user { text-align: right; margin: 6px 0; }
+      #chatMessages .msg-user span { display: inline-block; background: var(--accent); color: white; border-radius: 10px; padding: 6px 10px; max-width: 80%; }
+      #chatMessages .msg-bot span { display: inline-block; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; max-width: 80%; white-space: pre-wrap; }
+      #chatInputRow { display: flex; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--border); }
+      #chatInputRow textarea { flex: 1; resize: none; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-family: inherit; }
+      #chatInputRow button { padding: 0 14px; border-radius: 6px; border: none; background: var(--accent); color: white; font-weight: 600; font-size: 12px; }
+
 
       .ledger-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
       .ledger-row:last-child { border-bottom: none; }
@@ -537,6 +666,18 @@ app.get('/', requireAuth, (req, res) => {
         <form id="logoutForm" method="POST" action="/logout" style="display:none"></form>
       </div>
 
+      </div>
+      <button id="chatToggle" aria-label="Ouvrir le chat">💬</button>
+      <div id="chatPanel">
+        <div id="chatPanelHead">
+          <span>Assistant (consultatif)</span>
+          <button id="chatClose" aria-label="Fermer">&times;</button>
+        </div>
+        <div id="chatMessages"></div>
+        <div id="chatInputRow">
+          <textarea id="chatInput" rows="1" placeholder="Poser une question sur le marche..."></textarea>
+          <button id="chatSend">Envoyer</button>
+        </div>
       </div>
 
 <script src="/app.js"></script>
@@ -983,6 +1124,48 @@ async function saveParams() {
 }
 loadLevels();
 loadScenarios();
+document.getElementById('chatToggle').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.add('open');
+});
+document.getElementById('chatClose').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.remove('open');
+});
+function appendChatMessage(role, text) {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'msg-user' : 'msg-bot';
+  const span = document.createElement('span');
+  span.textContent = text;
+  div.appendChild(span);
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+async function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  appendChatMessage('user', text);
+  input.value = '';
+  appendChatMessage('bot', '...');
+  const box = document.getElementById('chatMessages');
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+    box.removeChild(box.lastChild);
+    appendChatMessage('bot', data.reply || ('Erreur: ' + data.error));
+  } catch (e) {
+    box.removeChild(box.lastChild);
+    appendChatMessage('bot', 'Erreur reseau: ' + e.message);
+  }
+}
+document.getElementById('chatSend').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); sendChatMessage(); }
+});
   `);
 });
 

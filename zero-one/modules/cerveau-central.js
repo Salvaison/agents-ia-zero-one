@@ -189,7 +189,7 @@ function evaluate(module) {
   const trig = primaryVol.trigger;
   details.push((trig && trig.status === 'insufficient_data')
     ? `Trigger: ${trig.count} ticks en buffer (min ${MIN_TICKS})`
-    : `Trigger: score=${trig && trig.score} coherence=${trig && trig.coherence}`);
+    : `Trigger: score=${trig && trig.score} coherence=${trig && trig.coherence} conviction=${trig && trig.convictionScore}`);
   const ma = evalMaTrend(module, trig);
   details.push(`MA/Tendance: ${ma === null ? 'non branche' : ma}`);
 const rules = config.entryRules[module];

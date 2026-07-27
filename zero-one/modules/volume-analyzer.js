@@ -177,16 +177,29 @@ function analyzeTrigger() {
   }
 
   const PCT_THRESHOLDS = _config.scoring.trigger.thresholds.values;
+  const SLICE_COUNT = 8; // passe de 4 a 8 le 27/07/2026 -- granularite plus fine (0.125/palier au lieu de 0.25)
+  const SLICE_SIZE = 25; // reduit de 50 a 25 -- fenetre totale inchangee a 200 ticks (8x25)
 
   const slices = [];
-  for (let i = 0; i < 4; i++) {
-    const start = tickBuffer.length - (4 - i) * 50;
-    const slice = tickBuffer.slice(Math.max(0, start), start + 50);
+  for (let i = 0; i < SLICE_COUNT; i++) {
+    const start = tickBuffer.length - (SLICE_COUNT - i) * SLICE_SIZE;
+    const slice = tickBuffer.slice(Math.max(0, start), start + SLICE_SIZE);
     if (slice.length < 2) { slices.push(null); continue; }
     const p0 = slice[0].price;
     const p1 = slice[slice.length - 1].price;
     const pctMove = (p1 - p0) / p0;
-    slices.push({ pctMove, score: toScore(pctMove, PCT_THRESHOLDS) });
+    // Delta de volume signe (27/07/2026) : volume achat moins volume vente
+    // sur la tranche -- mesure si le mouvement de prix est porte par un
+    // vrai flux directionnel (side/volume du tick) ou juste du bruit.
+    let buyVol = 0;
+    let sellVol = 0;
+    for (const t of slice) {
+      const v = parseFloat(t.volume) || 0;
+      if (t.side === 1) buyVol += v;
+      else if (t.side === 2) sellVol += v;
+    }
+    const volDelta = buyVol - sellVol;
+    slices.push({ pctMove, score: toScore(pctMove, PCT_THRESHOLDS), volDelta });
   }
 
   const validSlices = slices.filter(s => s !== null);
@@ -197,6 +210,16 @@ function analyzeTrigger() {
   const signs = validSlices.map(s => Math.sign(s.pctMove));
   const sameSignCount = signs.filter(s => s === signs[0] && s !== 0).length;
   const coherence = sameSignCount / validSlices.length;
+
+  // convictionScore (27/07/2026, chantier volume/side) : meme logique que
+  // coherence mais appliquee au signe du volume delta plutot qu'au prix --
+  // mesure si le FLUX (achat/vente) va dans le meme sens sur les tranches,
+  // independamment du mouvement de prix. EXPOSE POUR OBSERVATION SEULEMENT :
+  // ne participe pas encore a weightedScore ni a la bascule MA/Tendance
+  // (a calibrer avant integration -- decision du 27/07/2026).
+  const volSigns = validSlices.map(s => Math.sign(s.volDelta));
+  const sameVolSignCount = volSigns.filter(s => s === volSigns[0] && s !== 0).length;
+  const convictionScore = sameVolSignCount / validSlices.length;
 
   const avgScore = validSlices.reduce((a, s) => a + s.score, 0) / validSlices.length;
   const weightedScore = Math.round(avgScore * (0.5 + 0.5 * coherence));
@@ -216,8 +239,9 @@ function analyzeTrigger() {
   return {
     group: 'trigger',
     lastPrice,
-    slices: validSlices.map(s => ({ pctMove: (s.pctMove * 100).toFixed(4) + '%', score: s.score })),
+    slices: validSlices.map(s => ({ pctMove: (s.pctMove * 100).toFixed(4) + '%', score: s.score, volDelta: s.volDelta.toFixed(4) })),
     coherence: coherence.toFixed(2),
+    convictionScore: convictionScore.toFixed(2),
     cadenceTicksPerSec: cadence,
     cadenceScore,
     score: weightedScore,
