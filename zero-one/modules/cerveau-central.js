@@ -1,32 +1,37 @@
 /**
  * cerveau-central.js — Boucle d'évaluation persistante.
  *
- * RÉÉCRIT LE 17/07/2026. La version précédente était one-shot : elle appelait
- * runAll() une fois et le process mourait. Conséquence : le tickBuffer de
- * volume-analyzer.js n'avait jamais le temps de se remplir (le WebSocket met
- * ~1s à se connecter, le script avait déjà rendu insufficient_data). Le groupe
- * Trigger n'a donc JAMAIS produit une seule mesure depuis sa création.
+ * RÉÉCRIT LE 17/07/2026 (historique). La version précédente était one-shot :
+ * elle appelait runAll() une fois et le process mourait, empêchant le
+ * tickBuffer de volume-analyzer.js de se remplir. Corrigé depuis : boucle
+ * persistante avec warmup, tick() toutes les 60s.
  *
- * Autres bugs corrigés :
- *   - tfMap disait scalp: signal '60m' — cette clé n'existe dans AUCUN CSV_FILES
- *     de volume-analyzer.js ('3m','15m','1h','4h','1d','1w'). Le module scalp
- *     cherchait un fichier inexistant à chaque appel.
- *   - Le scalp lit TROIS timeframes (3m + 15m + 1h), pas un seul.
- *   - Les seuils 5/9, 6/9, 7/9 étaient codés en dur alors qu'ils sont abandonnés
- *     (jamais validés). Tout vient maintenant de config.json.
- *   - MCB / S/R / MA étaient des `const = 0`, ce qui les faisait compter comme
- *     "aucun signal" dans le total au lieu de "pas encore branché". Ils sont
- *     maintenant null, et un score contenant un null n'est PAS comparé à un seuil.
+ * MIS A JOUR LE 27/07/2026 -- etat reel du fichier a cette date :
+ *   - Momentum / MoneyFlow / DBSI : scores 1-5 ET valeurs brutes signees
+ *     (lastLbw/lastBw/lastMoneyFlow/dbsiTop/dbsiBottom) exposees pour le
+ *     diagnostic reel (rawGrid), en plus des scores utilises pour la somme.
+ *   - VWAP (LBW - BW) : calcule depuis le 24/07, detecte les passages a
+ *     zero (crossedZero) et l'amplitude du retournement (reversalMagnitude).
+ *   - Divergence : detectee via divergence.js (chaines par timeframe,
+ *     tfCount + sens), exposee brute via describeDivergence().
+ *   - rangeSR : combine MA200 (mobile) et niveaux fixes soumis (data/
+ *     levels.json), avec confluence scenario ; statut brut (touche_simple/
+ *     retest_confirme/hors_zone) expose via describeRangeSR().
+ *   - MA/Tendance : branche sur Trigger (coherence + cadenceScore) depuis
+ *     le 24/07. Seuils encore provisoires (config.json scoring.maTrend).
+ *   - Trigger : coherence (accord directionnel du prix) ET convictionScore
+ *     (accord directionnel du volume signe achat/vente) sur 8 tranches de
+ *     25 ticks depuis le 27/07 -- convictionScore expose pour observation,
+ *     ne participe pas encore a une decision.
+ *   - Simulation de trade (trade-simulator.js) : loi d'entree et machine a
+ *     etats TP1/TP2/liquidation basee sur le VWAP, en observation seule --
+ *     remplace le plan Fibonacci-sur-pivot du SOP v1 (jamais implemente).
  *
- * Ce que ce fichier NE fait pas encore (et le dit) :
- *   - La notation 1-5 de Momentum/MoneyFlow/DBSI n'existe pas dans
- *     volume-analyzer.js : il rend une force qualitative et score: null.
- *   - La détection de divergence (comparaison de deux signaux consécutifs pour
- *     en déduire 1tf/2tf/3tf) n'est implémentée nulle part.
- *   - S/R et MA/Tendance ne sont branchés à aucune source.
- *   Tant que ces trois points sont ouverts, aucune décision de trade ne peut
- *   être émise. Le fichier le signale explicitement plutôt que d'inventer un
- *   nombre.
+ * Points encore ouverts / provisoires :
+ *   - Seuils Trigger/Cadence/MA-Tendance non calibres sur donnees reelles
+ *     etendues (voir config.json, notes _status).
+ *   - Aucun ordre reel n'est jamais passe -- tout reste en observation/dry
+ *     run tant que la calibration n'est pas validee en paper trading.
  *
  * Usage :
  *   node cerveau-central.js              # boucle persistante (pour PM2)
@@ -39,6 +44,7 @@ const { analyzeVolume } = require('./volume-analyzer');
 const priceStream = require('./price-stream');
 const { scoreDivergence: computeDivergenceScore } = require('./divergence');
 const { scoreRangeSR: computeRangeSRScore } = require('./sr-detector');
+const { simulateModule } = require('./trade-simulator');
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const CONFIG_PATH = path.join(__dirname, '../config.json');
@@ -244,6 +250,12 @@ function evaluate(module) {
     cadence: (trig && trig.cadenceTicksPerSec !== undefined) ? trig.cadenceTicksPerSec : '--',
     tf: signalTfs[0],
   };
+
+  // Simulation de trade (27/07/2026) : loi d'entree + machine a etats
+  // TP1/TP2/liquidation basee sur le VWAP. OBSERVATION SEULE -- aucun ordre
+  // reel n'est jamais passe. Voir trade-simulator.js.
+  const tradeSimLine = simulateModule(module, primaryVol, divRaw);
+  if (tradeSimLine) details.push(tradeSimLine);
 
 const rules = config.entryRules[module];
   const notScored = Object.keys(scores).filter(k => scores[k] === null);
