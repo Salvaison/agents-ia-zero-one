@@ -354,6 +354,7 @@ app.get('/', requireAuth, (req, res) => {
         padding: 8px 12px; margin-bottom: 10px;
       }
       .ticker-label { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+      .ticker-updated { font-size: 10px; color: var(--faint); margin-top: 2px; }
 
       /* -- Navigation principale a plat, 5 onglets -- */
       .main-nav {
@@ -492,10 +493,13 @@ app.get('/', requireAuth, (req, res) => {
       .diag-decision.indisponible { color: var(--muted); background: var(--page); border: 1px solid var(--border); }
       .diag-reason { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
       .diag-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .diag-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+      .diag-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
       .diag-score { background: var(--page); border-radius: 6px; padding: 6px; text-align: center; }
       .diag-score .k { font-size: 9px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; }
-      .diag-score .v { font-size: 15px; font-weight: 700; font-family: "SF Mono", "Menlo", "Consolas", monospace; }
+      .diag-score .v { font-size: 10px; font-weight: 700; font-family: "SF Mono", "Menlo", "Consolas", monospace; }
       .diag-score .v.null { color: var(--faint); font-size: 11px; font-weight: 400; }
+      .diag-tf-note { font-size: 9px; color: var(--faint); text-align: right; margin-top: 3px; }
       .diag-details { margin-top: 8px; font-size: 11px; color: var(--muted); line-height: 1.6; font-family: "SF Mono", "Menlo", "Consolas", monospace; }
       .diag-updated { font-size: 10px; color: var(--faint); text-align: right; margin-top: 6px; }
       .diag-refresh { width: 100%; padding: 7px 0; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-weight: 600; font-size: 12px; margin-bottom: 10px; }
@@ -511,6 +515,7 @@ app.get('/', requireAuth, (req, res) => {
         <span class="ticker-label">BTCUSD.P</span>
         <span class="ticker-price mono" id="tickerPrice" style="font-size:16px;font-weight:600;color:var(--support)">--</span>
       </div>
+      <div class="ticker-updated" id="tickerUpdated"></div>
 
       <div class="main-nav">
         <span class="main-nav-item active" data-main="niveaux">NIVEAUX</span>
@@ -999,25 +1004,31 @@ async function loadDiagnostic() {
       return;
     }
     const data = await res.json();
-    content.innerHTML = data.results.map(renderDiagModule).join('') +
-      '<div class="diag-updated">maj: ' + new Date(data.updatedAt).toLocaleTimeString('fr-FR') + '</div>';
+    content.innerHTML = data.results.map(renderDiagModule).join('');
+    const tickerUpdatedEl = document.getElementById('tickerUpdated');
+    if (tickerUpdatedEl) tickerUpdatedEl.textContent = new Date(data.updatedAt).toLocaleTimeString('fr-FR');
   } catch (e) {
     content.innerHTML = '<div class="ledger-empty">Erreur reseau: ' + e.message + '</div>';
   }
 }
 function renderDiagModule(r) {
   const decClass = r.decision === 'CONFLUENCE ATTEINTE' ? 'ok' : r.decision === 'REFUS' ? 'refus' : 'indisponible';
-  const scoreKeys = ['divergence', 'rangeSR', 'momentum', 'moneyFlow', 'dbsi', 'trigger'];
-  const scoresHtml = scoreKeys.map(k => {
-    const v = r.scores ? r.scores[k] : null;
-    return '<div class="diag-score"><div class="k">' + k + '</div><div class="v ' + (v === null || v === undefined ? 'null' : '') + '">' + (v === null || v === undefined ? '--' : v) + '</div></div>';
+  const rg = r.rawGrid || {};
+  const row1 = [['DIV', rg.div], ['S/R', rg.sr], ['VWAP', rg.vwap], ['MONEYFLOW', rg.moneyFlow]];
+  const row2 = [['LBW', rg.lbw], ['BW', rg.bw], ['DBSI', rg.dbsi], ['TRIGGER', rg.trigger], ['CADENCE', rg.cadence]];
+  const buildRow = (row) => row.map(([label, v]) => {
+    const isEmpty = (v === null || v === undefined);
+    return '<div class="diag-score"><div class="k">' + label + '</div><div class="v ' + (isEmpty ? 'null' : '') + '">' + (isEmpty ? '--' : v) + '</div></div>';
   }).join('');
+  const gridHtml = '<div class="diag-grid-4">' + buildRow(row1) + '</div>' +
+    '<div class="diag-grid-5">' + buildRow(row2) + '</div>' +
+    '<div class="diag-tf-note">Donnees ' + (rg.tf || '--') + '</div>';
   const detailsHtml = (r.details || []).map(d => '<div>' + d + '</div>').join('');
   return '<div class="diag-module">' +
     '<div class="diag-head"><span class="diag-name">' + r.module.toUpperCase() + '</span>' +
     '<span class="diag-decision ' + decClass + '">' + r.decision + '</span></div>' +
     '<div class="diag-reason">' + r.reason + '</div>' +
-    '<div class="diag-scores">' + scoresHtml + '</div>' +
+    gridHtml +
     '<div class="diag-details">' + detailsHtml + '</div>' +
   '</div>';
 }

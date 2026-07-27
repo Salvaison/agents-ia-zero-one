@@ -83,11 +83,23 @@ function analyzeMomentum(timeframe, lookback = 20) {
   const last3 = recent.slice(-3);
   const avgLbw = last3.reduce((a, r) => a + Math.abs(r.lt_blue_wave), 0) / last3.length;
   const score = toScore(avgLbw, _config.scoring.momentum.thresholds.values);
+  // Valeurs brutes (27/07/2026) : derniere bougie signee (pas moyenne, pas
+  // valeur absolue) + tendance, pour l'affichage diagnostic reel.
+  const lastCandle = recent[recent.length - 1];
+  const prevCandle = recent[recent.length - 2];
+  const lastLbw = lastCandle.lt_blue_wave;
+  const lastBw = lastCandle.blue_wave;
+  const trendLbw = prevCandle
+    ? (lastLbw > prevCandle.lt_blue_wave ? 'hausse' : (lastLbw < prevCandle.lt_blue_wave ? 'baisse' : 'stable'))
+    : 'stable';
   return {
     group: 'momentum',
     timeframe,
     avgLbw: avgLbw.toFixed(2),
     score,
+    lastLbw: lastLbw.toFixed(2),
+    lastBw: lastBw.toFixed(2),
+    trendLbw,
   };
 }
 
@@ -98,11 +110,21 @@ function analyzeMoneyFlow(timeframe, lookback = 20) {
   const last3 = recent.slice(-3);
   const avgMF = last3.reduce((a, r) => a + Math.abs(r.money_flow), 0) / last3.length;
   const score = toScore(avgMF, _config.scoring.moneyFlow.thresholds.values);
+  // Valeur brute (27/07/2026) : derniere bougie signee + tendance, pour
+  // l'affichage diagnostic reel.
+  const lastCandle = recent[recent.length - 1];
+  const prevCandle = recent[recent.length - 2];
+  const lastMoneyFlow = lastCandle.money_flow;
+  const trendMoneyFlow = prevCandle
+    ? (lastMoneyFlow > prevCandle.money_flow ? 'hausse' : (lastMoneyFlow < prevCandle.money_flow ? 'baisse' : 'stable'))
+    : 'stable';
   return {
     group: 'moneyFlow',
     timeframe,
     avgMF: avgMF.toFixed(2),
     score,
+    lastMoneyFlow: lastMoneyFlow.toFixed(2),
+    trendMoneyFlow,
   };
 }
 function analyzeDbsi(timeframe, lookback = 20) {

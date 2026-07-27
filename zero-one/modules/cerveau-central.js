@@ -112,6 +112,24 @@ function scoreRangeSR(module, volByTf) {
   return result.score;
 }
 
+// Fonctions "describe" (27/07/2026) : exposent les donnees BRUTES de DIV et
+// S/R (tfCount/sens, status touche-retest) pour l'affichage diagnostic reel,
+// independamment du score numerique utilise par scoreDivergence/scoreRangeSR.
+function describeDivergence(module) {
+  const tf = config.timeframes[module];
+  if (!tf) return null;
+  const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
+  return computeDivergenceScore(signalTfs);
+}
+
+function describeRangeSR(module, volByTf) {
+  const tf = config.timeframes[module];
+  if (!tf) return null;
+  const signalTfs = Array.isArray(tf.signal) ? tf.signal : [tf.signal];
+  const mainTf = signalTfs[0];
+  return computeRangeSRScore(module, mainTf, volByTf);
+}
+
 function evalMaTrend(module, trig) {
   // Branche le 24/07/2026 sur Trigger (coherence + cadenceScore) plutot que MA200.
   // Voir config.json scoring.maTrend._note. Seuils PROVISOIRES.
@@ -209,6 +227,24 @@ function evaluate(module) {
     : `Trigger: score=${trig && trig.score} coherence=${trig && trig.coherence} conviction=${trig && trig.convictionScore}`);
   const ma = evalMaTrend(module, trig);
   details.push(`MA/Tendance: ${ma === null ? 'non branche' : ma}`);
+
+  // Grille diagnostic "donnees reelles" (27/07/2026) : DIV/S-R/VWAP/MoneyFlow
+  // puis LBW/BW/DBSI/Trigger/Cadence -- valeurs brutes plutot que scores 1-5.
+  const divRaw = describeDivergence(module);
+  const srRaw = describeRangeSR(module, volByTf);
+  const rawGrid = {
+    div: (divRaw && divRaw.tfCount > 0) ? `${divRaw.tfCount}TF ${divRaw.sens}` : 'aucune',
+    sr: srRaw ? srRaw.status : '--',
+    vwap: (primaryVol.vwap && primaryVol.vwap.current !== undefined) ? primaryVol.vwap.current : '--',
+    moneyFlow: (primaryVol.moneyFlow && primaryVol.moneyFlow.lastMoneyFlow !== undefined) ? `${primaryVol.moneyFlow.lastMoneyFlow} / ${primaryVol.moneyFlow.trendMoneyFlow}` : '--',
+    lbw: (primaryVol.momentum && primaryVol.momentum.lastLbw !== undefined) ? `${primaryVol.momentum.lastLbw} / ${primaryVol.momentum.trendLbw}` : '--',
+    bw: (primaryVol.momentum && primaryVol.momentum.lastBw !== undefined) ? primaryVol.momentum.lastBw : '--',
+    dbsi: (primaryVol.dbsi && primaryVol.dbsi.dbsiTop !== undefined) ? `top:${primaryVol.dbsi.dbsiTop} / bottom:${primaryVol.dbsi.dbsiBottom}` : '--',
+    trigger: (trig && trig.coherence !== undefined) ? `coh:${trig.coherence} / conv:${trig.convictionScore}` : '--',
+    cadence: (trig && trig.cadenceTicksPerSec !== undefined) ? trig.cadenceTicksPerSec : '--',
+    tf: signalTfs[0],
+  };
+
 const rules = config.entryRules[module];
   const notScored = Object.keys(scores).filter(k => scores[k] === null);
 
@@ -219,6 +255,7 @@ const rules = config.entryRules[module];
       reason: `categories non calculables: ${notScored.join(', ')}`,
       scores,
       details,
+      rawGrid,
     };
   }
 
@@ -232,6 +269,7 @@ const rules = config.entryRules[module];
           reason: `${b}=${scores[b]} < ${required} (bloquant)`,
           scores,
           details,
+          rawGrid,
         };
       }
     }
@@ -254,6 +292,7 @@ const rules = config.entryRules[module];
     threshold,
     scores,
     details,
+    rawGrid,
   };
 }
 
