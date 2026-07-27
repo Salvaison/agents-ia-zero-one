@@ -74,14 +74,14 @@ Trigger B — Signal automatique (continu)
 Confluence : divergences MCB multi-timeframes + prix dans zone S/R ±250$ + volume favorable
 Score ≥ seuil du module → entrée autorisée. **Seuils non définis à ce jour** — null dans config.json, à calibrer en paper trading. Les anciennes valeurs 5/9, 6/9, 7/9 n'ont jamais été validées.
 Exception : spike volume exceptionnel → entrée scalp immédiate sans scénario préétabli
-Fibonacci calculé par le bot sur dernier pivot (15m scalp / 4H day / 1D swing)
+VWAP (LBW - BW) surveille en continu chaque timeframe pour detecter les retournements de tendance -- remplace le plan Fibonacci-sur-pivot du SOP v1, qui n'a jamais ete implemente. Voir Trigger C pour le detail TP1/TP2. [MAJ 27/07/2026]
 
 
 Trigger C — Sortie
 
 
-TP1 : entre rentabilité frais + petit profit et 0.382 Fibonacci — obligatoire
-TP2 : à l'ouverture du trade inverse (Shlong) ou 0.618 Fibonacci
+TP1 : au premier passage a zero du VWAP depuis l'entree du trade
+TP2 : au deuxieme passage a zero du VWAP, si ecart de retournement >= 20 et BW entre -20 et 20 -- sinon ATTENDRE si ecart < 20, sinon LIQUIDER (motif distingue en log : divergence confirmee si DIV >= 1, sinon valeur BW hors zone -20/20). [MAJ 27/07/2026, remplace le plan Fibonacci 0.382/0.618 du SOP v1, jamais implemente]
 Circuit breakers volume : conditions exceptionnelles peuvent invalider un trade
 Stop dynamique : trade en profit >2% qui revient au niveau des frais → sortie
 
@@ -151,8 +151,8 @@ Score final ≥ seuil → entrée autorisée
 Exécution trade
 
 Calcul taille position (1% capital max)
-Calcul niveaux TP1/TP2 (0.382/0.618 Fibonacci)
-Structure 25/50/25 — à calibrer en paper trading
+Calcul niveaux TP1/TP2 via VWAP (passages a zero successifs, ecart de retournement, BW) -- voir Trigger C. [MAJ 27/07/2026, remplace le plan Fibonacci 0.382/0.618, jamais implemente]
+Structure 25/65/10 -- corrige le 27/07/2026 (etait 25/50/25 par erreur de recopie, jamais calibree en paper trading)
 Ordre via API MEXC
 
 
