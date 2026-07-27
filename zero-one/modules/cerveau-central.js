@@ -254,8 +254,12 @@ function evaluate(module) {
   // Simulation de trade (27/07/2026) : loi d'entree + machine a etats
   // TP1/TP2/liquidation basee sur le VWAP. OBSERVATION SEULE -- aucun ordre
   // reel n'est jamais passe. Voir trade-simulator.js.
-  const tradeSimLine = simulateModule(module, primaryVol, divRaw);
-  if (tradeSimLine) details.push(tradeSimLine);
+  // Desactivable via config.tradeSimulator.enabled (mis a false le 27/07/2026
+  // le temps de refondre le systeme de score/confluence -- voir config.json).
+  if (config.tradeSimulator && config.tradeSimulator.enabled) {
+    const tradeSimLine = simulateModule(module, primaryVol, divRaw);
+    if (tradeSimLine) details.push(tradeSimLine);
+  }
 
 const rules = config.entryRules[module];
   const notScored = Object.keys(scores).filter(k => scores[k] === null);

@@ -258,6 +258,10 @@
     "_note": "QUATRE minimums simultanes, pas une somme. C'est la FORME de la configuration qui compte : 5+5+4+1=15 atteint le total mais avec un Trigger a 1, le prix ne bouge pas — le raisonnement tombe. Momentum/MF/DBSI hauts signalent une pression qui n'a pas encore atteint le prix ; le Trigger a 3 montre que ca commence a ceder. On entre dans cette fenetre, avant l'acceleration. Le Trigger n'est PAS contourne — il est une des quatre conditions. Formalise le 17/07 une regle qui existait qualitativement dans le SOP (Trigger B, 'sudden exceptional volume spike').",
     "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite — on ne couvrira jamais toutes les exceptions de marche."
   },
+  "tradeSimulator": {
+    "enabled": false,
+    "_note": "Desactive le 27/07/2026 (decision de Benjamin) : le trade-simulator tourne independamment du systeme de score/confluence par design (voir SOP Trigger C), ce qui peut produire des signaux contradictoires pendant la refonte du systeme de score (ex: SCALP en REFUS alors que TRADE-SIM affiche ENTRER_LONG au meme instant). A reactiver une fois la refonte terminee."
+  },
   "signalTtl": {
     "scalp": null,
     "day": null,
