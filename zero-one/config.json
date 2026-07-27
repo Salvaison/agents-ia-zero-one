@@ -19,8 +19,8 @@
   "timeframes": {
     "scalp": {
       "signal": [
-        "3m",
         "15m",
+        "3m",
         "1h"
       ],
       "context": "4h",
