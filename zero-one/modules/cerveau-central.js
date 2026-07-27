@@ -186,6 +186,23 @@ function evaluate(module) {
       : `score=${v.dbsi && v.dbsi.score}`;
     details.push(`[${t}] Momentum: ${m} | MoneyFlow: ${mf} | DBSI: ${d}`);
   }
+
+  // Timeframes de CONTEXTE (27/07/2026) : affichage informatif uniquement,
+  // ne participent PAS au calcul du score (scores bases sur signalTfs/primaryVol).
+  const contextTfs = Array.isArray(tf.context) ? tf.context : (tf.context ? [tf.context] : []);
+  for (const t of contextTfs) {
+    const v = analyzeVolume(t);
+    const m = (v.momentum && v.momentum.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.momentum.count})`
+      : `score=${v.momentum && v.momentum.score}`;
+    const mf = (v.moneyFlow && v.moneyFlow.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.moneyFlow.count})`
+      : `score=${v.moneyFlow && v.moneyFlow.score}`;
+    const d = (v.dbsi && v.dbsi.status === 'insufficient_data')
+      ? `donnees insuffisantes (${v.dbsi.count})`
+      : `score=${v.dbsi && v.dbsi.score}`;
+    details.push(`[${t}] Momentum: ${m} | MoneyFlow: ${mf} | DBSI: ${d} (contexte, hors score)`);
+  }
   const trig = primaryVol.trigger;
   details.push((trig && trig.status === 'insufficient_data')
     ? `Trigger: ${trig.count} ticks en buffer (min ${MIN_TICKS})`

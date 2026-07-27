@@ -30,13 +30,19 @@
       "signal": [
         "4h"
       ],
-      "context": "1d"
+      "context": [
+        "15m",
+        "1h"
+      ]
     },
     "swing": {
       "signal": [
         "1d"
       ],
-      "context": "1W"
+      "context": [
+        "4h",
+        "1w"
+      ]
     }
   },
   "positionSizing": {
