@@ -260,7 +260,18 @@
   },
   "tradeSimulator": {
     "enabled": false,
-    "_note": "Desactive le 27/07/2026 (decision de Benjamin) : le trade-simulator tourne independamment du systeme de score/confluence par design (voir SOP Trigger C), ce qui peut produire des signaux contradictoires pendant la refonte du systeme de score (ex: SCALP en REFUS alors que TRADE-SIM affiche ENTRER_LONG au meme instant). A reactiver une fois la refonte terminee."
+    "_note": "Desactive le 27/07/2026 (decision de Benjamin) : le trade-simulator tourne independamment du systeme de score/confluence par design (voir SOP Trigger C), ce qui peut produire des signaux contradictoires pendant la refonte du systeme de score (ex: SCALP en REFUS alors que TRADE-SIM affiche ENTRER_LONG au meme instant). A reactiver une fois la refonte terminee.",
+    "lbwThresholds": {
+      "haussiere": {
+        "shortExtreme": 60,
+        "longSouple": -20
+      },
+      "baissiere": {
+        "longExtreme": -60,
+        "shortSouple": 20
+      },
+      "_note": "Seuils asymetriques (28/07/2026) : la tendance (close vs MA200) determine quel cote est 'dans le sens' (seuil assoupli) et quel cote est 'contre-tendance' (seuil extreme). Observation de Benjamin le 27/07 au soir : la vague MCB 15m etait collee en haut (haussiere) avec BW a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait empeche tout trade dans ce contexte pourtant clairement directionnel."
+    }
   },
   "signalTtl": {
     "scalp": null,

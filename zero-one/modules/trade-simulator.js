@@ -6,33 +6,28 @@
  * (LBW - BW), en remplacement du plan Fibonacci-sur-pivot du SOP v1 (jamais
  * implemente -- voir SOP-bot-trading-boono.md, section Trigger C).
  *
- * MIS A JOUR LE 28/07/2026 : ajoute les champs qu'un vrai ordre MEXC
+ * MIS A JOUR LE 28/07/2026 (1) : ajoute les champs qu'un vrai ordre MEXC
  * porterait (levier, taille de position, type d'ordre, openType) et un
- * mecanisme de stop loss :
- *   - Levier : fixe a 50x pour l'instant (entre 1x et 100x), PROVISOIRE --
- *     a calibrer en observation.
- *   - Taille de position : issue de config.positionSizing.maxCapitalPercentPerTrade.
- *   - Type d'ordre : "market" uniquement pour l'instant. L'idee d'un
- *     "limit" order specifiquement pour les trades lies a un scenario
- *     (le temps que le systeme trouve la meilleure entree) a ete evoquee
- *     le 28/07/2026 mais N'EST PAS TRANCHEE -- non implementee.
- *   - openType : "isolated" par defaut -- choix arbitraire, a confirmer.
- *   - Stop loss : AUCUN stop n'existe avant TP1 (1er passage a zero du
- *     VWAP). Au moment de TP1, un stop est pose au prix d'entree + 0.20
- *     (long) ou - 0.20 (short) -- essentiellement un stop a l'equilibre
- *     avec une petite marge, pas un stop classique a distance fixe depuis
- *     l'entree. Verifie a CHAQUE tick (pas seulement lors d'un passage a
- *     zero), en mode meche (high/low de la derniere bougie), car un stop
- *     doit reagir immediatement a un mouvement de prix.
+ * mecanisme de stop loss (pose a TP1, verifie en mode meche a chaque tick).
+ *
+ * MIS A JOUR LE 28/07/2026 (2) : seuils LBW d'entree ASYMETRIQUES selon la
+ * tendance (close vs MA200), configurables dans config.json
+ * (tradeSimulator.lbwThresholds). Observation de Benjamin le 27/07 au soir :
+ * avant la chute, la vague MCB 15m etait collee en haut (haussiere) avec BW
+ * a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait
+ * empeche TOUT trade dans ce contexte pourtant clairement directionnel.
+ * Nouvelle regle :
+ *   - Tendance haussiere (close > MA200) :
+ *       SHORT (contre-tendance, extreme)  : LBW >= lbwThresholds.haussiere.shortExtreme (60 par defaut)
+ *       LONG  (avec la tendance, assoupli) : LBW >= lbwThresholds.haussiere.longSouple (-20 par defaut)
+ *   - Tendance baissiere (close < MA200) :
+ *       LONG  (contre-tendance, extreme)  : LBW <= lbwThresholds.baissiere.longExtreme (-60 par defaut)
+ *       SHORT (avec la tendance, assoupli) : LBW <= lbwThresholds.baissiere.shortSouple (20 par defaut)
+ *   - Tendance indeterminee (close manquant/egal a MA200) : repli sur
+ *     l'ancien seuil symetrique +/-60 (THRESHOLDS.entryLbw), par prudence.
  *
  * Un seul trade simule ouvert a la fois par module (scalp/day/swing),
  * coherent avec l'architecture a 3 modules paralleles du SOP.
- *
- * ENTREE (evaluee uniquement si aucun trade simule n'est ouvert pour ce
- * module, et seulement au moment d'un passage a zero du VWAP -- crossedZero) :
- *   SI VWAP croise zero : LBW >= 60 : ecart >= 10 : DBSI <= -4 ALORS ENTRER_LONG
- *   SINON SI VWAP croise zero : LBW <= -60 : ecart >= 10 : DBSI <= -4 ALORS ENTRER_SHORT
- *   SINON ATTENDRE
  *
  * SORTIE (evaluee uniquement si un trade simule est ouvert pour ce module) :
  *   0. A CHAQUE TICK : si un stop loss est pose (donc apres TP1) et que la
@@ -76,6 +71,9 @@ function saveState(state) {
 
 // Seuils de la loi d'entree/sortie -- en dur pour l'instant (27-28/07/2026),
 // a exposer dans config.json si Benjamin veut les calibrer plus tard.
+// entryLbw sert desormais de REPLI uniquement, quand la tendance (close vs
+// MA200) est indeterminee -- voir lbwThresholds dans config.json pour le
+// cas normal (28/07/2026).
 const THRESHOLDS = {
   entryLbw: 60,
   entryEcart: 10,
@@ -94,7 +92,23 @@ const ORDER_DEFAULTS = {
   stopLossBufferAbs: 0.20, // marge au-dela du prix d'entree pour le stop pose a TP1
 };
 
-function evaluateEntry(primaryVol) {
+/**
+ * Determine la tendance (close vs MA200) a partir des donnees deja lues
+ * par analyzeMomentum(). Retourne 'haussiere', 'baissiere', ou null si
+ * indeterminable (donnees manquantes ou egalite exacte).
+ */
+function determineTrend(primaryVol) {
+  const momentum = primaryVol.momentum;
+  if (!momentum || momentum.lastClose === undefined || momentum.lastMa200 === undefined) return null;
+  const close = parseFloat(momentum.lastClose);
+  const ma200 = parseFloat(momentum.lastMa200);
+  if (isNaN(close) || isNaN(ma200)) return null;
+  if (close > ma200) return 'haussiere';
+  if (close < ma200) return 'baissiere';
+  return null;
+}
+
+function evaluateEntry(primaryVol, config) {
   const vwap = primaryVol.vwap;
   const momentum = primaryVol.momentum;
   const dbsi = primaryVol.dbsi;
@@ -111,11 +125,38 @@ function evaluateEntry(primaryVol) {
   if (ecart === null || ecart < THRESHOLDS.entryEcart) return null;
   if (dbsiDiff > THRESHOLDS.entryDbsi) return null; // DBSI doit etre <= -4
 
+  const trend = determineTrend(primaryVol);
+  const lbwCfg = (config && config.tradeSimulator && config.tradeSimulator.lbwThresholds) || null;
+
+  if (trend && lbwCfg && lbwCfg.haussiere && lbwCfg.baissiere) {
+    if (trend === 'haussiere') {
+      // Contre-tendance (extreme) teste en premier, prioritaire sur le seuil assoupli.
+      if (lbw >= lbwCfg.haussiere.shortExtreme) {
+        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+      }
+      if (lbw >= lbwCfg.haussiere.longSouple) {
+        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+      }
+      return null;
+    }
+    if (trend === 'baissiere') {
+      if (lbw <= lbwCfg.baissiere.longExtreme) {
+        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+      }
+      if (lbw <= lbwCfg.baissiere.shortSouple) {
+        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+      }
+      return null;
+    }
+  }
+
+  // Repli : tendance indeterminee ou config manquante -- ancien seuil
+  // symetrique +/-60 (comportement d'avant le 28/07/2026), par prudence.
   if (lbw >= THRESHOLDS.entryLbw) {
-    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff}` };
+    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)` };
   }
   if (lbw <= -THRESHOLDS.entryLbw) {
-    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff}` };
+    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)` };
   }
   return null;
 }
@@ -184,7 +225,7 @@ function simulateModule(module, primaryVol, divRaw, config) {
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
 
   if (!trade) {
-    const entry = evaluateEntry(primaryVol);
+    const entry = evaluateEntry(primaryVol, config);
     if (!entry) return null;
     const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
     state[module] = {
@@ -237,4 +278,4 @@ function simulateModule(module, primaryVol, divRaw, config) {
   return `[TRADE-SIM] ${module.toUpperCase()} ${direction} ${exit.action} @ ${price} (${exit.reason})${slNote}`;
 }
 
-module.exports = { simulateModule, loadState, THRESHOLDS, ORDER_DEFAULTS };
+module.exports = { simulateModule, loadState, THRESHOLDS, ORDER_DEFAULTS, determineTrend };
