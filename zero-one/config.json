@@ -280,8 +280,8 @@
     "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite — on ne couvrira jamais toutes les exceptions de marche."
   },
   "tradeSimulator": {
-    "enabled": false,
-    "_note": "Desactive le 27/07/2026 (decision de Benjamin) : le trade-simulator tourne independamment du systeme de score/confluence par design (voir SOP Trigger C), ce qui peut produire des signaux contradictoires pendant la refonte du systeme de score (ex: SCALP en REFUS alors que TRADE-SIM affiche ENTRER_LONG au meme instant). A reactiver une fois la refonte terminee.",
+    "enabled": true,
+    "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). trade-simulator.js n'est desormais appele que si cerveau-central.js confirme CONFLUENCE ATTEINTE (le portail) -- il n'a plus sa propre logique d'entree independante, il execute la loi VWAP precise une fois le portail ouvert. Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant).",
     "lbwThresholds": {
       "haussiere": {
         "shortExtreme": 60,
