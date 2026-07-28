@@ -247,6 +247,12 @@ app.post('/api/chat', requireAuth, async (req, res) => {
       'valeur directement dans les donnees fournies -- ne la recalcule JAMAIS toi-meme et ne l\'estime jamais ' +
       'depuis lt_blue_wave/blue_wave. Si la colonne semble absente ou vide pour une bougie donnee, dis-le ' +
       'explicitement plutot que d\'inventer une valeur. ' +
+      'IMPORTANT sur le prix de reference : quand tu cites "le prix" a un instant donne, precise TOUJOURS ' +
+      'si c\'est le CLOSE (cloture) ou un extreme intra-bougie (HIGH/LOW) -- ne confonds jamais les deux ' +
+      '(par exemple ne presente jamais un LOW comme si c\'etait le prix de cloture). Le VWAP et les scores ' +
+      'Momentum/MoneyFlow/DBSI sont calcules sur la cloture. Le S/R (touche/retest) et la divergence sont ' +
+      'calcules en mode meche depuis le 28/07/2026 (high/low, pas la cloture) -- si on te demande le statut ' +
+      'S/R ou une divergence, ne donne jamais le close comme reference. ' +
       'Reponds en francais, de maniere concise.';
 
     const messages = [
