@@ -131,6 +131,34 @@ function analyzeMoneyFlow(timeframe, lookback = 20) {
     trendMoneyFlow,
   };
 }
+// Bornes empiriques approximatives (28/07/2026, a affiner en observation) :
+// LBW/BW ~ +/-120, MoneyFlow ~ +/-35. Utilisees pour ramener les trois sur
+// une echelle commune (%) avant de les moyenner en un score d'Engagement
+// (la vague et les participants -- distinct de la Velocite, basee sur
+// Cadence/DBSI/Trigger).
+const ENGAGEMENT_BOUNDS = { lbw: 120, bw: 120, moneyFlow: 35 };
+
+function analyzeEngagement(timeframe, lookback = 20) {
+  const momentum = analyzeMomentum(timeframe, lookback);
+  const moneyFlow = analyzeMoneyFlow(timeframe, lookback);
+  if (momentum.status === 'insufficient_data' || moneyFlow.status === 'insufficient_data') {
+    return { status: 'insufficient_data' };
+  }
+  const lbwPct = Math.min(Math.abs(parseFloat(momentum.lastLbw)) / ENGAGEMENT_BOUNDS.lbw, 1) * 100;
+  const bwPct = Math.min(Math.abs(parseFloat(momentum.lastBw)) / ENGAGEMENT_BOUNDS.bw, 1) * 100;
+  const mfPct = Math.min(Math.abs(parseFloat(moneyFlow.lastMoneyFlow)) / ENGAGEMENT_BOUNDS.moneyFlow, 1) * 100;
+  const avgPct = (lbwPct + bwPct + mfPct) / 3;
+  const score = toScore(avgPct, _config.scoring.engagement.thresholds.values);
+  return {
+    group: 'engagement',
+    timeframe,
+    lbwPct: lbwPct.toFixed(1),
+    bwPct: bwPct.toFixed(1),
+    mfPct: mfPct.toFixed(1),
+    avgPct: avgPct.toFixed(1),
+    score,
+  };
+}
 function analyzeDbsi(timeframe, lookback = 20) {
   // Modifie le 24/07/2026 : le DBSI se recalcule en continu tant qu'une bougie
   // est ouverte (valeur vide dans le CSV jusqu'a cloture). On retombe sur la
@@ -279,6 +307,7 @@ function analyzeVolume(timeframe) {
   const dbsi = analyzeDbsi(timeframe);
   const vwap = analyzeVwap(timeframe);
   const trigger = analyzeTrigger();
+  const engagement = analyzeEngagement(timeframe);
   return {
     timeframe,
     momentum,
@@ -286,6 +315,7 @@ function analyzeVolume(timeframe) {
     dbsi,
     vwap,
     trigger,
+    engagement,
   };
 }
 
@@ -306,4 +336,4 @@ function runVolumeAnalyzer() {
   }
 }
 
-module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeVwap, analyzeTrigger };
+module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeVwap, analyzeTrigger, analyzeEngagement };

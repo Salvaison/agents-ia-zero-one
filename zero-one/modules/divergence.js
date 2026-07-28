@@ -197,13 +197,25 @@ function scoreDivergence(timeframes) {
     return { score: 0, sens: null, tfCount: 0, multidiv: false, detail: results };
   }
 
-  const hasMultidiv = tfCount >= 3 && bestChains.some(c => c.length >= 3);
+  // Multidiv (corrige le 28/07/2026) : une chaine qui accumule plusieurs
+  // points d'ancrage de plus en plus divergents (chain.length >= 3),
+  // INDEPENDAMMENT du nombre de TF actifs. L'ancienne condition exigeait a
+  // tort tfCount >= 3 en plus -- contresens clarifie par Benjamin : le
+  // renforcement (multidiv) peut se produire sur une seule chaine, a 1TF
+  // ou 2TF, pas seulement a partir de 3TF.
+  const hasMultidiv = bestChains.some(c => c.length >= 3);
 
+  // Bareme (28/07/2026, refonte du systeme de score -- chaine de minimums
+  // simultanes plutot que somme) :
+  //   1TF                    -> 1
+  //   2TF sans renforcement  -> 2
+  //   2TF avec multidiv      -> 3
+  //   3TF (ou plus)          -> 4 (max)
   let score;
-  if (hasMultidiv) score = 20;
-  else if (tfCount >= 3) score = 15;
-  else if (tfCount === 2) score = 10;
-  else score = 5;
+  if (tfCount >= 3) score = 4;
+  else if (tfCount === 2 && hasMultidiv) score = 3;
+  else if (tfCount === 2) score = 2;
+  else score = 1; // tfCount === 1
 
   return { score, sens: bestSens, tfCount, multidiv: hasMultidiv, detail: results };
 }

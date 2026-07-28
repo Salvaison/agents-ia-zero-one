@@ -189,14 +189,6 @@ function evaluate(module) {
 
   const primaryVol = volByTf[signalTfs[0]];
 
-  const scores = {
-    divergence: scoreDivergence(module),
-    rangeSR:    scoreRangeSR(module, volByTf),
-    momentum:   scoreMomentum(primaryVol),
-    moneyFlow:  scoreMoneyFlow(primaryVol),
-    dbsi:       scoreDbsi(primaryVol),
-    trigger:    scoreTrigger(primaryVol),
-  };
   for (const t of signalTfs) {
     const v = volByTf[t];
     const m = (v.momentum && v.momentum.status === 'insufficient_data')
@@ -251,62 +243,63 @@ function evaluate(module) {
     tf: signalTfs[0],
   };
 
-  // Simulation de trade (27/07/2026) : loi d'entree + machine a etats
-  // TP1/TP2/liquidation basee sur le VWAP. OBSERVATION SEULE -- aucun ordre
-  // reel n'est jamais passe. Voir trade-simulator.js.
-  // Desactivable via config.tradeSimulator.enabled (mis a false le 27/07/2026
-  // le temps de refondre le systeme de score/confluence -- voir config.json).
-  if (config.tradeSimulator && config.tradeSimulator.enabled) {
-    const tradeSimLine = simulateModule(module, primaryVol, divRaw, config);
-    if (tradeSimLine) details.push(tradeSimLine);
-  }
+  // ===== CHAINE DE CONFLUENCE (28/07/2026) =================================
+  // Remplace l'ancienne somme+seuil. Le volumeBypass associe n'est plus
+  // appele -- la faille qu'il corrigeait (une somme peut masquer un maillon
+  // mort) est desormais evitee structurellement par des minimums simultanes.
+  // Chaque maillon doit etre vrai EN MEME TEMPS :
+  //   DIV >= min   ET   S/R >= min   ET   Engagement >= min
+  //   ET   VWAP a croise zero   ET   Velocite (cadenceScore) >= min
+  // config.entryRules n'est plus lu ici (laisse en config, non supprime).
+  const minimums = (config.scoring.confluenceChain && config.scoring.confluenceChain.minimums) || {};
+  const divScore = divRaw ? divRaw.score : null;
+  const srScore = (srRaw && srRaw.score !== null && srRaw.score !== undefined) ? srRaw.score : null;
+  const engagementScore = (primaryVol.engagement && primaryVol.engagement.score !== undefined) ? primaryVol.engagement.score : null;
+  const velocityScore = (trig && trig.cadenceScore !== undefined && trig.cadenceScore !== null) ? trig.cadenceScore : null;
+  const vwapOk = !!(primaryVol.vwap && primaryVol.vwap.crossedZero);
 
-const rules = config.entryRules[module];
-  const notScored = Object.keys(scores).filter(k => scores[k] === null);
+  const chain = {
+    div: { value: divScore, min: minimums.div },
+    sr: { value: srScore, min: minimums.sr },
+    engagement: { value: engagementScore, min: minimums.engagement },
+    velocity: { value: velocityScore, min: minimums.velocity },
+  };
 
+  const notScored = Object.keys(chain).filter(k => chain[k].value === null);
   if (notScored.length) {
     return {
       module,
       decision: 'INDISPONIBLE',
       reason: `categories non calculables: ${notScored.join(', ')}`,
-      scores,
+      chain,
+      vwapOk,
       details,
       rawGrid,
     };
   }
 
-  if (rules.reading === 'C') {
-    for (const b of (rules.blocking || [])) {
-      const required = config.scoring[b] && config.scoring[b].min[module];
-      if (scores[b] < required) {
-        return {
-          module,
-          decision: 'REFUS',
-          reason: `${b}=${scores[b]} < ${required} (bloquant)`,
-          scores,
-          details,
-          rawGrid,
-        };
-      }
-    }
+  const chainFailures = Object.entries(chain).filter(([k, c]) => c.value < (c.min || 0));
+  const passes = chainFailures.length === 0 && vwapOk;
+
+  // Simulation de trade (27/07/2026, cascade 3m ajoutee separement dans
+  // trade-simulator.js) : loi d'entree + machine a etats TP1/TP2/liquidation
+  // basee sur le VWAP. OBSERVATION SEULE -- aucun ordre reel n'est jamais
+  // passe. N'agit desormais QUE si la chaine de confluence est entierement
+  // verifiee (passes === true) -- cerveau-central est le portail,
+  // trade-simulator l'executant. Desactivable via config.tradeSimulator.enabled.
+  if (passes && config.tradeSimulator && config.tradeSimulator.enabled) {
+    const tradeSimLine = simulateModule(module, primaryVol, divRaw, config, volByTf);
+    if (tradeSimLine) details.push(tradeSimLine);
   }
-
-  const summed = ['divergence', 'rangeSR', 'momentum', 'moneyFlow', 'dbsi']
-    .reduce((a, k) => a + scores[k], 0);
-
-  const bypass = checkVolumeBypass(module, scores);
-  const threshold = rules.totalThreshold;
-  const passes = bypass.applies || (threshold !== null && summed >= threshold);
 
   return {
     module,
     decision: passes ? 'CONFLUENCE ATTEINTE' : 'REFUS',
-    reason: bypass.applies
-      ? `bypass volume: ${bypass.reason}`
-      : `total=${summed} vs seuil=${threshold}`,
-    summed,
-    threshold,
-    scores,
+    reason: passes
+      ? 'tous les maillons de la chaine sont verifies'
+      : (!vwapOk ? 'VWAP: pas de passage a zero' : chainFailures.map(([k, c]) => `${k}=${c.value}<${c.min}`).join(', ')),
+    chain,
+    vwapOk,
     details,
     rawGrid,
   };

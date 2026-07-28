@@ -153,6 +153,18 @@
         "unit": "valeur absolue du Money Flow, moyenne des 3 dernieres bougies"
       }
     },
+    "engagement": {
+      "thresholds": {
+        "values": [
+          20,
+          40,
+          60,
+          80
+        ],
+        "unit": "moyenne normalisee (%) de |LBW|/120, |BW|/120, |MoneyFlow|/35"
+      },
+      "_note": "Ajoute le 28/07/2026 (refonte du systeme de score). Bornes 120/35 estimees a l'oeil par Benjamin, PAS mesurees formellement -- PROVISOIRE, a calibrer en observation."
+    },
     "dbsi": {
       "range": [
         1,
@@ -222,6 +234,15 @@
         ]
       },
       "_note": "Cadence = ticks/seconde sur les 200 derniers ticks du Trigger. Seuils PROVISOIRES (aucune observation reelle encore) -- a calibrer. Ajoute le 24/07/2026 pour exposer la densite temporelle comme condition de scenario, distincte du score Trigger lui-meme."
+    },
+    "confluenceChain": {
+      "minimums": {
+        "div": 1,
+        "sr": 2,
+        "engagement": 3,
+        "velocity": 2
+      },
+      "_note": "Ajoute le 28/07/2026 -- refonte complete du systeme de decision. Remplace l'ancienne somme+seuil par une chaine ET : chaque maillon (DIV/S-R/Engagement/Velocite) doit depasser son minimum EN MEME TEMPS que le VWAP ait croise zero, sinon REFUS. Chaine volontairement PERMISSIVE au depart (decision explicite de Benjamin) -- a resserrer une fois en observation reelle."
     }
   },
   "entryRules": {

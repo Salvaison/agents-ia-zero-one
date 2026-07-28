@@ -12,22 +12,36 @@
  *
  * MIS A JOUR LE 28/07/2026 (2) : seuils LBW d'entree ASYMETRIQUES selon la
  * tendance (close vs MA200), configurables dans config.json
- * (tradeSimulator.lbwThresholds). Observation de Benjamin le 27/07 au soir :
- * avant la chute, la vague MCB 15m etait collee en haut (haussiere) avec BW
- * a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait
- * empeche TOUT trade dans ce contexte pourtant clairement directionnel.
- * Nouvelle regle :
- *   - Tendance haussiere (close > MA200) :
- *       SHORT (contre-tendance, extreme)  : LBW >= lbwThresholds.haussiere.shortExtreme (60 par defaut)
- *       LONG  (avec la tendance, assoupli) : LBW >= lbwThresholds.haussiere.longSouple (-20 par defaut)
- *   - Tendance baissiere (close < MA200) :
- *       LONG  (contre-tendance, extreme)  : LBW <= lbwThresholds.baissiere.longExtreme (-60 par defaut)
- *       SHORT (avec la tendance, assoupli) : LBW <= lbwThresholds.baissiere.shortSouple (20 par defaut)
- *   - Tendance indeterminee (close manquant/egal a MA200) : repli sur
- *     l'ancien seuil symetrique +/-60 (THRESHOLDS.entryLbw), par prudence.
+ * (tradeSimulator.lbwThresholds).
+ *
+ * MIS A JOUR LE 28/07/2026 (3) : cascade VWAP 15m -> 3m. Quand le VWAP du
+ * timeframe principal (15m pour Scalp) est tres proche de zero
+ * (|vwap| <= 2) sans avoir encore croise, le systeme interroge le VWAP 3m
+ * pour une confirmation anticipee -- si le 3m a deja croise zero, ca
+ * confirme le mouvement 3 a 6 minutes avant la cloture de la bougie 15m.
+ * Le passage a zero sur 3m suit exactement les memes regles que sur 15m
+ * (memes seuils LBW/ecart/DBSI). Ne s'applique qu'aux modules dont le
+ * timeframe 3m est disponible dans volByTf (Scalp uniquement pour
+ * l'instant, puisque son signal inclut 3m -- Day/Swing n'ont pas cette
+ * donnee).
+ *
+ * MIS A JOUR LE 28/07/2026 (4) : trade-simulator.js devient l'EXECUTANT
+ * d'un systeme a deux etages. cerveau-central.js calcule desormais une
+ * chaine de confluence (DIV/S-R/Engagement/VWAP/Velocite, minimums
+ * simultanes) qui sert de PORTAIL -- simulateModule() n'est appele par
+ * cerveau-central.js que si cette chaine est entierement verifiee
+ * (CONFLUENCE ATTEINTE). La loi VWAP ci-dessous reste le declencheur
+ * PRECIS (le "quand exactement"), evaluee uniquement une fois le portail
+ * ouvert.
  *
  * Un seul trade simule ouvert a la fois par module (scalp/day/swing),
  * coherent avec l'architecture a 3 modules paralleles du SOP.
+ *
+ * ENTREE (evaluee uniquement si aucun trade simule n'est ouvert pour ce
+ * module, et seulement au moment d'un passage a zero du VWAP -- crossedZero
+ * sur le TF principal, OU confirme par la cascade 3m) :
+ *   SI VWAP croise zero : LBW seuil (asymetrique selon tendance) : ecart >= 10 : DBSI <= -4 ALORS ENTRER_LONG/SHORT
+ *   SINON ATTENDRE
  *
  * SORTIE (evaluee uniquement si un trade simule est ouvert pour ce module) :
  *   0. A CHAQUE TICK : si un stop loss est pose (donc apres TP1) et que la
@@ -71,9 +85,8 @@ function saveState(state) {
 
 // Seuils de la loi d'entree/sortie -- en dur pour l'instant (27-28/07/2026),
 // a exposer dans config.json si Benjamin veut les calibrer plus tard.
-// entryLbw sert desormais de REPLI uniquement, quand la tendance (close vs
-// MA200) est indeterminee -- voir lbwThresholds dans config.json pour le
-// cas normal (28/07/2026).
+// entryLbw sert de REPLI uniquement, quand la tendance (close vs MA200)
+// est indeterminee -- voir lbwThresholds dans config.json pour le cas normal.
 const THRESHOLDS = {
   entryLbw: 60,
   entryEcart: 10,
@@ -81,6 +94,7 @@ const THRESHOLDS = {
   tp2Ecart: 20,
   tp2BwMin: -20,
   tp2BwMax: 20,
+  cascadeVwapThreshold: 2, // |vwap 15m| <= ce seuil -> interroge le 3m (28/07/2026)
 };
 
 // Parametres d'ordre simules -- reflete les champs qu'un vrai ordre MEXC
@@ -97,8 +111,8 @@ const ORDER_DEFAULTS = {
  * par analyzeMomentum(). Retourne 'haussiere', 'baissiere', ou null si
  * indeterminable (donnees manquantes ou egalite exacte).
  */
-function determineTrend(primaryVol) {
-  const momentum = primaryVol.momentum;
+function determineTrend(vol) {
+  const momentum = vol.momentum;
   if (!momentum || momentum.lastClose === undefined || momentum.lastMa200 === undefined) return null;
   const close = parseFloat(momentum.lastClose);
   const ma200 = parseFloat(momentum.lastMa200);
@@ -108,11 +122,33 @@ function determineTrend(primaryVol) {
   return null;
 }
 
-function evaluateEntry(primaryVol, config) {
-  const vwap = primaryVol.vwap;
-  const momentum = primaryVol.momentum;
-  const dbsi = primaryVol.dbsi;
-  if (!vwap || !vwap.crossedZero) return null;
+/**
+ * Cascade VWAP 15m -> 3m (28/07/2026). Si le VWAP du TF principal n'a pas
+ * encore croise zero mais en est tres proche (|vwap| <= seuil), interroge
+ * le VWAP 3m (s'il est disponible dans volByTf) pour une confirmation
+ * anticipee. Retourne le "vol" a utiliser pour l'evaluation de la loi
+ * d'entree -- soit primaryVol tel quel (croisement normal ou aucune
+ * cascade applicable), soit le vol du 3m (cascade confirmee), soit null
+ * (aucun croisement, ni direct ni par cascade).
+ */
+function resolveEntryVol(primaryVol, volByTf) {
+  if (primaryVol.vwap && primaryVol.vwap.crossedZero) {
+    return { vol: primaryVol, cascade: false };
+  }
+  const current = primaryVol.vwap ? parseFloat(primaryVol.vwap.current) : NaN;
+  if (isNaN(current) || Math.abs(current) > THRESHOLDS.cascadeVwapThreshold) return { vol: null, cascade: false };
+  const vol3m = volByTf && volByTf['3m'];
+  if (!vol3m || !vol3m.vwap || !vol3m.vwap.crossedZero) return { vol: null, cascade: false };
+  return { vol: vol3m, cascade: true };
+}
+
+function evaluateEntry(primaryVol, config, volByTf) {
+  const { vol: sourceVol, cascade } = resolveEntryVol(primaryVol, volByTf || {});
+  if (!sourceVol) return null;
+
+  const vwap = sourceVol.vwap;
+  const momentum = sourceVol.momentum;
+  const dbsi = sourceVol.dbsi;
   if (!momentum || momentum.lastLbw === undefined) return null;
   if (!dbsi || dbsi.diff === undefined) return null;
 
@@ -125,26 +161,29 @@ function evaluateEntry(primaryVol, config) {
   if (ecart === null || ecart < THRESHOLDS.entryEcart) return null;
   if (dbsiDiff > THRESHOLDS.entryDbsi) return null; // DBSI doit etre <= -4
 
+  const cascadeNote = cascade ? ' [cascade 3m, confirmation anticipee]' : '';
+
+  // Tendance toujours evaluee sur le TF principal (15m), pas sur le 3m
+  // meme en cas de cascade -- la tendance de fond ne change pas en 3 min.
   const trend = determineTrend(primaryVol);
   const lbwCfg = (config && config.tradeSimulator && config.tradeSimulator.lbwThresholds) || null;
 
   if (trend && lbwCfg && lbwCfg.haussiere && lbwCfg.baissiere) {
     if (trend === 'haussiere') {
-      // Contre-tendance (extreme) teste en premier, prioritaire sur le seuil assoupli.
       if (lbw >= lbwCfg.haussiere.shortExtreme) {
-        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
       }
       if (lbw >= lbwCfg.haussiere.longSouple) {
-        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
       }
       return null;
     }
     if (trend === 'baissiere') {
       if (lbw <= lbwCfg.baissiere.longExtreme) {
-        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
       }
       if (lbw <= lbwCfg.baissiere.shortSouple) {
-        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}` };
+        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
       }
       return null;
     }
@@ -153,10 +192,10 @@ function evaluateEntry(primaryVol, config) {
   // Repli : tendance indeterminee ou config manquante -- ancien seuil
   // symetrique +/-60 (comportement d'avant le 28/07/2026), par prudence.
   if (lbw >= THRESHOLDS.entryLbw) {
-    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)` };
+    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
   }
   if (lbw <= -THRESHOLDS.entryLbw) {
-    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)` };
+    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
   }
   return null;
 }
@@ -214,18 +253,18 @@ function evaluateExit(trade, primaryVol, divRaw) {
 
 /**
  * Point d'entree principal, appele une fois par module (scalp/day/swing)
- * a chaque tick de cerveau-central.js. Retourne une ligne de log/details
- * a afficher (visible en pm2 logs ET dans le panneau Diagnostic, puisque
- * `details` y est deja rendu), ou null si rien de notable ne s'est passe
- * ce tick pour ce module.
+ * a chaque tick de cerveau-central.js -- UNIQUEMENT si la chaine de
+ * confluence est deja verifiee (voir cerveau-central.js). Retourne une
+ * ligne de log/details a afficher, ou null si rien de notable ne s'est
+ * passe ce tick pour ce module.
  */
-function simulateModule(module, primaryVol, divRaw, config) {
+function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   const state = loadState();
   const trade = state[module];
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
 
   if (!trade) {
-    const entry = evaluateEntry(primaryVol, config);
+    const entry = evaluateEntry(primaryVol, config, volByTf);
     if (!entry) return null;
     const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
     state[module] = {

@@ -154,7 +154,22 @@ function scoreFixedLevels(mainTimeframe) {
       best = { ...result, matchedLevel: lvl.label, matchedPrice: lvl.price };
     }
   }
-  return best;
+
+  // Confluence de NIVEAUX (28/07/2026) : si le niveau touche/retested a au
+  // moins un AUTRE niveau soumis a moins de `tolerance`% de son prix, le
+  // signal se renforce (bonus applique dans scoreRangeSR). Different de
+  // l'ancienne confluence-scenario, retiree -- ici ce sont plusieurs prix
+  // de niveaux qui coincident, pas un scenario qui s'active.
+  let levelConfluence = false;
+  if ((best.status === 'touche_simple' || best.status === 'retest_confirme') && best.matchedPrice !== undefined) {
+    levelConfluence = levels.some(lvl => {
+      if (lvl.label === best.matchedLevel) return false;
+      const gapPct = Math.abs((lvl.price - best.matchedPrice) / best.matchedPrice) * 100;
+      return gapPct <= tolerance;
+    });
+  }
+
+  return { ...best, levelConfluence };
 }
 
 /**
@@ -232,7 +247,6 @@ function loadScenarios() {
  */
 function scoreRangeSR(module, mainTimeframe, volByTf) {
   const config = loadConfig();
-  const points = config.scoring.rangeSR.points;
 
   const ma200Candles = readCloses(mainTimeframe, 50);
   const ma200Result = ma200Candles.length >= 3
@@ -245,29 +259,27 @@ function scoreRangeSR(module, mainTimeframe, volByTf) {
     return { status: 'insufficient_data', score: null, timeframe: mainTimeframe };
   }
 
-  // Confluence : un niveau fixe touche/retestE, ET un scenario du meme module
-  // referencant ce meme niveau (par label), dont toutes les conditions sont
-  // actives en ce moment.
-  if (volByTf && (fixedResult.status === 'touche_simple' || fixedResult.status === 'retest_confirme')) {
-    const scenarios = loadScenarios();
-    const matchingScenarios = scenarios.filter(s => s.module === module && s.levelLabel === fixedResult.matchedLevel);
-    for (const s of matchingScenarios) {
-      if (evaluateScenario(s, volByTf, config)) {
-        return { status: 'confluence_scenario', score: points.confluenceScenario, timeframe: mainTimeframe, matchedLevel: fixedResult.matchedLevel, scenario: s };
-      }
-    }
-  }
-
-  // Sinon : meilleur des deux resultats (MA200 vs niveaux fixes).
+  // Meilleur des deux resultats (MA200 vs niveaux fixes). Le bonus de
+  // confluence-scenario (25 pts) a ete RETIRE le 28/07/2026 -- decision du
+  // 27/07 reaffirmee : un scenario n'est plus qu'une source de niveau
+  // parmi d'autres (touche/retest comme les autres), sans passe-droit de
+  // score. evaluateScenario()/loadScenarios() restent disponibles pour
+  // l'affichage actif/inactif d'un scenario ailleurs, juste plus appelees
+  // ici.
   const rank = { insufficient_data: -1, hors_zone: 0, touche_simple: 1, retest_confirme: 2 };
   const best = (rank[fixedResult.status] || 0) >= (rank[ma200Result.status] || 0)
     ? { ...fixedResult, source: 'niveaux' }
-    : { ...ma200Result, source: 'ma200' };
+    : { ...ma200Result, source: 'ma200', levelConfluence: false };
 
+  // Bareme 0-3 (28/07/2026, refonte du systeme de score -- chaine de
+  // minimums simultanes plutot que somme) :
+  //   hors_zone       -> 0
+  //   touche_simple   -> 1 (+1 si confluence de niveaux -> 2)
+  //   retest_confirme -> 2 (+1 si confluence de niveaux -> 3)
   let score;
-  if (best.status === 'retest_confirme') score = points.retestConfirme;
-  else if (best.status === 'touche_simple') score = points.toucheSimple;
-  else score = points.non;
+  if (best.status === 'retest_confirme') score = best.levelConfluence ? 3 : 2;
+  else if (best.status === 'touche_simple') score = best.levelConfluence ? 2 : 1;
+  else score = 0;
 
   return { ...best, score, timeframe: mainTimeframe };
 }
