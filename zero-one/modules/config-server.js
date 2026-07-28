@@ -45,6 +45,8 @@ const PASSWORD = process.env.CONFIG_UI_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const CONFIG_PATH = path.join(__dirname, '../config.json');
 const DIAGNOSTIC_PATH = path.join(__dirname, '../data/latest-evaluation.json');
+const TRADES_STATE_PATH = path.join(__dirname, '../data/trade-sim-state.json');
+const TRADES_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
 
 if (!PASSWORD || !SESSION_SECRET) {
   console.error('[config-server] FATAL: CONFIG_UI_PASSWORD ou SESSION_SECRET manquant dans .env');
@@ -309,6 +311,24 @@ app.get('/api/diagnostic', requireAuth, (req, res) => {
         : e.message,
     });
   }
+});
+
+app.get('/api/trades', requireAuth, (req, res) => {
+  let ongoing = { scalp: null, day: null, swing: null };
+  let executed = [];
+  try {
+    if (fs.existsSync(TRADES_STATE_PATH)) {
+      const parsed = JSON.parse(fs.readFileSync(TRADES_STATE_PATH, 'utf8'));
+      ongoing = { scalp: parsed.scalp || null, day: parsed.day || null, swing: parsed.swing || null };
+    }
+  } catch (e) { /* garde les valeurs par defaut */ }
+  try {
+    if (fs.existsSync(TRADES_HISTORY_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TRADES_HISTORY_PATH, 'utf8'));
+      executed = Array.isArray(data) ? data : [];
+    }
+  } catch (e) { /* liste vide */ }
+  res.json({ ongoing, executed });
 });
 
 // ── Page principale ───────────────────────────────────────────────────────────
@@ -700,13 +720,24 @@ app.get('/', requireAuth, (req, res) => {
 // ── Script client ─────────────────────────────────────────────────────────────
 app.get('/app.js', requireAuth, (req, res) => {
   res.type('application/javascript').send(`
+let diagAutoRefresh = null;
+let tradesAutoRefresh = null;
 document.querySelectorAll('.main-nav-item').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.main-nav-item').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.main-section').forEach(s => s.classList.remove('active'));
     el.classList.add('active');
     document.getElementById('section-' + el.dataset.main).classList.add('active');
-    if (el.dataset.main === 'diagnostic') loadDiagnostic();
+    if (diagAutoRefresh) { clearInterval(diagAutoRefresh); diagAutoRefresh = null; }
+    if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
+    if (el.dataset.main === 'diagnostic') {
+      loadDiagnostic();
+      diagAutoRefresh = setInterval(loadDiagnostic, 60000);
+    }
+    if (el.dataset.main === 'trades') {
+      loadTrades();
+      tradesAutoRefresh = setInterval(loadTrades, 60000);
+    }
     if (el.dataset.main === 'parametres') loadParams();
   });
 });
@@ -1039,6 +1070,70 @@ function renderDiagModule(r) {
   '</div>';
 }
 document.getElementById('diagRefresh').addEventListener('click', loadDiagnostic);
+
+function renderOngoingModule(module, trade) {
+  if (!trade) {
+    return '<div class="placeholder-note">' + module.toUpperCase() + ' : aucun trade en cours.</div>';
+  }
+  const dirClass = trade.direction === 'long' ? 'ok' : 'refus';
+  return '<div class="diag-module">' +
+    '<div class="diag-head"><span class="diag-name">' + module.toUpperCase() + '</span>' +
+    '<span class="diag-decision ' + dirClass + '">' + trade.direction.toUpperCase() + '</span></div>' +
+    '<div class="diag-details">' +
+      '<div>Entree : ' + trade.entryPrice + ' (' + new Date(trade.entryTimestamp).toLocaleTimeString('fr-FR') + ')</div>' +
+      '<div>Passages a zero depuis entree : ' + trade.crossingsSinceEntry + (trade.tp1Taken ? ' (TP1 pris)' : '') + '</div>' +
+      '<div>Stop loss : ' + (trade.stopLossPrice !== null && trade.stopLossPrice !== undefined ? trade.stopLossPrice : 'pas encore pose') + '</div>' +
+      '<div>Levier : ' + trade.leverage + 'x | ' + trade.orderType + ' | ' + trade.openType + ' | taille : ' + trade.positionSizePercent + '%</div>' +
+    '</div></div>';
+}
+
+function renderExecutedRow(t) {
+  const hasPnl = t.pnlPercent !== null && t.pnlPercent !== undefined;
+  const pnlClass = hasPnl ? (t.pnlPercent >= 0 ? 'ok' : 'refus') : 'indisponible';
+  const pnlText = hasPnl ? t.pnlPercent.toFixed(2) + '%' : '--';
+  return '<div class="diag-module">' +
+    '<div class="diag-head"><span class="diag-name">' + t.module.toUpperCase() + ' ' + t.direction.toUpperCase() + '</span>' +
+    '<span class="diag-decision ' + pnlClass + '">' + pnlText + '</span></div>' +
+    '<div class="diag-details">' +
+      '<div>Entree : ' + t.entryPrice + ' &rarr; Sortie : ' + t.exitPrice + '</div>' +
+      '<div>Motif : ' + t.exitReason + '</div>' +
+      '<div>' + new Date(t.entryTimestamp).toLocaleString('fr-FR') + ' &rarr; ' + new Date(t.exitTimestamp).toLocaleString('fr-FR') + '</div>' +
+    '</div></div>';
+}
+
+async function loadTrades() {
+  const ongoingEl = document.getElementById('tab2-ongoing');
+  const executedEl = document.getElementById('tab2-executed');
+  const pnlEl = document.getElementById('tab2-pnl');
+  try {
+    const res = await fetch('/api/trades');
+    if (!res.ok) throw new Error('reponse HTTP ' + res.status);
+    const data = await res.json();
+    const modules = ['scalp', 'day', 'swing'];
+    ongoingEl.innerHTML = modules.map(m => renderOngoingModule(m, data.ongoing && data.ongoing[m])).join('');
+    const executed = (data.executed || []).slice().reverse();
+    executedEl.innerHTML = executed.length
+      ? executed.map(renderExecutedRow).join('')
+      : '<div class="placeholder-note">Aucun trade execute pour le moment.</div>';
+    if (executed.length) {
+      const withPnl = executed.filter(t => t.pnlPercent !== null && t.pnlPercent !== undefined);
+      const wins = withPnl.filter(t => t.pnlPercent >= 0).length;
+      const totalPnl = withPnl.reduce((a, t) => a + t.pnlPercent, 0);
+      const avgPnl = withPnl.length ? totalPnl / withPnl.length : 0;
+      const winRate = withPnl.length ? (wins / withPnl.length * 100) : 0;
+      pnlEl.innerHTML = '<div class="diag-module"><div class="diag-details">' +
+        '<div>Trades executes : ' + executed.length + '</div>' +
+        '<div>Taux de reussite (simule) : ' + winRate.toFixed(1) + '% (' + wins + '/' + withPnl.length + ')</div>' +
+        '<div>PNL cumule (simule) : ' + totalPnl.toFixed(2) + '%</div>' +
+        '<div>PNL moyen par trade : ' + avgPnl.toFixed(2) + '%</div>' +
+      '</div></div>';
+    } else {
+      pnlEl.innerHTML = '<div class="placeholder-note">P/L -- aucune donnee disponible.<br>Alimentation automatique une fois des trades executes.</div>';
+    }
+  } catch (e) {
+    ongoingEl.innerHTML = '<div class="ledger-empty">Erreur reseau: ' + e.message + '</div>';
+  }
+}
 
 const FIELDS = [
   { group: 'Contexte de trading', key: 'positionSizing.maxCapitalPercentPerTrade', label: 'Capital max par trade', unit: '%', info: 'Pourcentage du capital risque sur un seul trade' },

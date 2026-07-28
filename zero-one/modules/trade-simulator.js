@@ -83,6 +83,38 @@ function saveState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
 
+const HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
+const HISTORY_MAX = 200; // limite pour ne pas laisser grossir indefiniment
+
+function loadHistory() {
+  if (!fs.existsSync(HISTORY_PATH)) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function appendHistory(record) {
+  const history = loadHistory();
+  history.push(record);
+  if (history.length > HISTORY_MAX) history.shift();
+  fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
+}
+
+// PNL simule (28/07/2026) : pourcentage de variation entre entree et
+// sortie, applique au levier du trade -- purement indicatif, aucun ordre
+// reel, aucun capital engage.
+function computePnlPercent(trade, exitPrice) {
+  if (exitPrice === null || exitPrice === undefined) return null;
+  if (trade.entryPrice === null || trade.entryPrice === undefined) return null;
+  const rawPct = trade.direction === 'long'
+    ? ((exitPrice - trade.entryPrice) / trade.entryPrice) * 100
+    : ((trade.entryPrice - exitPrice) / trade.entryPrice) * 100;
+  return rawPct * (trade.leverage || 1);
+}
+
 // Seuils de la loi d'entree/sortie -- en dur pour l'instant (27-28/07/2026),
 // a exposer dans config.json si Benjamin veut les calibrer plus tard.
 // entryLbw sert de REPLI uniquement, quand la tendance (close vs MA200)
@@ -288,6 +320,18 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   // zero du VWAP (mode meche : high/low de la derniere bougie).
   if (checkStopLoss(trade, primaryVol)) {
     const direction = trade.direction;
+    appendHistory({
+      module,
+      direction,
+      entryPrice: trade.entryPrice,
+      entryTimestamp: trade.entryTimestamp,
+      exitPrice: price,
+      exitTimestamp: new Date().toISOString(),
+      exitReason: `stop loss touche a ${trade.stopLossPrice} (mode meche)`,
+      leverage: trade.leverage,
+      positionSizePercent: trade.positionSizePercent,
+      pnlPercent: computePnlPercent(trade, price),
+    });
     state[module] = null;
     saveState(state);
     return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (stop loss touche a ${trade.stopLossPrice}, mode meche)`;
@@ -307,6 +351,18 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
 
   const direction = trade.direction;
   if (exit.closesTrade) {
+    appendHistory({
+      module,
+      direction,
+      entryPrice: trade.entryPrice,
+      entryTimestamp: trade.entryTimestamp,
+      exitPrice: price,
+      exitTimestamp: new Date().toISOString(),
+      exitReason: `${exit.action} -- ${exit.reason}`,
+      leverage: trade.leverage,
+      positionSizePercent: trade.positionSizePercent,
+      pnlPercent: computePnlPercent(trade, price),
+    });
     state[module] = null;
   } else {
     state[module] = trade;
