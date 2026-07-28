@@ -51,16 +51,27 @@ function readSignals(timeframe) {
   const rows = lines.slice(1).map(line => {
     const parts = line.split(',');
     const timestamp = parts[0];
+    const high = parseFloat(parts[2]);
+    const low = parseFloat(parts[3]);
     const close = parseFloat(parts[4]);
     const blue_wave = parseFloat(parts[6]);
     const buy = parseFloat(parts[8]);
     const ma200 = parseFloat(parts[12]);
-    return { timestamp, close, blue_wave, buy, ma200 };
-  }).filter(r => !isNaN(r.close) && !isNaN(r.blue_wave));
+    return { timestamp, high, low, close, blue_wave, buy, ma200 };
+  }).filter(r => !isNaN(r.close) && !isNaN(r.blue_wave) && !isNaN(r.high) && !isNaN(r.low));
   return rows.filter(r => !isNaN(r.buy) && r.buy !== 0);
 }
-function pctPrice(a, b) {
-  return ((b.close - a.close) / a.close) * 100;
+// Mode meche (28/07/2026) : compare l'extreme de prix pertinent selon le
+// sens teste plutot que la seule cloture -- low si l'onde monte (recherche
+// d'une divergence haussiere sur un plus bas), high si l'onde descend
+// (divergence baissiere sur un plus haut). Remplace l'ancien pctPrice()
+// base uniquement sur la cloture. Convention identique a celle du calcul
+// de `sens` dans closeChain() -- les deux doivent rester synchronises.
+function pctPriceLow(a, b) {
+  return ((b.low - a.low) / a.low) * 100;
+}
+function pctPriceHigh(a, b) {
+  return ((b.high - a.high) / a.high) * 100;
 }
 
 function pctWave(a, b) {
@@ -68,9 +79,10 @@ function pctWave(a, b) {
 }
 
 function diverges(a, b) {
-  const dPrice = pctPrice(a, b);
   const dWave = pctWave(a, b);
-  if (dPrice === 0 || dWave === 0) return false;
+  if (dWave === 0) return false;
+  const dPrice = dWave > 0 ? pctPriceLow(a, b) : pctPriceHigh(a, b);
+  if (dPrice === 0) return false;
   return Math.sign(dPrice) !== Math.sign(dWave);
 }
 function detectDivergenceChains(timeframe) {
@@ -110,8 +122,8 @@ function detectDivergenceChains(timeframe) {
 function closeChain(points, timeframe, isActive = false, expired = false) {
   const first = points[0];
   const last = points[points.length - 1];
-  const dPrice = pctPrice(first, last);
   const dWave = pctWave(first, last);
+  const dPrice = dWave > 0 ? pctPriceLow(first, last) : pctPriceHigh(first, last);
   const sens = dPrice < 0 && dWave > 0 ? 'haussiere' : (dPrice > 0 && dWave < 0 ? 'baissiere' : 'indeterminee');
 
   return {

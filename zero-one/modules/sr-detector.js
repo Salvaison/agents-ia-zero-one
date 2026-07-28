@@ -44,10 +44,12 @@ function readCloses(timeframe, limit = 50) {
     const parts = line.split(',');
     return {
       timestamp: parts[0],
+      high: parseFloat(parts[2]),
+      low: parseFloat(parts[3]),
       close: parseFloat(parts[4]),
       ma200: parseFloat(parts[12]),
     };
-  }).filter(r => !isNaN(r.close) && !isNaN(r.ma200));
+  }).filter(r => !isNaN(r.close) && !isNaN(r.ma200) && !isNaN(r.high) && !isNaN(r.low));
   return rows.slice(-limit);
 }
 
@@ -56,11 +58,24 @@ function pctGap(price, ma) {
 }
 
 /**
+ * Retourne le prix (high, low, ou le niveau lui-meme si la meche l'a
+ * physiquement traverse) le plus proche du niveau donne -- mode "meche"
+ * plutot que cloture seule (corrige le 28/07/2026, suite a un episode ou
+ * le chatbot consultatif a confondu un low intra-bougie avec le prix de
+ * cloture).
+ */
+function closestApproach(candle, level) {
+  if (level >= candle.low && level <= candle.high) return level;
+  return Math.abs(candle.high - level) < Math.abs(candle.low - level) ? candle.high : candle.low;
+}
+
+/**
  * Cherche le motif touche -> eloignement -> retest dans une serie de
- * bougies (close + ma200 par bougie). Retourne le meilleur statut trouve.
+ * bougies (high/low/ma200 par bougie -- mode meche depuis le 28/07/2026,
+ * auparavant close seule). Retourne le meilleur statut trouve.
  */
 function detectTouchRetest(candles, toleranceP, minDeviationP) {
-  const gaps = candles.map(c => pctGap(c.close, c.ma200));
+  const gaps = candles.map(c => pctGap(closestApproach(c, c.ma200), c.ma200));
 
   let lastTouchIdx = -1;
   for (let i = gaps.length - 1; i >= 0; i--) {
@@ -106,8 +121,8 @@ function readClosesOnly(timeframe, limit = 50) {
   const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
   const rows = lines.slice(1).map(line => {
     const parts = line.split(',');
-    return { timestamp: parts[0], close: parseFloat(parts[4]) };
-  }).filter(r => !isNaN(r.close));
+    return { timestamp: parts[0], high: parseFloat(parts[2]), low: parseFloat(parts[3]), close: parseFloat(parts[4]) };
+  }).filter(r => !isNaN(r.close) && !isNaN(r.high) && !isNaN(r.low));
   return rows.slice(-limit);
 }
 
@@ -133,7 +148,7 @@ function scoreFixedLevels(mainTimeframe) {
   const rank = { hors_zone: 0, touche_simple: 1, retest_confirme: 2 };
   let best = { status: 'hors_zone', matchedLevel: null };
   for (const lvl of levels) {
-    const candles = closes.map(c => ({ timestamp: c.timestamp, close: c.close, ma200: lvl.price }));
+    const candles = closes.map(c => ({ timestamp: c.timestamp, high: c.high, low: c.low, close: c.close, ma200: lvl.price }));
     const result = detectTouchRetest(candles, tolerance, minDeviation);
     if ((rank[result.status] || 0) > (rank[best.status] || 0)) {
       best = { ...result, matchedLevel: lvl.label, matchedPrice: lvl.price };
