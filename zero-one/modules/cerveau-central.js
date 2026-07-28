@@ -257,7 +257,7 @@ function evaluate(module) {
   // Desactivable via config.tradeSimulator.enabled (mis a false le 27/07/2026
   // le temps de refondre le systeme de score/confluence -- voir config.json).
   if (config.tradeSimulator && config.tradeSimulator.enabled) {
-    const tradeSimLine = simulateModule(module, primaryVol, divRaw);
+    const tradeSimLine = simulateModule(module, primaryVol, divRaw, config);
     if (tradeSimLine) details.push(tradeSimLine);
   }
 

@@ -100,6 +100,8 @@ function analyzeMomentum(timeframe, lookback = 20) {
     lastLbw: lastLbw.toFixed(2),
     lastBw: lastBw.toFixed(2),
     trendLbw,
+    lastHigh: lastCandle.high,
+    lastLow: lastCandle.low,
   };
 }
 

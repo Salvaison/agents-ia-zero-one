@@ -6,6 +6,25 @@
  * (LBW - BW), en remplacement du plan Fibonacci-sur-pivot du SOP v1 (jamais
  * implemente -- voir SOP-bot-trading-boono.md, section Trigger C).
  *
+ * MIS A JOUR LE 28/07/2026 : ajoute les champs qu'un vrai ordre MEXC
+ * porterait (levier, taille de position, type d'ordre, openType) et un
+ * mecanisme de stop loss :
+ *   - Levier : fixe a 50x pour l'instant (entre 1x et 100x), PROVISOIRE --
+ *     a calibrer en observation.
+ *   - Taille de position : issue de config.positionSizing.maxCapitalPercentPerTrade.
+ *   - Type d'ordre : "market" uniquement pour l'instant. L'idee d'un
+ *     "limit" order specifiquement pour les trades lies a un scenario
+ *     (le temps que le systeme trouve la meilleure entree) a ete evoquee
+ *     le 28/07/2026 mais N'EST PAS TRANCHEE -- non implementee.
+ *   - openType : "isolated" par defaut -- choix arbitraire, a confirmer.
+ *   - Stop loss : AUCUN stop n'existe avant TP1 (1er passage a zero du
+ *     VWAP). Au moment de TP1, un stop est pose au prix d'entree + 0.20
+ *     (long) ou - 0.20 (short) -- essentiellement un stop a l'equilibre
+ *     avec une petite marge, pas un stop classique a distance fixe depuis
+ *     l'entree. Verifie a CHAQUE tick (pas seulement lors d'un passage a
+ *     zero), en mode meche (high/low de la derniere bougie), car un stop
+ *     doit reagir immediatement a un mouvement de prix.
+ *
  * Un seul trade simule ouvert a la fois par module (scalp/day/swing),
  * coherent avec l'architecture a 3 modules paralleles du SOP.
  *
@@ -15,20 +34,23 @@
  *   SINON SI VWAP croise zero : LBW <= -60 : ecart >= 10 : DBSI <= -4 ALORS ENTRER_SHORT
  *   SINON ATTENDRE
  *
- * SORTIE (evaluee uniquement si un trade simule est ouvert pour ce module,
- * et seulement au moment d'un passage a zero du VWAP) :
- *   SI 1er passage depuis l'entree ALORS TP1 (garde le trade ouvert)
- *   SINON SI 2e passage : ecart >= 20 : BW entre -20 et 20 ALORS TP2 (ferme)
- *   SINON SI 2e passage : ecart < 20 ALORS ATTENDRE (garde le trade ouvert)
- *   SINON SI DIV >= 1 TF ALORS LIQUIDER, motif "divergence confirmee"
- *   SINON LIQUIDER, motif "valeur BW hors zone -20/20"
+ * SORTIE (evaluee uniquement si un trade simule est ouvert pour ce module) :
+ *   0. A CHAQUE TICK : si un stop loss est pose (donc apres TP1) et que la
+ *      meche de la derniere bougie l'a touche, LIQUIDER immediatement --
+ *      independamment d'un passage a zero du VWAP.
+ *   1. Sinon, uniquement au moment d'un passage a zero du VWAP :
+ *      SI 1er passage depuis l'entree ALORS TP1 (garde le trade ouvert,
+ *        pose le stop loss a l'equilibre +/- 0.20)
+ *      SINON SI 2e passage : ecart >= 20 : BW entre -20 et 20 ALORS TP2 (ferme)
+ *      SINON SI 2e passage : ecart < 20 ALORS ATTENDRE (garde le trade ouvert)
+ *      SINON SI DIV >= 1 TF ALORS LIQUIDER, motif "divergence confirmee"
+ *      SINON LIQUIDER, motif "valeur BW hors zone -20/20"
  *
  * HYPOTHESE D'IMPLEMENTATION A VALIDER AVEC BENJAMIN : chaque passage a zero
  * detecte fait avancer le compteur crossingsSinceEntry, y compris le cas
  * ATTENDRE (2e passage, ecart<20) -- donc un 3e passage eventuel tombe dans
  * la branche de liquidation par defaut (DIV/BW), faute de regle definie
- * au-dela du 2e passage dans la conversation du 27/07/2026. A confirmer ou
- * corriger une fois observe en conditions reelles.
+ * au-dela du 2e passage dans la conversation du 27/07/2026.
  *
  * Persistance : data/trade-sim-state.json, un objet par module ou null si
  * aucun trade simule n'est ouvert pour ce module.
@@ -52,7 +74,7 @@ function saveState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
 
-// Seuils de la loi d'entree/sortie -- en dur pour l'instant (27/07/2026),
+// Seuils de la loi d'entree/sortie -- en dur pour l'instant (27-28/07/2026),
 // a exposer dans config.json si Benjamin veut les calibrer plus tard.
 const THRESHOLDS = {
   entryLbw: 60,
@@ -61,6 +83,15 @@ const THRESHOLDS = {
   tp2Ecart: 20,
   tp2BwMin: -20,
   tp2BwMax: 20,
+};
+
+// Parametres d'ordre simules -- reflete les champs qu'un vrai ordre MEXC
+// porterait (levier, type d'ordre, openType), PROVISOIRES (28/07/2026).
+const ORDER_DEFAULTS = {
+  leverage: 50, // fixe entre 1x et 100x -- a calibrer, aucune donnee pour l'instant
+  orderType: 'market', // seul mode actif ; l'idee d'un limit order pour les scenarios n'est pas tranchee
+  openType: 'isolated', // choix par defaut arbitraire, a confirmer
+  stopLossBufferAbs: 0.20, // marge au-dela du prix d'entree pour le stop pose a TP1
 };
 
 function evaluateEntry(primaryVol) {
@@ -89,10 +120,26 @@ function evaluateEntry(primaryVol) {
   return null;
 }
 
+/**
+ * Verifie le stop loss en mode meche, a CHAQUE tick (independant d'un
+ * passage a zero du VWAP). Retourne true si le stop a ete touche.
+ * Aucun effet si trade.stopLossPrice est null (pas encore pose, avant TP1).
+ */
+function checkStopLoss(trade, primaryVol) {
+  if (trade.stopLossPrice === null || trade.stopLossPrice === undefined) return false;
+  const momentum = primaryVol.momentum;
+  if (!momentum || momentum.lastHigh === undefined || momentum.lastLow === undefined) return false;
+  const high = parseFloat(momentum.lastHigh);
+  const low = parseFloat(momentum.lastLow);
+  if (trade.direction === 'long') return low <= trade.stopLossPrice;
+  if (trade.direction === 'short') return high >= trade.stopLossPrice;
+  return false;
+}
+
 function evaluateExit(trade, primaryVol, divRaw) {
   const vwap = primaryVol.vwap;
   if (!vwap || !vwap.crossedZero) {
-    return { action: null, reason: null, closesTrade: false, incrementCrossing: false };
+    return { action: null, reason: null, closesTrade: false, incrementCrossing: false, setsStopLoss: false };
   }
 
   const ecart = vwap.reversalMagnitude !== null && vwap.reversalMagnitude !== undefined
@@ -104,24 +151,24 @@ function evaluateExit(trade, primaryVol, divRaw) {
   const crossingNumber = trade.crossingsSinceEntry + 1;
 
   if (crossingNumber === 1) {
-    return { action: 'TP1', reason: '1er passage a zero depuis entree', closesTrade: false, incrementCrossing: true };
+    return { action: 'TP1', reason: '1er passage a zero depuis entree', closesTrade: false, incrementCrossing: true, setsStopLoss: true };
   }
 
   if (crossingNumber === 2 && ecart !== null && ecart >= THRESHOLDS.tp2Ecart && bw !== null && bw >= THRESHOLDS.tp2BwMin && bw <= THRESHOLDS.tp2BwMax) {
-    return { action: 'TP2', reason: `2e passage, ecart=${ecart} BW=${bw}`, closesTrade: true, incrementCrossing: true };
+    return { action: 'TP2', reason: `2e passage, ecart=${ecart} BW=${bw}`, closesTrade: true, incrementCrossing: true, setsStopLoss: false };
   }
 
   if (crossingNumber === 2 && ecart !== null && ecart < THRESHOLDS.tp2Ecart) {
-    return { action: 'ATTENDRE', reason: `2e passage, ecart=${ecart} < ${THRESHOLDS.tp2Ecart}`, closesTrade: false, incrementCrossing: true };
+    return { action: 'ATTENDRE', reason: `2e passage, ecart=${ecart} < ${THRESHOLDS.tp2Ecart}`, closesTrade: false, incrementCrossing: true, setsStopLoss: false };
   }
 
   // Branche par defaut (2e passage avec BW hors zone, ou 3e+ passage) :
   // liquidation, motif distingue selon divergence (27/07/2026).
   const tfCount = (divRaw && divRaw.tfCount) || 0;
   if (tfCount >= 1) {
-    return { action: 'LIQUIDER', reason: 'divergence confirmee', closesTrade: true, incrementCrossing: true };
+    return { action: 'LIQUIDER', reason: 'divergence confirmee', closesTrade: true, incrementCrossing: true, setsStopLoss: false };
   }
-  return { action: 'LIQUIDER', reason: 'valeur inferieure a 20/-20 sur BW', closesTrade: true, incrementCrossing: true };
+  return { action: 'LIQUIDER', reason: 'valeur inferieure a 20/-20 sur BW', closesTrade: true, incrementCrossing: true, setsStopLoss: false };
 }
 
 /**
@@ -131,7 +178,7 @@ function evaluateExit(trade, primaryVol, divRaw) {
  * `details` y est deja rendu), ou null si rien de notable ne s'est passe
  * ce tick pour ce module.
  */
-function simulateModule(module, primaryVol, divRaw) {
+function simulateModule(module, primaryVol, divRaw, config) {
   const state = loadState();
   const trade = state[module];
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
@@ -139,23 +186,44 @@ function simulateModule(module, primaryVol, divRaw) {
   if (!trade) {
     const entry = evaluateEntry(primaryVol);
     if (!entry) return null;
+    const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
     state[module] = {
       direction: entry.direction,
       entryPrice: price,
       entryTimestamp: new Date().toISOString(),
       crossingsSinceEntry: 0,
       tp1Taken: false,
+      leverage: ORDER_DEFAULTS.leverage,
+      positionSizePercent,
+      orderType: ORDER_DEFAULTS.orderType,
+      openType: ORDER_DEFAULTS.openType,
+      stopLossPrice: null, // pose seulement au moment de TP1
     };
     saveState(state);
     const label = entry.direction === 'long' ? 'ENTRER_LONG' : 'ENTRER_SHORT';
-    return `[TRADE-SIM] ${label} @ ${price} (${entry.reason})`;
+    return `[TRADE-SIM] ${label} @ ${price} (${entry.reason}) [levier=${ORDER_DEFAULTS.leverage}x, ${ORDER_DEFAULTS.orderType}, ${ORDER_DEFAULTS.openType}, taille=${positionSizePercent}%]`;
   }
 
+  // 0. Stop loss -- verifie a CHAQUE tick, independamment d'un passage a
+  // zero du VWAP (mode meche : high/low de la derniere bougie).
+  if (checkStopLoss(trade, primaryVol)) {
+    const direction = trade.direction;
+    state[module] = null;
+    saveState(state);
+    return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (stop loss touche a ${trade.stopLossPrice}, mode meche)`;
+  }
+
+  // 1. Machine a etats basee sur les passages a zero du VWAP.
   const exit = evaluateExit(trade, primaryVol, divRaw);
   if (!exit.action) return null; // pas de passage a zero ce tick, rien a signaler
 
   if (exit.incrementCrossing) trade.crossingsSinceEntry += 1;
-  if (exit.action === 'TP1') trade.tp1Taken = true;
+  if (exit.action === 'TP1') {
+    trade.tp1Taken = true;
+    trade.stopLossPrice = trade.direction === 'long'
+      ? trade.entryPrice + ORDER_DEFAULTS.stopLossBufferAbs
+      : trade.entryPrice - ORDER_DEFAULTS.stopLossBufferAbs;
+  }
 
   const direction = trade.direction;
   if (exit.closesTrade) {
@@ -165,7 +233,8 @@ function simulateModule(module, primaryVol, divRaw) {
   }
   saveState(state);
 
-  return `[TRADE-SIM] ${module.toUpperCase()} ${direction} ${exit.action} @ ${price} (${exit.reason})`;
+  const slNote = exit.action === 'TP1' ? ` [stop loss pose a ${trade.stopLossPrice}]` : '';
+  return `[TRADE-SIM] ${module.toUpperCase()} ${direction} ${exit.action} @ ${price} (${exit.reason})${slNote}`;
 }
 
-module.exports = { simulateModule, loadState, THRESHOLDS };
+module.exports = { simulateModule, loadState, THRESHOLDS, ORDER_DEFAULTS };
