@@ -282,7 +282,8 @@
   "tradeSimulator": {
     "enabled": true,
     "requiresConfluence": false,
-    "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant). PORTAIL DESACTIVE LE 29/07/2026 (decision de Benjamin, requiresConfluence=false) : trade-simulator redevient autonome, pilote uniquement par sa propre loi VWAP/LBW/ecart/DBSI (cascade 3m incluse), pour calibrer ce declencheur en paper trading avant de le recontraindre par la chaine de confluence. Beaucoup de trades rates/inutiles attendus -- c'est le but de cette phase.",
+    "requiresDbsi": false,
+    "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant). PORTAIL DESACTIVE LE 29/07/2026 (decision de Benjamin, requiresConfluence=false) : trade-simulator redevient autonome, pilote uniquement par sa propre loi VWAP/LBW/ecart/DBSI (cascade 3m incluse), pour calibrer ce declencheur en paper trading avant de le recontraindre par la chaine de confluence. Beaucoup de trades rates/inutiles attendus -- c'est le but de cette phase. DBSI RETIRE LE 29/07/2026 (requiresDbsi=false) : calibrer d'abord le passage a zero + seuil LBW tout seuls, avant de reintroduire DBSI comme condition supplementaire.",
     "lbwThresholds": {
       "haussiere": {
         "shortExtreme": 60,

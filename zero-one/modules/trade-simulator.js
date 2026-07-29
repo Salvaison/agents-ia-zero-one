@@ -182,18 +182,27 @@ function evaluateEntry(primaryVol, config, volByTf) {
   const momentum = sourceVol.momentum;
   const dbsi = sourceVol.dbsi;
   if (!momentum || momentum.lastLbw === undefined) return null;
-  if (!dbsi || dbsi.diff === undefined) return null;
+
+  // DBSI desactivable (29/07/2026, decision de Benjamin) : pour calibrer
+  // d'abord le passage a zero + seuil LBW tout seuls, avant de reintroduire
+  // DBSI comme condition supplementaire. Reversible via
+  // config.tradeSimulator.requiresDbsi (false actuellement).
+  const requiresDbsi = !config || !config.tradeSimulator || config.tradeSimulator.requiresDbsi !== false;
+  const dbsiDiff = (dbsi && dbsi.diff !== undefined) ? parseFloat(dbsi.diff) : null;
+  if (requiresDbsi) {
+    if (dbsiDiff === null) return null;
+    if (dbsiDiff > THRESHOLDS.entryDbsi) return null; // DBSI doit etre <= -4
+  }
 
   const lbw = parseFloat(momentum.lastLbw);
   const ecart = vwap.reversalMagnitude !== null && vwap.reversalMagnitude !== undefined
     ? parseFloat(vwap.reversalMagnitude)
     : null;
-  const dbsiDiff = parseFloat(dbsi.diff);
 
   if (ecart === null || ecart < THRESHOLDS.entryEcart) return null;
-  if (dbsiDiff > THRESHOLDS.entryDbsi) return null; // DBSI doit etre <= -4
 
   const cascadeNote = cascade ? ' [cascade 3m, confirmation anticipee]' : '';
+  const dbsiNote = dbsiDiff !== null ? ` DBSI=${dbsiDiff}${requiresDbsi ? '' : ' (hors condition)'}` : '';
 
   // Tendance toujours evaluee sur le TF principal (15m), pas sur le 3m
   // meme en cas de cascade -- la tendance de fond ne change pas en 3 min.
@@ -203,19 +212,19 @@ function evaluateEntry(primaryVol, config, volByTf) {
   if (trend && lbwCfg && lbwCfg.haussiere && lbwCfg.baissiere) {
     if (trend === 'haussiere') {
       if (lbw >= lbwCfg.haussiere.shortExtreme) {
-        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
+        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
       }
       if (lbw >= lbwCfg.haussiere.longSouple) {
-        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
+        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
       }
       return null;
     }
     if (trend === 'baissiere') {
       if (lbw <= lbwCfg.baissiere.longExtreme) {
-        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
+        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
       }
       if (lbw <= lbwCfg.baissiere.shortSouple) {
-        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart} DBSI=${dbsiDiff}${cascadeNote}` };
+        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
       }
       return null;
     }
@@ -224,10 +233,10 @@ function evaluateEntry(primaryVol, config, volByTf) {
   // Repli : tendance indeterminee ou config manquante -- ancien seuil
   // symetrique +/-60 (comportement d'avant le 28/07/2026), par prudence.
   if (lbw >= THRESHOLDS.entryLbw) {
-    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
+    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart}${dbsiNote} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
   }
   if (lbw <= -THRESHOLDS.entryLbw) {
-    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart} DBSI=${dbsiDiff} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
+    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart}${dbsiNote} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
   }
   return null;
 }
