@@ -121,12 +121,13 @@ function computePnlPercent(trade, exitPrice) {
 // est indeterminee -- voir lbwThresholds dans config.json pour le cas normal.
 const THRESHOLDS = {
   entryLbw: 60,
-  entryEcart: 10,
+  entryEcart: 5, // baisse de 10 a 5 le 29/07/2026 -- aucun passage a zero observe en audit n'atteignait 10 (tous entre 5 et 8)
   entryDbsi: -4,
   tp2Ecart: 20,
   tp2BwMin: -20,
   tp2BwMax: 20,
-  cascadeVwapThreshold: 2, // |vwap 15m| <= ce seuil -> interroge le 3m (28/07/2026)
+  cascadeVwapThreshold: 3, // monte de 2 a 3 le 29/07/2026 (|vwap 15m| <= ce seuil -> interroge le 3m)
+  cadenceBypassThreshold: 30, // ajoute le 29/07/2026 -- repli si config.tradeSimulator.cadenceBypassThreshold absent
 };
 
 // Parametres d'ordre simules -- reflete les champs qu'un vrai ordre MEXC
@@ -175,6 +176,24 @@ function resolveEntryVol(primaryVol, volByTf) {
 }
 
 function evaluateEntry(primaryVol, config, volByTf) {
+  // Bypass Cadence (29/07/2026, decision de Benjamin) : capte les poussees
+  // directionnelles fortes que le VWAP (base sur un retournement/passage a
+  // zero) ne peut pas voir par construction -- observe en audit le
+  // 29/07/2026 (cadence pic a 53 ticks/s, DBSI eleve, mais VWAP 15m ET 3m
+  // sans aucun passage a zero). Si Cadence >= seuil, declenche une entree
+  // sur le sens lisse du prix (Trigger.priceSens3), independamment de tout
+  // passage a zero du VWAP.
+  const trig = primaryVol.trigger;
+  const cadenceBypassThreshold = (config && config.tradeSimulator && config.tradeSimulator.cadenceBypassThreshold) || THRESHOLDS.cadenceBypassThreshold;
+  if (trig && trig.cadenceTicksPerSec !== undefined && trig.cadenceTicksPerSec !== null) {
+    const cadenceValue = parseFloat(trig.cadenceTicksPerSec);
+    if (cadenceValue >= cadenceBypassThreshold && trig.priceSens3 !== undefined && trig.priceSens3 !== 0) {
+      const direction = trig.priceSens3 > 0 ? 'long' : 'short';
+      const sensLabel = trig.priceSens3 > 0 ? 'haussier' : 'baissier';
+      return { direction, reason: `bypass cadence=${cadenceValue} ticks/s (sens lisse 3 tranches, ${sensLabel})` };
+    }
+  }
+
   const { vol: sourceVol, cascade } = resolveEntryVol(primaryVol, volByTf || {});
   if (!sourceVol) return null;
 

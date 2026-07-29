@@ -288,6 +288,14 @@ function analyzeTrigger() {
     ? toScore(parseFloat(cadence), _config.scoring.cadence.thresholds.values)
     : null;
 
+  // Sens lisse (29/07/2026) : signe du mouvement de prix moyenne sur les 3
+  // dernieres tranches (sur 8), pour donner une direction exploitable a un
+  // bypass Cadence -- coherence/convictionScore restent des magnitudes non
+  // signees, ce champ comble ce manque.
+  const last3 = validSlices.slice(-3);
+  const avgPctMove3 = last3.reduce((a, s) => a + s.pctMove, 0) / last3.length;
+  const priceSens3 = Math.sign(avgPctMove3);
+
   const lastPrice = tickBuffer[tickBuffer.length - 1].price;
 
   return {
@@ -298,6 +306,8 @@ function analyzeTrigger() {
     convictionScore: convictionScore.toFixed(2),
     cadenceTicksPerSec: cadence,
     cadenceScore,
+    priceSens3,
+    avgPctMove3: (avgPctMove3 * 100).toFixed(4) + '%',
     score: weightedScore,
   };
 }
