@@ -281,7 +281,8 @@
   },
   "tradeSimulator": {
     "enabled": true,
-    "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). trade-simulator.js n'est desormais appele que si cerveau-central.js confirme CONFLUENCE ATTEINTE (le portail) -- il n'a plus sa propre logique d'entree independante, il execute la loi VWAP precise une fois le portail ouvert. Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant).",
+    "requiresConfluence": false,
+    "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant). PORTAIL DESACTIVE LE 29/07/2026 (decision de Benjamin, requiresConfluence=false) : trade-simulator redevient autonome, pilote uniquement par sa propre loi VWAP/LBW/ecart/DBSI (cascade 3m incluse), pour calibrer ce declencheur en paper trading avant de le recontraindre par la chaine de confluence. Beaucoup de trades rates/inutiles attendus -- c'est le but de cette phase.",
     "lbwThresholds": {
       "haussiere": {
         "shortExtreme": 60,

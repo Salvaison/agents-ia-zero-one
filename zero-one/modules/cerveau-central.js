@@ -284,10 +284,14 @@ function evaluate(module) {
   // Simulation de trade (27/07/2026, cascade 3m ajoutee separement dans
   // trade-simulator.js) : loi d'entree + machine a etats TP1/TP2/liquidation
   // basee sur le VWAP. OBSERVATION SEULE -- aucun ordre reel n'est jamais
-  // passe. N'agit desormais QUE si la chaine de confluence est entierement
-  // verifiee (passes === true) -- cerveau-central est le portail,
-  // trade-simulator l'executant. Desactivable via config.tradeSimulator.enabled.
-  if (passes && config.tradeSimulator && config.tradeSimulator.enabled) {
+  // passe. Portail de confluence DESACTIVE le 29/07/2026 (decision de
+  // Benjamin) : trade-simulator redevient autonome, pilote uniquement par
+  // sa propre loi VWAP/LBW/ecart/DBSI, pour calibrer ce declencheur en
+  // paper trading avant de le recontraindre par la chaine de confluence.
+  // Reversible via config.tradeSimulator.requiresConfluence (false
+  // actuellement -- remettre a true pour reactiver le portail).
+  const requiresConfluence = !config.tradeSimulator || config.tradeSimulator.requiresConfluence !== false;
+  if ((passes || !requiresConfluence) && config.tradeSimulator && config.tradeSimulator.enabled) {
     const tradeSimLine = simulateModule(module, primaryVol, divRaw, config, volByTf);
     if (tradeSimLine) details.push(tradeSimLine);
   }
