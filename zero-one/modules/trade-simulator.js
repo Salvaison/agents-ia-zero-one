@@ -372,9 +372,13 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   if (exit.incrementCrossing) trade.crossingsSinceEntry += 1;
   if (exit.action === 'TP1') {
     trade.tp1Taken = true;
+    // Corrige le 29/07/2026 : stop de protection pose a TP1 (break-even),
+    // du cote qui protege le gain acquis. LONG -> sous l'entree ; SHORT ->
+    // au-dessus. Les signes etaient inverses, ce qui posait le stop quasi
+    // colle au prix du mauvais cote (touche des la bougie suivante).
     trade.stopLossPrice = trade.direction === 'long'
-      ? trade.entryPrice + ORDER_DEFAULTS.stopLossBufferAbs
-      : trade.entryPrice - ORDER_DEFAULTS.stopLossBufferAbs;
+      ? trade.entryPrice - ORDER_DEFAULTS.stopLossBufferAbs
+      : trade.entryPrice + ORDER_DEFAULTS.stopLossBufferAbs;
   }
 
   const direction = trade.direction;
