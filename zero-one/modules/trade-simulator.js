@@ -365,6 +365,39 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
     return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (stop loss touche a ${trade.stopLossPrice}, mode meche)`;
   }
 
+  // 0.5. Timeout anti-zombie (30/07/2026, GARDE-FOU D'URGENCE) : une
+  // position sans TP1 n'a jamais de stop pose (voir etape 0 ci-dessus),
+  // donc peut rester ouverte a nu indefiniment si aucun passage a zero
+  // n'arrive. Ferme de force au-dela de config.tradeSimulator.
+  // maxHoldMinutesWithoutTp1[module] minutes. Provisoire, remplace par le
+  // "baton de relais" une fois pret.
+  if (!trade.tp1Taken) {
+    const maxHold = config && config.tradeSimulator && config.tradeSimulator.maxHoldMinutesWithoutTp1
+      ? config.tradeSimulator.maxHoldMinutesWithoutTp1[module]
+      : null;
+    if (maxHold) {
+      const elapsedMinutes = (Date.now() - new Date(trade.entryTimestamp).getTime()) / 60000;
+      if (elapsedMinutes >= maxHold) {
+        const direction = trade.direction;
+        appendHistory({
+          module,
+          direction,
+          entryPrice: trade.entryPrice,
+          entryTimestamp: trade.entryTimestamp,
+          exitPrice: price,
+          exitTimestamp: new Date().toISOString(),
+          exitReason: `timeout anti-zombie (${elapsedMinutes.toFixed(1)} min sans TP1, max ${maxHold})`,
+          leverage: trade.leverage,
+          positionSizePercent: trade.positionSizePercent,
+          pnlPercent: computePnlPercent(trade, price),
+        });
+        state[module] = null;
+        saveState(state);
+        return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (timeout anti-zombie, ${elapsedMinutes.toFixed(1)} min sans TP1)`;
+      }
+    }
+  }
+
   // 1. Machine a etats basee sur les passages a zero du VWAP.
   const exit = evaluateExit(trade, primaryVol, divRaw);
   if (!exit.action) return null; // pas de passage a zero ce tick, rien a signaler
