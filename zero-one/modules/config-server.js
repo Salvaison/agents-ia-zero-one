@@ -343,6 +343,214 @@ app.get('/api/audit-history', requireAuth, (req, res) => {
   res.json({ history });
 });
 
+// ── Page AUDIT independante (31/07/2026) ───────────────────────────────────────
+// Fond noir, hors de la coquille de l'app -- ouverte dans un nouvel onglet.
+app.get('/audit-view', requireAuth, (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit ZeroOne</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2230;
+    --border: #3a4557;
+    --text: #d8e0ea;
+    --muted: #7d8ba0;
+    --accent: #4a9eff;
+    --up: #26a69a;
+    --down: #ef5350;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+  }
+  h1 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; font-size: 11px; color: var(--muted); }
+  .controls input { width: 46px; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 5px; }
+  .controls button { background: var(--accent); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .stats { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .stats b { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; font-family: "SF Mono", Menlo, monospace; font-size: 12px; }
+  th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th:last-child, td:last-child { border-right: none; }
+  th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--bg); }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  tr.reversal { background: #2a1f3d; }
+  tr.trade { background: #0e2a1e; }
+  tr.bypass { background: #2a1a0d; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .badge.trade { background: #2ecc71; color: #04170e; }
+  .badge.bypass { background: #ff6b35; color: #2a1000; }
+  .pivot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+  .pivot.high { background: #26a69a; }
+  .pivot.low { background: #ef5350; }
+  .empty { color: var(--muted); padding: 30px; text-align: center; }
+</style>
+</head>
+<body>
+  <h1>Audit ZeroOne</h1>
+  <div class="sub">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.</div>
+
+  <div class="controls">
+    <label>Retournement Delta VWAP3 &gt;= <input type="number" id="rDelta" value="6" step="0.5"></label>
+    <label>et VWAP3 proche de &lt;= <input type="number" id="rProx" value="7" step="0.5"></label>
+    <label>Confirm. cadence &gt;= <input type="number" id="cCad" value="3" step="0.1"></label>
+    <label>ou netMove &gt;= <input type="number" id="cNet" value="2" step="0.1"></label>
+    <label>Bypass cadence &gt;= <input type="number" id="bCad" value="7" step="0.5"></label>
+    <label>ou netMove &gt;= <input type="number" id="bNet" value="5" step="0.5"></label>
+    <button onclick="loadAudit()">Rafraichir</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="wrap"><div class="empty">Chargement des donnees</div></div>
+
+<script>
+function fmt(v, d) {
+  if (v === undefined || v === null || isNaN(v)) return String.fromCharCode(8212);
+  return v.toFixed(d);
+}
+function cls(v) {
+  if (v === undefined || v === null || isNaN(v)) return '';
+  return v > 0 ? 'up' : (v < 0 ? 'down' : '');
+}
+function arrow(d) {
+  if (d === 'haussier') return '<span class="up">&#9650;</span>';
+  if (d === 'baissier') return '<span class="down">&#9660;</span>';
+  if (d === 'neutre') return '0';
+  return String.fromCharCode(8212);
+}
+function timeParis(ts) {
+  return new Date(ts).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+async function loadAudit() {
+  const wrap = document.getElementById('wrap');
+  const statsEl = document.getElementById('stats');
+  const rDelta = parseFloat(document.getElementById('rDelta').value) || 6;
+  const rProx = parseFloat(document.getElementById('rProx').value) || 7;
+  const cCad = parseFloat(document.getElementById('cCad').value) || 3;
+  const cNet = parseFloat(document.getElementById('cNet').value) || 2;
+  const bCad = parseFloat(document.getElementById('bCad').value) || 7;
+  const bNet = parseFloat(document.getElementById('bNet').value) || 5;
+
+  try {
+    const res = await fetch('/api/audit-history');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = data.history || [];
+    if (rows.length === 0) {
+      wrap.innerHTML = '<div class="empty">Aucune donnee pour le moment.</div>';
+      statsEl.innerHTML = '';
+      return;
+    }
+
+    const BASE_WINDOW = 10;
+    let prevVwap3 = null;
+    let vigActive = false, vigCounter = 0;
+    const VIG_WINDOW = 6;
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      r.deltaVwap3 = (prevVwap3 !== null && r.vwap3 !== null) ? (r.vwap3 - prevVwap3) : null;
+      if (r.vwap3 !== null) prevVwap3 = r.vwap3;
+
+      const start = Math.max(0, i - BASE_WINDOW);
+      const prior = rows.slice(start, i).filter(function(p) { return p.netMove !== null && p.netMove !== undefined; });
+      const baseline = prior.length > 0 ? prior.reduce(function(a, p) { return a + Math.abs(p.netMove); }, 0) / prior.length : null;
+      r.netMoveMult = (baseline !== null && baseline > 0 && r.netMove !== null) ? Math.abs(r.netMove) / baseline : null;
+
+      r.isReversal = (r.deltaVwap3 !== null && Math.abs(r.deltaVwap3) >= rDelta) && (r.vwap3 !== null && Math.abs(r.vwap3) <= rProx);
+      r.isConfirm = (r.cadenceMult !== null && r.cadenceMult >= cCad) || (r.netMoveMult !== null && r.netMoveMult >= cNet);
+      r.isBypass = (r.cadenceMult !== null && r.cadenceMult >= bCad) || (r.netMoveMult !== null && r.netMoveMult >= bNet);
+
+      r.isTrade = false;
+      if (r.isReversal) { vigActive = true; vigCounter = 0; }
+      else if (vigActive) { vigCounter++; if (vigCounter > VIG_WINDOW) vigActive = false; }
+      if (vigActive && r.isConfirm) { r.isTrade = true; vigActive = false; }
+
+      r.pivot = null;
+    }
+
+    let lastSign = null, lastIdx = null;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.deltaVwap3 === null || r.deltaVwap3 === 0) continue;
+      const sign = r.deltaVwap3 > 0 ? 1 : -1;
+      if (lastSign !== null && sign !== lastSign && lastIdx !== null) {
+        rows[lastIdx].pivot = (lastSign > 0) ? 'high' : 'low';
+      }
+      lastSign = sign;
+      lastIdx = i;
+    }
+
+    let reversals = 0, trades = 0, bypasses = 0, crosses = 0;
+    for (const r of rows) {
+      if (r.isReversal) reversals++;
+      if (r.isTrade) trades++;
+      if (r.isBypass) bypasses++;
+      if (r.vwap15Cross || r.vwap3Cross) crosses++;
+    }
+    statsEl.innerHTML = rows.length + ' releves (24h glissantes) - ' + crosses + ' passages a zero - ' + reversals + ' retournements imminents - <b style="color:#2ecc71">' + trades + ' TRADE</b> - <b style="color:#ff6b35">' + bypasses + ' BYPASS</b>';
+
+    const recent = rows.slice(-250);
+    let html = '<table><thead><tr>' +
+      '<th>Heure (Paris)</th><th>Pivot</th><th>VWAP3</th><th>Delta VWAP3</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
+      '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
+      '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
+      '</tr></thead><tbody>';
+
+    for (const r of recent) {
+      const rowCls = r.isTrade ? 'trade' : (r.isBypass ? 'bypass' : (r.isReversal ? 'reversal' : ''));
+      let pivotCell = '';
+      if (r.pivot === 'high') pivotCell = '<span class="pivot high"></span>';
+      else if (r.pivot === 'low') pivotCell = '<span class="pivot low"></span>';
+      let signalCell = '';
+      if (r.isTrade) signalCell = '<span class="badge trade">TRADE</span>';
+      else if (r.isBypass) signalCell = '<span class="badge bypass">BYPASS</span>';
+
+      html += '<tr class="' + rowCls + '">' +
+        '<td>' + timeParis(r.ts) + '</td>' +
+        '<td style="text-align:center;">' + pivotCell + '</td>' +
+        '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
+        '<td class="' + cls(r.deltaVwap3) + '">' + fmt(r.deltaVwap3,2) + '</td>' +
+        '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
+        '<td class="' + cls(r.vwap15) + '">' + fmt(r.vwap15,2) + '</td>' +
+        '<td>' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
+        '<td>' + fmt(r.cadence,2) + '</td>' +
+        '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
+        '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
+        '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,4) + '</td>' +
+        '<td>' + fmt(r.netMoveMult,2) + '</td>' +
+        '<td>' + fmt(r.amplitude,4) + '</td>' +
+        '<td>' + fmt(r.winSec,1) + '</td>' +
+        '<td>' + arrow(r.direction) + '</td>' +
+        '<td>' + (r.isReversal ? '&#9888;' : '') + '</td>' +
+        '<td>' + signalCell + '</td>' +
+        '</tr>';
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = '<div class="empty">Erreur reseau : ' + e.message + '</div>';
+  }
+}
+
+loadAudit();
+setInterval(loadAudit, 30000);
+</script>
+</body>
+</html>`);
+});
+
 // ── Page principale ───────────────────────────────────────────────────────────
 app.get('/', requireAuth, (req, res) => {
   res.send(`
@@ -703,20 +911,11 @@ app.get('/', requireAuth, (req, res) => {
 
       <!-- ═══════════════ AUDIT (baton de relais) ═══════════════ -->
       <div class="main-section" id="section-audit">
-        <div class="panel">
-          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; font-size:11px; color:var(--faint);">
-            <label>Retournement |&Delta;VWAP3|&ge; <input type="number" id="auditReversalDelta" value="6" step="0.5" style="width:48px;"></label>
-            <label>et |VWAP3|&le; <input type="number" id="auditReversalProx" value="7" step="0.5" style="width:48px;"></label>
-            <label>Confirm. cadenceMult&ge; <input type="number" id="auditConfirmCadence" value="3" step="0.1" style="width:48px;"></label>
-            <label>ou netMoveMult&ge; <input type="number" id="auditConfirmNetMove" value="2" step="0.1" style="width:48px;"></label>
-            <label>Bypass cadenceMult&ge; <input type="number" id="auditBypassCadence" value="7" step="0.5" style="width:48px;"></label>
-            <label>ou netMoveMult&ge; <input type="number" id="auditBypassNetMove" value="5" step="0.5" style="width:48px;"></label>
-            <button class="diag-refresh" id="auditRefresh">Rafraichir</button>
+        <div class="panel" style="text-align:center; padding:60px 20px;">
+          <div style="font-size:13px; color:var(--faint); margin-bottom:16px;">
+            La page AUDIT s ouvre dans un nouvel onglet, avec un affichage optimise (fond noir, colonnes larges) -- ideal aussi en mode paysage sur telephone.
           </div>
-          <div id="auditStats" style="font-size:11px; color:var(--faint); margin-bottom:8px;"></div>
-          <div id="auditTableWrap" style="overflow-x:auto; max-height:70vh; overflow-y:auto;">
-            <div class="placeholder-note">Chargement de l'historique...</div>
-          </div>
+          <button class="diag-refresh" id="auditOpenBtn" style="padding:10px 24px; font-size:13px;">Ouvrir la page AUDIT</button>
         </div>
       </div>
       <!-- ═══════════════ PARAMETRES ═══════════════ -->
@@ -772,8 +971,7 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
       tradesAutoRefresh = setInterval(loadTrades, 60000);
     }
     if (el.dataset.main === 'audit') {
-      loadAudit();
-      auditAutoRefresh = setInterval(loadAudit, 30000);
+      window.open('/audit-view', '_blank');
     }
     if (el.dataset.main === 'parametres') loadParams();
   });
@@ -1208,7 +1406,7 @@ async function loadAudit() {
     const data = await res.json();
     const rows = data.history || [];
     if (rows.length === 0) {
-      wrap.innerHTML = '<div class="placeholder-note">Aucune donnee pour l\'instant -- le baton-relay doit tourner un moment.</div>';
+      wrap.innerHTML = '<div class="placeholder-note">Aucune donnee pour le moment -- le baton-relay doit tourner un moment.</div>';
       statsEl.innerHTML = '';
       return;
     }
@@ -1292,7 +1490,7 @@ async function loadAudit() {
     wrap.innerHTML = '<div class="ledger-empty">Erreur reseau: ' + e.message + '</div>';
   }
 }
-document.getElementById('auditRefresh') && document.getElementById('auditRefresh').addEventListener('click', loadAudit);
+document.getElementById('auditOpenBtn') && document.getElementById('auditOpenBtn').addEventListener('click', function() { window.open('/audit-view', '_blank'); });
 
 const FIELDS = [
   { group: 'Contexte de trading', key: 'positionSizing.maxCapitalPercentPerTrade', label: 'Capital max par trade', unit: '%', info: 'Pourcentage du capital risque sur un seul trade' },
