@@ -296,6 +296,31 @@ function analyzeTrigger() {
   const avgPctMove3 = last3.reduce((a, s) => a + s.pctMove, 0) / last3.length;
   const priceSens3 = Math.sign(avgPctMove3);
 
+  // Mesures d'amplitude sur la fenetre de 200 ticks (30/07/2026) -- pour
+  // distinguer une vraie poussee d'un retournement bruite. amplitudePct
+  // capture la force reelle (high-low), non diluee par les allers-retours
+  // qui font chuter avgPctMove3 au pic. OBSERVATION SEULEMENT pour l'instant.
+  let amplitudePct = null;
+  let netMovePct = null;
+  let windowSeconds = null;
+  let priceHigh = null;
+  let priceLow = null;
+  if (windowTicks.length >= 2) {
+    let hi = -Infinity, lo = Infinity;
+    for (const t of windowTicks) {
+      const p = parseFloat(t.price);
+      if (p > hi) hi = p;
+      if (p < lo) lo = p;
+    }
+    priceHigh = hi;
+    priceLow = lo;
+    amplitudePct = lo > 0 ? ((hi - lo) / lo * 100) : null;
+    const pFirst = parseFloat(windowTicks[0].price);
+    const pLast = parseFloat(windowTicks[windowTicks.length - 1].price);
+    netMovePct = pFirst > 0 ? ((pLast - pFirst) / pFirst * 100) : null;
+    windowSeconds = (windowTicks[windowTicks.length - 1].ts - windowTicks[0].ts) / 1000;
+  }
+
   const lastPrice = tickBuffer[tickBuffer.length - 1].price;
 
   return {
@@ -308,6 +333,11 @@ function analyzeTrigger() {
     cadenceScore,
     priceSens3,
     avgPctMove3: (avgPctMove3 * 100).toFixed(4) + '%',
+    amplitudePct: amplitudePct !== null ? amplitudePct.toFixed(4) + '%' : null,
+    netMovePct: netMovePct !== null ? netMovePct.toFixed(4) + '%' : null,
+    windowSeconds: windowSeconds !== null ? windowSeconds.toFixed(1) : null,
+    priceHigh,
+    priceLow,
     score: weightedScore,
   };
 }

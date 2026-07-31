@@ -1,49 +1,54 @@
 /**
- * baton-relay.js — Processus PERMANENT et INDEPENDANT (30/07/2026).
- * Calcule le "baton de relais" toutes les 30s et implemente la CHAINE DE
- * DECISION definie avec Benjamin :
+ * baton-relay.js — Processus PERMANENT et INDEPENDANT (30/07/2026), separe
+ * de cerveau-central.js (qui evalue toutes les 60s). Calcule le "baton de
+ * relais" toutes les 30s :
+ *   - direction : signe de (prix maintenant - prix il y a 30s, le relevé
+ *     precedent)
+ *   - cadenceMultiplier : cadence actuelle / MOYENNE GLISSANTE sur 4h
  *
- *   1. EVENEMENT     : cadenceMultiplier >= 2x (vs moyenne glissante 4h)
- *                      -> entre en VIGILANCE
- *   2. VIGILANCE     : etat PERSISTANT, relaye de baton en baton. Ne
- *                      s'eteint jamais tout seul (decision de Benjamin) --
- *                      seule une reaction du prix le resout.
- *   3. REACTION PRIX : c'est le PRIX qui decide du sens, jamais l'evenement
- *                      (un pic de cadence est ambigu par nature : il casse
- *                      le marche -- ralentit, inverse, ou accentue une
- *                      tendance existante -- verifie le 30/07 sur 7 pics
- *                      reels : parfois retournement, parfois continuation).
- *                        - |netMove| >= 0.06%  -> action IMMEDIATE (1 baton)
- *                        - |netMove| >= 0.03%  -> action si confirme sur
- *                          2 batons consecutifs dans le MEME sens
- *                      (0.01% ~ mouvement moyen observe ; 3x = significatif)
- *   4. TRADE         : dans le sens du prix ("la liquidite MAINTENANT")
+ * Garde-fou de plausibilite : cadence > 120 = anomalie -- exclue de la
+ * moyenne glissante, ne produit aucun signal.
  *
- * Garde-fou de plausibilite : cadence > 120 = anomalie (sweep extreme ou
- * limite de resolution de l'horodatage MEXC -- observe cadence=50000 avec
- * winSec=0.0). Exclue de la moyenne glissante, ne produit aucun signal.
+ * CHAINE DE DECISION (30/07/2026) :
+ *   1. EVENEMENT     : cadenceMultiplier >= 2x -> VIGILANCE
+ *   2. VIGILANCE     : etat PERSISTANT, relaye de baton en baton
+ *   3. REACTION PRIX : |netMove| >= 0.06% -> action immediate ;
+ *                      |netMove| >= 0.03% confirme sur 2 batons -> action
+ *   4. TRADE         : dans le sens du prix
  *
- * Ecrit dans data/baton-state.json, lu par trade-simulator.js (60s).
- * Le baton NE DECIDE PAS le trade : il expose l'etat de la chaine. Les
- * regles d'action (tranches 25/65/10) vivent dans trade-simulator.js.
+ * MIS A JOUR LE 31/07/2026 (v3) : ajoute la persistance d'un historique
+ * glissant de 24h (2880 relevés a 30s) dans data/audit-history.json,
+ * servi par la route /api/audit-history (config-server.js) -- remplace
+ * le copier-coller manuel du log dans l'outil d'audit HTML par un vrai
+ * onglet du dashboard web (AUDIT). Inclut desormais priceHigh/priceLow
+ * (necessite le patch priceHigh/priceLow de volume-analyzer.js).
  *
- * PM2 : pm2 start baton-relay.js --name baton-relay
+ * Ecrit dans data/baton-state.json (etat courant, lu par trade-simulator.js
+ * a chaque cycle de 60s) ET data/audit-history.json (historique 24h, lu
+ * par le dashboard web). Le baton NE DECIDE PAS le trade : il expose l'etat
+ * de la chaine. Les regles d'action (tranches 25/65/10) vivent dans
+ * trade-simulator.js.
+ *
+ * PM2 : pm2 restart baton-relay
  */
 const fs = require('fs');
 const path = require('path');
 const priceStream = require('./price-stream');
-const { analyzeTrigger } = require('./volume-analyzer');
+const { analyzeVwap, analyzeTrigger } = require('./volume-analyzer');
 
 const STATE_PATH = path.join(__dirname, '../data/baton-state.json');
 const HISTORY_PATH = path.join(__dirname, '../data/baton-cadence-history.json');
+const AUDIT_HISTORY_PATH = path.join(__dirname, '../data/audit-history.json');
 
 const CADENCE_SANITY_CEILING = 120;   // au-dela = anomalie (nominal, a reviser en bull market)
 const ROLLING_WINDOW_MS = 4 * 60 * 60 * 1000; // moyenne glissante 4h
 const MIN_SAMPLES_FOR_AVG = 60;       // ~30 min avant de faire confiance a la moyenne
 
-const EVENT_MULTIPLIER = 2;           // seuil d'evenement (declenche la vigilance)
-const PRICE_REACTION_IMMEDIATE = 0.06; // % -- action immediate, 1 seul baton
-const PRICE_REACTION_CONFIRMED = 0.03; // % -- action si 2 batons consecutifs meme sens
+const EVENT_MULTIPLIER = 2;
+const PRICE_REACTION_IMMEDIATE = 0.06;
+const PRICE_REACTION_CONFIRMED = 0.03;
+
+const AUDIT_HISTORY_MAX = 2880; // 24h a raison d'un relevé/30s
 
 function loadHistory() {
   if (!fs.existsSync(HISTORY_PATH)) return [];
@@ -54,34 +59,37 @@ function loadHistory() {
     return [];
   }
 }
-
 function saveHistory(history) {
   fs.writeFileSync(HISTORY_PATH, JSON.stringify(history));
 }
-
 function writeState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
 
-let cadenceHistory = loadHistory();
-let prevPrice = null;
+function loadAuditHistory() {
+  if (!fs.existsSync(AUDIT_HISTORY_PATH)) return [];
+  try {
+    const data = JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH, 'utf8'));
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+function appendAuditHistory(row) {
+  auditHistory.push(row);
+  if (auditHistory.length > AUDIT_HISTORY_MAX) auditHistory.shift();
+  fs.writeFileSync(AUDIT_HISTORY_PATH, JSON.stringify(auditHistory));
+}
 
-// Etat de la chaine -- persiste d'un baton au suivant.
+let cadenceHistory = loadHistory();
+let auditHistory = loadAuditHistory();
+let prevPrice = null;
 let vigilance = null;
-// vigilance = {
-//   since: ISO string,          quand l'evenement a declenche la vigilance
-//   triggerMultiplier: number,  le multiplicateur de l'evenement declencheur
-//   priceAtEvent: number,       prix au moment de l'evenement
-//   batonCount: number,         nb de batons ecoules depuis
-//   pendingDirection: string,   sens du 1er baton >= 0.03% (attente confirmation)
-//   pendingNetMove: number,
-// }
 
 function pruneHistory(now) {
   const cutoff = now - ROLLING_WINDOW_MS;
   cadenceHistory = cadenceHistory.filter(h => h.ts >= cutoff);
 }
-
 function rollingAverage() {
   if (cadenceHistory.length === 0) return null;
   return cadenceHistory.reduce((a, h) => a + h.cadence, 0) / cadenceHistory.length;
@@ -100,11 +108,14 @@ function tick() {
   const currentCadence = parseFloat(trig.cadenceTicksPerSec);
   const isAnomaly = currentCadence > CADENCE_SANITY_CEILING;
 
-  // netMove vient du Trigger (deplacement net sur la fenetre de 200 ticks),
-  // deja exprime en % -- ex "0.0341%".
   const netMovePct = trig.netMovePct !== null && trig.netMovePct !== undefined
     ? parseFloat(String(trig.netMovePct).replace('%', ''))
     : null;
+  const amplitudePct = trig.amplitudePct !== null && trig.amplitudePct !== undefined
+    ? parseFloat(String(trig.amplitudePct).replace('%', ''))
+    : null;
+  const priceHigh = trig.priceHigh !== null && trig.priceHigh !== undefined ? parseFloat(trig.priceHigh) : null;
+  const priceLow = trig.priceLow !== null && trig.priceLow !== undefined ? parseFloat(trig.priceLow) : null;
 
   pruneHistory(now);
 
@@ -127,9 +138,7 @@ function tick() {
     }
   }
 
-  // ===== CHAINE DE DECISION =============================================
-
-  // 1. EVENEMENT -> entre (ou re-entre) en vigilance.
+  // ===== CHAINE DE DECISION (evenement/vigilance/reaction prix) ========
   const isEvent = cadenceMultiplier !== null && cadenceMultiplier >= EVENT_MULTIPLIER;
   if (isEvent) {
     vigilance = {
@@ -141,18 +150,13 @@ function tick() {
       pendingNetMove: null,
     };
   } else if (vigilance) {
-    // 2. VIGILANCE : persiste, on compte les batons ecoules.
     vigilance.batonCount += 1;
   }
 
-  // 3. REACTION DU PRIX -- evaluee seulement si on est en vigilance.
-  let action = null; // { type, direction, reason }
-
+  let action = null;
   if (vigilance && netMovePct !== null && direction && direction !== 'neutre') {
     const absMove = Math.abs(netMovePct);
-
     if (absMove >= PRICE_REACTION_IMMEDIATE) {
-      // Mouvement franc : pas besoin d'attendre une confirmation.
       action = {
         type: 'immediate',
         direction,
@@ -160,25 +164,20 @@ function tick() {
       };
     } else if (absMove >= PRICE_REACTION_CONFIRMED) {
       if (vigilance.pendingDirection === direction) {
-        // 2e baton consecutif dans le meme sens -> confirme.
         action = {
           type: 'confirmed',
           direction,
           reason: `netMove=${netMovePct}% >= ${PRICE_REACTION_CONFIRMED}% confirme sur 2 batons (${direction}), vigilance depuis ${vigilance.since} (evenement x${vigilance.triggerMultiplier})`,
         };
       } else {
-        // 1er baton : on met en attente de confirmation.
         vigilance.pendingDirection = direction;
         vigilance.pendingNetMove = netMovePct;
       }
     } else {
-      // Mouvement insuffisant : casse la sequence de confirmation en cours.
       vigilance.pendingDirection = null;
       vigilance.pendingNetMove = null;
     }
   }
-
-  // 4. Une action resout la vigilance (le prix a tranche).
   if (action) vigilance = null;
 
   writeState({
@@ -193,8 +192,30 @@ function tick() {
     isAnomaly,
     lastPrice: currentPrice,
     isEvent,
-    vigilance, // null si aucune vigilance en cours
-    action,    // null si rien a faire ce baton
+    vigilance,
+    action,
+  });
+
+  // ===== Historique 24h pour le dashboard web (31/07/2026) ==============
+  const vwap15 = analyzeVwap('15m');
+  const vwap3 = analyzeVwap('3m');
+  appendAuditHistory({
+    ts: now,
+    vwap15: (vwap15 && vwap15.current !== undefined) ? parseFloat(vwap15.current) : null,
+    vwap15Cross: !!(vwap15 && vwap15.crossedZero),
+    vwap3: (vwap3 && vwap3.current !== undefined) ? parseFloat(vwap3.current) : null,
+    vwap3Cross: !!(vwap3 && vwap3.crossedZero),
+    cadence: currentCadence,
+    cadenceMult: cadenceMultiplier,
+    priceSens3: trig.priceSens3 !== undefined ? trig.priceSens3 : null,
+    netMove: netMovePct,
+    amplitude: amplitudePct,
+    winSec: (trig.windowSeconds !== undefined && trig.windowSeconds !== null) ? parseFloat(trig.windowSeconds) : null,
+    direction,
+    lastPrice: currentPrice,
+    priceHigh,
+    priceLow,
+    isAnomaly,
   });
 
   if (isEvent) {
@@ -216,4 +237,4 @@ function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-console.log('[baton-relay] v2 demarre (chaine evenement/vigilance/prix), ecrit dans', STATE_PATH, 'toutes les 30s.');
+console.log('[baton-relay] v3 demarre (chaine + historique 24h), ecrit dans', STATE_PATH, 'et', AUDIT_HISTORY_PATH, 'toutes les 30s.');

@@ -47,6 +47,7 @@ const CONFIG_PATH = path.join(__dirname, '../config.json');
 const DIAGNOSTIC_PATH = path.join(__dirname, '../data/latest-evaluation.json');
 const TRADES_STATE_PATH = path.join(__dirname, '../data/trade-sim-state.json');
 const TRADES_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
+const AUDIT_HISTORY_PATH = path.join(__dirname, '../data/audit-history.json');
 
 if (!PASSWORD || !SESSION_SECRET) {
   console.error('[config-server] FATAL: CONFIG_UI_PASSWORD ou SESSION_SECRET manquant dans .env');
@@ -331,6 +332,17 @@ app.get('/api/trades', requireAuth, (req, res) => {
   res.json({ ongoing, executed });
 });
 
+app.get('/api/audit-history', requireAuth, (req, res) => {
+  let history = [];
+  try {
+    if (fs.existsSync(AUDIT_HISTORY_PATH)) {
+      const data = JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH, 'utf8'));
+      history = Array.isArray(data) ? data : [];
+    }
+  } catch (e) { /* liste vide */ }
+  res.json({ history });
+});
+
 // ── Page principale ───────────────────────────────────────────────────────────
 app.get('/', requireAuth, (req, res) => {
   res.send(`
@@ -548,6 +560,7 @@ app.get('/', requireAuth, (req, res) => {
         <span class="main-nav-item" data-main="scenario">SCENARIO</span>
         <span class="main-nav-item" data-main="diagnostic">DIAGNOSTIC</span>
         <span class="main-nav-item" data-main="trades">TRADES</span>
+        <span class="main-nav-item" data-main="audit">AUDIT</span>
         <span class="main-nav-item" data-main="parametres">PARAMETRES</span>
       </div>
 
@@ -688,6 +701,24 @@ app.get('/', requireAuth, (req, res) => {
         </div>
       </div>
 
+      <!-- ═══════════════ AUDIT (baton de relais) ═══════════════ -->
+      <div class="main-section" id="section-audit">
+        <div class="panel">
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; font-size:11px; color:var(--faint);">
+            <label>Retournement |&Delta;VWAP3|&ge; <input type="number" id="auditReversalDelta" value="6" step="0.5" style="width:48px;"></label>
+            <label>et |VWAP3|&le; <input type="number" id="auditReversalProx" value="7" step="0.5" style="width:48px;"></label>
+            <label>Confirm. cadenceMult&ge; <input type="number" id="auditConfirmCadence" value="3" step="0.1" style="width:48px;"></label>
+            <label>ou netMoveMult&ge; <input type="number" id="auditConfirmNetMove" value="2" step="0.1" style="width:48px;"></label>
+            <label>Bypass cadenceMult&ge; <input type="number" id="auditBypassCadence" value="7" step="0.5" style="width:48px;"></label>
+            <label>ou netMoveMult&ge; <input type="number" id="auditBypassNetMove" value="5" step="0.5" style="width:48px;"></label>
+            <button class="diag-refresh" id="auditRefresh">Rafraichir</button>
+          </div>
+          <div id="auditStats" style="font-size:11px; color:var(--faint); margin-bottom:8px;"></div>
+          <div id="auditTableWrap" style="overflow-x:auto; max-height:70vh; overflow-y:auto;">
+            <div class="placeholder-note">Chargement de l'historique...</div>
+          </div>
+        </div>
+      </div>
       <!-- ═══════════════ PARAMETRES ═══════════════ -->
       <div class="main-section" id="section-parametres">
         <h1 style="font-size:12px;font-weight:700;margin:4px 0 10px;display:flex;justify-content:space-between;">
@@ -722,6 +753,7 @@ app.get('/app.js', requireAuth, (req, res) => {
   res.type('application/javascript').send(`
 let diagAutoRefresh = null;
 let tradesAutoRefresh = null;
+let auditAutoRefresh = null;
 document.querySelectorAll('.main-nav-item').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.main-nav-item').forEach(t => t.classList.remove('active'));
@@ -730,6 +762,7 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
     document.getElementById('section-' + el.dataset.main).classList.add('active');
     if (diagAutoRefresh) { clearInterval(diagAutoRefresh); diagAutoRefresh = null; }
     if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
+    if (auditAutoRefresh) { clearInterval(auditAutoRefresh); auditAutoRefresh = null; }
     if (el.dataset.main === 'diagnostic') {
       loadDiagnostic();
       diagAutoRefresh = setInterval(loadDiagnostic, 60000);
@@ -737,6 +770,10 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
     if (el.dataset.main === 'trades') {
       loadTrades();
       tradesAutoRefresh = setInterval(loadTrades, 60000);
+    }
+    if (el.dataset.main === 'audit') {
+      loadAudit();
+      auditAutoRefresh = setInterval(loadAudit, 30000);
     }
     if (el.dataset.main === 'parametres') loadParams();
   });
@@ -1134,6 +1171,128 @@ async function loadTrades() {
     ongoingEl.innerHTML = '<div class="ledger-empty">Erreur reseau: ' + e.message + '</div>';
   }
 }
+
+function fmtNum(v, digits) {
+  if (v === undefined || v === null || isNaN(v)) return '\u2014';
+  return v.toFixed(digits);
+}
+function signStyle(v) {
+  if (v === undefined || v === null || isNaN(v)) return '';
+  if (v > 0) return 'color:#26a69a;';
+  if (v < 0) return 'color:#ef5350;';
+  return '';
+}
+function dirArrowAudit(direction) {
+  if (direction === 'haussier') return '<span style="color:#26a69a;">&#9650;</span>';
+  if (direction === 'baissier') return '<span style="color:#ef5350;">&#9660;</span>';
+  if (direction === 'neutre') return '0';
+  return '\u2014';
+}
+function fmtTimeParis(ts) {
+  return new Date(ts).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+async function loadAudit() {
+  const wrap = document.getElementById('auditTableWrap');
+  const statsEl = document.getElementById('auditStats');
+  const reversalDeltaT = parseFloat(document.getElementById('auditReversalDelta').value) || 6;
+  const reversalProxT = parseFloat(document.getElementById('auditReversalProx').value) || 7;
+  const confirmCadenceT = parseFloat(document.getElementById('auditConfirmCadence').value) || 3;
+  const confirmNetMoveT = parseFloat(document.getElementById('auditConfirmNetMove').value) || 2;
+  const bypassCadenceT = parseFloat(document.getElementById('auditBypassCadence').value) || 7;
+  const bypassNetMoveT = parseFloat(document.getElementById('auditBypassNetMove').value) || 5;
+
+  try {
+    const res = await fetch('/api/audit-history');
+    if (!res.ok) throw new Error('reponse HTTP ' + res.status);
+    const data = await res.json();
+    const rows = data.history || [];
+    if (rows.length === 0) {
+      wrap.innerHTML = '<div class="placeholder-note">Aucune donnee pour l\'instant -- le baton-relay doit tourner un moment.</div>';
+      statsEl.innerHTML = '';
+      return;
+    }
+
+    const NETMOVE_BASELINE_WINDOW = 10;
+    let prevVwap3 = null;
+    let vigilanceActive = false, vigilanceCounter = 0;
+    const VIGILANCE_WINDOW = 6;
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      r.deltaVwap3 = (prevVwap3 !== null && r.vwap3 !== null) ? (r.vwap3 - prevVwap3) : null;
+      if (r.vwap3 !== null) prevVwap3 = r.vwap3;
+
+      const start = Math.max(0, i - NETMOVE_BASELINE_WINDOW);
+      const prior = rows.slice(start, i).filter(p => p.netMove !== null && p.netMove !== undefined);
+      const baseline = prior.length > 0 ? prior.reduce((a, p) => a + Math.abs(p.netMove), 0) / prior.length : null;
+      r.netMoveMult = (baseline !== null && baseline > 0 && r.netMove !== null) ? Math.abs(r.netMove) / baseline : null;
+
+      r.isReversal = (r.deltaVwap3 !== null && Math.abs(r.deltaVwap3) >= reversalDeltaT)
+        && (r.vwap3 !== null && Math.abs(r.vwap3) <= reversalProxT);
+      r.isConfirm = (r.cadenceMult !== null && r.cadenceMult >= confirmCadenceT)
+        || (r.netMoveMult !== null && r.netMoveMult >= confirmNetMoveT);
+      r.isBypass = (r.cadenceMult !== null && r.cadenceMult >= bypassCadenceT)
+        || (r.netMoveMult !== null && r.netMoveMult >= bypassNetMoveT);
+
+      r.isTrade = false;
+      if (r.isReversal) { vigilanceActive = true; vigilanceCounter = 0; }
+      else if (vigilanceActive) { vigilanceCounter++; if (vigilanceCounter > VIGILANCE_WINDOW) vigilanceActive = false; }
+      if (vigilanceActive && r.isConfirm) { r.isTrade = true; vigilanceActive = false; }
+    }
+
+    let reversals = 0, trades = 0, bypasses = 0, crosses = 0;
+    for (const r of rows) {
+      if (r.isReversal) reversals++;
+      if (r.isTrade) trades++;
+      if (r.isBypass) bypasses++;
+      if (r.vwap15Cross || r.vwap3Cross) crosses++;
+    }
+    statsEl.innerHTML = rows.length + ' relev\u00e9s (24h glissantes) &middot; ' + crosses + ' passages \u00e0 z\u00e9ro &middot; ' + reversals + ' retournements imminents &middot; <span style="color:#2ecc71">' + trades + ' TRADE</span> &middot; <span style="color:#ff6b35">' + bypasses + ' BYPASS</span>';
+
+    const recent = rows.slice(-200);
+    let html = '<table style="width:100%; border-collapse:collapse; font-family:monospace; font-size:11px;">' +
+      '<thead><tr style="color:var(--faint); text-align:right;">' +
+      '<th style="text-align:left;">Heure (Paris)</th><th>Prix</th><th>High</th><th>Low</th>' +
+      '<th>VWAP3</th><th>&Delta;VWAP3</th><th>&times;0</th><th>VWAP15</th><th>&times;0</th>' +
+      '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NM&times;</th><th>Amplitude</th><th>WinSec</th>' +
+      '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
+      '</tr></thead><tbody>';
+
+    for (const r of recent) {
+      const rowStyle = r.isTrade ? 'background:#123a2a;' : (r.isBypass ? 'background:#2a1a10;' : (r.isReversal ? 'background:#3a2a5a;' : ''));
+      let signalCell = '';
+      if (r.isTrade) signalCell = '<b style="color:#2ecc71;">TRADE</b>';
+      else if (r.isBypass) signalCell = '<b style="color:#ff6b35;">BYPASS</b>';
+      html += '<tr style="' + rowStyle + ' border-bottom:1px solid var(--border);">' +
+        '<td style="text-align:left;">' + fmtTimeParis(r.ts) + '</td>' +
+        '<td>' + fmtNum(r.lastPrice,1) + '</td>' +
+        '<td>' + fmtNum(r.priceHigh,1) + '</td>' +
+        '<td>' + fmtNum(r.priceLow,1) + '</td>' +
+        '<td style="' + signStyle(r.vwap3) + '">' + fmtNum(r.vwap3,2) + '</td>' +
+        '<td style="' + signStyle(r.deltaVwap3) + '">' + fmtNum(r.deltaVwap3,2) + '</td>' +
+        '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
+        '<td style="' + signStyle(r.vwap15) + '">' + fmtNum(r.vwap15,2) + '</td>' +
+        '<td>' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
+        '<td>' + fmtNum(r.cadence,2) + '</td>' +
+        '<td>' + fmtNum(r.cadenceMult,2) + 'x</td>' +
+        '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
+        '<td style="' + signStyle(r.netMove) + '">' + fmtNum(r.netMove,4) + '</td>' +
+        '<td>' + fmtNum(r.netMoveMult,2) + '</td>' +
+        '<td>' + fmtNum(r.amplitude,4) + '</td>' +
+        '<td>' + fmtNum(r.winSec,1) + '</td>' +
+        '<td>' + dirArrowAudit(r.direction) + '</td>' +
+        '<td>' + (r.isReversal ? '&#9888;' : '') + '</td>' +
+        '<td>' + signalCell + '</td>' +
+        '</tr>';
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = '<div class="ledger-empty">Erreur reseau: ' + e.message + '</div>';
+  }
+}
+document.getElementById('auditRefresh') && document.getElementById('auditRefresh').addEventListener('click', loadAudit);
 
 const FIELDS = [
   { group: 'Contexte de trading', key: 'positionSizing.maxCapitalPercentPerTrade', label: 'Capital max par trade', unit: '%', info: 'Pourcentage du capital risque sur un seul trade' },
