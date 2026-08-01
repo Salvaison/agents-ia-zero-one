@@ -1,73 +1,88 @@
 /**
  * trade-simulator.js — Simulation de gestion de trade (entree + sortie),
  * en OBSERVATION SEULE : aucun ordre reel n'est jamais passe, aucun capital
- * n'est engage. Cree le 27/07/2026, suite a la formalisation de la loi
- * d'entree et de la machine a etats TP1/TP2/liquidation basee sur le VWAP
- * (LBW - BW), en remplacement du plan Fibonacci-sur-pivot du SOP v1 (jamais
- * implemente -- voir SOP-bot-trading-boono.md, section Trigger C).
+ * n'est engage.
  *
- * MIS A JOUR LE 28/07/2026 (1) : ajoute les champs qu'un vrai ordre MEXC
- * porterait (levier, taille de position, type d'ordre, openType) et un
- * mecanisme de stop loss (pose a TP1, verifie en mode meche a chaque tick).
+ * REFONTE COMPLETE DU 31/07/2026 (decision de Benjamin) -- l'ancienne loi
+ * d'entree (VWAP croise zero + seuil LBW + ecart + DBSI) est ENTIEREMENT
+ * REMPLACEE. Le systeme fonctionne desormais ainsi :
  *
- * MIS A JOUR LE 28/07/2026 (2) : seuils LBW d'entree ASYMETRIQUES selon la
- * tendance (close vs MA200), configurables dans config.json
- * (tradeSimulator.lbwThresholds).
+ * ENTREE -- pilotee par le "baton de relais" (baton-relay.js, process PM2
+ * permanent, ecrit data/baton-state.json toutes les 30s) :
+ *   1. EVENEMENT : cadence >= 2x sa moyenne glissante 4h -> VIGILANCE
+ *   2. VIGILANCE : etat persistant, relaye de baton en baton
+ *   3. REACTION PRIX decide de la direction (jamais l'evenement seul, qui
+ *      est ambigu par nature -- retournement OU continuation) :
+ *        - |netMove| >= 0.06% -> action immediate
+ *        - |netMove| >= 0.03% confirme sur 2 batons consecutifs -> action
+ *   4. Cette action (baton-state.json : lastAction) declenche l'entree,
+ *      dans le sens indique. Chaque action n'est consommee qu'UNE FOIS
+ *      (suivi par timestamp dans data/trade-sim-entry-tracker.json, par
+ *      module) -- meme signal jamais utilise deux fois pour deux entrees.
  *
- * MIS A JOUR LE 28/07/2026 (3) : cascade VWAP 15m -> 3m. Quand le VWAP du
- * timeframe principal (15m pour Scalp) est tres proche de zero
- * (|vwap| <= 2) sans avoir encore croise, le systeme interroge le VWAP 3m
- * pour une confirmation anticipee -- si le 3m a deja croise zero, ca
- * confirme le mouvement 3 a 6 minutes avant la cloture de la bougie 15m.
- * Le passage a zero sur 3m suit exactement les memes regles que sur 15m
- * (memes seuils LBW/ecart/DBSI). Ne s'applique qu'aux modules dont le
- * timeframe 3m est disponible dans volByTf (Scalp uniquement pour
- * l'instant, puisque son signal inclut 3m -- Day/Swing n'ont pas cette
- * donnee).
+ * SORTIE -- tranches 25/65/10 (structure Shlong, strategy-boono.md) :
+ *   - 25% (TP1) au 1er declencheur qualifiant apres l'entree
+ *   - 65% (TP2) au 2e declencheur qualifiant
+ *   - 10% (residu) ferme au 3e declencheur qualifiant -- SIMPLIFICATION
+ *     PROVISOIRE : le vrai shlong (bascule vers une position adverse,
+ *     10% maintenus comme hedge pendant la bascule) est un chantier
+ *     separe, non implemente ici. Pour l'instant, le residu est
+ *     simplement ferme.
+ *   - "Declencheur qualifiant" = un NOUVEL evenement de cadence (front
+ *     montant, pas juste "toujours vrai"), OU un NOUVEAU passage a zero du
+ *     VWAP (idem, front montant), OU un seuil NetMove independant (meme
+ *     regle que la reaction prix de l'entree : 0.06% immediat, 0.03%
+ *     confirme sur 2 batons) -- decision de Benjamin : "a chaque
+ *     evenement ou passage a 0. et NetMove".
  *
- * MIS A JOUR LE 28/07/2026 (4) : trade-simulator.js devient l'EXECUTANT
- * d'un systeme a deux etages. cerveau-central.js calcule desormais une
- * chaine de confluence (DIV/S-R/Engagement/VWAP/Velocite, minimums
- * simultanes) qui sert de PORTAIL -- simulateModule() n'est appele par
- * cerveau-central.js que si cette chaine est entierement verifiee
- * (CONFLUENCE ATTEINTE). La loi VWAP ci-dessous reste le declencheur
- * PRECIS (le "quand exactement"), evaluee uniquement une fois le portail
- * ouvert.
+ * PROTECTION -- liquidation par levier (SEUL filet, pas de stop manuel,
+ * decision de Benjamin : "essayons sans stoploss, cela se joue sur notre
+ * capacite a rentrer juste dans les trades") :
+ *   - Prix de liquidation calcule DES L'ENTREE a partir du levier
+ *     (entryPrice +/- entryPrice/leverage), verifie a chaque tick.
+ *   - Timeout anti-zombie (garde-fou complementaire, config.tradeSimulator.
+ *     maxHoldMinutesWithoutTp1) : ferme si aucune tranche n'a ete prise
+ *     au-dela du delai configure par module.
+ *   - COUPE-CIRCUIT (31/07/2026, decision de Benjamin) : si le PNL cumule
+ *     depuis la derniere remise a zero de l'historique descend a -25% ou
+ *     pire, bloque les NOUVELLES entrees (config.tradeSimulator.
+ *     circuitBreakerTripped, persiste, reversible manuellement). Les
+ *     positions deja ouvertes continuent d'etre gerees normalement --
+ *     seul un nouveau depart de trade est empeche, pas la gestion en cours.
  *
- * Un seul trade simule ouvert a la fois par module (scalp/day/swing),
- * coherent avec l'architecture a 3 modules paralleles du SOP.
+ * NOTE (a traiter separement) : l'hypothese du passage a zero du VWAP
+ * comme signal fiable reste en cours de revision (voir memoire du
+ * 31/07/2026 sur l'apogee de la vague MCB vs l'apogee du prix, et
+ * l'hypothese d'essoufflement de liquidite). Le passage a zero est
+ * conserve ici comme declencheur de tranche (decision explicite de
+ * Benjamin), mais la loi d'ENTREE n'en depend plus du tout.
  *
- * ENTREE (evaluee uniquement si aucun trade simule n'est ouvert pour ce
- * module, et seulement au moment d'un passage a zero du VWAP -- crossedZero
- * sur le TF principal, OU confirme par la cascade 3m) :
- *   SI VWAP croise zero : LBW seuil (asymetrique selon tendance) : ecart >= 10 : DBSI <= -4 ALORS ENTRER_LONG/SHORT
- *   SINON ATTENDRE
- *
- * SORTIE (evaluee uniquement si un trade simule est ouvert pour ce module) :
- *   0. A CHAQUE TICK : si un stop loss est pose (donc apres TP1) et que la
- *      meche de la derniere bougie l'a touche, LIQUIDER immediatement --
- *      independamment d'un passage a zero du VWAP.
- *   1. Sinon, uniquement au moment d'un passage a zero du VWAP :
- *      SI 1er passage depuis l'entree ALORS TP1 (garde le trade ouvert,
- *        pose le stop loss a l'equilibre +/- 0.20)
- *      SINON SI 2e passage : ecart >= 20 : BW entre -20 et 20 ALORS TP2 (ferme)
- *      SINON SI 2e passage : ecart < 20 ALORS ATTENDRE (garde le trade ouvert)
- *      SINON SI DIV >= 1 TF ALORS LIQUIDER, motif "divergence confirmee"
- *      SINON LIQUIDER, motif "valeur BW hors zone -20/20"
- *
- * HYPOTHESE D'IMPLEMENTATION A VALIDER AVEC BENJAMIN : chaque passage a zero
- * detecte fait avancer le compteur crossingsSinceEntry, y compris le cas
- * ATTENDRE (2e passage, ecart<20) -- donc un 3e passage eventuel tombe dans
- * la branche de liquidation par defaut (DIV/BW), faute de regle definie
- * au-dela du 2e passage dans la conversation du 27/07/2026.
- *
- * Persistance : data/trade-sim-state.json, un objet par module ou null si
- * aucun trade simule n'est ouvert pour ce module.
+ * Un seul trade simule ouvert a la fois par module (scalp/day/swing).
+ * Persistance : data/trade-sim-state.json (etat par module), data/
+ * trade-sim-history.json (historique des tranches/clotures), data/
+ * trade-sim-entry-tracker.json (dernier signal d'entree consomme par
+ * module, evite les entrees en double sur le meme signal).
  */
 const fs = require('fs');
 const path = require('path');
 
 const STATE_PATH = path.join(__dirname, '../data/trade-sim-state.json');
+const HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
+const ENTRY_TRACKER_PATH = path.join(__dirname, '../data/trade-sim-entry-tracker.json');
+const BATON_STATE_PATH = path.join(__dirname, '../data/baton-state.json');
+const CONFIG_PATH = path.join(__dirname, '../config.json');
+const HISTORY_MAX = 300;
+
+// Coupe-circuit (31/07/2026, decision de Benjamin) : si le PNL cumule
+// depuis la derniere remise a zero de l'historique descend a -25% ou
+// pire, bloque les NOUVELLES entrees pour recalibrage. Les positions deja
+// ouvertes continuent d etre gerees normalement (liquidation, tranches) --
+// seul un flag SEPARE de "enabled" est ecrit (config.tradeSimulator.
+// circuitBreakerTripped), car "enabled" est le portail que cerveau-
+// central.js verifie pour decider d appeler simulateModule() du tout : le
+// couper aurait aussi arrete le suivi des positions en cours. Remise a
+// false manuellement dans config.json une fois la recalibration faite.
+const CIRCUIT_BREAKER_THRESHOLD = -25;
 
 function loadState() {
   if (!fs.existsSync(STATE_PATH)) return { scalp: null, day: null, swing: null };
@@ -78,13 +93,9 @@ function loadState() {
     return { scalp: null, day: null, swing: null };
   }
 }
-
 function saveState(state) {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 }
-
-const HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
-const HISTORY_MAX = 200; // limite pour ne pas laisser grossir indefiniment
 
 function loadHistory() {
   if (!fs.existsSync(HISTORY_PATH)) return [];
@@ -95,7 +106,6 @@ function loadHistory() {
     return [];
   }
 }
-
 function appendHistory(record) {
   const history = loadHistory();
   history.push(record);
@@ -103,250 +113,250 @@ function appendHistory(record) {
   fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
 }
 
-// PNL simule (28/07/2026) : pourcentage de variation entre entree et
-// sortie, applique au levier du trade -- purement indicatif, aucun ordre
-// reel, aucun capital engage.
+/**
+ * Coupe-circuit : calcule le PNL cumule depuis la derniere remise a zero
+ * de l historique. Si <= CIRCUIT_BREAKER_THRESHOLD, ecrit
+ * config.tradeSimulator.circuitBreakerTripped = true (persiste, visible,
+ * reversible manuellement) et retourne true -- bloque alors les
+ * NOUVELLES entrees uniquement, jamais la gestion des positions deja
+ * ouvertes.
+ */
+function checkCircuitBreaker(config) {
+  if (config && config.tradeSimulator && config.tradeSimulator.circuitBreakerTripped) return true;
+
+  const history = loadHistory();
+  const withPnl = history.filter(h => h.pnlPercent !== null && h.pnlPercent !== undefined);
+  if (withPnl.length === 0) return false;
+
+  const totalPnl = withPnl.reduce((a, h) => a + h.pnlPercent, 0);
+  if (totalPnl > CIRCUIT_BREAKER_THRESHOLD) return false;
+
+  try {
+    const liveConfig = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    if (liveConfig.tradeSimulator && !liveConfig.tradeSimulator.circuitBreakerTripped) {
+      liveConfig.tradeSimulator.circuitBreakerTripped = true;
+      liveConfig.tradeSimulator._note_circuit_breaker =
+        `COUPE-CIRCUIT declenche le ${new Date().toISOString()} -- PNL cumule a ${totalPnl.toFixed(2)}% ` +
+        `(seuil ${CIRCUIT_BREAKER_THRESHOLD}%). Bloque uniquement les NOUVELLES entrees -- les positions ` +
+        `deja ouvertes continuent d etre gerees normalement (liquidation, tranches). Remettre a false ` +
+        `manuellement dans config.json apres recalibrage.`;
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(liveConfig, null, 2));
+      console.log(`[trade-simulator] COUPE-CIRCUIT declenche : PNL cumule ${totalPnl.toFixed(2)}% <= ${CIRCUIT_BREAKER_THRESHOLD}%. Nouvelles entrees bloquees.`);
+    }
+  } catch (e) {
+    console.error('[trade-simulator] Erreur ecriture coupe-circuit dans config.json :', e.message);
+  }
+  return true;
+}
+
+function loadEntryTracker() {
+  if (!fs.existsSync(ENTRY_TRACKER_PATH)) return { scalp: null, day: null, swing: null };
+  try {
+    const data = JSON.parse(fs.readFileSync(ENTRY_TRACKER_PATH, 'utf8'));
+    return { scalp: data.scalp || null, day: data.day || null, swing: data.swing || null };
+  } catch (e) {
+    return { scalp: null, day: null, swing: null };
+  }
+}
+function saveEntryTracker(t) {
+  fs.writeFileSync(ENTRY_TRACKER_PATH, JSON.stringify(t, null, 2));
+}
+
+function loadBatonState() {
+  if (!fs.existsSync(BATON_STATE_PATH)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(BATON_STATE_PATH, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+// PNL simule : pourcentage de variation entre entree et prix courant,
+// applique au levier -- purement indicatif. Plafonne a -100% : une
+// position en marge isolee ne peut structurellement pas perdre plus que
+// sa marge (checkLiquidation() devrait deja l'empecher en pratique).
 function computePnlPercent(trade, exitPrice) {
   if (exitPrice === null || exitPrice === undefined) return null;
   if (trade.entryPrice === null || trade.entryPrice === undefined) return null;
   const rawPct = trade.direction === 'long'
     ? ((exitPrice - trade.entryPrice) / trade.entryPrice) * 100
     : ((trade.entryPrice - exitPrice) / trade.entryPrice) * 100;
-  return rawPct * (trade.leverage || 1);
+  const pnl = rawPct * (trade.leverage || 1);
+  return Math.max(pnl, -100);
 }
 
-// Seuils de la loi d'entree/sortie -- en dur pour l'instant (27-28/07/2026),
-// a exposer dans config.json si Benjamin veut les calibrer plus tard.
-// entryLbw sert de REPLI uniquement, quand la tendance (close vs MA200)
-// est indeterminee -- voir lbwThresholds dans config.json pour le cas normal.
-const THRESHOLDS = {
-  entryLbw: 60,
-  entryEcart: 5, // baisse de 10 a 5 le 29/07/2026 -- aucun passage a zero observe en audit n'atteignait 10 (tous entre 5 et 8)
-  entryDbsi: -4,
-  tp2Ecart: 20,
-  tp2BwMin: -20,
-  tp2BwMax: 20,
-  cascadeVwapThreshold: 3, // monte de 2 a 3 le 29/07/2026 (|vwap 15m| <= ce seuil -> interroge le 3m)
-  cadenceBypassThreshold: 30, // ajoute le 29/07/2026 -- repli si config.tradeSimulator.cadenceBypassThreshold absent
-};
-
-// Parametres d'ordre simules -- reflete les champs qu'un vrai ordre MEXC
-// porterait (levier, type d'ordre, openType), PROVISOIRES (28/07/2026).
 const ORDER_DEFAULTS = {
-  leverage: 50, // fixe entre 1x et 100x -- a calibrer, aucune donnee pour l'instant
-  orderType: 'market', // seul mode actif ; l'idee d'un limit order pour les scenarios n'est pas tranchee
-  openType: 'isolated', // choix par defaut arbitraire, a confirmer
-  stopLossBufferAbs: 0.20, // marge au-dela du prix d'entree pour le stop pose a TP1
+  leverage: 50,
+  orderType: 'market',
+  openType: 'isolated', // marge isolee -- necessaire pour que la liquidation par levier soit un vrai plafond
 };
 
 /**
- * Determine la tendance (close vs MA200) a partir des donnees deja lues
- * par analyzeMomentum(). Retourne 'haussiere', 'baissiere', ou null si
- * indeterminable (donnees manquantes ou egalite exacte).
+ * Prix de liquidation par levier -- SEUL filet de protection (31/07/2026,
+ * plus de stop manuel). A `leverage`x, une perte de -100% de la marge
+ * correspond a un mouvement de prix de (entryPrice / leverage) contre la
+ * position. A 50x : +/-2% depuis l'entree.
  */
-function determineTrend(vol) {
-  const momentum = vol.momentum;
-  if (!momentum || momentum.lastClose === undefined || momentum.lastMa200 === undefined) return null;
-  const close = parseFloat(momentum.lastClose);
-  const ma200 = parseFloat(momentum.lastMa200);
-  if (isNaN(close) || isNaN(ma200)) return null;
-  if (close > ma200) return 'haussiere';
-  if (close < ma200) return 'baissiere';
-  return null;
+function computeLiquidationPrice(entryPrice, direction, leverage) {
+  if (!leverage || leverage <= 0 || !entryPrice) return null;
+  const distance = entryPrice / leverage;
+  return direction === 'long' ? entryPrice - distance : entryPrice + distance;
 }
 
-/**
- * Cascade VWAP 15m -> 3m (28/07/2026). Si le VWAP du TF principal n'a pas
- * encore croise zero mais en est tres proche (|vwap| <= seuil), interroge
- * le VWAP 3m (s'il est disponible dans volByTf) pour une confirmation
- * anticipee. Retourne le "vol" a utiliser pour l'evaluation de la loi
- * d'entree -- soit primaryVol tel quel (croisement normal ou aucune
- * cascade applicable), soit le vol du 3m (cascade confirmee), soit null
- * (aucun croisement, ni direct ni par cascade).
- */
-function resolveEntryVol(primaryVol, volByTf) {
-  if (primaryVol.vwap && primaryVol.vwap.crossedZero) {
-    return { vol: primaryVol, cascade: false };
-  }
-  const current = primaryVol.vwap ? parseFloat(primaryVol.vwap.current) : NaN;
-  if (isNaN(current) || Math.abs(current) > THRESHOLDS.cascadeVwapThreshold) return { vol: null, cascade: false };
-  const vol3m = volByTf && volByTf['3m'];
-  if (!vol3m || !vol3m.vwap || !vol3m.vwap.crossedZero) return { vol: null, cascade: false };
-  return { vol: vol3m, cascade: true };
-}
-
-function evaluateEntry(primaryVol, config, volByTf) {
-  // Bypass Cadence (29/07/2026, decision de Benjamin) : capte les poussees
-  // directionnelles fortes que le VWAP (base sur un retournement/passage a
-  // zero) ne peut pas voir par construction -- observe en audit le
-  // 29/07/2026 (cadence pic a 53 ticks/s, DBSI eleve, mais VWAP 15m ET 3m
-  // sans aucun passage a zero). Si Cadence >= seuil, declenche une entree
-  // sur le sens lisse du prix (Trigger.priceSens3), independamment de tout
-  // passage a zero du VWAP.
-  const trig = primaryVol.trigger;
-  const cadenceBypassThreshold = (config && config.tradeSimulator && config.tradeSimulator.cadenceBypassThreshold) || THRESHOLDS.cadenceBypassThreshold;
-  if (trig && trig.cadenceTicksPerSec !== undefined && trig.cadenceTicksPerSec !== null) {
-    const cadenceValue = parseFloat(trig.cadenceTicksPerSec);
-    if (cadenceValue >= cadenceBypassThreshold && trig.priceSens3 !== undefined && trig.priceSens3 !== 0) {
-      const direction = trig.priceSens3 > 0 ? 'long' : 'short';
-      const sensLabel = trig.priceSens3 > 0 ? 'haussier' : 'baissier';
-      return { direction, reason: `bypass cadence=${cadenceValue} ticks/s (sens lisse 3 tranches, ${sensLabel})` };
-    }
-  }
-
-  const { vol: sourceVol, cascade } = resolveEntryVol(primaryVol, volByTf || {});
-  if (!sourceVol) return null;
-
-  const vwap = sourceVol.vwap;
-  const momentum = sourceVol.momentum;
-  const dbsi = sourceVol.dbsi;
-  if (!momentum || momentum.lastLbw === undefined) return null;
-
-  // DBSI desactivable (29/07/2026, decision de Benjamin) : pour calibrer
-  // d'abord le passage a zero + seuil LBW tout seuls, avant de reintroduire
-  // DBSI comme condition supplementaire. Reversible via
-  // config.tradeSimulator.requiresDbsi (false actuellement).
-  const requiresDbsi = !config || !config.tradeSimulator || config.tradeSimulator.requiresDbsi !== false;
-  const dbsiDiff = (dbsi && dbsi.diff !== undefined) ? parseFloat(dbsi.diff) : null;
-  if (requiresDbsi) {
-    if (dbsiDiff === null) return null;
-    if (dbsiDiff > THRESHOLDS.entryDbsi) return null; // DBSI doit etre <= -4
-  }
-
-  const lbw = parseFloat(momentum.lastLbw);
-  const ecart = vwap.reversalMagnitude !== null && vwap.reversalMagnitude !== undefined
-    ? parseFloat(vwap.reversalMagnitude)
-    : null;
-
-  if (ecart === null || ecart < THRESHOLDS.entryEcart) return null;
-
-  const cascadeNote = cascade ? ' [cascade 3m, confirmation anticipee]' : '';
-  const dbsiNote = dbsiDiff !== null ? ` DBSI=${dbsiDiff}${requiresDbsi ? '' : ' (hors condition)'}` : '';
-
-  // Tendance toujours evaluee sur le TF principal (15m), pas sur le 3m
-  // meme en cas de cascade -- la tendance de fond ne change pas en 3 min.
-  const trend = determineTrend(primaryVol);
-  const lbwCfg = (config && config.tradeSimulator && config.tradeSimulator.lbwThresholds) || null;
-
-  if (trend && lbwCfg && lbwCfg.haussiere && lbwCfg.baissiere) {
-    if (trend === 'haussiere') {
-      if (lbw >= lbwCfg.haussiere.shortExtreme) {
-        return { direction: 'short', reason: `LBW=${lbw} (extreme, contre-tendance haussiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
-      }
-      if (lbw >= lbwCfg.haussiere.longSouple) {
-        return { direction: 'long', reason: `LBW=${lbw} (assoupli, tendance haussiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
-      }
-      return null;
-    }
-    if (trend === 'baissiere') {
-      if (lbw <= lbwCfg.baissiere.longExtreme) {
-        return { direction: 'long', reason: `LBW=${lbw} (extreme, contre-tendance baissiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
-      }
-      if (lbw <= lbwCfg.baissiere.shortSouple) {
-        return { direction: 'short', reason: `LBW=${lbw} (assoupli, tendance baissiere) ecart=${ecart}${dbsiNote}${cascadeNote}` };
-      }
-      return null;
-    }
-  }
-
-  // Repli : tendance indeterminee ou config manquante -- ancien seuil
-  // symetrique +/-60 (comportement d'avant le 28/07/2026), par prudence.
-  if (lbw >= THRESHOLDS.entryLbw) {
-    return { direction: 'long', reason: `LBW=${lbw} ecart=${ecart}${dbsiNote} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
-  }
-  if (lbw <= -THRESHOLDS.entryLbw) {
-    return { direction: 'short', reason: `LBW=${lbw} ecart=${ecart}${dbsiNote} (seuil symetrique, tendance indeterminee)${cascadeNote}` };
-  }
-  return null;
-}
-
-/**
- * Verifie le stop loss en mode meche, a CHAQUE tick (independant d'un
- * passage a zero du VWAP). Retourne true si le stop a ete touche.
- * Aucun effet si trade.stopLossPrice est null (pas encore pose, avant TP1).
- */
-function checkStopLoss(trade, primaryVol) {
-  if (trade.stopLossPrice === null || trade.stopLossPrice === undefined) return false;
+function checkLiquidation(trade, primaryVol) {
+  if (trade.liquidationPrice === null || trade.liquidationPrice === undefined) return false;
   const momentum = primaryVol.momentum;
   if (!momentum || momentum.lastHigh === undefined || momentum.lastLow === undefined) return false;
   const high = parseFloat(momentum.lastHigh);
   const low = parseFloat(momentum.lastLow);
-  if (trade.direction === 'long') return low <= trade.stopLossPrice;
-  if (trade.direction === 'short') return high >= trade.stopLossPrice;
+  if (trade.direction === 'long') return low <= trade.liquidationPrice;
+  if (trade.direction === 'short') return high >= trade.liquidationPrice;
   return false;
 }
 
-function evaluateExit(trade, primaryVol, divRaw) {
-  const vwap = primaryVol.vwap;
-  if (!vwap || !vwap.crossedZero) {
-    return { action: null, reason: null, closesTrade: false, incrementCrossing: false, setsStopLoss: false };
-  }
+/**
+ * Entree pilotee par le baton de relais. Consulte baton-state.json :
+ * lastAction (persistant, contrairement a "action" qui n'est vrai qu'un
+ * seul tick) porte la direction resolue par la chaine evenement/
+ * vigilance/reaction-prix. Chaque action n'est utilisee QU'UNE FOIS par
+ * module (lastConsumedTs empeche de re-entrer sur le meme signal).
+ */
+function evaluateEntryFromBaton(batonState, lastConsumedTs) {
+  if (!batonState || !batonState.lastAction) return null;
+  const la = batonState.lastAction;
+  if (!la.timestamp || !la.direction) return null;
+  if (lastConsumedTs && la.timestamp <= lastConsumedTs) return null; // deja consomme
 
-  const ecart = vwap.reversalMagnitude !== null && vwap.reversalMagnitude !== undefined
-    ? parseFloat(vwap.reversalMagnitude)
-    : null;
-  const bw = primaryVol.momentum && primaryVol.momentum.lastBw !== undefined
-    ? parseFloat(primaryVol.momentum.lastBw)
-    : null;
-  const crossingNumber = trade.crossingsSinceEntry + 1;
+  const direction = la.direction === 'haussier' ? 'long' : (la.direction === 'baissier' ? 'short' : null);
+  if (!direction) return null;
 
-  if (crossingNumber === 1) {
-    return { action: 'TP1', reason: '1er passage a zero depuis entree', closesTrade: false, incrementCrossing: true, setsStopLoss: true };
-  }
+  return {
+    direction,
+    reason: `baton ${la.type || ''} ${la.direction} -- ${la.reason || 'action resolue'}`,
+    actionTimestamp: la.timestamp,
+  };
+}
 
-  if (crossingNumber === 2 && ecart !== null && ecart >= THRESHOLDS.tp2Ecart && bw !== null && bw >= THRESHOLDS.tp2BwMin && bw <= THRESHOLDS.tp2BwMax) {
-    return { action: 'TP2', reason: `2e passage, ecart=${ecart} BW=${bw}`, closesTrade: true, incrementCrossing: true, setsStopLoss: false };
-  }
+/**
+ * Declencheur NetMove independant (meme seuil que la reaction prix de
+ * l'entree) : |netMove| >= 0.06% declenche immediatement ; >= 0.03%
+ * confirme sur 2 batons consecutifs dans le meme sens. Maintient son
+ * propre etat de confirmation sur le trade (pendingNetMoveDirection),
+ * independant de toute vigilance cadence deja ouverte ou non.
+ */
+function checkNetMoveThreshold(trade, batonState) {
+  if (!batonState || batonState.netMovePct === null || batonState.netMovePct === undefined) return false;
+  if (!batonState.direction || batonState.direction === 'neutre') return false;
+  const absMove = Math.abs(batonState.netMovePct);
 
-  if (crossingNumber === 2 && ecart !== null && ecart < THRESHOLDS.tp2Ecart) {
-    return { action: 'ATTENDRE', reason: `2e passage, ecart=${ecart} < ${THRESHOLDS.tp2Ecart}`, closesTrade: false, incrementCrossing: true, setsStopLoss: false };
+  if (absMove >= 0.06) {
+    trade.pendingNetMoveDirection = null;
+    return true; // immediat
   }
+  if (absMove >= 0.03) {
+    if (trade.pendingNetMoveDirection === batonState.direction) {
+      trade.pendingNetMoveDirection = null;
+      return true; // confirme sur 2 batons consecutifs
+    }
+    trade.pendingNetMoveDirection = batonState.direction;
+    return false;
+  }
+  trade.pendingNetMoveDirection = null;
+  return false;
+}
 
-  // Branche par defaut (2e passage avec BW hors zone, ou 3e+ passage) :
-  // liquidation, motif distingue selon divergence (27/07/2026).
-  const tfCount = (divRaw && divRaw.tfCount) || 0;
-  if (tfCount >= 1) {
-    return { action: 'LIQUIDER', reason: 'divergence confirmee', closesTrade: true, incrementCrossing: true, setsStopLoss: false };
+/**
+ * Progression des tranches 25/65/10 -- declenchee par TROIS voies
+ * independantes, decision de Benjamin : un NOUVEL evenement de cadence
+ * (front montant de baton-state.isEvent), un NOUVEAU passage a zero du
+ * VWAP (front montant), OU un seuil NetMove (meme regle que la reaction
+ * prix de l'entree, 0.06% immediat / 0.03% confirme x2). Chacun n'est
+ * compte qu'une fois par occurrence reelle (pas a chaque tick ou la
+ * condition reste vraie).
+ */
+function checkTrancheProgress(trade, batonState, primaryVol) {
+  const isEventNow = !!(batonState && batonState.isEvent);
+  const crossedNow = !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero);
+
+  const eventIsNew = isEventNow && !trade.lastIsEventSeen;
+  const crossIsNew = crossedNow && !trade.lastCrossedZeroSeen;
+  const netMoveIsNew = checkNetMoveThreshold(trade, batonState);
+
+  trade.lastIsEventSeen = isEventNow;
+  trade.lastCrossedZeroSeen = crossedNow;
+
+  if (!eventIsNew && !crossIsNew && !netMoveIsNew) return null;
+
+  trade.eventsSinceEntry += 1;
+  let triggerLabel;
+  if (eventIsNew) triggerLabel = `evenement cadence (x${batonState.cadenceMultiplier})`;
+  else if (crossIsNew) triggerLabel = 'passage a zero VWAP';
+  else triggerLabel = `netMove (${batonState.netMovePct}%)`;
+
+  if (trade.eventsSinceEntry === 1) {
+    return { stage: 1, fraction: 25, reason: `1er declencheur : ${triggerLabel}` };
   }
-  return { action: 'LIQUIDER', reason: 'valeur inferieure a 20/-20 sur BW', closesTrade: true, incrementCrossing: true, setsStopLoss: false };
+  if (trade.eventsSinceEntry === 2) {
+    return { stage: 2, fraction: 65, reason: `2e declencheur : ${triggerLabel}` };
+  }
+  return {
+    stage: 3,
+    fraction: 10,
+    reason: `${trade.eventsSinceEntry}e declencheur (${triggerLabel}) -- residu ferme, shlong complet non implemente`,
+  };
 }
 
 /**
  * Point d'entree principal, appele une fois par module (scalp/day/swing)
- * a chaque tick de cerveau-central.js -- UNIQUEMENT si la chaine de
- * confluence est deja verifiee (voir cerveau-central.js). Retourne une
- * ligne de log/details a afficher, ou null si rien de notable ne s'est
- * passe ce tick pour ce module.
+ * a chaque tick de cerveau-central.js. Signature INCHANGEE (compatibilite
+ * avec l'appel existant dans cerveau-central.js) -- divRaw n'est plus
+ * utilise (l'ancienne branche de liquidation par divergence a disparu
+ * avec l'ancienne loi de sortie), conserve uniquement pour compatibilite
+ * d'appel.
  */
 function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   const state = loadState();
   const trade = state[module];
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
+  const batonState = loadBatonState();
 
   if (!trade) {
-    const entry = evaluateEntry(primaryVol, config, volByTf);
+    if (checkCircuitBreaker(config)) return null; // coupe-circuit actif, pas de nouvelle entree
+
+    const entryTracker = loadEntryTracker();
+    const entry = evaluateEntryFromBaton(batonState, entryTracker[module]);
     if (!entry) return null;
+
+    entryTracker[module] = entry.actionTimestamp;
+    saveEntryTracker(entryTracker);
+
     const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
+    const liquidationPrice = computeLiquidationPrice(price, entry.direction, ORDER_DEFAULTS.leverage);
+
     state[module] = {
       direction: entry.direction,
       entryPrice: price,
       entryTimestamp: new Date().toISOString(),
-      crossingsSinceEntry: 0,
-      tp1Taken: false,
       leverage: ORDER_DEFAULTS.leverage,
       positionSizePercent,
       orderType: ORDER_DEFAULTS.orderType,
       openType: ORDER_DEFAULTS.openType,
-      stopLossPrice: null, // pose seulement au moment de TP1
+      liquidationPrice,
+      eventsSinceEntry: 0,
+      lastIsEventSeen: !!(batonState && batonState.isEvent),
+      lastCrossedZeroSeen: !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero),
+      pendingNetMoveDirection: null,
+      trancheStage: 0,
     };
     saveState(state);
+
     const label = entry.direction === 'long' ? 'ENTRER_LONG' : 'ENTRER_SHORT';
-    return `[TRADE-SIM] ${label} @ ${price} (${entry.reason}) [levier=${ORDER_DEFAULTS.leverage}x, ${ORDER_DEFAULTS.orderType}, ${ORDER_DEFAULTS.openType}, taille=${positionSizePercent}%]`;
+    return `[TRADE-SIM] ${module.toUpperCase()} ${label} @ ${price} (${entry.reason}) [levier=${ORDER_DEFAULTS.leverage}x, ${ORDER_DEFAULTS.orderType}, ${ORDER_DEFAULTS.openType}, taille=${positionSizePercent}%, liquidation=${liquidationPrice}]`;
   }
 
-  // 0. Stop loss -- verifie a CHAQUE tick, independamment d'un passage a
-  // zero du VWAP (mode meche : high/low de la derniere bougie).
-  if (checkStopLoss(trade, primaryVol)) {
+  // 0. Liquidation par levier -- verifiee a CHAQUE tick DES L'ENTREE (mode
+  // meche). SEUL filet de protection.
+  if (checkLiquidation(trade, primaryVol)) {
     const direction = trade.direction;
     appendHistory({
       module,
@@ -355,23 +365,20 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       entryTimestamp: trade.entryTimestamp,
       exitPrice: price,
       exitTimestamp: new Date().toISOString(),
-      exitReason: `stop loss touche a ${trade.stopLossPrice} (mode meche)`,
+      exitReason: `liquidation par levier touchee a ${trade.liquidationPrice} (mode meche, ${trade.leverage}x)`,
       leverage: trade.leverage,
       positionSizePercent: trade.positionSizePercent,
       pnlPercent: computePnlPercent(trade, price),
     });
     state[module] = null;
     saveState(state);
-    return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (stop loss touche a ${trade.stopLossPrice}, mode meche)`;
+    return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (liquidation par levier touchee a ${trade.liquidationPrice}, ${trade.leverage}x)`;
   }
 
-  // 0.5. Timeout anti-zombie (30/07/2026, GARDE-FOU D'URGENCE) : une
-  // position sans TP1 n'a jamais de stop pose (voir etape 0 ci-dessus),
-  // donc peut rester ouverte a nu indefiniment si aucun passage a zero
-  // n'arrive. Ferme de force au-dela de config.tradeSimulator.
-  // maxHoldMinutesWithoutTp1[module] minutes. Provisoire, remplace par le
-  // "baton de relais" une fois pret.
-  if (!trade.tp1Taken) {
+  // 0.5. Timeout anti-zombie (garde-fou complementaire) : tant qu'aucune
+  // tranche n'a ete prise, la position est pleinement exposee -- ferme de
+  // force au-dela du delai configure.
+  if (trade.trancheStage === 0) {
     const maxHold = config && config.tradeSimulator && config.tradeSimulator.maxHoldMinutesWithoutTp1
       ? config.tradeSimulator.maxHoldMinutesWithoutTp1[module]
       : null;
@@ -386,56 +393,51 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
           entryTimestamp: trade.entryTimestamp,
           exitPrice: price,
           exitTimestamp: new Date().toISOString(),
-          exitReason: `timeout anti-zombie (${elapsedMinutes.toFixed(1)} min sans TP1, max ${maxHold})`,
+          exitReason: `timeout anti-zombie (${elapsedMinutes.toFixed(1)} min sans tranche, max ${maxHold})`,
           leverage: trade.leverage,
           positionSizePercent: trade.positionSizePercent,
           pnlPercent: computePnlPercent(trade, price),
         });
         state[module] = null;
         saveState(state);
-        return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (timeout anti-zombie, ${elapsedMinutes.toFixed(1)} min sans TP1)`;
+        return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (timeout anti-zombie, ${elapsedMinutes.toFixed(1)} min sans tranche)`;
       }
     }
   }
 
-  // 1. Machine a etats basee sur les passages a zero du VWAP.
-  const exit = evaluateExit(trade, primaryVol, divRaw);
-  if (!exit.action) return null; // pas de passage a zero ce tick, rien a signaler
-
-  if (exit.incrementCrossing) trade.crossingsSinceEntry += 1;
-  if (exit.action === 'TP1') {
-    trade.tp1Taken = true;
-    // Corrige le 29/07/2026 : stop de protection pose a TP1 (break-even),
-    // du cote qui protege le gain acquis. LONG -> sous l'entree ; SHORT ->
-    // au-dessus. Les signes etaient inverses, ce qui posait le stop quasi
-    // colle au prix du mauvais cote (touche des la bougie suivante).
-    trade.stopLossPrice = trade.direction === 'long'
-      ? trade.entryPrice - ORDER_DEFAULTS.stopLossBufferAbs
-      : trade.entryPrice + ORDER_DEFAULTS.stopLossBufferAbs;
+  // 1. Progression des tranches 25/65/10.
+  const progress = checkTrancheProgress(trade, batonState, primaryVol);
+  if (!progress) {
+    saveState(state); // persiste lastIsEventSeen/lastCrossedZeroSeen mis a jour
+    return null;
   }
 
-  const direction = trade.direction;
-  if (exit.closesTrade) {
-    appendHistory({
-      module,
-      direction,
-      entryPrice: trade.entryPrice,
-      entryTimestamp: trade.entryTimestamp,
-      exitPrice: price,
-      exitTimestamp: new Date().toISOString(),
-      exitReason: `${exit.action} -- ${exit.reason}`,
-      leverage: trade.leverage,
-      positionSizePercent: trade.positionSizePercent,
-      pnlPercent: computePnlPercent(trade, price),
-    });
+  trade.trancheStage = progress.stage;
+  const pnl = computePnlPercent(trade, price);
+  appendHistory({
+    module,
+    direction: trade.direction,
+    entryPrice: trade.entryPrice,
+    entryTimestamp: trade.entryTimestamp,
+    exitPrice: price,
+    exitTimestamp: new Date().toISOString(),
+    exitReason: `tranche ${progress.fraction}% -- ${progress.reason}`,
+    fraction: progress.fraction,
+    trancheStage: progress.stage,
+    leverage: trade.leverage,
+    positionSizePercent: trade.positionSizePercent,
+    pnlPercent: pnl,
+  });
+
+  if (progress.stage >= 3) {
     state[module] = null;
-  } else {
-    state[module] = trade;
+    saveState(state);
+    return `[TRADE-SIM] ${module.toUpperCase()} ${trade.direction} FERME (residu 10%) @ ${price} (${progress.reason})`;
   }
-  saveState(state);
 
-  const slNote = exit.action === 'TP1' ? ` [stop loss pose a ${trade.stopLossPrice}]` : '';
-  return `[TRADE-SIM] ${module.toUpperCase()} ${direction} ${exit.action} @ ${price} (${exit.reason})${slNote}`;
+  state[module] = trade;
+  saveState(state);
+  return `[TRADE-SIM] ${module.toUpperCase()} ${trade.direction} TRANCHE ${progress.fraction}% @ ${price} (${progress.reason})`;
 }
 
-module.exports = { simulateModule, loadState, THRESHOLDS, ORDER_DEFAULTS, determineTrend };
+module.exports = { simulateModule, loadState, ORDER_DEFAULTS, computeLiquidationPrice };

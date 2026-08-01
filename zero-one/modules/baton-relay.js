@@ -85,6 +85,7 @@ let cadenceHistory = loadHistory();
 let auditHistory = loadAuditHistory();
 let prevPrice = null;
 let vigilance = null;
+let lastAction = null; // persiste (contrairement a "action", vrai un seul tick)
 
 function pruneHistory(now) {
   const cutoff = now - ROLLING_WINDOW_MS;
@@ -178,7 +179,10 @@ function tick() {
       vigilance.pendingNetMove = null;
     }
   }
-  if (action) vigilance = null;
+  if (action) {
+    vigilance = null;
+    lastAction = { ...action, timestamp: new Date(now).toISOString() };
+  }
 
   writeState({
     timestamp: new Date(now).toISOString(),
@@ -194,6 +198,7 @@ function tick() {
     isEvent,
     vigilance,
     action,
+    lastAction,
   });
 
   // ===== Historique 24h pour le dashboard web (31/07/2026) ==============

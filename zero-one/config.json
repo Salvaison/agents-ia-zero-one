@@ -280,8 +280,9 @@
     "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite — on ne couvrira jamais toutes les exceptions de marche."
   },
   "tradeSimulator": {
-    "enabled": false,
-    "_note_urgence": "DESACTIVE le 31/07/2026 (decision de Benjamin) -- PNL a -189.83% apres une nuit. Deux corrections structurelles a faire avant reactivation : (1) prix de liquidation base sur le levier, actif des l'entree, plafonnant la perte a -100% de la marge (le vrai 'hedge' est la taille de position, pas un stop-loss manuel) ; (2) le signal VWAP doit detecter un extremum local de sa propre valeur (retournement de trajectoire), pas un changement de signe -- le croisement a zero marque l'apogee de la vague MCB, pas celle du prix, qui arrive plus tot.",
+    "enabled": true,
+    "circuitBreakerTripped": false,
+    "_note": "REACTIVE le 31/07/2026 apres refonte complete : entree pilotee par baton-relay.js (chaine evenement/vigilance/reaction-prix), tranches 25/65/10 declenchees par evenement cadence, passage a zero VWAP, ou seuil netMove -- l'ancienne loi VWAP/LBW/ecart/DBSI a ete entierement retiree. Liquidation par levier (ORDER_DEFAULTS.leverage) comme seul filet de protection, plus de stop manuel. Coupe-circuit : bloque les nouvelles entrees si PNL cumule <= -25% (circuitBreakerTripped, remettre a false manuellement apres recalibrage).",
     "requiresConfluence": false,
     "requiresDbsi": false,
     "cadenceBypassThreshold": 30,

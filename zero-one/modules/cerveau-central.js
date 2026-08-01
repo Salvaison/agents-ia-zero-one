@@ -70,7 +70,7 @@ fs.watchFile(CONFIG_PATH, { interval: 5000 }, () => {
   }
 });
 
-const EVAL_INTERVAL_MS = 60000;
+const EVAL_INTERVAL_MS = 30000; // baisse de 60000 le 31/07/2026 -- aligne sur le cycle de baton-relay.js (30s), qui produisait un verdict sur deux jamais lu
 const WARMUP_MS        = 30000;
 const MIN_TICKS        = 50;
 
