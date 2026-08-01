@@ -501,23 +501,22 @@ async function loadAudit() {
     }
     statsEl.innerHTML = rows.length + ' releves (24h glissantes) - ' + crosses + ' passages a zero - ' + reversals + ' retournements imminents - <b style="color:#2ecc71">' + trades + ' TRADE</b> - <b style="color:#ff6b35">' + bypasses + ' BYPASS</b>';
 
-    const recent = rows.slice(-250);
-    let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>Pivot</th><th>VWAP3</th><th>Delta VWAP3</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
-      '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
-      '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
-      '</tr></thead><tbody>';
+    const recent = rows.slice(-2880);
+    let inVigilance = false;
+    const rowsHtml = [];
 
     for (const r of recent) {
       const rowCls = r.isTrade ? 'trade' : (r.isBypass ? 'bypass' : (r.isReversal ? 'reversal' : ''));
       let pivotCell = '';
       if (r.pivot === 'high') pivotCell = '<span class="pivot high"></span>';
       else if (r.pivot === 'low') pivotCell = '<span class="pivot low"></span>';
+      if (r.isReversal) inVigilance = true;
       let signalCell = '';
-      if (r.isTrade) signalCell = '<span class="badge trade">TRADE</span>';
-      else if (r.isBypass) signalCell = '<span class="badge bypass">BYPASS</span>';
+      if (r.isTrade) { signalCell = '<span class="badge trade">TRADE</span>'; inVigilance = false; }
+      else if (r.isBypass) { signalCell = '<span class="badge bypass">BYPASS</span>'; inVigilance = false; }
+      else if (inVigilance) { signalCell = '<span style="font-size:9px; opacity:0.65;">' + (r.direction || '') + '</span>'; }
 
-      html += '<tr class="' + rowCls + '">' +
+      rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
         '<td style="text-align:center;">' + pivotCell + '</td>' +
         '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
@@ -535,8 +534,14 @@ async function loadAudit() {
         '<td>' + arrow(r.direction) + '</td>' +
         '<td>' + (r.isReversal ? '&#9888;' : '') + '</td>' +
         '<td>' + signalCell + '</td>' +
-        '</tr>';
+        '</tr>');
     }
+    rowsHtml.reverse();
+    let html = '<table><thead><tr>' +
+      '<th>Heure (Paris)</th><th>Pivot</th><th>VWAP3</th><th>Delta VWAP3</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
+      '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
+      '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
+      '</tr></thead><tbody>' + rowsHtml.join('');
     html += '</tbody></table>';
     wrap.innerHTML = html;
   } catch (e) {
