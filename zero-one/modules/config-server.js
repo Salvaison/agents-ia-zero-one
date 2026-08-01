@@ -512,8 +512,12 @@ async function loadAudit() {
       else if (r.pivot === 'low') pivotCell = '<span class="pivot low"></span>';
       if (r.isReversal) inVigilance = true;
       let signalCell = '';
-      if (r.isTrade) { signalCell = '<span class="badge trade">TRADE</span>'; inVigilance = false; }
-      else if (r.isBypass) { signalCell = '<span class="badge bypass">BYPASS</span>'; inVigilance = false; }
+      if (r.isTrade) {
+        const dirLabel = r.direction === 'haussier' ? 'LONG' : (r.direction === 'baissier' ? 'SHORT' : 'TRADE');
+        const dirColor = r.direction === 'haussier' ? '#2ecc71' : (r.direction === 'baissier' ? '#e74c3c' : '#95a5a6');
+        signalCell = '<span class="badge trade" style="background:' + dirColor + '; color:#0f1419;">' + dirLabel + '</span>';
+        inVigilance = false;
+      } else if (r.isBypass) { signalCell = '<span class="badge bypass">BYPASS</span>'; inVigilance = false; }
       else if (inVigilance) { signalCell = '<span style="font-size:9px; opacity:0.65;">' + (r.direction || '') + '</span>'; }
 
       rowsHtml.push('<tr class="' + rowCls + '">' +
