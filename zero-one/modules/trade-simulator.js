@@ -203,12 +203,11 @@ function computeLiquidationPrice(entryPrice, direction, leverage) {
   return direction === 'long' ? entryPrice - distance : entryPrice + distance;
 }
 
-function checkLiquidation(trade, primaryVol) {
+function checkLiquidation(trade) {
   if (trade.liquidationPrice === null || trade.liquidationPrice === undefined) return false;
-  const momentum = primaryVol.momentum;
-  if (!momentum || momentum.lastHigh === undefined || momentum.lastLow === undefined) return false;
-  const high = parseFloat(momentum.lastHigh);
-  const low = parseFloat(momentum.lastLow);
+  const high = trade.priceHighSinceEntry;
+  const low = trade.priceLowSinceEntry;
+  if (high === undefined || low === undefined) return false;
   if (trade.direction === 'long') return low <= trade.liquidationPrice;
   if (trade.direction === 'short') return high >= trade.liquidationPrice;
   return false;
@@ -347,6 +346,8 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       lastCrossedZeroSeen: !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero),
       pendingNetMoveDirection: null,
       trancheStage: 0,
+      priceHighSinceEntry: price,
+      priceLowSinceEntry: price,
     };
     saveState(state);
 
@@ -354,9 +355,20 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
     return `[TRADE-SIM] ${module.toUpperCase()} ${label} @ ${price} (${entry.reason}) [levier=${ORDER_DEFAULTS.leverage}x, ${ORDER_DEFAULTS.orderType}, ${ORDER_DEFAULTS.openType}, taille=${positionSizePercent}%, liquidation=${liquidationPrice}]`;
   }
 
+  // Suivi du plus haut/bas REEL depuis l'entree (corrige le 01/08/2026 --
+  // l'ancienne version comparait au high/low d'une bougie ENTIERE du
+  // timeframe primaire, pouvant inclure un pic survenu AVANT l'entree,
+  // ou a l'inverse rater un vrai pic hors de la fenetre de cette bougie).
+  const tickHigh = (primaryVol && primaryVol.trigger && primaryVol.trigger.priceHigh !== undefined && primaryVol.trigger.priceHigh !== null)
+    ? parseFloat(primaryVol.trigger.priceHigh) : price;
+  const tickLow = (primaryVol && primaryVol.trigger && primaryVol.trigger.priceLow !== undefined && primaryVol.trigger.priceLow !== null)
+    ? parseFloat(primaryVol.trigger.priceLow) : price;
+  if (tickHigh !== null && (trade.priceHighSinceEntry === undefined || tickHigh > trade.priceHighSinceEntry)) trade.priceHighSinceEntry = tickHigh;
+  if (tickLow !== null && (trade.priceLowSinceEntry === undefined || tickLow < trade.priceLowSinceEntry)) trade.priceLowSinceEntry = tickLow;
+
   // 0. Liquidation par levier -- verifiee a CHAQUE tick DES L'ENTREE (mode
-  // meche). SEUL filet de protection.
-  if (checkLiquidation(trade, primaryVol)) {
+  // meche, plus haut/bas REEL depuis l'entree). SEUL filet de protection.
+  if (checkLiquidation(trade)) {
     const direction = trade.direction;
     appendHistory({
       module,

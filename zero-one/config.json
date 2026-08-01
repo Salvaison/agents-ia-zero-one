@@ -280,7 +280,7 @@
     "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite \u2014 on ne couvrira jamais toutes les exceptions de marche."
   },
   "tradeSimulator": {
-    "enabled": false,
+    "enabled": true,
     "circuitBreakerTripped": false,
     "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant). PORTAIL DESACTIVE LE 29/07/2026 (decision de Benjamin, requiresConfluence=false) : trade-simulator redevient autonome, pilote uniquement par sa propre loi VWAP/LBW/ecart/DBSI (cascade 3m incluse), pour calibrer ce declencheur en paper trading avant de le recontraindre par la chaine de confluence. Beaucoup de trades rates/inutiles attendus -- c'est le but de cette phase. DBSI RETIRE LE 29/07/2026 (requiresDbsi=false) : calibrer d'abord le passage a zero + seuil LBW tout seuls, avant de reintroduire DBSI comme condition supplementaire. BYPASS CADENCE AJOUTE LE 29/07/2026 (cadenceBypassThreshold=30) : capte les poussees directionnelles fortes que le VWAP ne peut pas voir par construction (observe en audit -- mouvement fort, cadence pic a 53 ticks/s, sans aucun passage a zero VWAP ni 15m ni 3m). Direction determinee par Trigger.priceSens3 (sens lisse sur 3 tranches).",
     "requiresConfluence": false,
