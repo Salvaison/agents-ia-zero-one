@@ -333,6 +333,20 @@ function checkInvalidation(trade, batonState, config, price) {
  * compte qu'une fois par occurrence reelle (pas a chaque tick ou la
  * condition reste vraie).
  */
+/**
+ * Source VWAP du declencheur de tranche (02/08/2026). Utilisee A LA FOIS a
+ * l'initialisation de lastCrossedZeroSeen et dans checkTrancheProgress :
+ * initialiser l'etat avec un timeframe et le surveiller avec un autre faisait
+ * manquer le premier front montant.
+ */
+function resolveVwapSource(primaryVol, volByTf, config) {
+  const tf = (config && config.tradeSimulator && config.tradeSimulator.vwapTriggerTimeframe)
+    || '15m';
+  return (volByTf && volByTf[tf] && volByTf[tf].vwap)
+    ? volByTf[tf].vwap
+    : (primaryVol && primaryVol.vwap);
+}
+
 const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
 
 function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
@@ -348,11 +362,7 @@ function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
   const isEventNow = !!(batonState && batonState.isEvent);
   // Timeframe du declencheur VWAP (02/08/2026) : le 4h du module day ne
   // traversait zero qu'une fois par jour -- 1 seul usage sur 81 tranches.
-  const vwapTf = (config && config.tradeSimulator && config.tradeSimulator.vwapTriggerTimeframe)
-    || '15m';
-  const vwapSrc = (volByTf && volByTf[vwapTf] && volByTf[vwapTf].vwap)
-    ? volByTf[vwapTf].vwap
-    : (primaryVol && primaryVol.vwap);
+  const vwapSrc = resolveVwapSource(primaryVol, volByTf, config);
   const crossedNow = !!(vwapSrc && vwapSrc.crossedZero);
 
   const eventIsNew = isEventNow && !trade.lastIsEventSeen;
@@ -482,7 +492,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       liquidationPrice,
       eventsSinceEntry: 0,
       lastIsEventSeen: !!(batonState && batonState.isEvent),
-      lastCrossedZeroSeen: !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero),
+      lastCrossedZeroSeen: !!(resolveVwapSource(primaryVol, volByTf, config) || {}).crossedZero,
       pendingNetMoveDirection: null,
       trancheStage: 0,
       priceHighSinceEntry: price,
