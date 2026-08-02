@@ -278,6 +278,7 @@ function checkInvalidation(trade, batonState, config, price) {
   const stallPct = cfg.stallPct !== undefined ? cfg.stallPct : 0.023;
   const stallCycles = cfg.stallCycles !== undefined ? cfg.stallCycles : 20;
   const graceCycles = cfg.graceCycles !== undefined ? cfg.graceCycles : 2;
+  const reversalConfirmCycles = cfg.reversalConfirmCycles !== undefined ? cfg.reversalConfirmCycles : 2;
   const exitInProfit = cfg.exitInProfit !== false;
 
   trade.cyclesSinceEntry = (trade.cyclesSinceEntry || 0) + 1;
@@ -294,13 +295,20 @@ function checkInvalidation(trade, batonState, config, price) {
       : ((trade.entryPrice - price) / trade.entryPrice) * 100;
   }
 
-  // 1. FLUX INVERSE : le deplacement va contre la position au-dela du seuil.
+  // 1. FLUX INVERSE : le deplacement va contre la position au-dela du seuil,
+  // CONFIRME sur plusieurs cycles consecutifs (02/08/2026 : sans confirmation,
+  // 6 invalidations sur 7 etaient prematurees -- le zigzag du marche suffisait
+  // a franchir le seuil un cycle isole).
   const adverse = trade.direction === 'long' ? -disp : disp;
   if (adverse >= reversalPct) {
-    if (exitInProfit || favorPct === null || favorPct <= 0) {
+    trade.reversalCount = (trade.reversalCount || 0) + 1;
+    if (trade.reversalCount >= reversalConfirmCycles
+        && (exitInProfit || favorPct === null || favorPct <= 0)) {
       trade.stallCount = 0;
-      return `invalidation -- flux inverse (deplacement 5min ${disp}% contre la position, seuil ${reversalPct}%)`;
+      return `invalidation -- flux inverse (deplacement 5min ${disp}% contre la position sur ${trade.reversalCount} cycles, seuil ${reversalPct}%)`;
     }
+  } else {
+    trade.reversalCount = 0;
   }
 
   // 2. FLUX ETEINT : rien ne bouge depuis assez longtemps.
@@ -385,6 +393,26 @@ function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
 }
 
 /**
+ * BLACKOUT PROGRAMME (02/08/2026) -- fenetres pendant lesquelles le simulateur
+ * n'ouvre aucune position et ferme celles qui sont ouvertes. Prevu pour les
+ * maintenances reseau annoncees, ou toute periode ou l'on ne veut pas que le
+ * bot trade sans surveillance. Format ISO 8601 UTC dans config.json.
+ */
+function isInBlackout(config) {
+  const wins = (config && config.tradeSimulator && config.tradeSimulator.blackoutWindows) || [];
+  if (!wins.length) return null;
+  const now = Date.now();
+  for (const w of wins) {
+    if (!w || !w.from || !w.to) continue;
+    const from = Date.parse(w.from);
+    const to = Date.parse(w.to);
+    if (isNaN(from) || isNaN(to)) continue;
+    if (now >= from && now <= to) return w;
+  }
+  return null;
+}
+
+/**
  * Point d'entree principal, appele une fois par module (scalp/day/swing)
  * a chaque tick de cerveau-central.js. Signature INCHANGEE (compatibilite
  * avec l'appel existant dans cerveau-central.js) -- divRaw n'est plus
@@ -404,6 +432,31 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   const trade = state[module];
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
   const batonState = loadBatonState();
+
+  // Blackout programme : aucune nouvelle entree, et fermeture preventive de
+  // toute position ouverte. Verifie AVANT toute autre logique.
+  const blackout = isInBlackout(config);
+  if (blackout) {
+    if (trade) {
+      const direction = trade.direction;
+      appendHistory({
+        module,
+        direction,
+        entryPrice: trade.entryPrice,
+        entryTimestamp: trade.entryTimestamp,
+        exitPrice: price,
+        exitTimestamp: new Date().toISOString(),
+        exitReason: `blackout programme (${blackout.label || 'fenetre de maintenance'}) -- fermeture preventive`,
+        leverage: trade.leverage,
+        positionSizePercent: trade.positionSizePercent,
+        pnlPercent: computePnlPercent(trade, price),
+      });
+      state[module] = null;
+      saveState(state);
+      return `[TRADE-SIM] ${module.toUpperCase()} ${direction} SORTIE @ ${price} (blackout programme)`;
+    }
+    return null;
+  }
 
   if (!trade) {
     if (checkCircuitBreaker(config)) return null; // coupe-circuit actif, pas de nouvelle entree

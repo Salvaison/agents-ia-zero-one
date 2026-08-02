@@ -186,6 +186,14 @@ function evaluate(module) {
   for (const t of signalTfs) {
     volByTf[t] = analyzeVolume(t);
   }
+  // Le declencheur de tranche VWAP de trade-simulator.js lit un timeframe qui
+  // n'est pas forcement un timeframe de signal du module (02/08/2026 : le
+  // module day a 4h en signal mais utilise le 15m pour ce declencheur).
+  const vwapTrigTf = config && config.tradeSimulator
+    && config.tradeSimulator.vwapTriggerTimeframe;
+  if (vwapTrigTf && !volByTf[vwapTrigTf]) {
+    volByTf[vwapTrigTf] = analyzeVolume(vwapTrigTf);
+  }
 
   const primaryVol = volByTf[signalTfs[0]];
 

@@ -309,13 +309,27 @@
     "vwapTriggerTimeframe": "15m",
     "invalidation": {
       "enabled": true,
-      "reversalPct": 0.06,
+      "reversalPct": 0.1,
       "stallPct": 0.023,
       "stallCycles": 20,
       "graceCycles": 2,
       "exitInProfit": true,
-      "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation."
-    }
+      "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation.",
+      "reversalConfirmCycles": 2
+    },
+    "blackoutWindows": [
+      {
+        "from": "2026-08-04T08:45:00Z",
+        "to": "2026-08-04T11:15:00Z",
+        "label": "maintenance DigitalOcean NYC1 phase 2"
+      },
+      {
+        "from": "2026-08-05T08:45:00Z",
+        "to": "2026-08-05T11:15:00Z",
+        "label": "maintenance DigitalOcean NYC1 phase 3"
+      }
+    ],
+    "_blackoutNote": "Fenetres ISO 8601 UTC. Le 3 aout n'est PAS blackoute : Benjamin est present ce jour-la et observe la reconnexion WebSocket en conditions reelles (le code de reconnexion de price-stream.js n'a jamais tourne jusqu'ici). Les 4 et 5 sont blackoutes car il est en randonnee. Vider la liste pour desactiver le mecanisme."
   },
   "signalTtl": {
     "scalp": null,
