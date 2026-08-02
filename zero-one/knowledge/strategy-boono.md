@@ -1,7 +1,9 @@
 # strategy-boono.md
-*Version 0.4 — 2 août 2026*
+*Version 0.4.1 — 2 août 2026 (soir)*
 *(v0.3 du 16 juillet ; cette version intègre le bâton de relais, la loi
-d'invalidation et le passage à un module unique)*
+d'invalidation et le passage à un module unique. La 0.4.1 précise le rôle
+réel des timeframes, corrige la contrainte RAM et documente la cohérence
+du VWAP.)*
 
 ---
 
@@ -164,10 +166,15 @@ absorbé.
 
 ### 4. Coupe-circuit (ACTIF)
 
-Si le PNL cumulé depuis la dernière remise à zéro descend à −25 % ou pire, les
-**nouvelles** entrées sont bloquées (`circuitBreakerTripped`, à remettre
-manuellement à `false`). Les positions déjà ouvertes continuent d'être gérées
-normalement — jamais de position orpheline.
+Si le PNL cumulé depuis la dernière remise à zéro descend à **−25 % ou pire**,
+les **nouvelles** entrées sont bloquées (`circuitBreakerTripped`). Les positions
+déjà ouvertes continuent d'être gérées normalement — jamais de position
+orpheline.
+
+**Le déblocage est manuel et délibéré.** Le flag ne se remet jamais à `false`
+tout seul : il faut une révision des paramètres avant de relancer. C'est
+l'implémentation technique de la règle « semaine négative → stop et révision »,
+appliquée à un seuil de perte plutôt qu'à un calendrier.
 
 ### 5. Blackout programmé (ACTIF, ajouté le 02/08)
 
@@ -210,11 +217,23 @@ jour : sur 81 tranches, ce déclencheur n'a servi **qu'une fois**. Le 15m offre
 ~31 traversées par jour, cohérent avec des positions dont la durée médiane
 gagnante est de 17 minutes.
 
-Piège rencontré le 02/08 : `volByTf` est reconstruit pour chaque module avec
-**uniquement ses propres timeframes de signal**. Pour day (`signal: ["4h"]`),
-`volByTf["15m"]` était `undefined` et le fallback retombait silencieusement sur
-le 4h. Corrigé dans `cerveau-central.js` : le timeframe du déclencheur est
-chargé s'il manque.
+Deux pièges rencontrés le 02/08, tous deux corrigés :
+
+1. **`volByTf` incomplet** — il est reconstruit pour chaque module avec
+   *uniquement ses propres timeframes de signal*. Pour day (`signal: ["4h"]`),
+   `volByTf["15m"]` était `undefined` et le fallback retombait silencieusement
+   sur le 4h : le patch n'avait rien changé. Corrigé dans `cerveau-central.js`,
+   le timeframe du déclencheur est chargé s'il manque.
+
+2. **Initialisation incohérente** — à l'ouverture d'une position,
+   `lastCrossedZeroSeen` était initialisé avec le VWAP de `primaryVol` (4h)
+   alors que la surveillance comparait contre le 15m. Le VWAP 4h étant en état
+   « traversé » ~32 % du temps, le flag pouvait démarrer à `true` alors que le
+   15m était à `false` — et le premier vrai front montant était manqué. Corrigé
+   par `resolveVwapSource()`, fonction unique utilisée **aux deux endroits**.
+
+Règle générale qui s'en dégage : **un état et sa surveillance doivent lire la
+même source**. Les deux bugs viennent de la même faute.
 
 ### Rôle réel des 10 % — clarifié le 16/07/2026
 
@@ -268,6 +287,21 @@ logiques distinctes. Seul DAY est implémenté.
 - Piloté par le bâton de relais (chaîne événement → vigilance → réaction prix)
 - Durée médiane observée : 17 min (gagnantes) / 8 min (perdantes)
 
+⚠ **Le timeframe de signal ne pilote presque plus rien** (constaté le 02/08).
+Recensement des usages de `primaryVol` dans `trade-simulator.js` :
+
+| Usage | Dépend du timeframe ? |
+|---|---|
+| `trigger.lastPrice` (prix d'entrée/sortie) | **Non** — le Trigger lit le buffer de ticks |
+| `trigger.priceHigh/priceLow` (suivi liquidation) | **Non** — idem |
+| VWAP du déclencheur de tranche | Non — le 15m est utilisé (fallback seulement s'il manque) |
+
+Les correctifs du 02/08 (VWAP sur 15m, liquidation sur suivi tick par tick)
+ont vidé le TF de signal de sa substance sans qu'on s'en aperçoive. Passer le
+module day de 4h à 1h ne changerait **aujourd'hui aucun comportement de
+trading** — seulement l'affichage du scoring. La question redeviendra réelle
+quand le portail de confluence sera reconnecté.
+
 ### Module Scalp — INTENTION
 - Timeframes prévus : 15m + 3m + 1h · contexte 4h
 - Levier envisagé : 20x–75x
@@ -299,6 +333,17 @@ une fois la confluence validée.
 **Statut au 02/08 : ce portail est désactivé** (`requiresConfluence: false`).
 Le scoring tourne et s'affiche mais ne conditionne pas l'entrée. À
 reconnecter une fois le bâton calibré.
+
+### Le « contexte » n'entre pas dans la décision
+
+Les timeframes de contexte (4h pour scalp, 1d pour day, 4h+1w pour swing) sont
+calculés et affichés, mais **explicitement exclus du score** — les logs le
+disent littéralement : `[4h] DBSI: score=5 (contexte, hors score)`.
+
+Le contexte existe donc pour la lecture humaine, pas pour la décision de
+l'agent. À trancher : soit lui donner un poids réel, soit assumer qu'il est
+purement informatif. Aujourd'hui c'est le second cas, sans que ce soit une
+décision explicite.
 
 ### Ce qui reste vrai du modèle
 - **Divergence MCB** : signal primaire, confluence multi-timeframes requise
@@ -347,8 +392,11 @@ Seuils Trigger (`scoring.trigger.thresholds`), pour une tranche de 25 ticks :
 Entre le moment où la confluence est atteinte et celui où le Trigger trouve son
 entrée, le marché peut s'inverser. Trois options examinées :
 
-1. **Re-demander la permission aux scores** — le plus juste, mais coûteux :
-   relire les 6 CSV et rejouer le scoring à chaque tentative, sur un VPS 512 Mo.
+1. **Re-demander la permission aux scores** — le plus juste. Écarté à
+   l'époque pour une raison de ressources (relire les 6 CSV et rejouer le
+   scoring à chaque tentative sur un VPS 512 Mo). **Cette contrainte n'existe
+   plus** : le droplet est à 1 Go (vérifié le 02/08 — 480 Mo utilisés,
+   481 Mo disponibles, pas de swap). Option à reconsidérer.
 2. **Le DBSI comme arbitre** — écarté. Sémantique inconnue (indicateur protégé,
    colonnes nommées par position à l'écran) et rendu sur ~25 bougies seulement.
 3. **Date de péremption par module** — retenu sur le principe. Un signal scalp
@@ -401,6 +449,14 @@ niveau S/R au même titre que DS/DR/WS/WR/MS/MR — sa touche score dans
 **Une seule ligne suffit.** Contrairement à une cascade EMA 8/13/21/55 ou SMA
 15/30/100/200 (Jayson Casper), on a choisi de ne pas construire de cascade : le
 MA est un indicateur tardif, utile en confirmation mais peu réactif.
+
+**Piste à tester au retour (02/08) : passer la période de 200 à 100.** Ses
+retournements sont jugés trop tardifs à l'usage, ce qui est cohérent avec le
+constat ci-dessus. La période se change dans les **paramètres de l'indicateur
+sur TradingView**, donc côté collecteur iMac — et non dans `config.json`.
+Conséquence à documenter le jour où ce sera fait : l'historique déjà collecté
+reste en période 200, il y aura une **discontinuité dans les CSV** à la date
+du changement.
 
 ### Mécanique touch / reject / retest
 
