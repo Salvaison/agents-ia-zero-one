@@ -273,7 +273,18 @@ function checkNetMoveThreshold(trade, batonState) {
  * compte qu'une fois par occurrence reelle (pas a chaque tick ou la
  * condition reste vraie).
  */
+const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
+
 function checkTrancheProgress(trade, batonState, primaryVol) {
+  // Sens du mouvement PAR RAPPORT A LA POSITION : positif = en notre
+  // faveur, negatif = contre nous. En % de prix, hors levier.
+  const px = (primaryVol && primaryVol.trigger) ? parseFloat(primaryVol.trigger.lastPrice) : null;
+  let favorPct = null;
+  if (px && trade.entryPrice) {
+    favorPct = trade.direction === 'long'
+      ? ((px - trade.entryPrice) / trade.entryPrice) * 100
+      : ((trade.entryPrice - px) / trade.entryPrice) * 100;
+  }
   const isEventNow = !!(batonState && batonState.isEvent);
   const crossedNow = !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero);
 
@@ -285,6 +296,15 @@ function checkTrancheProgress(trade, batonState, primaryVol) {
   trade.lastCrossedZeroSeen = crossedNow;
 
   if (!eventIsNew && !crossIsNew && !netMoveIsNew) return null;
+
+  // FILTRE DIRECTIONNEL (02/08/2026) : ne pas consommer de tranche quand le
+  // mouvement va contre la position au-dela de la tolerance. Sans ce filtre,
+  // un pic de cadence pendant un mouvement adverse ferme la tranche au pire
+  // prix (cas du 02/08 04:07, -19.29% puis -29.44%).
+  if (favorPct !== null && favorPct < -ADVERSE_TOLERANCE_PCT) {
+    trade.lastAdverseSkip = new Date().toISOString();
+    return null;
+  }
 
   trade.eventsSinceEntry += 1;
   let triggerLabel;

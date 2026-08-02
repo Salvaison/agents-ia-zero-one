@@ -49,6 +49,8 @@ const PRICE_REACTION_IMMEDIATE = 0.06;
 const PRICE_REACTION_CONFIRMED = 0.03;
 
 const AUDIT_HISTORY_MAX = 2880; // 24h a raison d'un relevé/30s
+const PRICE_HISTORY_SIZE = 10;        // fenetre du desequilibre (10 batons = 5 min)
+const IMBALANCE_THRESHOLD = 0.10;     // % de deplacement de prix -- ~p90/p95 mesure sur 24h
 
 function loadHistory() {
   if (!fs.existsSync(HISTORY_PATH)) return [];
@@ -86,6 +88,7 @@ let auditHistory = loadAuditHistory();
 let prevPrice = null;
 let vigilance = null;
 let lastAction = null; // persiste (contrairement a "action", vrai un seul tick)
+let priceHistory = []; // 10 derniers prix (02/08/2026 -- remplace netMoveHistory)
 
 function pruneHistory(now) {
   const cutoff = now - ROLLING_WINDOW_MS;
@@ -117,6 +120,34 @@ function tick() {
     : null;
   const priceHigh = trig.priceHigh !== null && trig.priceHigh !== undefined ? parseFloat(trig.priceHigh) : null;
   const priceLow = trig.priceLow !== null && trig.priceLow !== undefined ? parseFloat(trig.priceLow) : null;
+
+  // ===== Recommandation VWAP15 / desequilibre (01/08/2026, mode observation) ====
+  const vwap15 = analyzeVwap('15m');
+  // Deplacement de prix REEL sur la fenetre (corrige le 02/08/2026 -- voir
+  // en-tete du patch : l'ancienne somme de netMove chevauchants sous-estimait
+  // l'amplitude d'un facteur ~2 et s'inversait parfois de signe).
+  let displacementPct = null;
+  if (priceHistory.length >= PRICE_HISTORY_SIZE) {
+    const p0 = priceHistory[0];
+    if (p0) displacementPct = parseFloat((((currentPrice - p0) / p0) * 100).toFixed(4));
+  }
+  if (currentPrice && !isAnomaly) {
+    priceHistory.push(currentPrice);
+    if (priceHistory.length > PRICE_HISTORY_SIZE) priceHistory.shift();
+  }
+  const strongImbalance = displacementPct !== null && Math.abs(displacementPct) >= IMBALANCE_THRESHOLD;
+  const vwap15NearZero = !!(vwap15 && vwap15.nearZero);
+  const vwap15Cur = (vwap15 && vwap15.current !== undefined) ? parseFloat(vwap15.current) : null;
+  const vwap15Prev = (vwap15 && vwap15.previous !== undefined) ? parseFloat(vwap15.previous) : null;
+  const vwap15TrendDown = (vwap15Cur !== null && vwap15Prev !== null)
+    ? (Math.abs(vwap15Cur) < Math.abs(vwap15Prev)) : null;
+  let vwapRegime = 'neutre';
+  if (vwap15TrendDown === false) vwapRegime = 'continuation';
+  else if (vwap15NearZero && vwap15TrendDown === true) vwapRegime = 'retournement_possible';
+  let recommendedDirection = null;
+  if (vwapRegime === 'retournement_possible' && strongImbalance) {
+    recommendedDirection = displacementPct > 0 ? 'baissier' : 'haussier'; // sens oppose au desequilibre
+  }
 
   pruneHistory(now);
 
@@ -199,10 +230,12 @@ function tick() {
     vigilance,
     action,
     lastAction,
+    vwapRegime,
+    displacementPct,
+    recommendedDirection,
   });
 
   // ===== Historique 24h pour le dashboard web (31/07/2026) ==============
-  const vwap15 = analyzeVwap('15m');
   const vwap3 = analyzeVwap('3m');
   appendAuditHistory({
     ts: now,
