@@ -265,6 +265,58 @@ function checkNetMoveThreshold(trade, batonState) {
 }
 
 /**
+ * INVALIDATION (02/08/2026) -- la position meurt quand le scenario qui l'a
+ * motivee n'existe plus. Deux causes : flux inverse, ou flux eteint.
+ * Ce n'est pas un stop-loss : aucun niveau de perte n'intervient dans la
+ * decision, seulement l'etat du flux (displacementPct du baton).
+ */
+function checkInvalidation(trade, batonState, config, price) {
+  const cfg = (config && config.tradeSimulator && config.tradeSimulator.invalidation) || {};
+  if (cfg.enabled === false) return null;
+
+  const reversalPct = cfg.reversalPct !== undefined ? cfg.reversalPct : 0.06;
+  const stallPct = cfg.stallPct !== undefined ? cfg.stallPct : 0.023;
+  const stallCycles = cfg.stallCycles !== undefined ? cfg.stallCycles : 20;
+  const graceCycles = cfg.graceCycles !== undefined ? cfg.graceCycles : 2;
+  const exitInProfit = cfg.exitInProfit !== false;
+
+  trade.cyclesSinceEntry = (trade.cyclesSinceEntry || 0) + 1;
+  if (trade.cyclesSinceEntry <= graceCycles) return null;
+
+  const disp = batonState ? batonState.displacementPct : null;
+  if (disp === null || disp === undefined) return null;
+
+  // Position en profit ? (en % de prix, hors levier)
+  let favorPct = null;
+  if (price && trade.entryPrice) {
+    favorPct = trade.direction === 'long'
+      ? ((price - trade.entryPrice) / trade.entryPrice) * 100
+      : ((trade.entryPrice - price) / trade.entryPrice) * 100;
+  }
+
+  // 1. FLUX INVERSE : le deplacement va contre la position au-dela du seuil.
+  const adverse = trade.direction === 'long' ? -disp : disp;
+  if (adverse >= reversalPct) {
+    if (exitInProfit || favorPct === null || favorPct <= 0) {
+      trade.stallCount = 0;
+      return `invalidation -- flux inverse (deplacement 5min ${disp}% contre la position, seuil ${reversalPct}%)`;
+    }
+  }
+
+  // 2. FLUX ETEINT : rien ne bouge depuis assez longtemps.
+  if (Math.abs(disp) < stallPct) {
+    trade.stallCount = (trade.stallCount || 0) + 1;
+    if (trade.stallCount >= stallCycles) {
+      return `invalidation -- flux eteint (${trade.stallCount} cycles sous ${stallPct}%)`;
+    }
+  } else {
+    trade.stallCount = 0;
+  }
+
+  return null;
+}
+
+/**
  * Progression des tranches 25/65/10 -- declenchee par TROIS voies
  * independantes, decision de Benjamin : un NOUVEL evenement de cadence
  * (front montant de baton-state.isEvent), un NOUVEAU passage a zero du
@@ -419,6 +471,29 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
     state[module] = null;
     saveState(state);
     return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (liquidation par levier touchee a ${trade.liquidationPrice}, ${trade.leverage}x)`;
+  }
+
+  // 0.4. INVALIDATION (02/08/2026) : le scenario d'entree n'existe plus.
+  // Verifiee avant les tranches -- une position dont la raison d'etre a
+  // disparu ne doit pas attendre un declencheur pour sortir.
+  const invalidReason = checkInvalidation(trade, batonState, config, price);
+  if (invalidReason) {
+    const direction = trade.direction;
+    appendHistory({
+      module,
+      direction,
+      entryPrice: trade.entryPrice,
+      entryTimestamp: trade.entryTimestamp,
+      exitPrice: price,
+      exitTimestamp: new Date().toISOString(),
+      exitReason: invalidReason,
+      leverage: trade.leverage,
+      positionSizePercent: trade.positionSizePercent,
+      pnlPercent: computePnlPercent(trade, price),
+    });
+    state[module] = null;
+    saveState(state);
+    return `[TRADE-SIM] ${module.toUpperCase()} ${direction} SORTIE @ ${price} (${invalidReason})`;
   }
 
   // 0.5. Timeout anti-zombie (garde-fou complementaire) : tant qu'aucune

@@ -306,7 +306,16 @@
     "activeModules": [
       "day"
     ],
-    "vwapTriggerTimeframe": "15m"
+    "vwapTriggerTimeframe": "15m",
+    "invalidation": {
+      "enabled": true,
+      "reversalPct": 0.06,
+      "stallPct": 0.023,
+      "stallCycles": 20,
+      "graceCycles": 2,
+      "exitInProfit": true,
+      "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation."
+    }
   },
   "signalTtl": {
     "scalp": null,
