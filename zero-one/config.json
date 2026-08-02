@@ -1,5 +1,5 @@
 {
-  "_comment": "Param\u00e8tres de strat\u00e9gie centralis\u00e9s \u2014 Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le d\u00e9tail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une d\u00e9cision non encore prise, pas une valeur par d\u00e9faut de z\u00e9ro.",
+  "_comment": "Paramètres de stratégie centralisés — Bot Trading Boono. Voir zero-one/knowledge/parametres-dynamiques.md pour le détail de chaque valeur et son statut. Les valeurs null sont volontaires : elles marquent une décision non encore prise, pas une valeur par défaut de zéro.",
   "_lastUpdated": "2026-07-24",
   "srZone": {
     "tolerancePercent": 0.39,
@@ -24,7 +24,7 @@
         "1h"
       ],
       "context": "4h",
-      "_note": "TROIS timeframes de signal, pas un. Une divergence sur UN SEUL suffit a atteindre le minimum (5 pts). Les 3 alignes montent le score, ils ne conditionnent pas l'ouverture. Corrige le 16/07 : l'ancien '60m' n'existait dans aucune cle de volume-analyzer.js \u2014 le module scalp ne pouvait pas fonctionner."
+      "_note": "TROIS timeframes de signal, pas un. Une divergence sur UN SEUL suffit a atteindre le minimum (5 pts). Les 3 alignes montent le score, ils ne conditionnent pas l'ouverture. Corrige le 16/07 : l'ancien '60m' n'existait dans aucune cle de volume-analyzer.js — le module scalp ne pouvait pas fonctionner."
     },
     "day": {
       "signal": [
@@ -108,7 +108,7 @@
         "day": 15,
         "swing": 25
       },
-      "_note": "Pour le swing, 25 est BLOQUANT : pas de scenario, pas de trade. Bar\u00e8me progressif ajoute le 20/07/2026 : touche simple=10 (prix au niveau, rien confirme), retest confirme=15 (le prix a teste le niveau une seconde fois et reagi dans le sens attendu), confluence scenario=25. Regle heuristique, pas une loi universelle : si la touche ne se confirme pas immediatement par un retest, 'wait for further confirmation' -- le score reste a 10 (pas de blocage null) en attendant un signal ulterieur.",
+      "_note": "Pour le swing, 25 est BLOQUANT : pas de scenario, pas de trade. Barème progressif ajoute le 20/07/2026 : touche simple=10 (prix au niveau, rien confirme), retest confirme=15 (le prix a teste le niveau une seconde fois et reagi dans le sens attendu), confluence scenario=25. Regle heuristique, pas une loi universelle : si la touche ne se confirme pas immediatement par un retest, 'wait for further confirmation' -- le score reste a 10 (pas de blocage null) en attendant un signal ulterieur.",
       "_sources": "DS/DR/WS/WR/MS/MR (soumis via l'interface S/R, a construire) + la 200MA du DBSI (MC DBSI 'Long Term Trend', deja disponible dans les donnees collectees -- v[1] de la serie S8XNwk.st). La MA200 est une source de niveau S/R au meme titre que les autres, pas un score separe."
     },
     "momentum": {
@@ -254,7 +254,7 @@
     "day": {
       "reading": "B",
       "totalThreshold": 36,
-      "_status": "36 = somme mecanique des minimums, donc presque aussi strict qu'exiger toutes les conditions. A revoir \u2014 le scalp a ete abaisse, le day ne l'a pas ete."
+      "_status": "36 = somme mecanique des minimums, donc presque aussi strict qu'exiger toutes les conditions. A revoir — le scalp a ete abaisse, le day ne l'a pas ete."
     },
     "swing": {
       "reading": "C",
@@ -276,8 +276,8 @@
       "trigger": 3
     },
     "mode": "simultaneous_minimums",
-    "_note": "QUATRE minimums simultanes, pas une somme. C'est la FORME de la configuration qui compte : 5+5+4+1=15 atteint le total mais avec un Trigger a 1, le prix ne bouge pas \u2014 le raisonnement tombe. Momentum/MF/DBSI hauts signalent une pression qui n'a pas encore atteint le prix ; le Trigger a 3 montre que ca commence a ceder. On entre dans cette fenetre, avant l'acceleration. Le Trigger n'est PAS contourne \u2014 il est une des quatre conditions. Formalise le 17/07 une regle qui existait qualitativement dans le SOP (Trigger B, 'sudden exceptional volume spike').",
-    "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite \u2014 on ne couvrira jamais toutes les exceptions de marche."
+    "_note": "QUATRE minimums simultanes, pas une somme. C'est la FORME de la configuration qui compte : 5+5+4+1=15 atteint le total mais avec un Trigger a 1, le prix ne bouge pas — le raisonnement tombe. Momentum/MF/DBSI hauts signalent une pression qui n'a pas encore atteint le prix ; le Trigger a 3 montre que ca commence a ceder. On entre dans cette fenetre, avant l'acceleration. Le Trigger n'est PAS contourne — il est une des quatre conditions. Formalise le 17/07 une regle qui existait qualitativement dans le SOP (Trigger B, 'sudden exceptional volume spike').",
+    "_status": "PISTE NON RETENUE POUR L'INSTANT : adapter les seuils du Trigger a la volatilite du moment (0,066% est un vrai mouvement en marche calme, du bruit en tempete). Aucune donnee pour calibrer ca aujourd'hui. Coherence avant exhaustivite — on ne couvrira jamais toutes les exceptions de marche."
   },
   "tradeSimulator": {
     "enabled": true,
@@ -302,13 +302,17 @@
         "shortSouple": 20
       },
       "_note": "Seuils asymetriques (28/07/2026) : la tendance (close vs MA200) determine quel cote est 'dans le sens' (seuil assoupli) et quel cote est 'contre-tendance' (seuil extreme). Observation de Benjamin le 27/07 au soir : la vague MCB 15m etait collee en haut (haussiere) avec BW a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait empeche tout trade dans ce contexte pourtant clairement directionnel."
-    }
+    },
+    "activeModules": [
+      "day"
+    ],
+    "vwapTriggerTimeframe": "15m"
   },
   "signalTtl": {
     "scalp": null,
     "day": null,
     "swing": null,
-    "_status": "NON TRANCHE \u2014 duree de validite d'une confluence avant peremption. Entre le moment ou le score est atteint et celui ou le Trigger trouve son entree, le marche peut s'inverser. Le DBSI a ete ecarte comme arbitre (semantique inconnue, rendu sur ~25 bougies seulement). Valeurs a fixer en paper."
+    "_status": "NON TRANCHE — duree de validite d'une confluence avant peremption. Entre le moment ou le score est atteint et celui ou le Trigger trouve son entree, le marche peut s'inverser. Le DBSI a ete ecarte comme arbitre (semantique inconnue, rendu sur ~25 bougies seulement). Valeurs a fixer en paper."
   },
   "divergence": {
     "maxChainHours": {

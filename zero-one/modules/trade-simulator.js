@@ -275,7 +275,7 @@ function checkNetMoveThreshold(trade, batonState) {
  */
 const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
 
-function checkTrancheProgress(trade, batonState, primaryVol) {
+function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
   // Sens du mouvement PAR RAPPORT A LA POSITION : positif = en notre
   // faveur, negatif = contre nous. En % de prix, hors levier.
   const px = (primaryVol && primaryVol.trigger) ? parseFloat(primaryVol.trigger.lastPrice) : null;
@@ -286,7 +286,14 @@ function checkTrancheProgress(trade, batonState, primaryVol) {
       : ((trade.entryPrice - px) / trade.entryPrice) * 100;
   }
   const isEventNow = !!(batonState && batonState.isEvent);
-  const crossedNow = !!(primaryVol && primaryVol.vwap && primaryVol.vwap.crossedZero);
+  // Timeframe du declencheur VWAP (02/08/2026) : le 4h du module day ne
+  // traversait zero qu'une fois par jour -- 1 seul usage sur 81 tranches.
+  const vwapTf = (config && config.tradeSimulator && config.tradeSimulator.vwapTriggerTimeframe)
+    || '15m';
+  const vwapSrc = (volByTf && volByTf[vwapTf] && volByTf[vwapTf].vwap)
+    ? volByTf[vwapTf].vwap
+    : (primaryVol && primaryVol.vwap);
+  const crossedNow = !!(vwapSrc && vwapSrc.crossedZero);
 
   const eventIsNew = isEventNow && !trade.lastIsEventSeen;
   const crossIsNew = crossedNow && !trade.lastCrossedZeroSeen;
@@ -334,6 +341,13 @@ function checkTrancheProgress(trade, batonState, primaryVol) {
  * d'appel.
  */
 function simulateModule(module, primaryVol, divRaw, config, volByTf) {
+  // Filtre des modules actifs (02/08/2026) : les trois modules ouvraient la
+  // meme position a l'identique, soit 3x l'exposition prevue. Seul day est
+  // actif le temps de le calibrer proprement.
+  const active = (config && config.tradeSimulator && config.tradeSimulator.activeModules)
+    || ['day'];
+  if (!active.includes(module)) return null;
+
   const state = loadState();
   const trade = state[module];
   const price = primaryVol.trigger && primaryVol.trigger.lastPrice;
@@ -438,7 +452,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   }
 
   // 1. Progression des tranches 25/65/10.
-  const progress = checkTrancheProgress(trade, batonState, primaryVol);
+  const progress = checkTrancheProgress(trade, batonState, primaryVol, volByTf, config);
   if (!progress) {
     saveState(state); // persiste lastIsEventSeen/lastCrossedZeroSeen mis a jour
     return null;
