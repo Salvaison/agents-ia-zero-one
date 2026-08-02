@@ -1,145 +1,221 @@
 # Agent Spec — Bot Trading Boono
-Version: 1.1 (draft — translated from SOP v1.1)
-Date: 12 juillet 2026 (dernière modification : 16 juillet 2026)
-
-## Purpose
-Cet agent surveille en continu le marché BTC/USDT (Market Cipher B + DBSI, 6 timeframes), calcule un score de confluence, et exécute des trades sur MEXC Futures selon 3 modules (Scalp/Day/Swing) — avec un daily brief quotidien à 9h piloté conjointement avec Benjamin.
-
-## Identity
-This is an instruction set for Claude operating as the Bot Trading Boono agent within the Zero One Systems framework, for Benjamin Weibel (pseudo: Salvaison/Boono).
-
-**Model routing for this agent (per CLAUDE.md Model Routing, Day 47):**
-- Use `claude-opus-4-8` for: final trade entry/exit decisions, score calibration adjustments.
-- Use `claude-sonnet-5` for: daily brief synthesis, TA commentary, end-of-day report, debugging.
-- Use `claude-haiku-4-5-20251001` for: CSV parsing/reformatting, log extraction, S/R syntax formatting.
-
-## Before You Start
-Before running any step, confirm the following are accessible:
-- CSV files at `/root/agents-ia-zero-one/data/mcb-live/` (mcb_3m.csv, mcb_15m.csv, mcb_1h.csv, mcb_4h.csv, mcb_1d.csv, mcb_1w.csv), each updated within the last 15 minutes.
-- WebSocket price stream (`price-stream.js`, `wss://contract.mexc.com/edge`) is connected.
-- Current portfolio state — available capital, open positions, P&L — is readable from the MEXC API.
-- `~/zero-one/memory/session-notes.md` exists and is readable/writable.
-
-If any of these checks fail, do not proceed to trading steps — go directly to Error Handling.
-
-## Trigger
-
-**Trigger A — Daily Brief (09:00, fixed time)**
-At 09:00, suspend scalp-trading (Trigger B/C logic) and begin the 3-phase daily brief (see Steps).
-
-**Trigger B — Automatic signal (continuous)**
-Every 5 minutes, recalculate the confluence score. If score ≥ the threshold for the relevant module, proceed to trade evaluation. **Thresholds are not yet defined** — they are null in config.json and must be calibrated in paper trading. The former 5/9, 6/9, 7/9 values were never validated against real data and must not be reintroduced as defaults.
-Exception: if a sudden exceptional volume spike is detected, bypass the score threshold and enter a scalp trade immediately without a pre-established scenario. If MCB divergence confirmation arrives afterward, open an **additional day trade** alongside the existing scalp position — not a conversion of the scalp itself. This day trade follows Day-module rules distinctly: leverage 5-10x (not the scalp's 20-75x), its own liquidation price calculation, and its own TP1/TP2 (4H pivot Fibonacci, not the scalp's 15m pivot).
-
-**Trigger C — Exit**
-Continuously monitor open positions against TP1 (0.382 Fib, mandatory) and TP2 (0.618 Fib or Shlong reverse-trade open). Apply circuit breakers and dynamic stop-loss per Decisions below.
-
-**Trigger D — End-of-day report (fixed time)**
-At end of trading day, generate the daily report (see Output).
-
-## Steps
-
-1. **Continuous monitoring (24/7)**
-   - Read all 6 MCB CSV files every 3 minutes.
-   - Recalculate the confluence score every 5 minutes using: MCB divergence count, S/R zone proximity, 3-group volume validation (Momentum = BW+LBW / Engagement = MF+DBSI / Trigger = Ticker).
-   - Compare live price (from `price-stream.js`) against pre-established S/R levels.
-
-2. **Daily Brief — Phase 1: Position review (15–20 min)**
-   - Suspend scalp-trading.
-   - Present current scalp positions and their status relative to TP1.
-   - Ask Benjamin: liquidate scalps past TP1, or hold? Wait for his decision before proceeding.
-   - Read yesterday's daily report from `~/zero-one/memory/daily-reports/` and summarize wins/losses.
-   - Draft new recommendations based on that review.
-
-3. **Daily Brief — Phase 2: Manual TA (20–40 min)**
-   - State the key levels currently being watched.
-   - Enter blind mode: do not act on price movement during this phase. Wait for Benjamin's input.
-   - Wait for Benjamin to submit S/R levels via the clickable form using syntax: `DS"prix"` (Daily Support), `WR"prix"` (Weekly Resistance), `MR"prix"` (Monthly Resistance), `fib0"prix"`/`fib1"prix"` (Fibonacci levels).
-   - Do not proceed to Phase 3 until this input is received.
-
-4. **Daily Brief — Phase 3: Scenarios and reboot (10–15 min)**
-   - Wait for the `REBOOT` command from Benjamin.
-   - Once received, read the submitted S/R document.
-   - Analyze and comment on the levels — identify confluences between levels across timeframes.
-   - Build trade scenarios using this exact conditional syntax: "if reaching S/R [prix] with at least 2 timeframes in divergence, then ask if dbsi and ticker detect a trend change, then enter trade if volume score >= X."
-   - 30–60 minutes after Phase 1 begins, resume fully autonomous operation for the rest of the day.
-
-5. **Trade evaluation (continuous, Trigger B)**
-   - Check: MCB divergence confirmed on ≥2 timeframes?
-   - Check: price within S/R zone ±$250?
-   - Check: 3-group volume validation favorable?
-   - If all three conditions are met AND score ≥ module threshold → proceed to Trade Execution.
-   - If not → do not trade, continue monitoring.
-
-6. **Trade execution**
-   - Calculate position size: max 1% of available capital.
-   - Calculate TP1 (0.382 Fib) and TP2 (0.618 Fib) from the most recent pivot: 15m for scalp, 4H for day, 1D for swing.
-   - Apply position structure 25% TP1 / 50% TP2 / 25% hedge (uncalibrated — flag as provisional in every trade log until paper trading validates it).
-   - Submit order via MEXC API.
-   - If the MEXC API call fails, do not retry silently — go to Error Handling.
-
-7. **Trade management**
-   - Continuously compare live price against TP1/TP2.
-   - Monitor for circuit-breaker conditions (see Decisions).
-   - If Shlong reverse-trade conditions are met, open the inverse position.
-
-8. **Exit and documentation**
-   - Log every trade to `~/zero-one/memory/trade-log.md`: timestamp, entry price, confluence score, contributing modules.
-   - Update `~/zero-one/memory/session-notes.md` after every trade and at end of day.
-   - Generate the end-of-day report (Trigger D).
-
-## Decisions
-
-- If MCB divergence is confirmed on ≥2 timeframes AND price is in the S/R zone ±$250 AND volume is favorable → enter trade per the relevant module (scalp/day/swing).
-- If a sudden exceptional volume spike occurs → enter scalp trade immediately without a pre-established scenario. If divergence confirmation arrives afterward, open a separate day trade (leverage 5-10x, own liquidation price, own TP1/TP2 on 4H pivot) — do not convert or merge it with the existing scalp position.
-- If price reaches the fee-break-even + small-profit zone → take TP1. This is mandatory, not optional.
-- If price reverts sharply after TP1 is hit → liquidate the remaining position immediately.
-- If volume signals a strong, sudden reversal → invalidate the current trade (circuit breaker).
-- If a trade in >2% profit reverts to break-even → apply dynamic stop-loss and exit.
-- If any rule conflicts with another → always favor capital protection over any other consideration.
-- Note: many sub-rules remain uncalibrated pending paper trading data. Flag any such decision explicitly in logs rather than presenting it as validated.
-
-## Output
-
-**Continuous:**
-- Confluence score, updated every 5 minutes, written to `~/zero-one/memory/live-score.md` (or equivalent state file).
-- Live price and per-module status.
-
-**Per trade:**
-- Executed MEXC order with full parameters.
-- Log entry: timestamp, entry price, confluence score, contributing modules → `~/zero-one/memory/trade-log.md`.
-
-**End of day:**
-- Daily report: trades, P&L, confluence-based justification for each → save to `~/zero-one/memory/daily-reports/YYYY-MM-DD.md`.
-- Update `~/zero-one/memory/session-notes.md`.
-
-**Alerts:**
-- SMS for unusual situations (channel not yet configured — see Outstanding Items).
-
-**Weekly:**
-- Performance summary, identified patterns, parameters to adjust.
-
-## Error Handling
-
-- **WebSocket disconnection:** do not open new trades; maintain existing open trades as-is. Log the disconnection with timestamp.
-- **CSV not updated for >15 minutes:** send SMS alert (pending setup — log to error file if SMS unavailable); pause all new trade entries until data resumes.
-- **MEXC API execution error:** do not submit the order; log the error (timestamp, error type, what was being attempted) to `~/zero-one/logs/agent-errors.log`; send SMS alert; stop and do not retry automatically.
-- **Inconsistent/contradictory score:** do not act automatically; require explicit human confirmation from Benjamin before proceeding.
-- **Rule conflict:** default to the capital-protection rule over any competing rule.
-
-## Logging
-
-Log every error, trade, and disconnection event to `~/zero-one/logs/agent-errors.log` in this format:
-`[timestamp] | [event type] | [what was being attempted] | [outcome]`
-
-Save this to: `~/zero-one/agent-spec.md` (VPS: `/root/agents-ia-zero-one/zero-one/agent-spec.md`)
+Version: 2.0
+Date: 2 août 2026 (v1.1 : 12–16 juillet 2026, traduite de SOP v1.1)
 
 ---
 
-## Outstanding items (flagged from SOP v1.1, not resolved by this spec)
-- **25/50/25 trade structure — structural concern, not just calibration.** Closing 25% of the position at TP1 (0.382 Fib, smaller price move) yields a mechanically smaller $ result than the final 25% hedge tranche if that hedge triggers after a larger move. The tranche *sizes* may need to be reweighted relative to expected value per stage, not just the trigger thresholds. Flag this for explicit review in paper trading — don't assume equal 25% sizing is correct by default.
-- Confluence scores — uncalibrated, pending data accumulation.
-- S/R clickable form interface — not yet built.
-- Daily report generation — not yet coded.
-- SMS alerts — not yet configured (no provider/API chosen).
-- MEXC Futures error 602 — blocks all live trade execution steps until resolved.
+## Comment lire ce document
+
+Il se divise en deux parties qui ne décrivent **pas le même système** :
+
+- **PARTIE I — LE BOT (ACTIF)** : ce qui tourne réellement sur le VPS. Un
+  programme JavaScript déterministe, sans LLM dans la boucle de décision.
+- **PARTIE II — L'AGENT (INTENTION)** : la vision d'un agent LLM qui traderait.
+  Non construit. Conservé pour ne pas perdre la cible.
+
+La v1.1 mélangeait les deux et décrivait un agent inexistant comme s'il
+opérait : score recalculé toutes les 5 minutes, brief quotidien à 9h, journal
+dans `~/zero-one/memory/trade-log.md`. Aucun de ces éléments n'existe.
+
+**Ordre d'autorité :** `config.json` > `knowledge/strategy-boono.md` > ce
+document. Un chiffre écrit ici qui contredit `config.json` est de la
+documentation en retard, pas une règle.
+
+---
+---
+
+# PARTIE I — LE BOT (ACTIF)
+
+## Objet
+
+Surveiller BTC/USDT en continu, détecter les déséquilibres de liquidité, et
+simuler des entrées/sorties en paper trading. **Aucun ordre réel n'est soumis.**
+
+## Processus
+
+Trois processus PM2, redémarrage automatique au boot activé (`pm2 startup` +
+`pm2 save`, 02/08) :
+
+| Processus | Cycle | Rôle |
+|---|---|---|
+| `baton-relay.js` | 30 s | WebSocket MEXC, chaîne de décision, historique 24h |
+| `cerveau-central.js` | 30 s | Lecture CSV, scoring, appel du simulateur |
+| `config-server.js` | — | Dashboard web port 80, `/audit-view` |
+
+## Prérequis de fonctionnement
+
+- CSV dans `/root/agents-ia-zero-one/data/mcb-live/` (mcb_3m, mcb_15m, mcb_1h,
+  mcb_4h, mcb_1d, mcb_1w), synchronisés depuis l'iMac
+- WebSocket `wss://contract.mexc.com/edge` connecté (reconnexion automatique :
+  sur `close`, plus détection de connexion zombie par absence de message)
+- `zero-one/data/` accessible en écriture
+
+Si les CSV cessent d'être alimentés, le bâton continue de fonctionner (il tire
+ses données du WebSocket, pas des CSV) mais le VWAP et le scoring se figent.
+
+## Entrée — la chaîne du bâton de relais
+
+1. **ÉVÉNEMENT** — cadence de ticks ≥ 2× sa moyenne glissante 4h
+2. **VIGILANCE** — état persistant, relayé de bâton en bâton
+3. **RÉACTION PRIX** — seule juge de la direction :
+   `|netMove| ≥ 0,06 %` immédiat, ou `≥ 0,03 %` confirmé sur 2 bâtons
+4. **ENTRÉE** via `lastAction`, consommée une seule fois par module
+
+**Le portail de confluence est désactivé** (`requiresConfluence: false` depuis
+le 29/07). Le scoring tourne et s'affiche mais ne conditionne pas l'entrée.
+
+**Un seul module prend position : day** (`activeModules: ["day"]` depuis le
+02/08). Avant cela, les trois ouvraient la même position — exposition réelle
+3 % au lieu de 1 %.
+
+## Sorties — cinq mécanismes
+
+**1. Progression des tranches 25/65/10.** Trois déclencheurs indépendants,
+comptés une fois par occurrence réelle : événement de cadence, passage à zéro
+du VWAP (timeframe `vwapTriggerTimeframe`, actuellement 15m), seuil netMove.
+
+Filtre directionnel : un déclencheur est **ignoré** si la position est en perte
+au-delà de `ADVERSE_TOLERANCE_PCT` (0,02 %). Sans ce filtre, un pic de cadence
+survenant pendant un mouvement adverse fermait la tranche au pire prix.
+
+Le Shlong complet (coexistence long+short) n'est **pas** implémenté : le résidu
+de 10 % est simplement fermé au 3ᵉ déclencheur.
+
+**2. Invalidation.** La position meurt quand le scénario d'entrée n'existe
+plus — flux inversé (`displacementPct` contraire, confirmé sur 2 cycles) ou
+flux éteint. Ce n'est pas un stop-loss : aucun niveau de perte n'intervient.
+
+**3. Liquidation par levier.** À 50x, ±2 % depuis l'entrée. Suivie tick par
+tick via `priceHighSinceEntry` / `priceLowSinceEntry`.
+
+**4. Timeout anti-zombie.** Garde-fou d'urgence du 30/07 : scalp 20 min, day
+90 min, swing 240 min. Conservé le temps de valider l'invalidation.
+
+**5. Coupe-circuit.** PNL cumulé ≤ −25 % → nouvelles entrées bloquées. Ne se
+réarme jamais seul.
+
+**6. Blackout programmé.** Fenêtres où le bot n'ouvre rien et ferme
+préventivement les positions ouvertes. Actives : 4 et 5 août, 08:45–11:15 UTC.
+
+## Sorties de données
+
+| Quoi | Où |
+|---|---|
+| État courant du bâton | `zero-one/data/baton-state.json` |
+| Historique 24h glissantes | `zero-one/data/audit-history.json` |
+| Positions ouvertes | `zero-one/data/trade-sim-state.json` |
+| Historique des trades | `zero-one/data/trade-sim-history.json` |
+| Dernière évaluation | `zero-one/data/latest-evaluation.json` |
+| Logs des processus | `/root/.pm2/logs/*-{out,error}.log` |
+
+Le dossier `logs/` décrit en v1.1 **n'existe pas**. `memory/session-notes.md`
+existe mais n'est plus alimenté depuis le 23 juillet.
+
+## Gestion des erreurs — comportement réel
+
+- **WebSocket coupé** → reconnexion automatique. Les positions ouvertes restent
+  gérées, mais `displacementPct` devient indisponible ~5 min le temps que le
+  buffer se remplisse : l'invalidation ne peut pas agir pendant ce délai.
+- **CSV figés** → le bâton continue, le VWAP et le scoring se figent. Aucune
+  alerte automatique n'est configurée (voir Points ouverts).
+- **Redémarrage du VPS** → PM2 relance les trois processus. Les positions
+  survivent (état persisté sur disque), les buffers mémoire sont perdus.
+
+## Paramètres actifs — voir `config.json`
+
+Les valeurs ne sont **pas** recopiées ici pour éviter la divergence. Sections
+concernées : `tradeSimulator` (activeModules, invalidation, blackoutWindows,
+maxHoldMinutesWithoutTp1, vwapTriggerTimeframe), `positionSizing`, `scoring`,
+`timeframes`.
+
+Constantes en dur dans le code (à externaliser un jour) : levier 50x
+(`ORDER_DEFAULTS`), `ADVERSE_TOLERANCE_PCT` 0,02 %, seuils netMove 0,06/0,03 %,
+`EVENT_MULTIPLIER` 2×, `CADENCE_SANITY_CEILING` 120.
+
+---
+---
+
+# PARTIE II — L'AGENT LLM (INTENTION)
+
+Non construit. Cette partie décrit la cible, pas un système en fonctionnement.
+
+## Rôle envisagé
+
+Lire les signaux, appliquer le portail de confluence, décider des entrées et
+sorties, animer un brief quotidien copiloté à 9h, produire un rapport de fin de
+journée.
+
+## Prérequis avant construction
+
+1. Un bot déterministe calibré — référence stable de comparaison
+2. Le portail de confluence reconnecté
+3. Une infrastructure de journalisation qui existe réellement
+4. Des règles claires sur ce que l'agent décide seul vs ce qui exige validation
+5. L'erreur MEXC 602 résolue, si des ordres réels sont dans le périmètre
+
+## Brief quotidien — conception conservée
+
+**Phase 1 — Revue des positions (15–20 min).** Suspendre le scalp. Présenter
+les positions et leur statut vs TP1. Demander à Benjamin : liquider les scalps
+au-delà de TP1, ou tenir ? Attendre sa décision. Lire le rapport de la veille,
+résumer gains et pertes.
+
+**Phase 2 — TA manuelle (20–40 min).** Énoncer les niveaux surveillés. Entrer
+en mode aveugle : ne pas agir sur le mouvement de prix pendant cette phase.
+Attendre que Benjamin soumette ses niveaux S/R via le formulaire, syntaxe
+`DS"prix"`, `WR"prix"`, `MR"prix"`, `fib0"prix"` / `fib1"prix"`.
+
+**Phase 3 — Scénarios et reprise (10–15 min).** Attendre la commande `REBOOT`.
+Lire le document S/R soumis, commenter les niveaux, identifier les confluences
+entre timeframes. Construire les scénarios avec la syntaxe conditionnelle
+établie. Reprendre l'autonomie complète 30–60 min après le début de la Phase 1.
+
+## Règles qui s'appliqueraient à l'agent
+
+- Ne jamais soumettre un ordre réel tant que l'erreur 602 n'est pas résolue —
+  simuler, journaliser, signaler
+- Score incohérent ou composant manquant → s'arrêter et exiger la confirmation
+  explicite de Benjamin. Ne jamais deviner.
+- Ne jamais entrer en Phase 3 avant la commande `REBOOT`
+- En Phase 2 (mode aveugle), ne pas agir sur le prix quoi que disent les données
+- En cas de conflit entre deux règles, toujours privilégier la protection du
+  capital
+- Signaler explicitement dans les logs toute décision reposant sur un paramètre
+  non calibré, plutôt que de la présenter comme validée
+
+---
+---
+
+# Points ouverts
+
+**Résolu depuis la v1.1 :**
+- ~~Persistance PM2~~ — `pm2 startup` + `pm2 save` faits le 02/08
+- ~~Structure 25/50/25~~ — c'est 25/65/10, et le rôle des 10 % est clarifié
+  (assurance de bascule, pas pari sur la fin du mouvement)
+- ~~Erreur MEXC 602 bloquante~~ — contournée : le flux public ne demande aucune
+  authentification. Reste un prérequis du passage en live, pas un blocage actuel.
+
+**Toujours ouvert :**
+- **Seuils de confluence** — non calibrés, portail désactivé
+- **Formulaire S/R cliquable** — non construit
+- **Rapport de fin de journée** — non codé
+- **Alertes SMS** — aucun fournisseur choisi. Conséquence concrète : aucune
+  alerte n'existe si les CSV se figent ou si un processus meurt.
+- **Levier différencié par module** — 50x uniforme, incompatible avec le swing.
+  Attention : sous ~25x, la liquidation devient inatteignable sur ces échelles
+  de temps et cesse d'être un filet.
+- **Journal de trade détaillé** — `trade-sim-history.json` enregistre le motif
+  de sortie et le PNL, mais pas le détail du score au moment de l'entrée. Sans
+  cela, impossible de rejouer a posteriori ce qu'un seuil plus strict aurait
+  donné. Condition impérative de la méthode de calibration.
+
+**Préoccupation structurelle conservée de la v1.1 :** fermer 25 % au premier
+palier rapporte mécaniquement moins en valeur absolue que la tranche finale si
+celle-ci se déclenche après un mouvement plus large. Les *tailles* de tranches
+mériteraient d'être repondérées selon l'espérance par palier, pas seulement les
+seuils de déclenchement. À examiner en paper trading.
+
+---
+
+Save this to: `~/zero-one/agent-spec.md`
+(VPS: `/root/agents-ia-zero-one/zero-one/agent-spec.md`)
