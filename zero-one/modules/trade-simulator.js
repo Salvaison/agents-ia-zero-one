@@ -265,6 +265,32 @@ function checkNetMoveThreshold(trade, batonState) {
 }
 
 /**
+ * SEUIL D'INVALIDATION PROPORTIONNEL (03/08/2026). cadenceMult et NMx sont
+ * deja relatifs a la volatilite recente -- reversalPct etait le seul seuil
+ * reste fixe, ce qui l'a rendu trop serré pendant un episode de forte
+ * volatilite le 03/08 (6 pertes consecutives, -51.70%, alors que le bot
+ * etait pourtant entre dans le bon sens).
+ *
+ * Fenetre de reference VOLONTAIREMENT LONGUE (2h) : une fenetre courte
+ * (10-30min) explose PENDANT l'episode volatil lui-meme et deviendrait
+ * trop laxiste au pire moment. Sur 2h, la baseline reste stable meme en
+ * plein episode (mesure : 0.11-0.17% contre jusqu'a 0.42% en fenetre 10min).
+ */
+function computeAdaptiveThreshold(priceHistoryLong, multiplier, floor, ceiling) {
+  if (!priceHistoryLong || priceHistoryLong.length < 20) return floor;
+  const disps = [];
+  for (let i = 10; i < priceHistoryLong.length; i++) {
+    const p0 = priceHistoryLong[i - 10];
+    const p1 = priceHistoryLong[i];
+    if (p0) disps.push(Math.abs(((p1 - p0) / p0) * 100));
+  }
+  if (!disps.length) return floor;
+  const baseline = disps.reduce((a, v) => a + v, 0) / disps.length;
+  const adaptive = baseline * multiplier;
+  return Math.min(ceiling, Math.max(floor, adaptive));
+}
+
+/**
  * INVALIDATION (02/08/2026) -- la position meurt quand le scenario qui l'a
  * motivee n'existe plus. Deux causes : flux inverse, ou flux eteint.
  * Ce n'est pas un stop-loss : aucun niveau de perte n'intervient dans la
@@ -274,7 +300,20 @@ function checkInvalidation(trade, batonState, config, price) {
   const cfg = (config && config.tradeSimulator && config.tradeSimulator.invalidation) || {};
   if (cfg.enabled === false) return null;
 
-  const reversalPct = cfg.reversalPct !== undefined ? cfg.reversalPct : 0.06;
+  // Buffer long pour le seuil adaptatif (03/08/2026) -- alimente a chaque
+  // appel, independant de trade.entryPrice (persiste entre les trades).
+  if (price) {
+    priceHistoryLong.push(price);
+    if (priceHistoryLong.length > PRICE_HISTORY_LONG_MAX) priceHistoryLong.shift();
+  }
+
+  const adaptive = cfg.adaptiveThreshold !== false;
+  const floor = cfg.reversalFloorPct !== undefined ? cfg.reversalFloorPct : 0.10;
+  const ceiling = cfg.reversalCeilingPct !== undefined ? cfg.reversalCeilingPct : 0.30;
+  const multiplier = cfg.reversalMultiplier !== undefined ? cfg.reversalMultiplier : 3;
+  const reversalPct = adaptive
+    ? computeAdaptiveThreshold(priceHistoryLong, multiplier, floor, ceiling)
+    : (cfg.reversalPct !== undefined ? cfg.reversalPct : 0.06);
   const stallPct = cfg.stallPct !== undefined ? cfg.stallPct : 0.023;
   const stallCycles = cfg.stallCycles !== undefined ? cfg.stallCycles : 20;
   const graceCycles = cfg.graceCycles !== undefined ? cfg.graceCycles : 2;
@@ -350,6 +389,8 @@ function resolveVwapSource(primaryVol, volByTf, config) {
 const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
 
 const COOLDOWN_PATH = path.join(__dirname, '../data/trade-sim-cooldown.json');
+const PRICE_HISTORY_LONG_MAX = 240; // 2h a 30s/cycle -- fenetre de reference du seuil adaptatif
+let priceHistoryLong = [];
 
 /**
  * COOLDOWN APRES UNE PERTE (03/08/2026) -- voir en-tete du patch. Fichier

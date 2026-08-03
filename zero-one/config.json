@@ -315,7 +315,12 @@
       "graceCycles": 2,
       "exitInProfit": true,
       "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation. MAJ 03/08 : stallPct releve de 0.023 (p50) a 0.048 (p75) -- la regle 'flux eteint' ne s'etait jamais declenchee en 2 jours, le seuil etait trop bas pour que le compteur stallCount atteigne jamais stallCycles.",
-      "reversalConfirmCycles": 2
+      "reversalConfirmCycles": 2,
+      "adaptiveThreshold": true,
+      "reversalMultiplier": 3,
+      "reversalFloorPct": 0.1,
+      "reversalCeilingPct": 0.3,
+      "_adaptiveNote": "Seuil adaptatif (03/08/2026) : reversalPct = clamp(3x la baseline de deplacement 5min sur les 2 dernieres heures, entre 0.10% et 0.30%). Corrige l'incoherence relevee par Benjamin -- cadenceMult et NMx sont deja proportionnels a la volatilite, reversalPct etait le seul seuil fixe. Calibre sur UN episode de forte volatilite (03/08 16h20-17h50, 6 pertes consecutives -51.70% avec l'ancien seuil fixe) -- a reobserver sur d'autres episodes avant de considerer ces valeurs comme definitives. reversalPct (valeur fixe) reste le fallback si adaptiveThreshold=false."
     },
     "blackoutWindows": [
       {
