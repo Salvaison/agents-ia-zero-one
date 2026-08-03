@@ -310,11 +310,11 @@
     "invalidation": {
       "enabled": true,
       "reversalPct": 0.1,
-      "stallPct": 0.023,
+      "stallPct": 0.048,
       "stallCycles": 20,
       "graceCycles": 2,
       "exitInProfit": true,
-      "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation.",
+      "_note": "Loi d'invalidation (02/08/2026). PAS un stop-loss : sort quand le flux qui a motive l'entree s'inverse ou s'eteint, independamment du niveau de perte. Seuils issus de la distribution reelle du deplacement 5min sur 24h : p50=0.023 p75=0.048 p90=0.084 p95=0.118. Le timeout anti-zombie reste actif comme filet ultime le temps de valider cette loi en observation. MAJ 03/08 : stallPct releve de 0.023 (p50) a 0.048 (p75) -- la regle 'flux eteint' ne s'etait jamais declenchee en 2 jours, le seuil etait trop bas pour que le compteur stallCount atteigne jamais stallCycles.",
       "reversalConfirmCycles": 2
     },
     "blackoutWindows": [
@@ -329,7 +329,12 @@
         "label": "maintenance DigitalOcean NYC1 phase 3"
       }
     ],
-    "_blackoutNote": "Fenetres ISO 8601 UTC. Le 3 aout n'est PAS blackoute : Benjamin est present ce jour-la et observe la reconnexion WebSocket en conditions reelles (le code de reconnexion de price-stream.js n'a jamais tourne jusqu'ici). Les 4 et 5 sont blackoutes car il est en randonnee. Vider la liste pour desactiver le mecanisme."
+    "_blackoutNote": "Fenetres ISO 8601 UTC. Le 3 aout n'est PAS blackoute : Benjamin est present ce jour-la et observe la reconnexion WebSocket en conditions reelles (le code de reconnexion de price-stream.js n'a jamais tourne jusqu'ici). Les 4 et 5 sont blackoutes car il est en randonnee. Vider la liste pour desactiver le mecanisme.",
+    "violentMove": {
+      "enabled": true,
+      "thresholdPct": 0.15,
+      "_note": "Liquidation instantanee (03/08/2026) si mouvement adverse >= 0.15% en UN SEUL cycle (30s) ET trancheStage===0 (aucune tranche prise). Teste sur 24h : une version inconditionnelle (sans la condition trancheStage) coupait aussi 2 positions deja gagnantes pour un bilan net de -31.2 points -- d'ou la restriction a tranche 0 uniquement."
+    }
   },
   "signalTtl": {
     "scalp": null,

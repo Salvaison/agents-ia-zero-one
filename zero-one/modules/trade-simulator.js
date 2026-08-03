@@ -515,6 +515,35 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
   if (tickHigh !== null && (trade.priceHighSinceEntry === undefined || tickHigh > trade.priceHighSinceEntry)) trade.priceHighSinceEntry = tickHigh;
   if (tickLow !== null && (trade.priceLowSinceEntry === undefined || tickLow < trade.priceLowSinceEntry)) trade.priceLowSinceEntry = tickLow;
 
+  // Mouvement violent en UN SEUL cycle (03/08/2026) : liquidation instantanee
+  // si aucune tranche n'a encore ete prise (voir en-tete du patch -- une
+  // liquidation inconditionnelle coupait aussi des positions deja gagnantes).
+  const vmCfg = (config && config.tradeSimulator && config.tradeSimulator.violentMove) || {};
+  const vmThreshold = vmCfg.thresholdPct !== undefined ? vmCfg.thresholdPct : 0.15;
+  if (vmCfg.enabled !== false && trade.trancheStage === 0 && trade.lastPriceSeen !== undefined) {
+    const moveOneCycle = ((price - trade.lastPriceSeen) / trade.lastPriceSeen) * 100;
+    const adverseOneCycle = trade.direction === 'long' ? -moveOneCycle : moveOneCycle;
+    if (adverseOneCycle >= vmThreshold) {
+      const direction = trade.direction;
+      appendHistory({
+        module,
+        direction,
+        entryPrice: trade.entryPrice,
+        entryTimestamp: trade.entryTimestamp,
+        exitPrice: price,
+        exitTimestamp: new Date().toISOString(),
+        exitReason: `liquidation instantanee -- mouvement violent (${moveOneCycle.toFixed(3)}% en 1 cycle, tranche 0, seuil ${vmThreshold}%)`,
+        leverage: trade.leverage,
+        positionSizePercent: trade.positionSizePercent,
+        pnlPercent: computePnlPercent(trade, price),
+      });
+      state[module] = null;
+      saveState(state);
+      return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (mouvement violent ${moveOneCycle.toFixed(3)}%, tranche 0)`;
+    }
+  }
+  trade.lastPriceSeen = price;
+
   // 0. Liquidation par levier -- verifiee a CHAQUE tick DES L'ENTREE (mode
   // meche, plus haut/bas REEL depuis l'entree). SEUL filet de protection.
   if (checkLiquidation(trade)) {
