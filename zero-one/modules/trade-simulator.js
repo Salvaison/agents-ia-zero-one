@@ -349,6 +349,40 @@ function resolveVwapSource(primaryVol, volByTf, config) {
 
 const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
 
+const COOLDOWN_PATH = path.join(__dirname, '../data/trade-sim-cooldown.json');
+
+/**
+ * COOLDOWN APRES UNE PERTE (03/08/2026) -- voir en-tete du patch. Fichier
+ * separe de trade-sim-state.json car il doit SURVIVRE a la fermeture de
+ * la position (on mesure le delai depuis la derniere sortie perdante).
+ */
+function loadCooldowns() {
+  if (!fs.existsSync(COOLDOWN_PATH)) return {};
+  try { return JSON.parse(fs.readFileSync(COOLDOWN_PATH, 'utf8')); }
+  catch (e) { return {}; }
+}
+
+function saveCooldowns(data) {
+  fs.writeFileSync(COOLDOWN_PATH, JSON.stringify(data, null, 2));
+}
+
+function isInCooldown(module, config) {
+  const minutes = (config && config.tradeSimulator && config.tradeSimulator.cooldownAfterLossMinutes !== undefined)
+    ? config.tradeSimulator.cooldownAfterLossMinutes : 10;
+  if (!minutes) return false;
+  const cooldowns = loadCooldowns();
+  const last = cooldowns[module];
+  if (!last) return false;
+  const elapsedMin = (Date.now() - new Date(last).getTime()) / 60000;
+  return elapsedMin < minutes;
+}
+
+function recordLossExit(module) {
+  const cooldowns = loadCooldowns();
+  cooldowns[module] = new Date().toISOString();
+  saveCooldowns(cooldowns);
+}
+
 function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
   // Sens du mouvement PAR RAPPORT A LA POSITION : positif = en notre
   // faveur, negatif = contre nous. En % de prix, hors levier.
@@ -470,6 +504,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
 
   if (!trade) {
     if (checkCircuitBreaker(config)) return null; // coupe-circuit actif, pas de nouvelle entree
+    if (isInCooldown(module, config)) return null; // cooldown apres perte (03/08/2026), voir en-tete du patch
 
     const entryTracker = loadEntryTracker();
     const entry = evaluateEntryFromBaton(batonState, entryTracker[module]);
@@ -537,6 +572,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
         positionSizePercent: trade.positionSizePercent,
         pnlPercent: computePnlPercent(trade, price),
       });
+      recordLossExit(module); // toujours une perte par construction (mouvement violent adverse)
       state[module] = null;
       saveState(state);
       return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (mouvement violent ${moveOneCycle.toFixed(3)}%, tranche 0)`;
@@ -560,6 +596,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       positionSizePercent: trade.positionSizePercent,
       pnlPercent: computePnlPercent(trade, price),
     });
+    recordLossExit(module); // toujours une perte par construction (liquidation)
     state[module] = null;
     saveState(state);
     return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (liquidation par levier touchee a ${trade.liquidationPrice}, ${trade.leverage}x)`;
@@ -583,6 +620,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       positionSizePercent: trade.positionSizePercent,
       pnlPercent: computePnlPercent(trade, price),
     });
+    if (computePnlPercent(trade, price) < 0) recordLossExit(module);
     state[module] = null;
     saveState(state);
     return `[TRADE-SIM] ${module.toUpperCase()} ${direction} SORTIE @ ${price} (${invalidReason})`;
@@ -611,6 +649,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
           positionSizePercent: trade.positionSizePercent,
           pnlPercent: computePnlPercent(trade, price),
         });
+        if (computePnlPercent(trade, price) < 0) recordLossExit(module);
         state[module] = null;
         saveState(state);
         return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (timeout anti-zombie, ${elapsedMinutes.toFixed(1)} min sans tranche)`;
