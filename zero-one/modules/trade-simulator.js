@@ -186,7 +186,7 @@ function computePnlPercent(trade, exitPrice) {
 }
 
 const ORDER_DEFAULTS = {
-  leverage: 50,
+  leverage: 25, // baisse de 50x le 04/08/2026 -- comparaison risque/PnL sur 5 jours, decision Benjamin
   orderType: 'market',
   openType: 'isolated', // marge isolee -- necessaire pour que la liquidation par levier soit un vrai plafond
 };
