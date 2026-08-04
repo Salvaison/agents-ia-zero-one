@@ -220,7 +220,7 @@ function checkLiquidation(trade) {
  * vigilance/reaction-prix. Chaque action n'est utilisee QU'UNE FOIS par
  * module (lastConsumedTs empeche de re-entrer sur le meme signal).
  */
-function evaluateEntryFromBaton(batonState, lastConsumedTs) {
+function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
   if (!batonState || !batonState.lastAction) return null;
   const la = batonState.lastAction;
   if (!la.timestamp || !la.direction) return null;
@@ -228,6 +228,21 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs) {
 
   const direction = la.direction === 'haussier' ? 'long' : (la.direction === 'baissier' ? 'short' : null);
   if (!direction) return null;
+
+  // FILTRE PIVOT DE VAGUE MCB (04/08/2026, Benjamin) : un point vert
+  // (creux confirme) = signal haussier, bloque les SHORT. Un point rouge
+  // (pic confirme) = signal baissier, bloque les LONG. Doit etre recent
+  // (maxAgePivotCandles) pour rester valable.
+  const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
+  if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
+    const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
+    if (batonState.wavePivotAgeCycles <= maxAge) {
+      const pivotDir = batonState.wavePivotType === 'creux' ? 'long' : 'short';
+      if (direction !== pivotDir) {
+        return null; // contresens d'un point de retournement recent -- entree refusee
+      }
+    }
+  }
 
   return {
     direction,
@@ -332,6 +347,24 @@ function checkInvalidation(trade, batonState, config, price) {
     favorPct = trade.direction === 'long'
       ? ((price - trade.entryPrice) / trade.entryPrice) * 100
       : ((trade.entryPrice - price) / trade.entryPrice) * 100;
+  }
+
+  // PIVOT DE VAGUE MCB EN SORTIE (04/08/2026, Benjamin) : un point oppose
+  // frais invalide immediatement, sans attendre de confirmation
+  // supplementaire -- le point est deja confirme sur sa propre bougie 3m
+  // (cf patch M). Meme flag de config que le filtre d'entree (patch N).
+  const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
+  if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
+    const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
+    if (batonState.wavePivotAgeCycles <= maxAge) {
+      const opposedByPeak = trade.direction === 'long' && batonState.wavePivotType === 'pic';
+      const opposedByTrough = trade.direction === 'short' && batonState.wavePivotType === 'creux';
+      if (opposedByPeak || opposedByTrough) {
+        if (exitInProfit || favorPct === null || favorPct <= 0) {
+          return `invalidation -- pivot de vague MCB oppose (${batonState.wavePivotType}, valeur ${batonState.wavePivotValue})`;
+        }
+      }
+    }
   }
 
   // 1. FLUX INVERSE : le deplacement va contre la position au-dela du seuil,
@@ -548,7 +581,7 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
     if (isInCooldown(module, config)) return null; // cooldown apres perte (03/08/2026), voir en-tete du patch
 
     const entryTracker = loadEntryTracker();
-    const entry = evaluateEntryFromBaton(batonState, entryTracker[module]);
+    const entry = evaluateEntryFromBaton(batonState, entryTracker[module], config);
     if (!entry) return null;
 
     entryTracker[module] = entry.actionTimestamp;

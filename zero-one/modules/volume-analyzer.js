@@ -73,6 +73,35 @@ function toScore(value, thresholds) {
   return 1;
 }
 
+/**
+ * PIVOTS DE LA VAGUE MCB (04/08/2026, mode observation) -- detecte le
+ * dernier extremum local CONFIRME de blue_wave (pic ou creux), calcule
+ * directement depuis les CSV deja collectes, sans collecte supplementaire.
+ * Un point n'est confirme que si la bougie SUIVANTE valide le retournement
+ * (meme mecanisme de preavis que documente le 16/07 pour les gros points
+ * MCB -- un point qui s'eteint a la bougie suivante n'est jamais retenu).
+ */
+function analyzeWavePivot(timeframe, lookback = 20) {
+  const data = readCSV(timeframe);
+  if (data.length < 3) return { status: 'insufficient_data', count: data.length };
+  const recent = data.slice(-lookback);
+  // Le dernier point ne peut jamais etre confirme (il faudrait la bougie
+  // suivante, pas encore arrivee) -- on cherche donc a partir de l'avant-
+  // dernier index vers le debut de la fenetre.
+  for (let i = recent.length - 2; i >= 1; i--) {
+    const bw = recent[i].blue_wave;
+    const prev = recent[i - 1].blue_wave;
+    const next = recent[i + 1].blue_wave;
+    if (bw > prev && bw > next) {
+      return { type: 'pic', value: bw, ageCycles: (recent.length - 1 - i) };
+    }
+    if (bw < prev && bw < next) {
+      return { type: 'creux', value: bw, ageCycles: (recent.length - 1 - i) };
+    }
+  }
+  return { type: null, value: null, ageCycles: null };
+}
+
 function analyzeMomentum(timeframe, lookback = 20) {
   // Modifie le 24/07/2026 : LBW seul (velocite/amplitude immediate).
   // Auparavant |BW|+|LBW| combines -- la moyenne noyait le signal de
@@ -376,4 +405,4 @@ function runVolumeAnalyzer() {
   }
 }
 
-module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeVwap, analyzeTrigger, analyzeEngagement };
+module.exports = { analyzeVolume, analyzeMomentum, analyzeMoneyFlow, analyzeDbsi, analyzeVwap, analyzeTrigger, analyzeEngagement, analyzeWavePivot };

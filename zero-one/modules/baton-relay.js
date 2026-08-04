@@ -34,7 +34,7 @@
 const fs = require('fs');
 const path = require('path');
 const priceStream = require('./price-stream');
-const { analyzeVwap, analyzeTrigger } = require('./volume-analyzer');
+const { analyzeVwap, analyzeTrigger, analyzeWavePivot } = require('./volume-analyzer');
 
 const STATE_PATH = path.join(__dirname, '../data/baton-state.json');
 const HISTORY_PATH = path.join(__dirname, '../data/baton-cadence-history.json');
@@ -123,6 +123,9 @@ function tick() {
 
   // ===== Recommandation VWAP15 / desequilibre (01/08/2026, mode observation) ====
   const vwap15 = analyzeVwap('15m');
+  // Pivots de vague MCB (04/08/2026, observation) -- sur 3m, coherent avec
+  // le rythme du baton (cycle 30s). Ne pilote aucune decision a ce stade.
+  const wavePivot = analyzeWavePivot('3m');
   // Deplacement de prix REEL sur la fenetre (corrige le 02/08/2026 -- voir
   // en-tete du patch : l'ancienne somme de netMove chevauchants sous-estimait
   // l'amplitude d'un facteur ~2 et s'inversait parfois de signe).
@@ -233,6 +236,9 @@ function tick() {
     vwapRegime,
     displacementPct,
     recommendedDirection,
+    wavePivotType: wavePivot.type || null,
+    wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
+    wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
   });
 
   // ===== Historique 24h pour le dashboard web (31/07/2026) ==============

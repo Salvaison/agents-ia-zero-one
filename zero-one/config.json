@@ -341,7 +341,12 @@
       "_note": "Liquidation instantanee (03/08/2026) si mouvement adverse >= 0.15% en UN SEUL cycle (30s) ET trancheStage===0 (aucune tranche prise). Teste sur 24h : une version inconditionnelle (sans la condition trancheStage) coupait aussi 2 positions deja gagnantes pour un bilan net de -31.2 points -- d'ou la restriction a tranche 0 uniquement."
     },
     "cooldownAfterLossMinutes": 10,
-    "_cooldownNote": "Cooldown (03/08/2026) : apres une sortie en PERTE, le module concerne n'accepte aucune nouvelle entree avant ce delai. Mesure sur 71 cycles day : entrees <5min apres une perte = -4.54% (15 trades) ; >=5min = +24.16% (15 trades). Simulation de plusieurs valeurs : 10 min etait le meilleur compromis teste (+133.75% vs +122.42% actuel sur l'historique). Les sorties GAGNANTES n'imposent aucun delai. Mettre a 0 pour desactiver."
+    "_cooldownNote": "Cooldown (03/08/2026) : apres une sortie en PERTE, le module concerne n'accepte aucune nouvelle entree avant ce delai. Mesure sur 71 cycles day : entrees <5min apres une perte = -4.54% (15 trades) ; >=5min = +24.16% (15 trades). Simulation de plusieurs valeurs : 10 min etait le meilleur compromis teste (+133.75% vs +122.42% actuel sur l'historique). Les sorties GAGNANTES n'imposent aucun delai. Mettre a 0 pour desactiver.",
+    "wavePivotFilter": {
+      "enabled": true,
+      "maxAgePivotCandles": 3,
+      "_note": "Filtre actif (04/08/2026, decision Benjamin) : bloque toute entree a l'encontre du dernier point de retournement confirme de la vague MCB (blue_wave), s'il a moins de maxAgePivotCandles bougies 3m (defaut 3 = 9 min). Point vert (creux) = bloque SHORT, point rouge (pic) = bloque LONG. Base sur l'observation manuelle de Benjamin, annees de pratique en trading manuel -- pas encore mesure statistiquement sur ce niveau de fraicheur precis, a reobserver sur les 5 prochains jours. Desactiver : enabled=false."
+    }
   },
   "signalTtl": {
     "scalp": null,
