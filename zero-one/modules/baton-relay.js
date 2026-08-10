@@ -49,6 +49,16 @@ const PRICE_REACTION_IMMEDIATE = 0.06;
 const PRICE_REACTION_CONFIRMED = 0.03;
 
 const AUDIT_HISTORY_MAX = 2880; // 24h a raison d'un relevé/30s
+const CONFIG_PATH_BR = path.join(__dirname, '../config.json');
+
+/* Config relue a chaque tick (hot-reload, comme cerveau-central) -- necessaire
+ * depuis le 10/08/2026 pour le seuil du declencheur de deplacement. */
+let _cfgCache = {};
+function reloadConfigBR() {
+  try { _cfgCache = JSON.parse(fs.readFileSync(CONFIG_PATH_BR, 'utf8')); }
+  catch (e) { /* garde la derniere version valide */ }
+}
+reloadConfigBR();
 const PRICE_HISTORY_SIZE = 10;        // fenetre du desequilibre (10 batons = 5 min)
 const IMBALANCE_THRESHOLD = 0.10;     // % de deplacement de prix -- ~p90/p95 mesure sur 24h
 
@@ -100,6 +110,7 @@ function rollingAverage() {
 }
 
 function tick() {
+  reloadConfigBR();
   const trig = analyzeTrigger();
   const now = Date.now();
 
@@ -144,6 +155,20 @@ function tick() {
   const vwap15Prev = (vwap15 && vwap15.previous !== undefined) ? parseFloat(vwap15.previous) : null;
   const vwap15TrendDown = (vwap15Cur !== null && vwap15Prev !== null)
     ? (Math.abs(vwap15Cur) < Math.abs(vwap15Prev)) : null;
+  // PENTE DU VWAP (10/08/2026, observation seulement) -- direction de la
+  // ligne par rapport a l'horizontale du zero MCB, et puissance de cette
+  // pente (angle d'attaque). Une ligne PLATE = apogee de vague, retournement
+  // proche (observation de Benjamin). Ne pilote aucune decision a ce stade.
+  const slopeFlat = 0.5;   // en-deca : ligne parallele au zero, seuil PROVISOIRE
+  const slopeStrong = 3.0; // au-dela : pente marquee, seuil PROVISOIRE
+  let vwapSlope = null, vwapSlopeDir = null, vwapSlopeStrength = null;
+  if (vwap15Cur !== null && vwap15Prev !== null) {
+    vwapSlope = parseFloat((vwap15Cur - vwap15Prev).toFixed(4));
+    const abs = Math.abs(vwapSlope);
+    vwapSlopeDir = abs < slopeFlat ? 'plat' : (vwapSlope > 0 ? 'montant' : 'descendant');
+    vwapSlopeStrength = abs < slopeFlat ? 'faible' : (abs >= slopeStrong ? 'fort' : 'moyen');
+  }
+
   let vwapRegime = 'neutre';
   if (vwap15TrendDown === false) vwapRegime = 'continuation';
   else if (vwap15NearZero && vwap15TrendDown === true) vwapRegime = 'retournement_possible';
@@ -174,11 +199,24 @@ function tick() {
   }
 
   // ===== CHAINE DE DECISION (evenement/vigilance/reaction prix) ========
+  // Deux voies d'ouverture de vigilance depuis le 10/08/2026 :
+  //   1. EVENEMENT CADENCE  -- pic d'activite instantane (voie historique)
+  //   2. DEPLACEMENT 5 MIN  -- mouvement progressif, invisible a la cadence
+  //      (voir en-tete du patch : 293 occasions/24h ratees par la voie 1)
   const isEvent = cadenceMultiplier !== null && cadenceMultiplier >= EVENT_MULTIPLIER;
-  if (isEvent) {
+
+  const dispCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.displacementTrigger) || {};
+  const dispThreshold = dispCfg.thresholdPct !== undefined ? dispCfg.thresholdPct : 0.084;
+  const isDisplacementEvent = dispCfg.enabled !== false
+    && displacementPct !== null
+    && Math.abs(displacementPct) >= dispThreshold;
+
+  if (isEvent || isDisplacementEvent) {
     vigilance = {
       since: new Date(now).toISOString(),
+      trigger: isEvent ? 'cadence' : 'displacement',
       triggerMultiplier: cadenceMultiplier,
+      triggerDisplacement: displacementPct,
       priceAtEvent: currentPrice,
       batonCount: 0,
       pendingDirection: null,
@@ -236,6 +274,9 @@ function tick() {
     vwapRegime,
     displacementPct,
     recommendedDirection,
+    vwapSlope,
+    vwapSlopeDir,
+    vwapSlopeStrength,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
