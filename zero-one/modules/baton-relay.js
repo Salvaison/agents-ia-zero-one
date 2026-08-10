@@ -159,8 +159,12 @@ function tick() {
   // ligne par rapport a l'horizontale du zero MCB, et puissance de cette
   // pente (angle d'attaque). Une ligne PLATE = apogee de vague, retournement
   // proche (observation de Benjamin). Ne pilote aucune decision a ce stade.
-  const slopeFlat = 0.5;   // en-deca : ligne parallele au zero, seuil PROVISOIRE
-  const slopeStrong = 3.0; // au-dela : pente marquee, seuil PROVISOIRE
+  // Seuils recalibres le 10/08/2026 sur la distribution reelle (24h, 187
+  // changements) : p25=2.04 p50=4.81 p75=8.90. Les anciennes valeurs posees
+  // a l'estime (0.5 / 3.0) classaient 64% des cas en 'fort' -- inutilisable.
+  const _slopeCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.vwapSlope) || {};
+  const slopeFlat = _slopeCfg.flatBelow !== undefined ? _slopeCfg.flatBelow : 2.04;
+  const slopeStrong = _slopeCfg.strongAbove !== undefined ? _slopeCfg.strongAbove : 8.90;
   let vwapSlope = null, vwapSlopeDir = null, vwapSlopeStrength = null;
   if (vwap15Cur !== null && vwap15Prev !== null) {
     vwapSlope = parseFloat((vwap15Cur - vwap15Prev).toFixed(4));

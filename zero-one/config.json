@@ -345,14 +345,20 @@
     "wavePivotFilter": {
       "enabled": true,
       "maxAgePivotCandles": 1,
-      "_note": "Filtre actif (04/08/2026, decision Benjamin) : bloque toute entree a l'encontre du dernier point de retournement confirme de la vague MCB (blue_wave), s'il a moins de maxAgePivotCandles bougies 3m (defaut 3 = 9 min). Point vert (creux) = bloque SHORT, point rouge (pic) = bloque LONG. Base sur l'observation manuelle de Benjamin, annees de pratique en trading manuel -- pas encore mesure statistiquement sur ce niveau de fraicheur precis, a reobserver sur les 5 prochains jours. Desactiver : enabled=false."
+      "_note": "Filtre pivot MCB (04/08/2026, decision Benjamin) : bloque toute entree a l'encontre du dernier point de retournement confirme de la vague MCB (blue_wave), s'il a moins de maxAgePivotCandles bougies 3m. Point vert (creux) = bloque SHORT, point rouge (pic) = bloque LONG. Sert aussi de signal de sortie sur position ouverte. MAJ 10/08/2026 : earlyReleaseOnSlope leve le blocage AVANT l'echeance du minuteur si la pente du VWAP s'inverse contre le sens du pivot -- ne peut que raccourcir le blocage. Note : remplacer entierement le minuteur par la pente aurait ete contre-productif, le VWAP15 ne changeant de valeur qu'une fois toutes les 7.7 min en moyenne (bougies 15m) contre 3 min pour le minuteur actuel. Desactiver le filtre entier : enabled=false.",
+      "earlyReleaseOnSlope": true
     },
     "displacementTrigger": {
       "enabled": true,
       "thresholdPct": 0.084,
       "_note": "3e declencheur d'entree (10/08/2026) : ouvre une vigilance quand le deplacement de prix sur 5 min depasse ce seuil, en parallele de l'evenement cadence. Corrige la cecite aux mouvements PROGRESSIFS (constate le 10/08 : 0.44% d'amplitude sur la matinee, seulement 2 trades ; au moment cle de 11:50, cadence 1.81x et netMove 0.045% sous les seuils, mais deplacement 5min a -0.141%). Seuil 0.084 = p90 de la distribution mesuree sur 24h (p50=0.023 p75=0.048 p95=0.118 p99=0.212). Mesure : 396 declenchements/24h contre 148 pour la cadence, dont seulement 103 communs -- 293 occasions actuellement invisibles. Baisser le seuil = plus de trades. enabled:false pour revenir au comportement d'avant le 10/08."
     },
-    "_vwapSlopeNote": "Pente du VWAP exposee en OBSERVATION depuis le 10/08/2026 (vwapSlope, vwapSlopeDir montant/plat/descendant, vwapSlopeStrength faible/moyen/fort). Seuils provisoires en dur dans baton-relay.js : plat < 0.5, fort >= 3.0. Ne pilote AUCUNE decision -- a calibrer sur donnees reelles avant usage. Objectif vise par Benjamin : une ligne VWAP parallele au zero MCB marque l'apogee de la vague donc un retournement proche, et l'angle d'attaque indique la puissance de la direction."
+    "_vwapSlopeNote": "Pente du VWAP exposee en OBSERVATION depuis le 10/08/2026 (vwapSlope, vwapSlopeDir montant/plat/descendant, vwapSlopeStrength faible/moyen/fort). Seuils provisoires en dur dans baton-relay.js : plat < 0.5, fort >= 3.0. Ne pilote AUCUNE decision -- a calibrer sur donnees reelles avant usage. Objectif vise par Benjamin : une ligne VWAP parallele au zero MCB marque l'apogee de la vague donc un retournement proche, et l'angle d'attaque indique la puissance de la direction.",
+    "vwapSlope": {
+      "flatBelow": 2.04,
+      "strongAbove": 8.9,
+      "_note": "Seuils de classification de la pente VWAP15, recalibres le 10/08/2026 sur la distribution reelle mesuree (24h, 187 changements de valeur) : p10=0.85 p25=2.04 p50=4.81 p75=8.90 p90=12.44 p95=17.10 max=36.78. Les valeurs precedentes (0.5/3.0) etaient posees a l'estime et classaient 64% des cas en 'fort'."
+    }
   },
   "signalTtl": {
     "scalp": null,

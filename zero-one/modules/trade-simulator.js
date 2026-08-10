@@ -236,7 +236,16 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
   const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
   if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
     const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
-    if (batonState.wavePivotAgeCycles <= maxAge) {
+    // LEVEE ANTICIPEE (10/08/2026) : le blocage saute avant l'echeance du
+    // minuteur si la pente du VWAP s'est inversee contre le sens du pivot --
+    // le marche a repris la main dans l'autre sens, le pivot est caduc.
+    // Ne peut que RACCOURCIR le blocage, jamais l'allonger.
+    const pivotDirEarly = batonState.wavePivotType === 'creux' ? 'haussier' : 'baissier';
+    const slopeOpposes = pivotCfg.earlyReleaseOnSlope !== false
+      && batonState.vwapSlopeDir
+      && batonState.vwapSlopeDir !== 'plat'
+      && batonState.vwapSlopeDir !== (pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
+    if (batonState.wavePivotAgeCycles <= maxAge && !slopeOpposes) {
       const pivotDir = batonState.wavePivotType === 'creux' ? 'long' : 'short';
       if (direction !== pivotDir) {
         return null; // contresens d'un point de retournement recent -- entree refusee
@@ -356,7 +365,14 @@ function checkInvalidation(trade, batonState, config, price) {
   const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
   if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
     const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
-    if (batonState.wavePivotAgeCycles <= maxAge) {
+    // Meme levee anticipee qu'a l'entree (10/08/2026) : un pivot dont la
+    // pente VWAP s'est inversee ne doit plus provoquer de sortie.
+    const _pivotDirEarly = batonState.wavePivotType === 'creux' ? 'haussier' : 'baissier';
+    const _slopeOpposes = pivotCfg.earlyReleaseOnSlope !== false
+      && batonState.vwapSlopeDir
+      && batonState.vwapSlopeDir !== 'plat'
+      && batonState.vwapSlopeDir !== (_pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
+    if (batonState.wavePivotAgeCycles <= maxAge && !_slopeOpposes) {
       const opposedByPeak = trade.direction === 'long' && batonState.wavePivotType === 'pic';
       const opposedByTrough = trade.direction === 'short' && batonState.wavePivotType === 'creux';
       if (opposedByPeak || opposedByTrough) {
