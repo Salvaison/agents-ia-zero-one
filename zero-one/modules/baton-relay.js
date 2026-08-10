@@ -173,6 +173,21 @@ function tick() {
     vwapSlopeStrength = abs < slopeFlat ? 'faible' : (abs >= slopeStrong ? 'fort' : 'moyen');
   }
 
+  // Pente du VWAP3 (10/08/2026) -- plus reactive que celle du 15m (mise a jour
+  // toutes les 3 min contre 7.7 min en moyenne). Memes seuils pour l'instant,
+  // a recalibrer separement : la distribution du 3m n'a aucune raison d'etre
+  // identique a celle du 15m.
+  const vwap3obj = analyzeVwap('3m');
+  const vwap3Cur = (vwap3obj && vwap3obj.current !== undefined) ? parseFloat(vwap3obj.current) : null;
+  const vwap3Prev = (vwap3obj && vwap3obj.previous !== undefined) ? parseFloat(vwap3obj.previous) : null;
+  let vwap3Slope = null, vwap3SlopeDir = null, vwap3SlopeStrength = null;
+  if (vwap3Cur !== null && vwap3Prev !== null) {
+    vwap3Slope = parseFloat((vwap3Cur - vwap3Prev).toFixed(4));
+    const abs3 = Math.abs(vwap3Slope);
+    vwap3SlopeDir = abs3 < slopeFlat ? 'plat' : (vwap3Slope > 0 ? 'montant' : 'descendant');
+    vwap3SlopeStrength = abs3 < slopeFlat ? 'faible' : (abs3 >= slopeStrong ? 'fort' : 'moyen');
+  }
+
   let vwapRegime = 'neutre';
   if (vwap15TrendDown === false) vwapRegime = 'continuation';
   else if (vwap15NearZero && vwap15TrendDown === true) vwapRegime = 'retournement_possible';
@@ -281,6 +296,9 @@ function tick() {
     vwapSlope,
     vwapSlopeDir,
     vwapSlopeStrength,
+    vwap3Slope,
+    vwap3SlopeDir,
+    vwap3SlopeStrength,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
@@ -299,6 +317,8 @@ function tick() {
     priceSens3: trig.priceSens3 !== undefined ? trig.priceSens3 : null,
     vwapSlope,
     vwapSlopeDir,
+    vwap3Slope,
+    vwap3SlopeDir,
     netMove: netMovePct,
     amplitude: amplitudePct,
     winSec: (trig.windowSeconds !== undefined && trig.windowSeconds !== null) ? parseFloat(trig.windowSeconds) : null,

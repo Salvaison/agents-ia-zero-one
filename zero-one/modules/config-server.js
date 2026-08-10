@@ -455,6 +455,7 @@ async function loadAudit() {
 
     const BASE_WINDOW = 10;
     let prevVwap3 = null;
+    let prevVwap15 = null;
     let vigActive = false, vigCounter = 0;
     const VIG_WINDOW = 6;
 
@@ -462,6 +463,8 @@ async function loadAudit() {
       const r = rows[i];
       r.deltaVwap3 = (prevVwap3 !== null && r.vwap3 !== null) ? (r.vwap3 - prevVwap3) : null;
       if (r.vwap3 !== null) prevVwap3 = r.vwap3;
+      r.deltaVwap15 = (prevVwap15 !== null && r.vwap15 !== null) ? (r.vwap15 - prevVwap15) : null;
+      if (r.vwap15 !== null) prevVwap15 = r.vwap15;
 
       const start = Math.max(0, i - BASE_WINDOW);
       const prior = rows.slice(start, i).filter(function(p) { return p.netMove !== null && p.netMove !== undefined; });
@@ -531,13 +534,16 @@ async function loadAudit() {
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
         '<td style="text-align:center;">' + pivotCell + '</td>' +
-        '<td style="text-align:center;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
+        '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.deltaVwap3) + '">' + fmt(r.deltaVwap3,2) + '</td>' +
-        '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
+        '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
+        '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap15) + '">' + fmt(r.vwap15,2) + '</td>' +
-        '<td>' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
+        '<td class="' + cls(r.deltaVwap15) + '">' + fmt(r.deltaVwap15,2) + '</td>' +
+        '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
+        '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
         '<td>' + fmt(r.cadence,2) + '</td>' +
         '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
         '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
@@ -552,7 +558,9 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>Pivot</th><th>Pente</th><th>VWAP3</th><th>Delta VWAP3</th><th>SlopeV</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
+      '<th>Heure (Paris)</th><th>Pivot</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>Dvwap3</th><th>SlopeV</th><th>x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>Dvwap15</th><th>SlopeV</th><th>x0</th>' +
       '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
       '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
