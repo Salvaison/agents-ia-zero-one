@@ -297,6 +297,8 @@ function tick() {
     cadence: currentCadence,
     cadenceMult: cadenceMultiplier,
     priceSens3: trig.priceSens3 !== undefined ? trig.priceSens3 : null,
+    vwapSlope,
+    vwapSlopeDir,
     netMove: netMovePct,
     amplitude: amplitudePct,
     winSec: (trig.windowSeconds !== undefined && trig.windowSeconds !== null) ? parseFloat(trig.windowSeconds) : null,

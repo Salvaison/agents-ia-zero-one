@@ -501,6 +501,14 @@ async function loadAudit() {
     }
     statsEl.innerHTML = rows.length + ' releves (24h glissantes) - ' + crosses + ' passages a zero - ' + reversals + ' retournements imminents - <b style="color:#2ecc71">' + trades + ' TRADE</b> - <b style="color:#ff6b35">' + bypasses + ' BYPASS</b>';
 
+    // Fleche de direction de la pente VWAP (10/08/2026) -- montant / plat /
+    // descendant par rapport a l'horizontale du zero MCB.
+    function slopeArrow(d) {
+      if (d === 'montant') return '<span style="color:#2ecc71;">&#9650;</span>';
+      if (d === 'descendant') return '<span style="color:#e74c3c;">&#9660;</span>';
+      if (d === 'plat') return '<span style="color:#f1c40f;">&#9644;</span>';
+      return '';
+    }
     const recent = rows.slice(-2880);
     let inVigilance = false;
     const rowsHtml = [];
@@ -523,8 +531,10 @@ async function loadAudit() {
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
         '<td style="text-align:center;">' + pivotCell + '</td>' +
+        '<td style="text-align:center;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.deltaVwap3) + '">' + fmt(r.deltaVwap3,2) + '</td>' +
+        '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
         '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
         '<td class="' + cls(r.vwap15) + '">' + fmt(r.vwap15,2) + '</td>' +
         '<td>' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
@@ -542,7 +552,7 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>Pivot</th><th>VWAP3</th><th>Delta VWAP3</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
+      '<th>Heure (Paris)</th><th>Pivot</th><th>Pente</th><th>VWAP3</th><th>Delta VWAP3</th><th>SlopeV</th><th>x0</th><th>VWAP15</th><th>x0</th>' +
       '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
       '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
@@ -1365,11 +1375,24 @@ async function loadTrades() {
       const totalPnl = withPnl.reduce((a, t) => a + t.pnlPercent, 0);
       const avgPnl = withPnl.length ? totalPnl / withPnl.length : 0;
       const winRate = withPnl.length ? (wins / withPnl.length * 100) : 0;
+      // Comptage des ENTREES distinctes (10/08/2026) : chaque entree genere
+      // jusqu'a 3 lignes de sortie (tranches 25/65/10) -- afficher le nombre
+      // de lignes donnait un total trompeur (300 lignes pour 141 entrees).
+      const entryKeys = new Set(executed.map(t => t.entryTimestamp + '|' + t.module));
+      const nbEntrees = entryKeys.size;
+      const pnlParEntree = nbEntrees ? totalPnl / nbEntrees : 0;
+      let btcPrice = '--';
+      try {
+        const bs = await (await fetch('/api/baton-state')).json();
+        if (bs && bs.lastPrice) btcPrice = Number(bs.lastPrice).toLocaleString('fr-FR');
+      } catch (e) { /* prix indisponible */ }
       pnlEl.innerHTML = '<div class="diag-module"><div class="diag-details">' +
-        '<div>Trades executes : ' + executed.length + '</div>' +
-        '<div>Taux de reussite (simule) : ' + winRate.toFixed(1) + '% (' + wins + '/' + withPnl.length + ')</div>' +
+        '<div style="font-size:20px; font-weight:600; margin-bottom:8px;">BTC : ' + btcPrice + ' USDT</div>' +
+        '<div>Entrees : <b>' + nbEntrees + '</b>  (' + executed.length + ' lignes de sortie)</div>' +
+        '<div>Taux de reussite (simule) : ' + winRate.toFixed(1) + '% (' + wins + '/' + withPnl.length + ' lignes)</div>' +
         '<div>PNL cumule (simule) : ' + totalPnl.toFixed(2) + '%</div>' +
-        '<div>PNL moyen par trade : ' + avgPnl.toFixed(2) + '%</div>' +
+        '<div>PNL moyen par ENTREE : ' + pnlParEntree.toFixed(2) + '%</div>' +
+        '<div style="opacity:0.6; font-size:11px;">PNL moyen par ligne : ' + avgPnl.toFixed(2) + '%</div>' +
       '</div></div>';
     } else {
       pnlEl.innerHTML = '<div class="placeholder-note">P/L -- aucune donnee disponible.<br>Alimentation automatique une fois des trades executes.</div>';
