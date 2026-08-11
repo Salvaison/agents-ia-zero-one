@@ -239,7 +239,13 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
   const _pivAge = batonState.wavePivotAgeRealCycles !== undefined && batonState.wavePivotAgeRealCycles !== null
     ? batonState.wavePivotAgeRealCycles
     : batonState.wavePivotAgeCycles;
-  if (pivotCfg.enabled !== false && batonState.wavePivotType && _pivAge !== null && _pivAge !== undefined) {
+  // BLOCAGE D'ENTREE DESACTIVE le 11/08/2026 (decision Benjamin) -- voir
+  // en-tete du patch Y. Le pivot reste ACTIF EN SORTIE. Le probleme du
+  // systeme est le manque d'entrees, et les signaux de pente (3 echelles,
+  // dont la live a 30s) + displacementPct sont plus riches et plus frais.
+  // Reactiver : wavePivotFilter.blockEntry = true dans config.json.
+  if (pivotCfg.blockEntry === true
+      && pivotCfg.enabled !== false && batonState.wavePivotType && _pivAge !== null && _pivAge !== undefined) {
     const maxAge = pivotCfg.maxAgePivotCycles !== undefined ? pivotCfg.maxAgePivotCycles
       : (pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 6);
     // LEVEE ANTICIPEE (10/08/2026) : le blocage saute avant l'echeance du

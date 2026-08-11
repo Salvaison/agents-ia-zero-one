@@ -324,7 +324,9 @@
       "_note": "Filtre pivot MCB (04/08/2026, decision Benjamin) : bloque toute entree a l'encontre du dernier point de retournement confirme de la vague MCB (blue_wave), s'il a moins de maxAgePivotCandles bougies 3m. Point vert (creux) = bloque SHORT, point rouge (pic) = bloque LONG. Sert aussi de signal de sortie sur position ouverte. MAJ 10/08/2026 : earlyReleaseOnSlope leve le blocage AVANT l'echeance du minuteur si la pente du VWAP s'inverse contre le sens du pivot -- ne peut que raccourcir le blocage. Note : remplacer entierement le minuteur par la pente aurait ete contre-productif, le VWAP15 ne changeant de valeur qu'une fois toutes les 7.7 min en moyenne (bougies 15m) contre 3 min pour le minuteur actuel. Desactiver le filtre entier : enabled=false.",
       "earlyReleaseOnSlope": true,
       "_granulariteNote": "CORRIGE le 11/08/2026 : l'age du pivot est desormais compte en CYCLES DE BATON (30s) via wavePivotAgeRealCycles, et non plus en bougies 3m. maxAgePivotCycles=6 = 3 minutes exactement, previsible quel que soit le moment de detection dans la bougie. Motif : avec l'ancien comptage et maxAgePivotCandles=1, le filtre d'ENTREE etait de fait inoperant -- mesure sur 24h : 0 blocage sur 57 candidats a l'entree. Il restait actif en SORTIE (les positions ouvertes sont testees a chaque cycle, donc bien plus d'occasions de tomber dans la fenetre etroite). maxAgePivotCandles est conserve en fallback si le nouveau champ est absent.",
-      "maxAgePivotCycles": 6
+      "maxAgePivotCycles": 6,
+      "blockEntry": false,
+      "_blockEntryNote": "Blocage d'ENTREE desactive le 11/08/2026 (decision Benjamin). Le filtre pivot reste ACTIF EN SORTIE, ou il a fait ses preuves (54 invalidations sur la semaine, dont des sorties gagnantes). Motif de la desactivation a l'entree : le probleme du systeme est le MANQUE d'entrees ; les signaux de pente (VWAP15/VWAP3/live) et displacementPct sont plus riches et plus frais qu'un pivot binaire mis a jour a la cloture d'une bougie 3m. Reactiver : blockEntry=true."
     },
     "displacementTrigger": {
       "enabled": true,
