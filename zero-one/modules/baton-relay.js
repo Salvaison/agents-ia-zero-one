@@ -51,6 +51,60 @@ const PRICE_REACTION_CONFIRMED = 0.03;
 const AUDIT_HISTORY_MAX = 2880; // 24h a raison d'un relevé/30s
 const CONFIG_PATH_BR = path.join(__dirname, '../config.json');
 
+/* PENTE VWAP LIVE (11/08/2026) -- voir en-tete du patch V. Le snapshot
+ * intra-bougie (mcb_3m_live.csv, ecrit toutes les 15s par le collecteur iMac)
+ * ne contient qu'une ligne : on accumule ici un historique glissant pour
+ * pouvoir calculer une pente par regression. */
+const LIVE_CSV_PATH = '/root/agents-ia-zero-one/data/mcb-live/mcb_3m_live.csv';
+const LIVE_HISTORY_PATH = path.join(__dirname, '../data/vwap-live-history.json');
+const LIVE_HISTORY_MAX = 40;   // ~20 min a 30s -- assez pour une pente stable
+const LIVE_SLOPE_POINTS = 8;   // regression sur les 8 derniers points (~4 min)
+
+function loadLiveHistory() {
+  if (!fs.existsSync(LIVE_HISTORY_PATH)) return [];
+  try {
+    const d = JSON.parse(fs.readFileSync(LIVE_HISTORY_PATH, 'utf8'));
+    return Array.isArray(d) ? d : [];
+  } catch (e) { return []; }
+}
+
+let liveHistory = loadLiveHistory();
+
+/* Lit le snapshot live et retourne { ts, vwap } ou null. Le fichier n'a qu'une
+ * ligne de donnees (plus l'en-tete). */
+function readLiveSnapshot() {
+  try {
+    if (!fs.existsSync(LIVE_CSV_PATH)) return null;
+    const lines = fs.readFileSync(LIVE_CSV_PATH, 'utf8').trim().split('\n');
+    if (lines.length < 2) return null;
+    const c = lines[1].split(',');
+    const lbw = parseFloat(c[5]);
+    const bw = parseFloat(c[6]);
+    if (isNaN(lbw) || isNaN(bw)) return null;
+    return { barTs: c[0], vwap: parseFloat((lbw - bw).toFixed(4)) };
+  } catch (e) { return null; }
+}
+
+/* Pente par regression lineaire (moindres carres) sur les N derniers points,
+ * normalisee en unites VWAP PAR MINUTE -- les intervalles entre points ne sont
+ * pas parfaitement reguliers (snapshot 15s cote iMac, sync 30s, cycle baton
+ * 30s), donc on ne peut pas se contenter d'une difference brute. */
+function computeLiveSlope(hist, n) {
+  const pts = hist.slice(-n);
+  if (pts.length < 3) return null;
+  const t0 = pts[0].ts;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0;
+  for (const p of pts) {
+    const x = (p.ts - t0) / 60000; // minutes depuis le premier point
+    const y = p.vwap;
+    sx += x; sy += y; sxy += x * y; sxx += x * x;
+  }
+  const k = pts.length;
+  const denom = k * sxx - sx * sx;
+  if (Math.abs(denom) < 1e-9) return null;
+  return parseFloat((((k * sxy - sx * sy) / denom)).toFixed(4));
+}
+
 /* Config relue a chaque tick (hot-reload, comme cerveau-central) -- necessaire
  * depuis le 10/08/2026 pour le seuil du declencheur de deplacement. */
 let _cfgCache = {};
@@ -134,6 +188,34 @@ function tick() {
 
   // ===== Recommandation VWAP15 / desequilibre (01/08/2026, mode observation) ====
   const vwap15 = analyzeVwap('15m');
+  // ===== PENTE VWAP LIVE (11/08/2026, observation) =========================
+  // Accumule les snapshots intra-bougie et calcule la pente par regression.
+  // Ne pilote aucune decision -- seuils provisoires, unite differente (par
+  // minute) de la pente par bougie : ordres de grandeur non comparables.
+  let vwapLive = null, vwapLiveSlope = null, vwapLiveSlopeDir = null;
+  const liveSnap = readLiveSnapshot();
+  if (liveSnap) {
+    vwapLive = liveSnap.vwap;
+    const last = liveHistory[liveHistory.length - 1];
+    // N'ajoute que si la valeur a change OU si plus de 25s se sont ecoulees --
+    // evite d'empiler des doublons quand le rsync n'a pas encore rafraichi.
+    if (!last || last.vwap !== vwapLive || (now - last.ts) > 25000) {
+      liveHistory.push({ ts: now, vwap: vwapLive });
+      if (liveHistory.length > LIVE_HISTORY_MAX) liveHistory.shift();
+      try { fs.writeFileSync(LIVE_HISTORY_PATH, JSON.stringify(liveHistory)); }
+      catch (e) { /* persistance best-effort */ }
+    }
+    vwapLiveSlope = computeLiveSlope(liveHistory, LIVE_SLOPE_POINTS);
+    if (vwapLiveSlope !== null) {
+      const absL = Math.abs(vwapLiveSlope);
+      // Lu depuis _cfgCache et non _slopeCfg : ce bloc s'execute AVANT la
+      // declaration de _slopeCfg dans tick() (bug corrige le 11/08/2026).
+      const _liveCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.vwapSlope) || {};
+      const flatL = _liveCfg.liveFlatBelow !== undefined ? _liveCfg.liveFlatBelow : 1.0;
+      vwapLiveSlopeDir = absL < flatL ? 'plat' : (vwapLiveSlope > 0 ? 'montant' : 'descendant');
+    }
+  }
+
   // Pivots de vague MCB (04/08/2026, observation) -- sur 3m, coherent avec
   // le rythme du baton (cycle 30s). Ne pilote aucune decision a ce stade.
   const wavePivot = analyzeWavePivot('3m');
@@ -303,6 +385,10 @@ function tick() {
     vwap3Slope,
     vwap3SlopeDir,
     vwap3SlopeStrength,
+    vwapLive,
+    vwapLiveSlope,
+    vwapLiveSlopeDir,
+    vwapLivePoints: liveHistory.length,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
@@ -323,6 +409,9 @@ function tick() {
     vwapSlopeDir,
     vwap3Slope,
     vwap3SlopeDir,
+    vwapLive,
+    vwapLiveSlope,
+    vwapLiveSlopeDir,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     netMove: netMovePct,
