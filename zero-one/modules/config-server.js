@@ -398,15 +398,15 @@ app.get('/audit-view', requireAuth, (req, res) => {
 </head>
 <body>
   <h1>Audit ZeroOne</h1>
-  <div class="sub">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.</div>
+  <div class="sub">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.<br><span style="opacity:0.7;">Seuils par defaut alignes sur ceux du baton (11/08/2026). La colonne Trade montre les entrees/sorties REELLES du simulateur.</span></div>
 
   <div class="controls">
     <label>Retournement Delta VWAP3 &gt;= <input type="number" id="rDelta" value="6" step="0.5"></label>
     <label>et VWAP3 proche de &lt;= <input type="number" id="rProx" value="7" step="0.5"></label>
-    <label>Confirm. cadence &gt;= <input type="number" id="cCad" value="3" step="0.1"></label>
-    <label>ou netMove &gt;= <input type="number" id="cNet" value="2" step="0.1"></label>
-    <label>Bypass cadence &gt;= <input type="number" id="bCad" value="7" step="0.5"></label>
-    <label>ou netMove &gt;= <input type="number" id="bNet" value="5" step="0.5"></label>
+    <label>Confirm. cadence &gt;= <input type="number" id="cCad" value="2" step="0.1"></label>
+    <label>ou netMove &gt;= <input type="number" id="cNet" value="0.06" step="0.01"></label>
+    <label>Bypass cadence &gt;= <input type="number" id="bCad" value="3" step="0.5"></label>
+    <label>ou netMove &gt;= <input type="number" id="bNet" value="0.03" step="0.01"></label>
     <button onclick="loadAudit()">Rafraichir</button>
   </div>
 
@@ -506,15 +506,72 @@ async function loadAudit() {
 
     // Fleche de direction de la pente VWAP (10/08/2026) -- montant / plat /
     // descendant par rapport a l'horizontale du zero MCB.
-    // Pivot de vague MCB (11/08/2026) -- distinct du pivot VWAP3 de la
-    // colonne precedente : ce sont les points rouge/vert de la Blue Wave,
-    // ceux qui pilotent reellement les blocages d'entree et les sorties.
+    // Pivot de vague MCB -- affiche UNIQUEMENT a son apparition (11/08/2026),
+    // au lieu d'etre repete sur toutes les lignes suivantes. On voit ainsi le
+    // moment exact du point, comme pour les badges.
+    let _lastPivKey = null;
     function mcbPivotCell(r) {
-      if (!r.wavePivotType) return '';
+      if (!r.wavePivotType) { _lastPivKey = null; return ''; }
+      const key = r.wavePivotType + ':' + r.wavePivotValue;
+      if (key === _lastPivKey) return '';
+      _lastPivKey = key;
       const v = (r.wavePivotValue !== null && r.wavePivotValue !== undefined)
         ? Math.round(r.wavePivotValue) : '';
       const col = r.wavePivotType === 'creux' ? '#2ecc71' : '#e74c3c';
-      return '<span style="color:' + col + '; font-size:10px;">' + v + '</span>';
+      return '<span style="color:' + col + '; font-size:10px; font-weight:600;">' + v + '</span>';
+    }
+
+    // Regime directionnel de la vague MCB 15m -- LE filtre qui decide quelles
+    // entrees sont autorisees depuis le 11/08. Affiche a chaque changement.
+    let _lastRegKey = null;
+    function regimeCell(r) {
+      if (!r.waveRegime15) return '';
+      const isNew = r.waveRegime15 !== _lastRegKey;
+      _lastRegKey = r.waveRegime15;
+      const up = r.waveRegime15 === 'haussier';
+      const col = up ? '#2ecc71' : '#e74c3c';
+      const ar = up ? '&#9650;' : '&#9660;';
+      const w = isNew ? 'font-weight:700;' : 'opacity:0.45;';
+      return '<span style="color:' + col + ';' + w + '">' + ar + '</span>';
+    }
+
+    /* Colonne Signal refondue (11/08/2026) -- deux natures d'information :
+     *   - EVENEMENTS DU BATON (ce qui motive), en discret, calcules avec les
+     *     VRAIS seuils du baton et non avec les curseurs de la page.
+     *   - TRADES REELS (ce qui en resulte), en badges colores pleins.
+     * Remplace les anciens badges TRADE/BYPASS/LONG/SHORT, qui etaient une
+     * simulation parallele sans rapport avec les decisions reelles. */
+    function buildSignal(r, d5) {
+      let out = '';
+      const marks = [];
+      if (r.cadenceMult !== null && r.cadenceMult !== undefined && r.cadenceMult >= 2) {
+        marks.push('EVT x' + r.cadenceMult.toFixed(1));
+      }
+      if (d5 !== null && Math.abs(d5) >= 0.067) marks.push('DEPL');
+      if (r.netMove !== null && r.netMove !== undefined && Math.abs(r.netMove) >= 0.06) {
+        marks.push(r.netMove > 0 ? 'NM+' : 'NM-');
+      }
+      if (marks.length) {
+        out += '<span style="color:#8fa3bf; font-size:9px; margin-right:4px;">' + marks.join(' ') + '</span>';
+      }
+      const ev = tradeEvents[Math.floor(r.ts / 30000)];
+      if (ev) {
+        out += ev.map(function(e) {
+          return '<span title="' + e.title + '" style="background:' + e.bg +
+                 '; color:#fff; padding:1px 5px; border-radius:3px; font-size:9px; ' +
+                 'font-weight:600; margin-right:2px;">' + e.label + '</span>';
+        }).join('');
+      }
+      return out;
+    }
+
+    // Deplacement de prix sur 5 min (10 releves) -- meme calcul que le baton.
+    function disp5(idx, arr) {
+      if (idx < 10) return null;
+      const p0 = arr[idx - 10] && arr[idx - 10].lastPrice;
+      const p1 = arr[idx] && arr[idx].lastPrice;
+      if (!p0 || !p1) return null;
+      return ((p1 - p0) / p0) * 100;
     }
     function slopeArrow(d) {
       if (d === 'montant') return '<span style="color:#2ecc71;">&#9650;</span>';
@@ -522,27 +579,61 @@ async function loadAudit() {
       if (d === 'plat') return '<span style="color:#f1c40f;">&#9644;</span>';
       return '';
     }
+    // Trades reels, indexes par tranche de 30s pour appariement avec l'audit.
+    let tradeEvents = {};
+    try {
+      const tr = await (await fetch('/api/trades')).json();
+      (tr.executed || []).forEach(function(t) {
+        if (t.module !== 'day') return;
+        const eIn = Math.floor(new Date(t.entryTimestamp).getTime() / 30000);
+        const eOut = Math.floor(new Date(t.exitTimestamp).getTime() / 30000);
+        const dir = t.direction === 'long' ? 'LONG' : 'SHORT';
+        if (!tradeEvents[eIn]) tradeEvents[eIn] = [];
+        if (!tradeEvents[eIn].some(function(x) { return x.label.indexOf('ENTREE') === 0; })) {
+          tradeEvents[eIn].push({
+            label: 'ENTREE ' + dir,
+            bg: t.direction === 'long' ? '#1e8449' : '#922b21',
+            title: 'Entree ' + dir + ' @ ' + t.entryPrice
+          });
+        }
+        const rs = String(t.exitReason || '');
+        let lbl = 'SORTIE', bg = '#555';
+        if (rs.indexOf('tranche 25') >= 0) { lbl = 'T25'; bg = '#2471a3'; }
+        else if (rs.indexOf('tranche 65') >= 0) { lbl = 'T65'; bg = '#2471a3'; }
+        else if (rs.indexOf('tranche 10') >= 0) { lbl = 'T10'; bg = '#2471a3'; }
+        else if (rs.indexOf('pivot de vague') >= 0) { lbl = 'PIVOT'; bg = '#7d3c98'; }
+        else if (rs.indexOf('flux') >= 0) { lbl = 'INVAL'; bg = '#b9770e'; }
+        else if (rs.indexOf('liquidation') >= 0) { lbl = 'LIQ'; bg = '#a93226'; }
+        else if (rs.indexOf('timeout') >= 0) { lbl = 'TIMEOUT'; bg = '#616a6b'; }
+        else if (rs.indexOf('blackout') >= 0) { lbl = 'BLACKOUT'; bg = '#616a6b'; }
+        const pnl = (t.pnlPercent !== null && t.pnlPercent !== undefined)
+          ? ' (' + t.pnlPercent.toFixed(2) + '%)' : '';
+        if (!tradeEvents[eOut]) tradeEvents[eOut] = [];
+        tradeEvents[eOut].push({ label: lbl + pnl, bg: bg, title: rs });
+      });
+    } catch (e) { /* trades indisponibles, l'audit reste lisible */ }
+
     const recent = rows.slice(-2880);
     let inVigilance = false;
     const rowsHtml = [];
 
-    for (const r of recent) {
+    // entries() plutot que for...of : le calcul du deplacement 5 min a besoin
+    // de l'index pour remonter de 10 releves (corrige le 11/08/2026).
+    for (const [i, r] of recent.entries()) {
       const rowCls = r.isTrade ? 'trade' : (r.isBypass ? 'bypass' : (r.isReversal ? 'reversal' : ''));
       let pivotCell = '';
       if (r.pivot === 'high') pivotCell = '<span class="pivot high"></span>';
       else if (r.pivot === 'low') pivotCell = '<span class="pivot low"></span>';
       if (r.isReversal) inVigilance = true;
-      let signalCell = '';
-      if (r.isTrade) {
-        const dirLabel = r.direction === 'haussier' ? 'LONG' : (r.direction === 'baissier' ? 'SHORT' : 'TRADE');
-        const dirColor = r.direction === 'haussier' ? '#2ecc71' : (r.direction === 'baissier' ? '#e74c3c' : '#95a5a6');
-        signalCell = '<span class="badge trade" style="background:' + dirColor + '; color:#0f1419;">' + dirLabel + '</span>';
-        inVigilance = false;
-      } else if (r.isBypass) { signalCell = '<span class="badge bypass">BYPASS</span>'; inVigilance = false; }
-      else if (inVigilance) { signalCell = '<span style="font-size:9px; opacity:0.65;">' + (r.direction || '') + '</span>'; }
+      // Colonne Signal (11/08/2026) : evenements reels du baton + trades reels.
+      // Les anciens badges calcules avec les curseurs de la page sont retires --
+      // ils affichaient des signaux sans rapport avec les decisions du bot.
+      const signalCell = buildSignal(r, disp5(i, recent));
+      if (r.isTrade || r.isBypass) inVigilance = false;
 
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
+        '<td style="text-align:center;">' + regimeCell(r) + '</td>' +
         '<td style="text-align:center;">' + pivotCell + '</td>' +
         '<td style="text-align:center;">' + mcbPivotCell(r) + '</td>' +
         '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
@@ -567,7 +658,7 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>PivV3</th><th>PivMCB</th>' +
+      '<th>Heure (Paris)</th><th>Regime</th><th>PivV3</th><th>PivMCB</th>' +
       '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>SlopeV3</th><th>x0</th>' +
       '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>SlopeV15</th><th>x0</th>' +
       '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
