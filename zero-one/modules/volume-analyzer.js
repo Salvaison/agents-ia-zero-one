@@ -85,6 +85,23 @@ function analyzeWavePivot(timeframe, lookback = 20) {
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
   const recent = data.slice(-lookback);
+
+  /* FILTRE D'AMPLITUDE (11/08/2026) -- ne retenir que les VRAIES apogees de
+   * vague, pas les micro-inflexions ou la vague hesite d'un cran. Sur 542
+   * pivots bruts en 15m, la moitie avait une amplitude < 1.59.
+   * Validation croisee : sur 27h, Benjamin compte 14 points sur son
+   * graphique MarketCipher (la detection en trouve exactement 14) dont 7-8
+   * significatifs -- et le seuil 2.0 en retient precisement 7.
+   * L'amplitude est l'ecart au plus proche des deux voisins. */
+  let minAmp = 2.0;
+  try {
+    const c = loadConfig();
+    if (c && c.scoring && c.scoring.wavePivot
+        && c.scoring.wavePivot.minAmplitude !== undefined) {
+      minAmp = c.scoring.wavePivot.minAmplitude;
+    }
+  } catch (e) { /* valeur par defaut */ }
+
   // Le dernier point ne peut jamais etre confirme (il faudrait la bougie
   // suivante, pas encore arrivee) -- on cherche donc a partir de l'avant-
   // dernier index vers le debut de la fenetre.
@@ -93,13 +110,17 @@ function analyzeWavePivot(timeframe, lookback = 20) {
     const prev = recent[i - 1].blue_wave;
     const next = recent[i + 1].blue_wave;
     if (bw > prev && bw > next) {
-      return { type: 'pic', value: bw, ageCycles: (recent.length - 1 - i) };
+      const amp = Math.min(bw - prev, bw - next);
+      if (amp < minAmp) continue; // micro-inflexion, on poursuit la recherche
+      return { type: 'pic', value: bw, amplitude: amp, ageCycles: (recent.length - 1 - i) };
     }
     if (bw < prev && bw < next) {
-      return { type: 'creux', value: bw, ageCycles: (recent.length - 1 - i) };
+      const amp = Math.min(prev - bw, next - bw);
+      if (amp < minAmp) continue; // micro-inflexion, on poursuit la recherche
+      return { type: 'creux', value: bw, amplitude: amp, ageCycles: (recent.length - 1 - i) };
     }
   }
-  return { type: null, value: null, ageCycles: null };
+  return { type: null, value: null, amplitude: null, ageCycles: null };
 }
 
 function analyzeMomentum(timeframe, lookback = 20) {

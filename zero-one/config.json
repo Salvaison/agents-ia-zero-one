@@ -243,6 +243,10 @@
         "velocity": 2
       },
       "_note": "Ajoute le 28/07/2026 -- refonte complete du systeme de decision. Remplace l'ancienne somme+seuil par une chaine ET : chaque maillon (DIV/S-R/Engagement/Velocite) doit depasser son minimum EN MEME TEMPS que le VWAP ait croise zero, sinon REFUS. Chaine volontairement PERMISSIVE au depart (decision explicite de Benjamin) -- a resserrer une fois en observation reelle."
+    },
+    "wavePivot": {
+      "minAmplitude": 2.0,
+      "_note": "Amplitude minimale pour qu'un extremum local de blue_wave soit retenu comme pivot (11/08/2026). L'amplitude est l'ecart au plus proche des deux voisins. En-deca, l'extremum est ignore : ce sont les micro-inflexions ou la vague hesite d'un cran sans marquer d'apogee (la moitie des 542 pivots bruts du 15m avaient une amplitude < 1.59). Calibre par validation croisee avec le comptage visuel de Benjamin : sur 27h il compte 14 points sur son graphique MarketCipher -- la detection en trouve exactement 14 -- dont 7-8 significatifs, et le seuil 2.0 en retient precisement 7. S'applique a TOUS les timeframes (3m comme 15m). Augmenter si trop de pivots intermediaires passent encore."
     }
   },
   "entryRules": {
