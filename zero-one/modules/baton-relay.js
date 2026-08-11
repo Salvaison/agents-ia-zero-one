@@ -72,6 +72,9 @@ let liveHistory = loadLiveHistory();
 
 /* Suivi de la premiere detection de chaque pivot, pour mesurer son age en
  * cycles reels de 30s plutot qu'en bougies 3m (11/08/2026). */
+/* Horodatages des pics de cadence recents, pour detecter un SECOND pic
+ * rapproche (11/08/2026) -- meilleur signal directionnel mesure : 75%. */
+let _recentPics = [];
 let _lastPivotKey = null;
 let _lastPivotSeenAt = null;
 
@@ -394,8 +397,64 @@ function tick() {
     vigilance.batonCount += 1;
   }
 
+  /* 3e VOIE D ACTION (11/08/2026) -- pic de cadence sans reaction prix.
+   * La voie normale (reaction prix par netMove) reste PRIORITAIRE : elle
+   * est evaluee juste apres et ne s execute que si aucune action ici. */
   let action = null;
-  if (vigilance && netMovePct !== null && direction && direction !== 'neutre') {
+
+  const _crCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.prediction) || {};
+  const _crMinMult = _crCfg.cadenceReversalMinMult !== undefined ? _crCfg.cadenceReversalMinMult : 3;
+  const _crMinDisp = _crCfg.cadenceReversalMinDisplacement !== undefined ? _crCfg.cadenceReversalMinDisplacement : 0.05;
+  const _crDoublePicWindow = _crCfg.doublePicWindowCycles !== undefined ? _crCfg.doublePicWindowCycles : 8;
+  const _crConfirmMax = _crCfg.confirmMaxCycles !== undefined ? _crCfg.confirmMaxCycles : 6;
+
+  /* Historique des pics recents, pour detecter un SECOND pic rapproche. */
+  if (isEvent && cadenceMultiplier !== null && cadenceMultiplier >= _crMinMult) {
+    _recentPics.push(now);
+    while (_recentPics.length && (now - _recentPics[0]) > _crDoublePicWindow * 30000) _recentPics.shift();
+  }
+
+  if (_crCfg.cadenceReversalEnabled !== false
+      && vigilance
+      && vigilance.trigger === 'cadence'
+      && (vigilance.triggerMultiplier || 0) >= _crMinMult
+      && displacementPct !== null
+      && Math.abs(displacementPct) >= _crMinDisp) {
+
+    const opposeDir = displacementPct > 0 ? 'baissier' : 'haussier';
+
+    /* VOIE 1 (75%) -- second pic rapproche : bataille, point de bascule.
+     * Action immediate, sans attendre de confirmation. */
+    const isDoublePic = isEvent
+      && cadenceMultiplier !== null && cadenceMultiplier >= _crMinMult
+      && _recentPics.length >= 2;
+
+    /* VOIE 2 (62.5%) -- confirmation : un cycle dont Dir. va dans le sens
+     * predit, dans la limite de confirmMaxCycles. Au-dela, on ne fait RIEN
+     * (mesure : forcer l'entree sans confirmation tombe a 58.3%). */
+    const dirConfirms = direction && direction !== 'neutre' && direction === opposeDir;
+    const withinWindow = vigilance.batonCount <= _crConfirmMax;
+
+    if (isDoublePic) {
+      action = {
+        type: 'cadence_reversal_double',
+        direction: opposeDir,
+        reason: `second pic de cadence x${cadenceMultiplier} en moins de ${_crDoublePicWindow} cycles (bataille) -- sens oppose au deplacement (${displacementPct}%)`,
+      };
+      vigilance = null;
+      _recentPics.length = 0;
+    } else if (dirConfirms && withinWindow) {
+      action = {
+        type: 'cadence_reversal_confirmed',
+        direction: opposeDir,
+        reason: `pic de cadence x${vigilance.triggerMultiplier}, direction confirmee au cycle ${vigilance.batonCount} -- sens oppose au deplacement (${displacementPct}%)`,
+      };
+      vigilance = null;
+    }
+    /* Sinon : rien. La vigilance suit son cours normal (reaction prix). */
+  }
+
+  if (!action && vigilance && netMovePct !== null && direction && direction !== 'neutre') {
     const absMove = Math.abs(netMovePct);
     if (absMove >= PRICE_REACTION_IMMEDIATE) {
       action = {

@@ -368,7 +368,10 @@
       "displacementMin": 0.084,
       "cadenceExhaustedBelow": 0.7,
       "slope3FlatBelow": 2.19,
-      "_note": "Prediction de retournement (11/08/2026), OBSERVATION SEULEMENT -- ne pilote aucune decision. Fondee sur l'hypothese d'essoufflement de liquidite formulee par Benjamin le 31/07 : un mouvement fort dont la force motrice s'epuise se retourne. Mesure sur 24h, base 51.5% : deplacement fort + cadence essoufflee = 70.7% (n=75) ; deplacement fort + pente VWAP3 plate = 79.3% (n=29). Aucun signal isole ne depasse 57%. Echantillons faibles -- a confirmer sur plusieurs jours avant tout branchement sur les decisions."
+      "_note": "Prediction de retournement (11/08/2026), OBSERVATION SEULEMENT -- ne pilote aucune decision. Fondee sur l'hypothese d'essoufflement de liquidite formulee par Benjamin le 31/07 : un mouvement fort dont la force motrice s'epuise se retourne. Mesure sur 24h, base 51.5% : deplacement fort + cadence essoufflee = 70.7% (n=75) ; deplacement fort + pente VWAP3 plate = 79.3% (n=29). Aucun signal isole ne depasse 57%. Echantillons faibles -- a confirmer sur plusieurs jours avant tout branchement sur les decisions.",
+      "doublePicWindowCycles": 8,
+      "confirmMaxCycles": 6,
+      "_cadenceReversalNote": "3e VOIE D'ACTION (11/08/2026, ACTIVE, affinee) -- deux mecanismes par ordre de priorite. VOIE 1 : un SECOND pic de cadence >= cadenceReversalMinMult dans les doublePicWindowCycles declenche immediatement dans le sens OPPOSE au deplacement -- 75% de justesse mesuree (n=20), remarquablement stable de 4 a 20 cycles de fenetre. Interpretation : deux pics rapproches = bataille, point de bascule, et le sens qui l'emporte est l'oppose du mouvement qui vient d'avoir lieu. VOIE 2 : sinon, attendre jusqu'a confirmMaxCycles qu'un cycle confirme le sens predit -- 62.5% (n=48). Au-dela : RIEN (forcer sans confirmation tombe a 58.3%). La voie normale par netMove reste prioritaire sur les deux. Desactiver : cadenceReversalEnabled=false."
     }
   },
   "signalTtl": {
