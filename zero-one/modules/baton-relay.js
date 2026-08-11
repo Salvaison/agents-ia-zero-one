@@ -75,6 +75,10 @@ let liveHistory = loadLiveHistory();
 /* Horodatages des pics de cadence recents, pour detecter un SECOND pic
  * rapproche (11/08/2026) -- meilleur signal directionnel mesure : 75%. */
 let _recentPics = [];
+
+/* Suivi du regime directionnel de la vague 15m (11/08/2026). */
+let _lastRegime15Key = null;
+let _lastRegime15Since = null;
 let _lastPivotKey = null;
 let _lastPivotSeenAt = null;
 
@@ -232,6 +236,25 @@ function tick() {
   // Pivots de vague MCB (04/08/2026, observation) -- sur 3m, coherent avec
   // le rythme du baton (cycle 30s). Ne pilote aucune decision a ce stade.
   const wavePivot = analyzeWavePivot('3m');
+
+  /* REGIME DIRECTIONNEL DE LA VAGUE MCB 15m (11/08/2026) -- regle de Benjamin,
+   * plusieurs annees d'observation : le dernier point confirme de la vague 15m
+   * definit le sens autorise. Pic (rouge) = seuls les SHORT ; creux (vert) =
+   * seuls les LONG. C'est un ETAT qui dure jusqu'au pivot suivant, pas un
+   * evenement avec fenetre de validite -- d'ou l'absence de maxAge ici.
+   * Le 15m et non le 3m : ce dernier produit un pivot toutes les 11 min
+   * (trop de bruit, justesse directionnelle mesuree 33-50%). */
+  const wavePivot15 = analyzeWavePivot('15m');
+  let waveRegime15 = null, waveRegime15Value = null;
+  if (wavePivot15 && wavePivot15.type) {
+    waveRegime15 = wavePivot15.type === 'creux' ? 'haussier' : 'baissier';
+    waveRegime15Value = wavePivot15.value !== undefined ? wavePivot15.value : null;
+    const rk = wavePivot15.type + ':' + waveRegime15Value;
+    if (_lastRegime15Key !== rk) {
+      _lastRegime15Key = rk;
+      _lastRegime15Since = new Date(now).toISOString();
+    }
+  }
   /* Age en CYCLES DE BATON (30s) et non en bougies 3m (11/08/2026) : mesure
    * du 11/08 -- avec l'ancien comptage en bougies, ZERO candidat a l'entree
    * sur 57 tombait dans la fenetre de validite. On horodate la premiere
@@ -517,6 +540,9 @@ function tick() {
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
     wavePivotAgeRealCycles,
+    waveRegime15,
+    waveRegime15Value,
+    waveRegime15Since: _lastRegime15Since,
   });
 
   // ===== Historique 24h pour le dashboard web (31/07/2026) ==============

@@ -229,6 +229,21 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
   const direction = la.direction === 'haussier' ? 'long' : (la.direction === 'baissier' ? 'short' : null);
   if (!direction) return null;
 
+  /* FILTRE DIRECTIONNEL VAGUE MCB 15m (11/08/2026) -- regle de Benjamin.
+   * Le dernier point confirme de la vague 15m definit le sens autorise :
+   * pic (rouge) = seuls les SHORT, creux (vert) = seuls les LONG.
+   * C'est un ETAT qui dure jusqu'au pivot suivant. Motif : deux LONG a
+   * contresens en une heure le 11/08 (-11.52% et -12.28%) pendant une chute
+   * continue, alors que toutes les pentes pointaient vers le haut.
+   * Desactiver : waveRegimeFilter.enabled = false. */
+  const _wrCfg = (config && config.tradeSimulator && config.tradeSimulator.waveRegimeFilter) || {};
+  if (_wrCfg.enabled !== false && batonState.waveRegime15) {
+    const allowed = batonState.waveRegime15 === 'haussier' ? 'long' : 'short';
+    if (direction !== allowed) {
+      return null; // contresens du regime de la vague MCB 15m -- entree refusee
+    }
+  }
+
   // FILTRE PIVOT DE VAGUE MCB (04/08/2026, Benjamin) : un point vert
   // (creux confirme) = signal haussier, bloque les SHORT. Un point rouge
   // (pic confirme) = signal baissier, bloque les LONG. Doit etre recent

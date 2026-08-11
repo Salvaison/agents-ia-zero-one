@@ -372,6 +372,10 @@
       "doublePicWindowCycles": 8,
       "confirmMaxCycles": 6,
       "_cadenceReversalNote": "3e VOIE D'ACTION (11/08/2026, ACTIVE, affinee) -- deux mecanismes par ordre de priorite. VOIE 1 : un SECOND pic de cadence >= cadenceReversalMinMult dans les doublePicWindowCycles declenche immediatement dans le sens OPPOSE au deplacement -- 75% de justesse mesuree (n=20), remarquablement stable de 4 a 20 cycles de fenetre. Interpretation : deux pics rapproches = bataille, point de bascule, et le sens qui l'emporte est l'oppose du mouvement qui vient d'avoir lieu. VOIE 2 : sinon, attendre jusqu'a confirmMaxCycles qu'un cycle confirme le sens predit -- 62.5% (n=48). Au-dela : RIEN (forcer sans confirmation tombe a 58.3%). La voie normale par netMove reste prioritaire sur les deux. Desactiver : cadenceReversalEnabled=false."
+    },
+    "waveRegimeFilter": {
+      "enabled": true,
+      "_note": "FILTRE DIRECTIONNEL VAGUE MCB 15m (11/08/2026) -- regle de Benjamin, plusieurs annees d'observation manuelle. Le dernier point CONFIRME de la vague 15m definit le sens autorise : pic (rouge) = seuls les SHORT, creux (vert) = seuls les LONG. C'est un ETAT qui dure jusqu'au pivot suivant, sans fenetre de validite temporelle. Motif immediat : deux LONG a contresens en une heure le 11/08 (-11.52% et -12.28%) pendant une chute continue de 64400 a 63700, alors que VWAP3 et VWAP15 pointaient tous deux vers le haut (leurs pentes refletent la derniere variation entre clotures, donc du passe). NON VALIDE STATISTIQUEMENT sur nos donnees (9 pivots distincts seulement dans l'historique) -- implemente sur le jugement de Benjamin. Le 15m et non le 3m : ce dernier donne un pivot toutes les 11 min avec une justesse directionnelle mesuree de 33-50%. Desactiver : enabled=false."
     }
   },
   "signalTtl": {
