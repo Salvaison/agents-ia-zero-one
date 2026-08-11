@@ -357,7 +357,9 @@
     "vwapSlope": {
       "flatBelow": 2.04,
       "strongAbove": 8.9,
-      "_note": "Seuils de classification de la pente VWAP15, recalibres le 10/08/2026 sur la distribution reelle mesuree (24h, 187 changements de valeur) : p10=0.85 p25=2.04 p50=4.81 p75=8.90 p90=12.44 p95=17.10 max=36.78. Les valeurs precedentes (0.5/3.0) etaient posees a l'estime et classaient 64% des cas en 'fort'."
+      "_note": "Seuils de classification de la pente VWAP15, recalibres le 10/08/2026 sur la distribution reelle mesuree (24h, 187 changements de valeur) : p10=0.85 p25=2.04 p50=4.81 p75=8.90 p90=12.44 p95=17.10 max=36.78. Les valeurs precedentes (0.5/3.0) etaient posees a l'estime et classaient 64% des cas en 'fort'. MAJ 11/08/2026 : seuils SEPARES par timeframe. VWAP3 (flat3Below/strong3Above) = 2.19/8.44, VWAP15 (flatBelow/strongAbove) = 1.77/7.35 environ. Mesure retroactive 24h : le VWAP3 change toutes les 5.0 min contre 18.2 min pour le VWAP15, soit 3.6x plus reactif -- c'est pourquoi la levee anticipee du blocage pivot bascule sur vwap3SlopeDir.",
+      "flat3Below": 2.19,
+      "strong3Above": 8.44
     }
   },
   "signalTtl": {

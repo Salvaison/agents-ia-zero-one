@@ -506,6 +506,16 @@ async function loadAudit() {
 
     // Fleche de direction de la pente VWAP (10/08/2026) -- montant / plat /
     // descendant par rapport a l'horizontale du zero MCB.
+    // Pivot de vague MCB (11/08/2026) -- distinct du pivot VWAP3 de la
+    // colonne precedente : ce sont les points rouge/vert de la Blue Wave,
+    // ceux qui pilotent reellement les blocages d'entree et les sorties.
+    function mcbPivotCell(r) {
+      if (!r.wavePivotType) return '';
+      const v = (r.wavePivotValue !== null && r.wavePivotValue !== undefined)
+        ? Math.round(r.wavePivotValue) : '';
+      const col = r.wavePivotType === 'creux' ? '#2ecc71' : '#e74c3c';
+      return '<span style="color:' + col + '; font-size:10px;">' + v + '</span>';
+    }
     function slopeArrow(d) {
       if (d === 'montant') return '<span style="color:#2ecc71;">&#9650;</span>';
       if (d === 'descendant') return '<span style="color:#e74c3c;">&#9660;</span>';
@@ -534,14 +544,13 @@ async function loadAudit() {
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
         '<td style="text-align:center;">' + pivotCell + '</td>' +
+        '<td style="text-align:center;">' + mcbPivotCell(r) + '</td>' +
         '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
-        '<td class="' + cls(r.deltaVwap3) + '">' + fmt(r.deltaVwap3,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
         '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap15) + '">' + fmt(r.vwap15,2) + '</td>' +
-        '<td class="' + cls(r.deltaVwap15) + '">' + fmt(r.deltaVwap15,2) + '</td>' +
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
         '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
         '<td>' + fmt(r.cadence,2) + '</td>' +
@@ -558,9 +567,9 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>Pivot</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>Dvwap3</th><th>SlopeV</th><th>x0</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>Dvwap15</th><th>SlopeV</th><th>x0</th>' +
+      '<th>Heure (Paris)</th><th>PivV3</th><th>PivMCB</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>SlopeV3</th><th>x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>SlopeV15</th><th>x0</th>' +
       '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
       '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');

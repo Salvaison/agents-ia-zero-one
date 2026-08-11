@@ -242,9 +242,9 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
     // Ne peut que RACCOURCIR le blocage, jamais l'allonger.
     const pivotDirEarly = batonState.wavePivotType === 'creux' ? 'haussier' : 'baissier';
     const slopeOpposes = pivotCfg.earlyReleaseOnSlope !== false
-      && batonState.vwapSlopeDir
-      && batonState.vwapSlopeDir !== 'plat'
-      && batonState.vwapSlopeDir !== (pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
+      && batonState.vwap3SlopeDir
+      && batonState.vwap3SlopeDir !== 'plat'
+      && batonState.vwap3SlopeDir !== (pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
     if (batonState.wavePivotAgeCycles <= maxAge && !slopeOpposes) {
       const pivotDir = batonState.wavePivotType === 'creux' ? 'long' : 'short';
       if (direction !== pivotDir) {
@@ -369,9 +369,9 @@ function checkInvalidation(trade, batonState, config, price) {
     // pente VWAP s'est inversee ne doit plus provoquer de sortie.
     const _pivotDirEarly = batonState.wavePivotType === 'creux' ? 'haussier' : 'baissier';
     const _slopeOpposes = pivotCfg.earlyReleaseOnSlope !== false
-      && batonState.vwapSlopeDir
-      && batonState.vwapSlopeDir !== 'plat'
-      && batonState.vwapSlopeDir !== (_pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
+      && batonState.vwap3SlopeDir
+      && batonState.vwap3SlopeDir !== 'plat'
+      && batonState.vwap3SlopeDir !== (_pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
     if (batonState.wavePivotAgeCycles <= maxAge && !_slopeOpposes) {
       const opposedByPeak = trade.direction === 'long' && batonState.wavePivotType === 'pic';
       const opposedByTrough = trade.direction === 'short' && batonState.wavePivotType === 'creux';

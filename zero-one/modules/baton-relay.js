@@ -180,12 +180,16 @@ function tick() {
   const vwap3obj = analyzeVwap('3m');
   const vwap3Cur = (vwap3obj && vwap3obj.current !== undefined) ? parseFloat(vwap3obj.current) : null;
   const vwap3Prev = (vwap3obj && vwap3obj.previous !== undefined) ? parseFloat(vwap3obj.previous) : null;
+  // Seuils PROPRES au 3m (11/08/2026) -- mesure retroactive sur 24h :
+  // VWAP3 p25=2.19 p50=4.25 p75=8.44 (contre 1.77/4.23/7.35 pour le 15m).
+  const slope3Flat = _slopeCfg.flat3Below !== undefined ? _slopeCfg.flat3Below : 2.19;
+  const slope3Strong = _slopeCfg.strong3Above !== undefined ? _slopeCfg.strong3Above : 8.44;
   let vwap3Slope = null, vwap3SlopeDir = null, vwap3SlopeStrength = null;
   if (vwap3Cur !== null && vwap3Prev !== null) {
     vwap3Slope = parseFloat((vwap3Cur - vwap3Prev).toFixed(4));
     const abs3 = Math.abs(vwap3Slope);
-    vwap3SlopeDir = abs3 < slopeFlat ? 'plat' : (vwap3Slope > 0 ? 'montant' : 'descendant');
-    vwap3SlopeStrength = abs3 < slopeFlat ? 'faible' : (abs3 >= slopeStrong ? 'fort' : 'moyen');
+    vwap3SlopeDir = abs3 < slope3Flat ? 'plat' : (vwap3Slope > 0 ? 'montant' : 'descendant');
+    vwap3SlopeStrength = abs3 < slope3Flat ? 'faible' : (abs3 >= slope3Strong ? 'fort' : 'moyen');
   }
 
   let vwapRegime = 'neutre';
@@ -319,6 +323,8 @@ function tick() {
     vwapSlopeDir,
     vwap3Slope,
     vwap3SlopeDir,
+    wavePivotType: wavePivot.type || null,
+    wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     netMove: netMovePct,
     amplitude: amplitudePct,
     winSec: (trig.windowSeconds !== undefined && trig.windowSeconds !== null) ? parseFloat(trig.windowSeconds) : null,
