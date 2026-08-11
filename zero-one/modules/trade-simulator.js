@@ -242,6 +242,24 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
     if (direction !== allowed) {
       return null; // contresens du regime de la vague MCB 15m -- entree refusee
     }
+
+    /* ABSTENTION SUR DESACCORD (11/08/2026) -- quand le VWAP3 contredit
+     * franchement le regime 15m, on n'entre dans AUCUN sens : le regime
+     * autorise encore une direction, mais le court terme a deja bascule.
+     * Cas reel : SHORT du 17:58 (-3.23%), regime baissier mais VWAP3 deja
+     * repasse a +2.72. Critere = le SIGNE du VWAP3, pas sa pente (celle-ci
+     * etait a +1.48, classee "plate", et n'aurait pas suffi).
+     * ENTREES UNIQUEMENT -- les sorties ne sont jamais bloquees. */
+    if (_wrCfg.abstainOnVwap3Disagreement !== false) {
+      const v3 = batonState.vwap3 !== undefined ? batonState.vwap3 : null;
+      const deadZone = _wrCfg.vwap3DeadZone !== undefined ? _wrCfg.vwap3DeadZone : 2.0;
+      if (v3 !== null && Math.abs(v3) >= deadZone) {
+        const v3Says = v3 > 0 ? 'haussier' : 'baissier';
+        if (v3Says !== batonState.waveRegime15) {
+          return null; // VWAP3 contredit le regime 15m -- abstention totale
+        }
+      }
+    }
   }
 
   // FILTRE PIVOT DE VAGUE MCB (04/08/2026, Benjamin) : un point vert

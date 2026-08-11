@@ -529,6 +529,8 @@ function tick() {
     vwapSlope,
     vwapSlopeDir,
     vwapSlopeStrength,
+    vwap3: vwap3Cur,
+    vwap15: vwap15Cur,
     vwap3Slope,
     vwap3SlopeDir,
     vwap3SlopeStrength,
