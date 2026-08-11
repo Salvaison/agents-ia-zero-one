@@ -1,9 +1,9 @@
 # strategy-boono.md
-*Version 0.4.1 — 2 août 2026 (soir)*
-*(v0.3 du 16 juillet ; cette version intègre le bâton de relais, la loi
-d'invalidation et le passage à un module unique. La 0.4.1 précise le rôle
-réel des timeframes, corrige la contrainte RAM et documente la cohérence
-du VWAP.)*
+*Version 0.5 — 11 août 2026 (soir)*
+*(v0.4.1 du 2 août. La 0.5 documente : l'infrastructure de collecte — le trou
+documentaire le plus coûteux —, la hiérarchie directionnelle mise en place le
+11/08, les trois voies d'action du bâton, la pente VWAP à trois échelles, et
+les mesures qui fondent chaque nouvelle règle.)*
 
 ---
 
@@ -21,7 +21,133 @@ chiffrée doit correspondre à `config.json` : en cas de divergence, c'est
 
 ---
 
-## État du système au 2 août 2026
+## INFRASTRUCTURE DE COLLECTE — lire avant toute intervention
+
+Cette section existe parce que son absence a coûté cher : l'information
+n'était consignée nulle part, et plusieurs sessions ont relancé les
+collecteurs à la main en créant des doublons qui se disputaient les onglets
+Chrome. Constaté le 11/08 : quatre processus au lieu de deux.
+
+**Les collecteurs sont gérés par `launchd`. Ne JAMAIS les lancer à la main.**
+
+| Processus | Rôle |
+|---|---|
+| `real-time-collector.js` | 3m, onglet dédié, écrit `mcb_3m.csv` |
+| `tab2-collector.js` | 15m/1h/4h/1d/1w en rotation sur UN seul onglet |
+
+- **Exactement deux onglets TradingView** doivent être ouverts : un sur
+  `interval=3`, un sur `interval=15`. Un troisième provoque des conflits
+  (`No unclaimed TradingView chart tab`).
+- Vérifier l'état :
+  `curl -s http://localhost:9222/json | python3 -c "import json,sys; [print(t['url']) for t in json.load(sys.stdin) if 'tradingview' in t.get('url','').lower()]"`
+- Vérifier les processus : `ps aux | grep -E "real-time-collector|tab2-collector" | grep -v grep`
+  → doit montrer **deux** lignes, toutes deux avec le chemin absolu
+  `/usr/local/bin/node` (signature de `launchd`). Une ligne sans chemin
+  absolu = instance manuelle à tuer.
+- Pour repartir propre : `pkill -f "real-time-collector"; pkill -f "tab2-collector"`
+  puis **ne rien relancer** — `launchd` s'en charge en quelques secondes.
+
+**Mort volontaire du collecteur** : `tab2-collector` se termine lui-même après
+30 minutes sans clôture 15m écrite (`FATAL: no close written on 15m for
+1810s — exiting so launchd restarts us`). C'est un garde-fou, pas un bug.
+Mais ce délai est **mal calibré** pour un timeframe qui clôture toutes les
+15 min : entre deux redémarrages, une bougie sur deux est perdue.
+
+**Défaut de collecte identifié le 11/08 — À REVÉRIFIER**
+Taux de bougies 15m manquantes, par période :
+
+| Période | Trous |
+|---|---|
+| 16–29 juillet | 0–1 % |
+| **30–31 juillet** | 10 % puis 24 % |
+| 1er–11 août | **10 à 49 %** |
+
+La bascule s'est produite au 30 juillet, date du passage Bybit → MEXC. Ce
+n'est PAS lié aux redémarrages de patchs : du 4 au 9 août, pendant l'absence
+de Benjamin et sans aucune intervention, le taux est resté entre 21 % et
+49 %. Le motif est systématique — trous de **30 minutes exactement**, jamais
+45 ou 60, soit une bougie sur deux.
+
+Mécanisme observé dans `mcb_tab2.log` : le WebSocket TradingView se ferme
+~4 min après chaque démarrage sans se reconnecter, le collecteur reste
+aveugle jusqu'au timeout de 30 min, redémarre, rattrape **une seule** bougie,
+et le cycle recommence.
+
+Deux causes possibles, non tranchées au 11/08 :
+1. Les instances en doublon (constatées ce jour-là) qui se volent les onglets
+2. La popup Chrome « Quitter le site Web ? », qui apparaît plusieurs fois par
+   jour et bloque le rechargement de la page. Un flag
+   `--disable-features=BeforeUnloadRequiresUserInteraction` a été ajouté au
+   lancement de Chrome — **son effet n'est pas vérifié**, ce flag pourrait
+   être obsolète dans Chrome 150.
+
+**Conséquence à garder en tête** : tout ce qui dépend de la vague 15m — dont
+le régime directionnel, filtre de plus haut niveau depuis le 11/08 — a
+travaillé sur des données amputées d'un tiers pendant douze jours.
+
+Autres éléments d'infrastructure :
+- `mcb_3m_live.csv` : snapshot intra-bougie écrit toutes les 15s par
+  `real-time-collector`, synchronisé vers le VPS. Une seule ligne, écrasée à
+  chaque écriture. Sert au calcul de la pente VWAP live.
+- Synchronisation Mac → VPS : LaunchAgent `com.boono.vps-sync.plist`, toutes
+  les 30s, via `sync-vps.sh` (liste explicite de fichiers — penser à y
+  ajouter tout nouveau CSV).
+- Rechargement des onglets en cas de doute : `node reload-tv-tabs.cjs` depuis
+  `/Users/boono3d/tradingview-mcp` (extension `.cjs` obligatoire, le
+  `package.json` du dossier est en `type: module`).
+
+---
+
+## État du système au 11 août 2026
+
+### Hiérarchie directionnelle (mise en place le 11/08) — LA contrainte de plus haut niveau
+
+Trois niveaux, dans cet ordre :
+
+**1. Régime de la vague MCB 15m** — `waveRegimeFilter`
+Le dernier point CONFIRMÉ de la vague 15m définit le sens autorisé :
+pic (rouge) = **seuls les SHORT**, creux (vert) = **seuls les LONG**. C'est un
+ÉTAT qui dure jusqu'au pivot suivant, sans fenêtre de validité temporelle.
+
+Motif : le 11/08, deux LONG à contresens en une heure pendant une chute
+continue de 64400 à 63700 (−11,52 % et −12,28 %), alors que VWAP3 et VWAP15
+pointaient tous deux vers le haut — leurs pentes reflètent la dernière
+variation entre clôtures, donc du passé.
+
+⚠ **Non validé statistiquement** (9 pivots seulement dans l'historique au
+moment du codage). Implémenté sur le jugement de Benjamin, plusieurs années
+d'observation manuelle de cet indicateur. Même démarche que le filtre pivot
+du 04/08.
+
+**2. Abstention sur désaccord VWAP3** — `abstainOnVwap3Disagreement`
+Quand le SIGNE du VWAP3 contredit le régime 15m et que `|VWAP3| ≥ 2.0`,
+AUCUNE entrée n'est prise, ni dans un sens ni dans l'autre. Le VWAP3 peut
+suspendre, jamais inverser — lui donner le dernier mot ramènerait le bruit
+(un pivot toutes les 11 min, justesse directionnelle mesurée 33-50 %).
+
+Motif : SHORT du 17:58 le 11/08 (−3,23 %), régime baissier mais VWAP3 déjà
+repassé à +2,72. Le critère est le SIGNE et non la pente — celle-ci était à
++1,48, classée « plate », et n'aurait pas suffi.
+
+**Portée : ENTRÉES UNIQUEMENT.** Une position ouverte doit toujours pouvoir
+être fermée, sinon on crée des positions bloquées.
+
+**3. Filtres classiques** — coupe-circuit −25 %, cooldown 10 min après perte,
+module actif.
+
+### Amplitude minimale des pivots — `scoring.wavePivot.minAmplitude = 2.0`
+
+Un extremum local de `blue_wave` n'est retenu comme pivot que si son écart au
+plus proche voisin atteint ce seuil. Sur 542 pivots bruts en 15m, la moitié
+avait une amplitude < 1,59 — de simples hésitations d'un cran, pas des
+apogées.
+
+**Validation croisée — le meilleur ancrage obtenu sur ce projet** : sur 27h,
+Benjamin compte **14 points** sur son graphique MarketCipher ; la détection en
+trouve **exactement 14**. Elle reproduit donc fidèlement l'indicateur. Et le
+seuil qui ne retient que ses 7-8 « significatifs » est précisément 2,0.
+
+---
 
 **Un seul module trade : DAY.** Scalp et swing sont évalués (scoring,
 dashboard) mais ne prennent aucune position — `config.tradeSimulator.activeModules
@@ -57,13 +183,51 @@ la chaîne dans `data/baton-state.json`, que `trade-simulator.js` consulte.
 
 ### Chaîne de décision
 
-1. **ÉVÉNEMENT** — la cadence de ticks atteint 2× sa moyenne glissante sur 4h
-2. **VIGILANCE** — état persistant, relayé de bâton en bâton, ne s'éteint pas seul
-3. **RÉACTION PRIX** — seule juge de la direction :
-   - `|netMove| ≥ 0,06 %` → action immédiate
-   - `|netMove| ≥ 0,03 %` confirmé sur 2 bâtons consécutifs → action
-4. **ENTRÉE** dans le sens du prix, via `lastAction` (version persistante du
-   verdict, pour ne jamais rater un signal entre deux cycles de lecture)
+**Ouverture de vigilance — DEUX voies** (une seule suffit) :
+1. **ÉVÉNEMENT CADENCE** — la cadence de ticks atteint 2× sa moyenne 4h
+2. **DÉPLACEMENT** — `|displacementPct| ≥ 0,067` (ajouté le 10/08)
+
+Le champ `vigilance.trigger` indique laquelle des deux a ouvert la vigilance,
+pour pouvoir mesurer séparément leur performance.
+
+Motif de la seconde voie : le bot était aveugle aux mouvements PROGRESSIFS.
+Cas du 10/08 à 11:50 — cadence 1,81× et netMove 0,045 % sous les seuils, mais
+déplacement 5 min à −0,141 %. Mesure sur 24h : 148 événements cadence contre
+396 déplacements ≥ p90, dont seulement 103 communs — **293 occasions
+invisibles** à la voie historique.
+
+**Action — TROIS voies, par ordre de priorité** :
+
+| Voie | Déclencheur | Justesse mesurée |
+|---|---|---|
+| **Double pic** | 2ᵉ pic ≥ 3× en moins de 8 cycles | **75 %** (n=20) |
+| **Confirmation** | pic ≥ 3× + `Dir.` confirme le sens opposé, ≤ 6 cycles | **62,5 %** (n=48) |
+| **Réaction prix** (historique) | `netMove ≥ 0,06 %` ou `0,03 %` ×2 | — |
+
+**Le principe qui a émergé le 11/08** : après un pic de cadence, le sens n'est
+PAS celui du mouvement en cours mais son **OPPOSÉ**.
+
+    sens du netMove courant      36,4 %   ← pire que le hasard
+    sens du déplacement 5 min    38,6 %   ← pire que le hasard
+    sens de la pente VWAP3       54,5 %
+    OPPOSÉ du déplacement        61,4 %   ← le seul exploitable
+
+Un pic de cadence marque un **retournement**, pas une continuation — c'est le
+principe de rééquilibrage formulé le 31/07, qui se vérifie précisément là où
+le bâton n'arrivait pas à décider. Et il expliquait pourquoi le bot ratait les
+retournements : il attendait une confirmation allant dans le sens du mouvement
+en train de finir.
+
+Constat qui l'a motivé : **44 % des pics ≥ 3× ne débouchaient sur rien**,
+alors que le prix bouge presque deux fois plus après un pic (0,100 % contre
+0,058 % d'amplitude médiane).
+
+Interprétation du double pic : deux pics rapprochés = une **bataille**, un
+point de bascule. Le taux de 75 % est remarquablement stable de 4 à 20 cycles
+de fenêtre — ce n'est pas un artefact de réglage.
+
+**ENTRÉE** dans le sens décidé, via `lastAction` (version persistante du
+verdict, pour ne jamais rater un signal entre deux cycles de lecture).
 
 Chaque action n'est consommée qu'une fois (`trade-sim-entry-tracker.json`).
 
@@ -92,21 +256,72 @@ plafonnait à 0,085 %, et son signe s'inversait par moments (+0,027 annonçant
 Distribution mesurée sur 24 h (2 870 fenêtres) : p50 = 0,023 % · p75 = 0,048 %
 · p90 = 0,084 % · p95 = 0,118 % · p99 = 0,212 %.
 
-### Recommandation directionnelle — INTENTION
+### Prédiction de retournement — OBSERVATION (refondue le 11/08)
 
-`recommendedDirection` combine le régime du VWAP15 (proche de zéro et
-trajectoire décroissante = retournement possible ; s'écartant de zéro =
-continuation) avec un déséquilibre fort, et recommande le **sens opposé** au
-déplacement observé — principe du *retour à l'équilibre des flux* : un fort
-déséquilibre directionnel rend probable un flux inverse ensuite.
+`recommendedDirection` prédit un retournement à venir. La version du 01/08
+(rééquilibrage sur `vwapRegime === 'retournement_possible'`) ne s'activait
+quasiment jamais et reposait sur un principe jamais confirmé — elle a été
+remplacée.
 
-Exposé dans `baton-state.json`, **en observation seulement** : ne pilote
-aucune entrée à ce jour.
+**Mesure sur 24h, base de référence 51,5 % de retournements :**
 
-⚠ Réserve du 02/08 : ce principe de rééquilibrage n'a **pas** été confirmé sur
-les bypass, où la continuation s'est révélée plus rentable que l'inversion
-sur 24 h de données. Échantillon trop faible (31 trades) pour conclure. À
-retrancher avec plusieurs jours de données.
+    SIGNAUX ISOLÉS — aucun n'est exploitable
+      déplacement 5 min fort (≥0,084)      57,1 %
+      cadence essoufflée (mult<0,7)        53,4 %
+      pente VWAP3 plate (<2,19)            50,0 %
+      VWAP3 proche de zéro                 50,6 %
+      netMove change de signe              49,8 %
+      pente VWAP15 plate                   41,2 %
+
+    COMBINAISONS — c'est là que le signal apparaît
+      déplacement fort ET cadence essoufflée   70,7 %  (n=75)
+      déplacement fort ET pente VWAP3 plate    79,3 %  (n=29)
+
+C'est l'hypothèse d'**essoufflement de liquidité** formulée le 31/07 et jamais
+testée jusqu'ici : un mouvement fort dont la force motrice s'épuise se
+retourne. Le sens prédit est l'OPPOSÉ du déplacement en cours.
+
+⚠ Échantillons faibles (75 et 29 cas). Reste en OBSERVATION — expose la
+prédiction sans piloter aucune décision. À confirmer sur plusieurs jours.
+
+Champs exposés : `recommendedDirection`, `recommendedReason`,
+`recommendedConfidence` ('moyenne' pour l'essoufflement, 'forte' pour la
+pente plate).
+
+### La pente du VWAP — trois échelles
+
+| Mesure | Source | Rafraîchissement |
+|---|---|---|
+| `vwapSlope` | VWAP15, dernière variation entre clôtures | **18,2 min** |
+| `vwap3Slope` | VWAP3, idem | **5,0 min** |
+| `vwapLiveSlope` | régression sur snapshots intra-bougie | **30 s** |
+
+**Piège majeur** : les deux premières ne sont PAS des pentes instantanées mais
+la **dernière variation figée**, répétée à chaque relevé jusqu'à la clôture
+suivante. D'où des situations où les deux disent « ça descend » alors que le
+marché s'est déjà stabilisé.
+
+La pente live corrige ça : le collecteur iMac écrit un snapshot intra-bougie
+toutes les 15s (`mcb_3m_live.csv`), le VPS accumule un historique glissant
+(40 points) et calcule la pente par **régression linéaire** sur les 8 derniers
+points, normalisée en unités VWAP **par minute** — les intervalles n'étant pas
+parfaitement réguliers, une différence brute serait faussée par un point
+aberrant.
+
+Seuils calibrés séparément (distribution mesurée sur 24h) :
+`flatBelow` 2,04 / `strongAbove` 8,90 pour le 15m ;
+`flat3Below` 2,19 / `strong3Above` 8,44 pour le 3m.
+
+⚠ **Ce que la pente ne fait PAS** : elle ne prédit pas la direction du prix.
+VWAP3 à **46,0 %** (moins bien que le hasard), VWAP15 à 56,4 %. Et
+l'hypothèse « pente plate = apogée » ne ressort qu'à 60 %/56 % sur des
+échantillons faibles. C'est pourquoi le remplacement de la stratégie du
+passage à zéro par la pente n'a PAS été implémenté, malgré son attrait
+conceptuel.
+
+Les pentes ne servent donc qu'à : la levée anticipée du blocage pivot (sur le
+VWAP3, 3,6× plus réactif que le 15m), et l'une des deux combinaisons de la
+prédiction de retournement.
 
 ---
 
@@ -523,26 +738,66 @@ plusieurs entrées à contresens.
 
 ## Chantiers ouverts
 
-**Avant tout autre développement** — accumuler plusieurs jours de données sur
-la configuration actuelle. Les décisions du 02/08 reposent sur 24 h ; deux
-valeurs que j'avais posées à l'estime se sont révélées mal calibrées (plancher
-de cadence inutile, seuil de déséquilibre hors d'atteinte).
+**PRIORITÉ 1 — Vérifier que la collecte 15m est réparée.** Voir la section
+Infrastructure. Tant que 10 à 49 % des bougies manquent, le régime
+directionnel travaille sur des données trompeuses. Contrôle :
+`grep -c FATAL mcb_tab2.log` doit cesser d'augmenter, et les horodatages de
+`mcb_15m.csv` doivent s'enchaîner toutes les 15 min sans saut de 30.
 
-Par ordre de priorité :
+**PRIORITÉ 2 — Mesurer l'effet des règles du 11/08.** Beaucoup a été ajouté en
+une journée, presque rien n'a été observé :
+- Les trois voies d'action tiennent-elles leurs 75 % / 62,5 % ?
+- Le régime 15m bloque-t-il trop d'entrées ? (deux filtres cumulés)
+- La prédiction par essoufflement se confirme-t-elle sur plus de 75 cas ?
+Les motifs d'entrée portent `cadence_reversal_double` ou
+`cadence_reversal_confirmed`, ce qui permet de les isoler.
 
-1. **Brancher `displacementPct` en entrée** — le bot est aveugle aux mouvements
-   progressifs. Le 02/08 entre 10:27 et 11:03, le prix a chuté de 0,55 % en
-   35 minutes avec 19 événements de cadence, et aucune position n'a été prise :
-   la chute se faisait en escalier (~0,008 % par bâton), invisible à un seuil qui
-   mesure un seul bâton de 30 secondes.
-2. **Différencier le levier par module** — 50x uniforme est incompatible avec le
-   swing. Attention : sous ~25x, la liquidation devient inatteignable sur ces
-   échelles de temps, donc elle cesse d'être un filet.
+**PRIORITÉ 3 — Calibrer `vwapLiveSlope`.** Le seuil « plat » à 1,0 est
+arbitraire et manifestement mal calé (une valeur observée à 0,9989 tombait
+pile à la limite). Attendre quelques heures de données, puis mesurer la
+distribution comme pour les autres pentes.
+
+Ensuite, par ordre décroissant :
+
+1. **Timeout du collecteur** — 30 min est mal calibré pour un timeframe qui
+   clôture toutes les 15 min. Le réduire à ~16 min diviserait les trous par
+   deux, même si la cause racine n'est pas résolue.
+2. **Différencier le levier par module** — 25x uniforme depuis le 04/08.
+   Attention : sous ~25x, la liquidation devient inatteignable sur ces
+   échelles de temps et cesse d'être un filet.
 3. **Retirer le timeout anti-zombie** une fois l'invalidation validée
 4. **Construire le vrai Shlong** (coexistence long+short)
 5. **Reconnecter le portail de confluence**
 6. **Scalp par les bypass**, avec assez de données pour trancher
 7. **Swing par la vague MCB**
+
+### Conflits et trous restants (inventaire du 11/08)
+
+**Conflit — `vwapTriggerTimeframe` sur 15m.** Le déclencheur de tranche
+« passage à zéro VWAP » utilise le 15m, qui ne change que toutes les 18 min.
+Le passer en 3m le rendrait réellement actif, mais changerait le comportement
+(sorties plus rapides). Laissé en l'état volontairement : le 15m filtre du
+bruit, et ce choix mérite d'être comparé aux données face au pivot MCB.
+
+**Trou — la vigilance ne s'éteint jamais.** Elle reste ouverte indéfiniment
+jusqu'à ce qu'une action se déclenche. Mesure : délai médian de 16 cycles
+(8 min) avant réaction, et un plafond à 7 cycles éliminerait 75 % des
+réactions actuelles. Non corrigé — l'effet serait massif et n'a pas été
+mesuré en termes de rentabilité.
+
+**Trou — pas de filtre de tendance de fond au sens classique.** Le régime de
+la vague 15m joue ce rôle depuis le 11/08, mais sur une échelle courte.
+
+### Ce que le système ne sait PAS voir
+
+Identifié le 11/08 en observant la lecture de Benjamin : il raisonne en
+**comparaisons entre extremums successifs** — higher low, divergence,
+touch-retest. Le code ne fait que des comparaisons à des seuils instantanés.
+
+Un *higher low*, c'est comparer le creux actuel au précédent. Une *divergence*,
+c'est comparer la direction du prix à celle de l'indicateur sur deux points.
+**Aucun de ces deux mécanismes n'existe.** C'est probablement la prochaine
+grande brique, d'une autre nature que tout ce qui a été fait jusqu'ici.
 
 ### Pistes non tranchées
 
