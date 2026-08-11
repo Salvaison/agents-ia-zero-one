@@ -306,10 +306,8 @@ function tick() {
   let vwapRegime = 'neutre';
   if (vwap15TrendDown === false) vwapRegime = 'continuation';
   else if (vwap15NearZero && vwap15TrendDown === true) vwapRegime = 'retournement_possible';
-  let recommendedDirection = null;
-  if (vwapRegime === 'retournement_possible' && strongImbalance) {
-    recommendedDirection = displacementPct > 0 ? 'baissier' : 'haussier'; // sens oppose au desequilibre
-  }
+  // recommendedDirection est desormais calcule PLUS BAS, apres cadenceMultiplier
+  // (11/08/2026) -- la nouvelle logique en a besoin. Voir patch AA.
 
   pruneHistory(now);
 
@@ -329,6 +327,42 @@ function tick() {
     rollingAvg4h = rollingAverage();
     if (cadenceHistory.length >= MIN_SAMPLES_FOR_AVG && rollingAvg4h > 0) {
       cadenceMultiplier = parseFloat((currentCadence / rollingAvg4h).toFixed(2));
+    }
+  }
+
+  /* PREDICTION DE RETOURNEMENT (11/08/2026) -- voir en-tete du patch AA.
+   * Aucun signal isole ne predit un retournement (50-57% contre 51.5% de base).
+   * Deux COMBINAISONS ressortent nettement, toutes deux fondees sur
+   * l'essoufflement : un mouvement fort dont la force motrice s'epuise.
+   *   deplacement fort + cadence essoufflee  -> 70.7%
+   *   deplacement fort + pente VWAP3 plate   -> 79.3%
+   * Le sens predit est l'OPPOSE du deplacement en cours.
+   * Place ICI et non plus haut : a besoin de cadenceMultiplier, calcule juste
+   * au-dessus. OBSERVATION SEULEMENT -- ne pilote aucune decision. */
+  const _recCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.prediction) || {};
+  const recDispMin = _recCfg.displacementMin !== undefined ? _recCfg.displacementMin : 0.084;
+  const recCadenceMax = _recCfg.cadenceExhaustedBelow !== undefined ? _recCfg.cadenceExhaustedBelow : 0.7;
+  const recSlopeFlat = _recCfg.slope3FlatBelow !== undefined ? _recCfg.slope3FlatBelow : 2.19;
+
+  let recommendedDirection = null;
+  let recommendedReason = null;
+  let recommendedConfidence = null;
+
+  if (_recCfg.enabled !== false
+      && displacementPct !== null
+      && Math.abs(displacementPct) >= recDispMin) {
+    const oppose = displacementPct > 0 ? 'baissier' : 'haussier';
+    const cadenceExhausted = cadenceMultiplier !== null && cadenceMultiplier < recCadenceMax;
+    const slopeFlat3 = vwap3Slope !== null && Math.abs(vwap3Slope) < recSlopeFlat;
+
+    if (slopeFlat3) {
+      recommendedDirection = oppose;
+      recommendedReason = `deplacement ${displacementPct}% + pente VWAP3 plate (${vwap3Slope})`;
+      recommendedConfidence = 'forte';
+    } else if (cadenceExhausted) {
+      recommendedDirection = oppose;
+      recommendedReason = `deplacement ${displacementPct}% + cadence essoufflee (x${cadenceMultiplier})`;
+      recommendedConfidence = 'moyenne';
     }
   }
 
@@ -408,6 +442,8 @@ function tick() {
     vwapRegime,
     displacementPct,
     recommendedDirection,
+    recommendedReason,
+    recommendedConfidence,
     vwapSlope,
     vwapSlopeDir,
     vwapSlopeStrength,

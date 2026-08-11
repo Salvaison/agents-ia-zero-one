@@ -362,7 +362,14 @@
         "_note": "Seuils asymetriques (28/07/2026) : la tendance (close vs MA200) determine quel cote est 'dans le sens' (seuil assoupli) et quel cote est 'contre-tendance' (seuil extreme). Observation de Benjamin le 27/07 au soir : la vague MCB 15m etait collee en haut (haussiere) avec BW a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait empeche tout trade dans ce contexte pourtant clairement directionnel."
       }
     },
-    "_archiveNote": "Parametres de l'ancienne loi d'entree (VWAP/LBW/ecart/DBSI), remplacee le 31/07/2026 par la chaine du baton de relais. Verifies non utilises par le code actif le 11/08/2026, archives ici plutot que supprimes pour garder la trace. requiresConfluence=false signifiait que le portail de confluence etait desactive ; il l'est toujours, mais par absence de code, plus par flag."
+    "_archiveNote": "Parametres de l'ancienne loi d'entree (VWAP/LBW/ecart/DBSI), remplacee le 31/07/2026 par la chaine du baton de relais. Verifies non utilises par le code actif le 11/08/2026, archives ici plutot que supprimes pour garder la trace. requiresConfluence=false signifiait que le portail de confluence etait desactive ; il l'est toujours, mais par absence de code, plus par flag.",
+    "prediction": {
+      "enabled": true,
+      "displacementMin": 0.084,
+      "cadenceExhaustedBelow": 0.7,
+      "slope3FlatBelow": 2.19,
+      "_note": "Prediction de retournement (11/08/2026), OBSERVATION SEULEMENT -- ne pilote aucune decision. Fondee sur l'hypothese d'essoufflement de liquidite formulee par Benjamin le 31/07 : un mouvement fort dont la force motrice s'epuise se retourne. Mesure sur 24h, base 51.5% : deplacement fort + cadence essoufflee = 70.7% (n=75) ; deplacement fort + pente VWAP3 plate = 79.3% (n=29). Aucun signal isole ne depasse 57%. Echantillons faibles -- a confirmer sur plusieurs jours avant tout branchement sur les decisions."
+    }
   },
   "signalTtl": {
     "scalp": null,
