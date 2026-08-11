@@ -552,7 +552,7 @@ async function loadAudit() {
         marks.push(r.netMove > 0 ? 'NM+' : 'NM-');
       }
       if (marks.length) {
-        out += '<span style="color:#8fa3bf; font-size:9px; margin-right:4px;">' + marks.join(' ') + '</span>';
+        out += '<span style="color:#8fa3bf; font-size:9px; margin-right:6px;">' + marks.join(' ') + '</span> ';
       }
       const ev = tradeEvents[Math.floor(r.ts / 30000)];
       if (ev) {
@@ -633,9 +633,9 @@ async function loadAudit() {
 
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
-        '<td style="text-align:center;">' + regimeCell(r) + '</td>' +
-        '<td style="text-align:center;">' + pivotCell + '</td>' +
-        '<td style="text-align:center;">' + mcbPivotCell(r) + '</td>' +
+        '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
+        '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
+        '<td style="text-align:center; padding:2px 1px;">' + mcbPivotCell(r) + '</td>' +
         '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
         '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
@@ -658,7 +658,10 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th>Heure (Paris)</th><th>Regime</th><th>PivV3</th><th>PivMCB</th>' +
+      '<th style="width:62px;">UTC+2</th>' +
+      '<th style="width:18px; padding:2px 1px;">Rg</th>' +
+      '<th style="width:18px; padding:2px 1px;">P3</th>' +
+      '<th style="width:26px; padding:2px 1px;">PM</th>' +
       '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>SlopeV3</th><th>x0</th>' +
       '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>SlopeV15</th><th>x0</th>' +
       '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +

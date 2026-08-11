@@ -567,6 +567,8 @@ function tick() {
     vwapLiveSlopeDir,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
+    waveRegime15,
+    waveRegime15Value,
     netMove: netMovePct,
     amplitude: amplitudePct,
     winSec: (trig.windowSeconds !== undefined && trig.windowSeconds !== null) ? parseFloat(trig.windowSeconds) : null,
