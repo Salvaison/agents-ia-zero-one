@@ -114,7 +114,12 @@ function reloadConfigBR() {
 }
 reloadConfigBR();
 const PRICE_HISTORY_SIZE = 10;        // fenetre du desequilibre (10 batons = 5 min)
-const IMBALANCE_THRESHOLD = 0.10;     // % de deplacement de prix -- ~p90/p95 mesure sur 24h
+/* Seuil du DESEQUILIBRE, utilise uniquement par recommendedDirection (en
+ * observation depuis le 01/08, ne pilote aucune decision). A ne pas confondre
+ * avec displacementTrigger.thresholdPct (0.067) qui, lui, ouvre une vigilance
+ * d'entree -- les deux mesurent |displacementPct| mais servent a des choses
+ * differentes. Lisible en config depuis le 11/08/2026, valeur inchangee. */
+const IMBALANCE_THRESHOLD_DEFAULT = 0.10;
 
 function loadHistory() {
   if (!fs.existsSync(HISTORY_PATH)) return [];
@@ -231,7 +236,9 @@ function tick() {
     priceHistory.push(currentPrice);
     if (priceHistory.length > PRICE_HISTORY_SIZE) priceHistory.shift();
   }
-  const strongImbalance = displacementPct !== null && Math.abs(displacementPct) >= IMBALANCE_THRESHOLD;
+  const _imbCfg = (_cfgCache && _cfgCache.tradeSimulator && _cfgCache.tradeSimulator.vwapSlope) || {};
+  const _imbThreshold = _imbCfg.imbalanceThreshold !== undefined ? _imbCfg.imbalanceThreshold : IMBALANCE_THRESHOLD_DEFAULT;
+  const strongImbalance = displacementPct !== null && Math.abs(displacementPct) >= _imbThreshold;
   const vwap15NearZero = !!(vwap15 && vwap15.nearZero);
   const vwap15Cur = (vwap15 && vwap15.current !== undefined) ? parseFloat(vwap15.current) : null;
   const vwap15Prev = (vwap15 && vwap15.previous !== undefined) ? parseFloat(vwap15.previous) : null;

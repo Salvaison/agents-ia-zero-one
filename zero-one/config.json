@@ -284,24 +284,11 @@
     "circuitBreakerTripped": false,
     "_note": "Reactive le 28/07/2026 -- la refonte du systeme de score est terminee (chaine de confluence ET, commit 7abb34f). Historique : desactive le 27/07/2026 le temps de cette refonte, pour eviter des signaux contradictoires (SCALP en REFUS alors que TRADE-SIM affichait ENTRER_LONG au meme instant). PORTAIL DESACTIVE LE 29/07/2026 (decision de Benjamin, requiresConfluence=false) : trade-simulator redevient autonome, pilote uniquement par sa propre loi VWAP/LBW/ecart/DBSI (cascade 3m incluse), pour calibrer ce declencheur en paper trading avant de le recontraindre par la chaine de confluence. Beaucoup de trades rates/inutiles attendus -- c'est le but de cette phase. DBSI RETIRE LE 29/07/2026 (requiresDbsi=false) : calibrer d'abord le passage a zero + seuil LBW tout seuls, avant de reintroduire DBSI comme condition supplementaire. BYPASS CADENCE AJOUTE LE 29/07/2026 (cadenceBypassThreshold=30) : capte les poussees directionnelles fortes que le VWAP ne peut pas voir par construction (observe en audit -- mouvement fort, cadence pic a 53 ticks/s, sans aucun passage a zero VWAP ni 15m ni 3m). Direction determinee par Trigger.priceSens3 (sens lisse sur 3 tranches).",
     "requiresConfluence": false,
-    "requiresDbsi": false,
-    "cadenceBypassThreshold": 30,
     "maxHoldMinutesWithoutTp1": {
       "scalp": 20,
       "day": 90,
       "swing": 240,
       "_note": "GARDE-FOU D'URGENCE ajoute le 30/07/2026 (PNL a -75%, positions zombies tenues des heures sans jamais atteindre TP1 donc jamais protegees par un stop). Ferme la position de force au prix courant au-dela de ce delai sans TP1. Plafonds provisoires, a ajuster en observation. Sera remplace par une vraie logique de sortie (le 'baton de relais', en cours de conception) une fois prete."
-    },
-    "lbwThresholds": {
-      "haussiere": {
-        "shortExtreme": 60,
-        "longSouple": -20
-      },
-      "baissiere": {
-        "longExtreme": -60,
-        "shortSouple": 20
-      },
-      "_note": "Seuils asymetriques (28/07/2026) : la tendance (close vs MA200) determine quel cote est 'dans le sens' (seuil assoupli) et quel cote est 'contre-tendance' (seuil extreme). Observation de Benjamin le 27/07 au soir : la vague MCB 15m etait collee en haut (haussiere) avec BW a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait empeche tout trade dans ce contexte pourtant clairement directionnel."
     },
     "activeModules": [
       "day"
@@ -322,19 +309,8 @@
       "reversalCeilingPct": 0.3,
       "_adaptiveNote": "Seuil adaptatif (03/08/2026) : reversalPct = clamp(3x la baseline de deplacement 5min sur les 2 dernieres heures, entre 0.10% et 0.30%). Corrige l'incoherence relevee par Benjamin -- cadenceMult et NMx sont deja proportionnels a la volatilite, reversalPct etait le seul seuil fixe. Calibre sur UN episode de forte volatilite (03/08 16h20-17h50, 6 pertes consecutives -51.70% avec l'ancien seuil fixe) -- a reobserver sur d'autres episodes avant de considerer ces valeurs comme definitives. reversalPct (valeur fixe) reste le fallback si adaptiveThreshold=false."
     },
-    "blackoutWindows": [
-      {
-        "from": "2026-08-04T08:45:00Z",
-        "to": "2026-08-04T11:15:00Z",
-        "label": "maintenance DigitalOcean NYC1 phase 2"
-      },
-      {
-        "from": "2026-08-05T08:45:00Z",
-        "to": "2026-08-05T11:15:00Z",
-        "label": "maintenance DigitalOcean NYC1 phase 3"
-      }
-    ],
-    "_blackoutNote": "Fenetres ISO 8601 UTC. Le 3 aout n'est PAS blackoute : Benjamin est present ce jour-la et observe la reconnexion WebSocket en conditions reelles (le code de reconnexion de price-stream.js n'a jamais tourne jusqu'ici). Les 4 et 5 sont blackoutes car il est en randonnee. Vider la liste pour desactiver le mecanisme.",
+    "blackoutWindows": [],
+    "_blackoutNote": "Fenetres ISO 8601 UTC. Liste VIDEE le 11/08/2026 : les fenetres des 4 et 5 aout (maintenance DigitalOcean, absence de Benjamin) sont depassees. Le mecanisme reste en place et fonctionnel -- reremplir la liste pour une prochaine periode sans surveillance.",
     "violentMove": {
       "enabled": true,
       "thresholdPct": 0.15,
@@ -346,7 +322,8 @@
       "enabled": true,
       "maxAgePivotCandles": 1,
       "_note": "Filtre pivot MCB (04/08/2026, decision Benjamin) : bloque toute entree a l'encontre du dernier point de retournement confirme de la vague MCB (blue_wave), s'il a moins de maxAgePivotCandles bougies 3m. Point vert (creux) = bloque SHORT, point rouge (pic) = bloque LONG. Sert aussi de signal de sortie sur position ouverte. MAJ 10/08/2026 : earlyReleaseOnSlope leve le blocage AVANT l'echeance du minuteur si la pente du VWAP s'inverse contre le sens du pivot -- ne peut que raccourcir le blocage. Note : remplacer entierement le minuteur par la pente aurait ete contre-productif, le VWAP15 ne changeant de valeur qu'une fois toutes les 7.7 min en moyenne (bougies 15m) contre 3 min pour le minuteur actuel. Desactiver le filtre entier : enabled=false.",
-      "earlyReleaseOnSlope": true
+      "earlyReleaseOnSlope": true,
+      "_granulariteNote": "ATTENTION granularite (11/08/2026) : wavePivotAgeCycles compte en BOUGIES 3m, pas en cycles de baton (30s). La valeur reste identique pendant 6 cycles avant d'incrementer. Avec maxAgePivotCandles=1, la fenetre reelle de blocage varie donc entre 3 et 6 minutes selon le moment ou le pivot est detecte dans la bougie. Corriger demanderait de compter en cycles de 30s, ce qui changerait le comportement -- laisse en l'etat, documente."
     },
     "displacementTrigger": {
       "enabled": true,
@@ -359,8 +336,25 @@
       "strongAbove": 8.9,
       "_note": "Seuils de classification de la pente VWAP15, recalibres le 10/08/2026 sur la distribution reelle mesuree (24h, 187 changements de valeur) : p10=0.85 p25=2.04 p50=4.81 p75=8.90 p90=12.44 p95=17.10 max=36.78. Les valeurs precedentes (0.5/3.0) etaient posees a l'estime et classaient 64% des cas en 'fort'. MAJ 11/08/2026 : seuils SEPARES par timeframe. VWAP3 (flat3Below/strong3Above) = 2.19/8.44, VWAP15 (flatBelow/strongAbove) = 1.77/7.35 environ. Mesure retroactive 24h : le VWAP3 change toutes les 5.0 min contre 18.2 min pour le VWAP15, soit 3.6x plus reactif -- c'est pourquoi la levee anticipee du blocage pivot bascule sur vwap3SlopeDir.",
       "flat3Below": 2.19,
-      "strong3Above": 8.44
-    }
+      "strong3Above": 8.44,
+      "imbalanceThreshold": 0.1
+    },
+    "_archive": {
+      "requiresDbsi": false,
+      "cadenceBypassThreshold": 30,
+      "lbwThresholds": {
+        "haussiere": {
+          "shortExtreme": 60,
+          "longSouple": -20
+        },
+        "baissiere": {
+          "longExtreme": -60,
+          "shortSouple": 20
+        },
+        "_note": "Seuils asymetriques (28/07/2026) : la tendance (close vs MA200) determine quel cote est 'dans le sens' (seuil assoupli) et quel cote est 'contre-tendance' (seuil extreme). Observation de Benjamin le 27/07 au soir : la vague MCB 15m etait collee en haut (haussiere) avec BW a peine sous zero -- l'ancien seuil symetrique +/-60 sur LBW aurait empeche tout trade dans ce contexte pourtant clairement directionnel."
+      }
+    },
+    "_archiveNote": "Parametres de l'ancienne loi d'entree (VWAP/LBW/ecart/DBSI), remplacee le 31/07/2026 par la chaine du baton de relais. Verifies non utilises par le code actif le 11/08/2026, archives ici plutot que supprimes pour garder la trace. requiresConfluence=false signifiait que le portail de confluence etait desactive ; il l'est toujours, mais par absence de code, plus par flag."
   },
   "signalTtl": {
     "scalp": null,
