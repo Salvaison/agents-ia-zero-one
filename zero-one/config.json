@@ -307,7 +307,12 @@
       "reversalMultiplier": 3,
       "reversalFloorPct": 0.1,
       "reversalCeilingPct": 0.3,
-      "_adaptiveNote": "Seuil adaptatif (03/08/2026) : reversalPct = clamp(3x la baseline de deplacement 5min sur les 2 dernieres heures, entre 0.10% et 0.30%). Corrige l'incoherence relevee par Benjamin -- cadenceMult et NMx sont deja proportionnels a la volatilite, reversalPct etait le seul seuil fixe. Calibre sur UN episode de forte volatilite (03/08 16h20-17h50, 6 pertes consecutives -51.70% avec l'ancien seuil fixe) -- a reobserver sur d'autres episodes avant de considerer ces valeurs comme definitives. reversalPct (valeur fixe) reste le fallback si adaptiveThreshold=false."
+      "_adaptiveNote": "Seuil adaptatif (03/08/2026) : reversalPct = clamp(3x la baseline de deplacement 5min sur les 2 dernieres heures, entre 0.10% et 0.30%). Corrige l'incoherence relevee par Benjamin -- cadenceMult et NMx sont deja proportionnels a la volatilite, reversalPct etait le seul seuil fixe. Calibre sur UN episode de forte volatilite (03/08 16h20-17h50, 6 pertes consecutives -51.70% avec l'ancien seuil fixe) -- a reobserver sur d'autres episodes avant de considerer ces valeurs comme definitives. reversalPct (valeur fixe) reste le fallback si adaptiveThreshold=false.",
+      "adaptiveStall": true,
+      "stallMultiplier": 1.0,
+      "stallFloorPct": 0.02,
+      "stallCeilingPct": 0.08,
+      "_stallNote": "stallPct ADAPTATIF depuis le 11/08/2026 (trou 3 de l'inventaire) : il vaut stallMultiplier x la baseline de deplacement 5min mesuree sur les 2 dernieres heures (meme buffer que reversalPct), borne entre stallFloorPct et stallCeilingPct. Multiplicateur 1.0 contre 3.0 pour reversalPct : le flux eteint detecte l'ABSENCE de mouvement, il doit se declencher autour du niveau ordinaire du moment, pas trois fois au-dessus. Bornes 0.020-0.080 choisies pour encadrer l'ancienne valeur fixe (0.048) et rester dans le meme ordre de grandeur en regime normal. Revenir au fixe : adaptiveStall=false."
     },
     "blackoutWindows": [],
     "_blackoutNote": "Fenetres ISO 8601 UTC. Liste VIDEE le 11/08/2026 : les fenetres des 4 et 5 aout (maintenance DigitalOcean, absence de Benjamin) sont depassees. Le mecanisme reste en place et fonctionnel -- reremplir la liste pour une prochaine periode sans surveillance.",

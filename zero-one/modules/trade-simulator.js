@@ -350,7 +350,17 @@ function checkInvalidation(trade, batonState, config, price) {
   const reversalPct = adaptive
     ? computeAdaptiveThreshold(priceHistoryLong, multiplier, floor, ceiling)
     : (cfg.reversalPct !== undefined ? cfg.reversalPct : 0.06);
-  const stallPct = cfg.stallPct !== undefined ? cfg.stallPct : 0.023;
+  // stallPct ADAPTATIF (11/08/2026) -- meme logique que reversalPct, qui l'est
+  // depuis le 03/08. Multiplicateur plus faible (1.0 vs 3.0) : le flux eteint
+  // detecte l'ABSENCE de mouvement, il doit donc se declencher autour du
+  // niveau ordinaire du moment, pas trois fois au-dessus.
+  const adaptiveStall = cfg.adaptiveStall !== false;
+  const stallFloor = cfg.stallFloorPct !== undefined ? cfg.stallFloorPct : 0.020;
+  const stallCeiling = cfg.stallCeilingPct !== undefined ? cfg.stallCeilingPct : 0.080;
+  const stallMultiplier = cfg.stallMultiplier !== undefined ? cfg.stallMultiplier : 1.0;
+  const stallPct = adaptiveStall
+    ? computeAdaptiveThreshold(priceHistoryLong, stallMultiplier, stallFloor, stallCeiling)
+    : (cfg.stallPct !== undefined ? cfg.stallPct : 0.023);
   const stallCycles = cfg.stallCycles !== undefined ? cfg.stallCycles : 20;
   const graceCycles = cfg.graceCycles !== undefined ? cfg.graceCycles : 2;
   const reversalConfirmCycles = cfg.reversalConfirmCycles !== undefined ? cfg.reversalConfirmCycles : 2;
