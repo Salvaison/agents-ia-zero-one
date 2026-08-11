@@ -70,6 +70,11 @@ function loadLiveHistory() {
 
 let liveHistory = loadLiveHistory();
 
+/* Suivi de la premiere detection de chaque pivot, pour mesurer son age en
+ * cycles reels de 30s plutot qu'en bougies 3m (11/08/2026). */
+let _lastPivotKey = null;
+let _lastPivotSeenAt = null;
+
 /* Lit le snapshot live et retourne { ts, vwap } ou null. Le fichier n'a qu'une
  * ligne de donnees (plus l'en-tete). */
 function readLiveSnapshot() {
@@ -224,6 +229,23 @@ function tick() {
   // Pivots de vague MCB (04/08/2026, observation) -- sur 3m, coherent avec
   // le rythme du baton (cycle 30s). Ne pilote aucune decision a ce stade.
   const wavePivot = analyzeWavePivot('3m');
+  /* Age en CYCLES DE BATON (30s) et non en bougies 3m (11/08/2026) : mesure
+   * du 11/08 -- avec l'ancien comptage en bougies, ZERO candidat a l'entree
+   * sur 57 tombait dans la fenetre de validite. On horodate la premiere
+   * detection de chaque pivot pour obtenir un age exact et previsible. */
+  if (wavePivot && wavePivot.type) {
+    const pivKey = wavePivot.type + ':' + wavePivot.value;
+    if (_lastPivotKey !== pivKey) {
+      _lastPivotKey = pivKey;
+      _lastPivotSeenAt = now;
+    }
+  } else {
+    _lastPivotKey = null;
+    _lastPivotSeenAt = null;
+  }
+  const wavePivotAgeRealCycles = _lastPivotSeenAt !== null
+    ? Math.floor((now - _lastPivotSeenAt) / 30000)
+    : null;
   // Deplacement de prix REEL sur la fenetre (corrige le 02/08/2026 -- voir
   // en-tete du patch : l'ancienne somme de netMove chevauchants sous-estimait
   // l'amplitude d'un facteur ~2 et s'inversait parfois de signe).
@@ -399,6 +421,7 @@ function tick() {
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
+    wavePivotAgeRealCycles,
   });
 
   // ===== Historique 24h pour le dashboard web (31/07/2026) ==============

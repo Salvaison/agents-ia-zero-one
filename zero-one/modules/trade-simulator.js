@@ -234,8 +234,14 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
   // (pic confirme) = signal baissier, bloque les LONG. Doit etre recent
   // (maxAgePivotCandles) pour rester valable.
   const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
-  if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
-    const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
+  // Age en CYCLES REELS de 30s (11/08/2026) -- l'ancien comptage en bougies 3m
+  // rendait le filtre d'entree inoperant (0 blocage sur 57 candidats mesures).
+  const _pivAge = batonState.wavePivotAgeRealCycles !== undefined && batonState.wavePivotAgeRealCycles !== null
+    ? batonState.wavePivotAgeRealCycles
+    : batonState.wavePivotAgeCycles;
+  if (pivotCfg.enabled !== false && batonState.wavePivotType && _pivAge !== null && _pivAge !== undefined) {
+    const maxAge = pivotCfg.maxAgePivotCycles !== undefined ? pivotCfg.maxAgePivotCycles
+      : (pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 6);
     // LEVEE ANTICIPEE (10/08/2026) : le blocage saute avant l'echeance du
     // minuteur si la pente du VWAP s'est inversee contre le sens du pivot --
     // le marche a repris la main dans l'autre sens, le pivot est caduc.
@@ -245,7 +251,7 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
       && batonState.vwap3SlopeDir
       && batonState.vwap3SlopeDir !== 'plat'
       && batonState.vwap3SlopeDir !== (pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
-    if (batonState.wavePivotAgeCycles <= maxAge && !slopeOpposes) {
+    if (_pivAge <= maxAge && !slopeOpposes) {
       const pivotDir = batonState.wavePivotType === 'creux' ? 'long' : 'short';
       if (direction !== pivotDir) {
         return null; // contresens d'un point de retournement recent -- entree refusee
@@ -363,8 +369,14 @@ function checkInvalidation(trade, batonState, config, price) {
   // supplementaire -- le point est deja confirme sur sa propre bougie 3m
   // (cf patch M). Meme flag de config que le filtre d'entree (patch N).
   const pivotCfg = (config && config.tradeSimulator && config.tradeSimulator.wavePivotFilter) || {};
-  if (pivotCfg.enabled !== false && batonState.wavePivotType && batonState.wavePivotAgeCycles !== null) {
-    const maxAge = pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 3;
+  // Age en CYCLES REELS de 30s (11/08/2026) -- l'ancien comptage en bougies 3m
+  // rendait le filtre d'entree inoperant (0 blocage sur 57 candidats mesures).
+  const _pivAge = batonState.wavePivotAgeRealCycles !== undefined && batonState.wavePivotAgeRealCycles !== null
+    ? batonState.wavePivotAgeRealCycles
+    : batonState.wavePivotAgeCycles;
+  if (pivotCfg.enabled !== false && batonState.wavePivotType && _pivAge !== null && _pivAge !== undefined) {
+    const maxAge = pivotCfg.maxAgePivotCycles !== undefined ? pivotCfg.maxAgePivotCycles
+      : (pivotCfg.maxAgePivotCandles !== undefined ? pivotCfg.maxAgePivotCandles : 6);
     // Meme levee anticipee qu'a l'entree (10/08/2026) : un pivot dont la
     // pente VWAP s'est inversee ne doit plus provoquer de sortie.
     const _pivotDirEarly = batonState.wavePivotType === 'creux' ? 'haussier' : 'baissier';
@@ -372,7 +384,7 @@ function checkInvalidation(trade, batonState, config, price) {
       && batonState.vwap3SlopeDir
       && batonState.vwap3SlopeDir !== 'plat'
       && batonState.vwap3SlopeDir !== (_pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
-    if (batonState.wavePivotAgeCycles <= maxAge && !_slopeOpposes) {
+    if (_pivAge <= maxAge && !_slopeOpposes) {
       const opposedByPeak = trade.direction === 'long' && batonState.wavePivotType === 'pic';
       const opposedByTrough = trade.direction === 'short' && batonState.wavePivotType === 'creux';
       if (opposedByPeak || opposedByTrough) {
