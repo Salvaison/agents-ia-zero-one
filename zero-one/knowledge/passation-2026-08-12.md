@@ -369,6 +369,29 @@ C'est la cause racine, indépendante de l'exchange. Diagnostic établi :
 **Correctif immédiat possible** (5 min, sans risque) : réduire le timeout de
 30 à ~16 min. Diviserait les trous par deux sans résoudre la cause.
 
+**DIAGNOSTIC AFFINÉ le 12/08 à 12h15** — le plus précis obtenu :
+
+TradingView **remplace son WebSocket toutes les 4 à 11 minutes**. Exemple
+relevé dans `mcb_tab2.log` :
+
+    10:00:11   Retroactive: 15m already up to date
+    10:04:40   WS close [.12149] → WS open [.12844]
+    10:15:57   WS open  [.12858] → WS close [.12844]
+
+La clôture de 10:00 UTC aurait dû être détectée vers 10:00:02, juste avant le
+remplacement de 10:04. **Elle n'apparaît pas dans le CSV.**
+
+Le collecteur reçoit pourtant des frames (le garde-fou ne s'est pas déclenché,
+compteur `FATAL` stable à 18). Le nouveau socket EST enregistré dans `wsMap` —
+le code est correct sur ce point. Mais TradingView n'y réémet apparemment pas
+immédiatement les données de série : le temps que l'abonnement se rétablisse,
+la clôture passe.
+
+**Ce que la reconstruction doit traiter** : détecter qu'un nouveau socket a
+remplacé l'ancien et **forcer une resynchronisation** (recharger la page, ou
+re-souscrire aux séries) plutôt que d'attendre passivement que les données
+reviennent.
+
 **Ce qu'il faut conserver de l'actuel** :
 - Le garde-fou du 15/07 : ne PAS mesurer le silence sur « temps depuis la
   dernière frame » — les heartbeats TradingView le rafraîchissent en
