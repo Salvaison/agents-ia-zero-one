@@ -1,27 +1,61 @@
 /**
- * price-stream.js
- * ----------------
- * Connexion WebSocket MEXC Futures — prix BTC/USDT en temps réel, tick par tick.
+ * price-stream.js — Bybit V5
+ * ---------------------------
+ * Connexion WebSocket Bybit V5 (contrats lineaires USDT) — prix BTCUSDT en
+ * temps reel, tick par tick.
  *
- * Canal public "push.deal" : chaque transaction exécutée (le plus granulaire).
- * Aucune authentification requise — les clés API et l'erreur 602 (signature)
- * ne concernent que les endpoints privés (comptes/ordres), pas le market data.
+ * REECRIT LE 12/08/2026 : bascule MEXC -> Bybit. Motif : depuis le passage a
+ * MEXC le 30/07, la collecte 15m perdait 10 a 49% des bougies (trous
+ * systematiques de 30 min, 15 morts du collecteur en une nuit). Quatre
+ * hypotheses ont ete explorees et ecartees (doublons de processus, popup
+ * Chrome, WebSocket non rebascule, watchdog). Decision de Benjamin : basculer
+ * TOUTE la chaine sur Bybit, exchange plus etabli, pour retrouver une collecte
+ * fiable -- tout le reste en depend.
  *
- * Usage dans cerveau-central.js :
+ * Canal public "publicTrade" : chaque transaction executee (le plus granulaire),
+ * equivalent du "push.deal" de MEXC. Aucune authentification requise pour le
+ * market data public.
+ *
+ * PROTOCOLE (verifie sur la doc officielle le 12/08/2026) :
+ *   URL          wss://stream.bybit.com/v5/public/linear
+ *   Souscription {"op":"subscribe","args":["publicTrade.BTCUSDT","tickers.BTCUSDT"]}
+ *   Heartbeat    {"op":"ping"} — recommande toutes les 20s
+ *   Timeout      la connexion est coupee apres 10 min sans ping-pong ni data
+ *   Trade        {"topic":"publicTrade.BTCUSDT","ts":...,"data":[{...}]}
+ *
+ * ATTENTION — DIFFERENCE DE FORMAT AVEC MEXC :
+ * Bybit envoie le sens en TEXTE ("Buy"/"Sell") la ou MEXC envoyait un ENTIER
+ * (1/2). Or volume-analyzer.js fait `if (t.side === 1) buyVol += v`. Le sens
+ * est donc converti ici en 1/2 pour preserver la compatibilite de toute la
+ * chaine aval — ne PAS retirer cette conversion sans verifier les consommateurs.
+ *
+ * Usage (inchange, l'interface publique est identique) :
  *   const priceStream = require('./price-stream');
  *   priceStream.start();
  *   priceStream.on('price', (tick) => { ... });
  *   const last = priceStream.getLastPrice();
  */
+
 const WebSocket = require('ws');
 const EventEmitter = require('events');
 
-const WS_URL = 'wss://contract.mexc.com/edge';
-const SYMBOL = 'BTC_USDT';
-const PING_INTERVAL_MS = 15000; /* doit rester < 60s (limite serveur) */
+const WS_URL = 'wss://stream.bybit.com/v5/public/linear';
+const SYMBOL = 'BTCUSDT';
+
+/* 20s recommande par la doc Bybit. La connexion est coupee apres 10 min sans
+ * ping-pong NI data — large marge, mais un marche calme peut etre silencieux. */
+const PING_INTERVAL_MS = 20000;
 const RECONNECT_DELAY_MS = 3000;
-const DATA_STALE_MS = 60000; /* si aucun message reçu depuis ce délai, la connexion est jugée zombie */
+
+/* Connexion "zombie" : ws.readyState reste OPEN mais plus rien n'arrive.
+ * Sans ce controle, une connexion figee silencieusement ne serait jamais
+ * rechargee. Mecanisme conserve du module MEXC — il avait fait ses preuves. */
+const DATA_STALE_MS = 60000;
 const STALE_CHECK_INTERVAL_MS = 15000;
+
+/* Conversion du sens Bybit -> format MEXC attendu en aval (voir en-tete). */
+const SIDE_BUY = 1;
+const SIDE_SELL = 2;
 
 class PriceStream extends EventEmitter {
   constructor() {
@@ -31,12 +65,13 @@ class PriceStream extends EventEmitter {
     this.staleCheckTimer = null;
     this.lastPrice = null;
     this.lastUpdateTs = null;
-    this.lastMessageReceivedAt = null; /* horloge murale — mise à jour sur TOUT message reçu, pas juste à l'ouverture */
+    /* horloge murale — mise a jour sur TOUT message recu, pas juste a l'ouverture */
+    this.lastMessageReceivedAt = null;
     this._shouldRun = false;
   }
 
   start() {
-    if (this._shouldRun) return; /* déjà démarré */
+    if (this._shouldRun) return; /* deja demarre */
     this._shouldRun = true;
     this._connect();
   }
@@ -53,12 +88,13 @@ class PriceStream extends EventEmitter {
   }
 
   _connect() {
-    console.log('[price-stream] Connexion à', WS_URL);
+    console.log('[price-stream] Connexion a', WS_URL);
     this.ws = new WebSocket(WS_URL);
-    this.lastMessageReceivedAt = Date.now(); /* évite un faux positif immédiat avant le premier message */
+    /* evite un faux positif immediat avant le premier message */
+    this.lastMessageReceivedAt = Date.now();
 
     this.ws.on('open', () => {
-      console.log('[price-stream] Connecté. Abonnement à push.deal pour', SYMBOL);
+      console.log('[price-stream] Connecte. Abonnement a publicTrade pour', SYMBOL);
       this._subscribe();
       this._startPing();
       this._startStaleCheck();
@@ -71,7 +107,7 @@ class PriceStream extends EventEmitter {
     });
 
     this.ws.on('close', () => {
-      console.warn('[price-stream] Connexion fermée.');
+      console.warn('[price-stream] Connexion fermee.');
       clearInterval(this.pingTimer);
       clearInterval(this.staleCheckTimer);
       this.emit('disconnected');
@@ -84,36 +120,39 @@ class PriceStream extends EventEmitter {
     });
   }
 
-  /* Détecte une connexion "zombie" : ws.readyState reste OPEN mais plus aucun
-   * message n'arrive (ni tick, ni pong). Sans ce contrôle, une connexion figée
-   * silencieusement ne serait jamais rechargée — elle reste "ouverte" indéfiniment. */
+  /* Detecte une connexion "zombie" : ws.readyState reste OPEN mais plus aucun
+   * message n'arrive (ni tick, ni pong). Sans ce controle, une connexion figee
+   * silencieusement ne serait jamais rechargee — elle reste "ouverte"
+   * indefiniment. terminate() coupe immediatement, sans attendre le handshake. */
   _startStaleCheck() {
     clearInterval(this.staleCheckTimer);
     this.staleCheckTimer = setInterval(() => {
       if (!this.lastMessageReceivedAt) return;
       const silentMs = Date.now() - this.lastMessageReceivedAt;
       if (silentMs > DATA_STALE_MS) {
-        console.warn(`[price-stream] Aucune donnée reçue depuis ${Math.round(silentMs / 1000)}s — connexion jugée zombie, fermeture forcée.`);
+        console.warn(`[price-stream] Aucune donnee recue depuis ${Math.round(silentMs / 1000)}s — connexion jugee zombie, fermeture forcee.`);
         clearInterval(this.staleCheckTimer);
         clearInterval(this.pingTimer);
-        try { this.ws.terminate(); } catch (e) {} /* terminate() coupe immédiatement, sans attendre le handshake de close */
+        try { this.ws.terminate(); } catch (e) {}
         this._scheduleReconnect();
       }
     }, STALE_CHECK_INTERVAL_MS);
   }
 
   _subscribe() {
-    /* Tick par tick (chaque transaction exécutée) */
-    this.ws.send(JSON.stringify({ method: 'sub.deal', param: { symbol: SYMBOL } }));
-    /* Optionnel : ticker agrégé (dernier prix + stats 24h), utile en complément */
-    this.ws.send(JSON.stringify({ method: 'sub.ticker', param: { symbol: SYMBOL } }));
+    /* Une seule requete pour les deux topics — Bybit l'accepte et c'est plus
+     * economique en connexions (limite : 500 connexions par 5 min et par IP). */
+    this.ws.send(JSON.stringify({
+      op: 'subscribe',
+      args: [`publicTrade.${SYMBOL}`, `tickers.${SYMBOL}`],
+    }));
   }
 
   _startPing() {
     clearInterval(this.pingTimer);
     this.pingTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ method: 'ping' }));
+        this.ws.send(JSON.stringify({ op: 'ping' }));
       }
     }, PING_INTERVAL_MS);
   }
@@ -128,29 +167,40 @@ class PriceStream extends EventEmitter {
     try {
       msg = JSON.parse(raw.toString());
     } catch (e) {
-      return; /* frame non-JSON, ignorée */
+      return; /* frame non-JSON, ignoree */
     }
 
-    /* Réponse au ping serveur / pong */
-    if (msg.channel === 'pong' || msg.method === 'pong') return;
+    /* Reponse au ping : {"success":true,"ret_msg":"pong","op":"ping"} */
+    if (msg.op === 'ping' || msg.op === 'pong') return;
 
-    /* Confirmation de souscription */
-    if (msg.channel === 'rs.sub.deal' || msg.channel === 'rs.sub.ticker') {
-      console.log('[price-stream] Souscription confirmée:', msg.channel);
+    /* Confirmation de souscription : {"success":true,"op":"subscribe",...}
+     * Un echec est signale explicitement — sans ce log, une souscription
+     * refusee rendrait le bot aveugle sans qu'on le voie. */
+    if (msg.op === 'subscribe') {
+      if (msg.success) {
+        console.log('[price-stream] Souscription confirmee (conn_id:', msg.conn_id, ')');
+      } else {
+        console.error('[price-stream] ECHEC de souscription:', msg.ret_msg);
+      }
       return;
     }
 
-    /* Flux tick-par-tick (transactions) — msg.data est un TABLEAU de deals, */
-    /* parfois plusieurs transactions dans le même message push */
-    if (msg.channel === 'push.deal' && msg.data) {
-      const deals = Array.isArray(msg.data) ? msg.data : [msg.data];
-      for (const d of deals) {
+    if (!msg.topic) return;
+
+    /* Flux tick-par-tick. data est TOUJOURS un tableau chez Bybit, parfois
+     * plusieurs transactions dans le meme message. */
+    if (msg.topic.startsWith('publicTrade.') && Array.isArray(msg.data)) {
+      for (const d of msg.data) {
+        const price = parseFloat(d.p);
+        if (!isFinite(price)) continue;
         const tick = {
-          symbol: msg.symbol || SYMBOL,
-          price: parseFloat(d.p),
+          symbol: d.s || SYMBOL,
+          price,
           volume: d.v,
-          side: d.T, /* 1 = achat, 2 = vente */
-          ts: d.t || msg.ts,
+          /* "Buy"/"Sell" -> 1/2 : format attendu par volume-analyzer.js.
+           * Voir l'avertissement en en-tete de fichier. */
+          side: d.S === 'Buy' ? SIDE_BUY : (d.S === 'Sell' ? SIDE_SELL : null),
+          ts: d.T || msg.ts,
         };
         this.lastPrice = tick.price;
         this.lastUpdateTs = tick.ts;
@@ -159,11 +209,14 @@ class PriceStream extends EventEmitter {
       return;
     }
 
-    /* Flux ticker agrégé (fallback / stats) */
-    if (msg.channel === 'push.ticker' && msg.data) {
+    /* Flux ticker agrege (fallback / stats). Bybit envoie un "snapshot"
+     * complet puis des "delta" partiels : lastPrice peut etre absent d'un
+     * delta, on ne l'emet que s'il est present. */
+    if (msg.topic.startsWith('tickers.') && msg.data) {
       const d = msg.data;
+      if (d.lastPrice === undefined) return;
       this.emit('ticker', {
-        symbol: msg.symbol || SYMBOL,
+        symbol: d.symbol || SYMBOL,
         lastPrice: parseFloat(d.lastPrice),
         fundingRate: d.fundingRate,
         ts: msg.ts,

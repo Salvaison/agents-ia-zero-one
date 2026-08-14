@@ -335,7 +335,9 @@
       "_granulariteNote": "CORRIGE le 11/08/2026 : l'age du pivot est desormais compte en CYCLES DE BATON (30s) via wavePivotAgeRealCycles, et non plus en bougies 3m. maxAgePivotCycles=6 = 3 minutes exactement, previsible quel que soit le moment de detection dans la bougie. Motif : avec l'ancien comptage et maxAgePivotCandles=1, le filtre d'ENTREE etait de fait inoperant -- mesure sur 24h : 0 blocage sur 57 candidats a l'entree. Il restait actif en SORTIE (les positions ouvertes sont testees a chaque cycle, donc bien plus d'occasions de tomber dans la fenetre etroite). maxAgePivotCandles est conserve en fallback si le nouveau champ est absent.",
       "maxAgePivotCycles": 6,
       "blockEntry": false,
-      "_blockEntryNote": "Blocage d'ENTREE desactive le 11/08/2026 (decision Benjamin). Le filtre pivot reste ACTIF EN SORTIE, ou il a fait ses preuves (54 invalidations sur la semaine, dont des sorties gagnantes). Motif de la desactivation a l'entree : le probleme du systeme est le MANQUE d'entrees ; les signaux de pente (VWAP15/VWAP3/live) et displacementPct sont plus riches et plus frais qu'un pivot binaire mis a jour a la cloture d'une bougie 3m. Reactiver : blockEntry=true."
+      "_blockEntryNote": "Blocage d'ENTREE desactive le 11/08/2026 (decision Benjamin). Le filtre pivot reste ACTIF EN SORTIE, ou il a fait ses preuves (54 invalidations sur la semaine, dont des sorties gagnantes). Motif de la desactivation a l'entree : le probleme du systeme est le MANQUE d'entrees ; les signaux de pente (VWAP15/VWAP3/live) et displacementPct sont plus riches et plus frais qu'un pivot binaire mis a jour a la cloture d'une bougie 3m. Reactiver : blockEntry=true.",
+      "minPivotValue": 50,
+      "_minPivotValueNote": "Remonte de 35 a 50 le 14/08/2026 (weekend) -- diagnostic sur 27 cas (08-08 au 08-14): seuil 35 win rate 12.5% pnl -21.97%, seuil 50 seul positif (+0.48%, n=6). A reevaluer si la population de trades change significativement (ex: reactivation de flux inverse, migration OKX 10x) -- voir memoire Claude #11."
     },
     "displacementTrigger": {
       "enabled": true,

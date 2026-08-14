@@ -433,7 +433,15 @@ function checkInvalidation(trade, batonState, config, price) {
       && batonState.vwap3SlopeDir
       && batonState.vwap3SlopeDir !== 'plat'
       && batonState.vwap3SlopeDir !== (_pivotDirEarly === 'haussier' ? 'montant' : 'descendant');
-    if (_pivAge <= maxAge && !_slopeOpposes) {
+    // FILTRE DE MAGNITUDE (13/08/2026) -- diagnostic sur 39 occurrences,
+    // decoupage par tercile : pivots faibles (1.1-27.9) et moyens
+    // (28.3-49.3) nettement perdants (win% 23.1 et 15.4), pivots forts
+    // (49.5-78.3) a l'equilibre (win% 30.8). Aucun filtre n'existait avant
+    // ce patch. Seuil a 35 par defaut, ajustable via config.json
+    // (config.tradeSimulator.wavePivotFilter.minPivotValue).
+    const minPivotValue = pivotCfg.minPivotValue !== undefined ? pivotCfg.minPivotValue : 35;
+    const pivotMagnitudeOk = Math.abs(batonState.wavePivotValue) >= minPivotValue;
+    if (_pivAge <= maxAge && !_slopeOpposes && pivotMagnitudeOk) {
       const opposedByPeak = trade.direction === 'long' && batonState.wavePivotType === 'pic';
       const opposedByTrough = trade.direction === 'short' && batonState.wavePivotType === 'creux';
       if (opposedByPeak || opposedByTrough) {
@@ -448,8 +456,17 @@ function checkInvalidation(trade, batonState, config, price) {
   // CONFIRME sur plusieurs cycles consecutifs (02/08/2026 : sans confirmation,
   // 6 invalidations sur 7 etaient prematurees -- le zigzag du marche suffisait
   // a franchir le seuil un cycle isole).
+  //
+  // DESACTIVE PAR DEFAUT (13/08/2026) -- diagnostic sur 10 occurrences :
+  // reversalCount valait systematiquement 2 (le minimum), la confirmation
+  // ne filtrait donc jamais rien en pratique. 0% de trades gagnants,
+  // -58.91% cumule. A 25x, un simple 0.10-0.40% de mouvement de prix
+  // devient 2.5% a 12% de perte de compte. Recalibrage prevu apres la
+  // migration au levier 10x (OKX) -- reactivable via config.json
+  // (config.tradeSimulator.invalidation.reversalEnabled = true).
+  const reversalEnabled = cfg.reversalEnabled === true;
   const adverse = trade.direction === 'long' ? -disp : disp;
-  if (adverse >= reversalPct) {
+  if (reversalEnabled && adverse >= reversalPct) {
     trade.reversalCount = (trade.reversalCount || 0) + 1;
     if (trade.reversalCount >= reversalConfirmCycles
         && (exitInProfit || favorPct === null || favorPct <= 0)) {
