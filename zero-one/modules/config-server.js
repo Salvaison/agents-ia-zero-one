@@ -565,6 +565,22 @@ async function loadAudit() {
       return out;
     }
 
+    /* Cellule PRIX avec carre de pivot (14/08/2026) : le carre marque
+     * l'extreme de prix qui a PRECEDE le point MCB, pas la confirmation
+     * elle-meme. L'infobulle donne le decalage reel en minutes, pour
+     * verifier sur donnees reelles la fourchette "3 a 5 bougies". */
+    function priceCell(r) {
+      const px = (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
+      if (!r.mcbExtreme) return px;
+      const col = r.mcbExtreme === 'creux' ? '#2ecc71' : '#e74c3c';
+      const lagMin = ((r.mcbExtremeLagRows || 0) * 30 / 60).toFixed(1);
+      const tip = (r.mcbExtreme === 'creux' ? 'Plus bas' : 'Plus haut') +
+                  ' ' + (r.mcbExtremeVal !== null && r.mcbExtremeVal !== undefined ? Math.round(r.mcbExtremeVal) : '') +
+                  ' -- point MCB confirme ' + lagMin + ' min plus tard';
+      return '<span title="' + tip + '" style="display:inline-block; width:7px; height:7px; ' +
+             'background:' + col + '; margin-right:4px; vertical-align:middle;"></span>' + px;
+    }
+
     // Deplacement de prix sur 5 min (10 releves) -- meme calcul que le baton.
     function disp5(idx, arr) {
       if (idx < 10) return null;
@@ -614,6 +630,44 @@ async function loadAudit() {
     } catch (e) { /* trades indisponibles, l'audit reste lisible */ }
 
     const recent = rows.slice(-2880);
+
+    /* EXTREME DE PRIX PRE-SIGNAL (14/08/2026) -- le point MCB confirme un
+     * retournement qui a eu lieu quelques bougies plus tot. On remonte la
+     * fenetre pour retrouver le vrai extreme de prix et le marquer, plutot
+     * que de laisser croire que le retournement s'est produit au moment de
+     * la confirmation.
+     * 30 releves de 30s = 15 min = 5 bougies de 3m (borne haute de la
+     * fourchette "3 a 5 bougies"). Passer a 18 pour 3 bougies. */
+    const MCB_LOOKBACK_ROWS = 30;
+    let _prePivKey = null;
+    for (let i = 0; i < recent.length; i++) {
+      const r = recent[i];
+      if (!r.wavePivotType) { _prePivKey = null; continue; }
+      const key = r.wavePivotType + ':' + r.wavePivotValue;
+      if (key === _prePivKey) continue;   // meme point, deja traite
+      _prePivKey = key;
+
+      const from = Math.max(0, i - MCB_LOOKBACK_ROWS);
+      let bestIdx = null, bestVal = null;
+      for (let j = from; j <= i; j++) {
+        const cand = recent[j];
+        if (r.wavePivotType === 'pic') {
+          const h = (cand.priceHigh !== null && cand.priceHigh !== undefined) ? cand.priceHigh : cand.lastPrice;
+          if (h === null || h === undefined) continue;
+          if (bestVal === null || h > bestVal) { bestVal = h; bestIdx = j; }
+        } else {
+          const l = (cand.priceLow !== null && cand.priceLow !== undefined) ? cand.priceLow : cand.lastPrice;
+          if (l === null || l === undefined) continue;
+          if (bestVal === null || l < bestVal) { bestVal = l; bestIdx = j; }
+        }
+      }
+      if (bestIdx !== null) {
+        recent[bestIdx].mcbExtreme = r.wavePivotType;
+        recent[bestIdx].mcbExtremeVal = bestVal;
+        recent[bestIdx].mcbExtremeLagRows = i - bestIdx;
+      }
+    }
+
     let inVigilance = false;
     const rowsHtml = [];
 
@@ -635,12 +689,22 @@ async function loadAudit() {
       // d'occuper sa propre colonne -- il appartient a la meme famille
       // d'information que les evenements du baton.
       const eventCell = (r.isReversal ? '<span style="color:#f1c40f; margin-right:4px;" title="Retournement imminent">&#9888;</span>' : '') + signalCell;
-      rowsHtml.push('<tr class="' + rowCls + '">' +
+      // mcbPivotCell() dedoublonne en interne (_lastPivKey) : un second
+      // appel sur la meme ligne renverrait toujours vide. On capture donc
+      // le resultat une seule fois, pour la cellule ET pour le fond de ligne.
+      const mcbCell = mcbPivotCell(r);
+      let rowStyle = '';
+      if (mcbCell !== '') {
+        rowStyle = r.wavePivotType === 'creux'
+          ? ' style="background:rgba(46,204,113,0.14);"'
+          : ' style="background:rgba(231,76,60,0.14);"';
+      }
+      rowsHtml.push('<tr class="' + rowCls + '"' + rowStyle + '>' +
         '<td>' + timeParis(r.ts) + '</td>' +
-        '<td style="font-weight:600;">' + (r.lastPrice !== null && r.lastPrice !== undefined ? Math.round(r.lastPrice) : '') + '</td>' +
+        '<td style="font-weight:600;">' + priceCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
-        '<td style="text-align:center; padding:2px 1px;">' + mcbPivotCell(r) + '</td>' +
+        '<td style="text-align:center; padding:2px 1px;">' + mcbCell + '</td>' +
         '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td style="text-align:center;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
@@ -651,9 +715,9 @@ async function loadAudit() {
         '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
         '<td>' + fmt(r.cadence,2) + '</td>' +
         '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
-        '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,4) + '</td>' +
+        '<td class="' + cls(r.netMove) + '" style="border-left:3px solid #5a6b85;">' + fmt(r.netMove,4) + '</td>' +
         '<td>' + fmt(r.netMoveMult,2) + '</td>' +
-        '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
+        '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
         '<td style="border-left:2px solid #5a6b85;">' + fmt(r.amplitude,4) + '</td>' +
         '<td>' + fmt(r.winSec,1) + '</td>' +
         '<td>' + arrow(r.direction) + '</td>' +
@@ -669,7 +733,7 @@ async function loadAudit() {
       '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
       '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
       '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
-      '<th>Cadence</th><th>nMx</th><th>NetMove</th><th>NMx</th><th>Sens3</th>' +
+      '<th>Cadence</th><th>nMx</th><th style="border-left:3px solid #5a6b85;">NetMove</th><th>NMx</th><th>Sens3</th>' +
       '<th style="border-left:2px solid #5a6b85;">Amplitude</th><th>WinSec</th><th>Dir.</th>' +
       '<th style="border-left:2px solid #5a6b85;">Evenement</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
