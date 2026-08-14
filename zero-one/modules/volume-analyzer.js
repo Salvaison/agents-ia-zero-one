@@ -39,7 +39,13 @@ function readCSV(timeframe) {
 
   const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n');
   return lines.slice(1).map(line => {
-    const [timestamp, open, high, low, close, lt_blue_wave, blue_wave, money_flow, buy, sell, dbsi_top, dbsi_bottom, ma200] = line.split(',');
+    const [timestamp, open, high, low, close, lt_blue_wave, blue_wave, money_flow, buy, sell, dbsi_top, dbsi_bottom, ma200, wt1_cross_up, wt1_cross_dn] = line.split(',');
+    // wt1_cross_up / wt1_cross_dn (14/08/2026) : signal MCB natif, points
+    // vert (creux) et rouge (pic) confirmes par l'indicateur lui-meme.
+    // Vide sur la plupart des bougies (le signal est ponctuel) et ABSENT
+    // des lignes anterieures au 14/08 21h (13 colonnes) -- d'ou le null
+    // plutot que NaN, pour distinguer "pas de signal" de "colonne absente".
+    const parseSignal = (s) => (s === undefined || s === '' ? null : parseFloat(s));
     return {
       timestamp,
       open: parseFloat(open),
@@ -54,6 +60,8 @@ function readCSV(timeframe) {
       dbsi_top: parseFloat(dbsi_top),
       dbsi_bottom: parseFloat(dbsi_bottom),
       ma200: parseFloat(ma200),
+      wt1_cross_up: parseSignal(wt1_cross_up),
+      wt1_cross_dn: parseSignal(wt1_cross_dn),
     };
   }).filter(r => !isNaN(r.close));
 }
@@ -81,7 +89,55 @@ function toScore(value, thresholds) {
  * (meme mecanisme de preavis que documente le 16/07 pour les gros points
  * MCB -- un point qui s'eteint a la bougie suivante n'est jamais retenu).
  */
+/**
+ * SIGNAL MCB NATIF (14/08/2026) -- remplace la detection maison par extrema
+ * locaux, dont le defaut structurel a ete demontre le meme jour : la boucle
+ * s'arretait au PREMIER pivot trouve en remontant, retournant un "pic" a
+ * chaque palier d'une tendance sans jamais atteindre le creux plus ancien
+ * (mesure : 6 pics consecutifs sans alternance sur 7h de donnees).
+ *
+ * On lit desormais les colonnes wt1_cross_up / wt1_cross_dn, ecrites par
+ * les collecteurs depuis le 14/08 21h : ce sont les points VERT (creux) et
+ * ROUGE (pic) que MarketCipher B calcule lui-meme et affiche sur la vague.
+ * Correspondance confirmee visuellement par Benjamin sur deux cas reels.
+ *
+ * Retourne le pivot le PLUS RECENT des deux series, avec son age en bougies.
+ * Pas de filtre d'amplitude ici : le filtrage par magnitude reste la
+ * responsabilite de l'appelant (cf. wavePivotFilter.minPivotValue cote
+ * trade-simulator.js), pour ne pas dupliquer la regle a deux endroits.
+ */
 function analyzeWavePivot(timeframe, lookback = 20) {
+  const data = readCSV(timeframe);
+  if (data.length < 2) return { status: 'insufficient_data', count: data.length };
+  const recent = data.slice(-lookback);
+
+  // Parcours du plus recent vers le plus ancien : le premier signal
+  // rencontre est le pivot courant. Contrairement a l'ancienne version,
+  // il n'y a pas d'ambiguite -- ces valeurs ne sont presentes QUE sur la
+  // bougie ou l'indicateur a confirme le point.
+  for (let i = recent.length - 1; i >= 0; i--) {
+    const bar = recent[i];
+    const up = bar.wt1_cross_up;
+    const dn = bar.wt1_cross_dn;
+    const ageCandles = (recent.length - 1 - i);
+
+    if (up !== null && up !== undefined && !isNaN(up)) {
+      return { type: 'creux', value: up, amplitude: null, ageCycles: ageCandles, source: 'mcb_natif' };
+    }
+    if (dn !== null && dn !== undefined && !isNaN(dn)) {
+      return { type: 'pic', value: dn, amplitude: null, ageCycles: ageCandles, source: 'mcb_natif' };
+    }
+  }
+  return { type: null, value: null, amplitude: null, ageCycles: null, source: 'mcb_natif' };
+}
+
+/**
+ * ANCIENNE IMPLEMENTATION (conservee pour comparaison, plus appelee).
+ * Detection par extrema locaux sur blue_wave + filtre d'amplitude.
+ * Defaut connu : s'arrete au premier extremum trouve, sans garantir
+ * l'alternance pic/creux. Voir en-tete de analyzeWavePivot ci-dessus.
+ */
+function analyzeWavePivotLegacy(timeframe, lookback = 20) {
   const data = readCSV(timeframe);
   if (data.length < 3) return { status: 'insufficient_data', count: data.length };
   const recent = data.slice(-lookback);

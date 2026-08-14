@@ -631,41 +631,47 @@ async function loadAudit() {
       const signalCell = buildSignal(r, disp5(i, recent));
       if (r.isTrade || r.isBypass) inVigilance = false;
 
+      // Retournement fusionne dans la colonne Evenement (14/08/2026) au lieu
+      // d'occuper sa propre colonne -- il appartient a la meme famille
+      // d'information que les evenements du baton.
+      const eventCell = (r.isReversal ? '<span style="color:#f1c40f; margin-right:4px;" title="Retournement imminent">&#9888;</span>' : '') + signalCell;
       rowsHtml.push('<tr class="' + rowCls + '">' +
         '<td>' + timeParis(r.ts) + '</td>' +
+        '<td style="font-weight:600;">' + (r.lastPrice !== null && r.lastPrice !== undefined ? Math.round(r.lastPrice) : '') + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + mcbPivotCell(r) + '</td>' +
-        '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
-        '<td class="' + cls(r.vwap3) + '">' + fmt(r.vwap3,2) + '</td>' +
+        '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
+        '<td style="text-align:center;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
         '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
-        '<td style="text-align:center; border-left:2px solid #5a6b85;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
-        '<td class="' + cls(r.vwap15) + '">' + fmt(r.vwap15,2) + '</td>' +
+        '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
+        '<td style="text-align:center;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
         '<td>' + fmt(r.cadence,2) + '</td>' +
         '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
-        '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
         '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,4) + '</td>' +
         '<td>' + fmt(r.netMoveMult,2) + '</td>' +
-        '<td>' + fmt(r.amplitude,4) + '</td>' +
+        '<td>' + (r.priceSens3 > 0 ? '&#9650;' : (r.priceSens3 < 0 ? '&#9660;' : '0')) + '</td>' +
+        '<td style="border-left:2px solid #5a6b85;">' + fmt(r.amplitude,4) + '</td>' +
         '<td>' + fmt(r.winSec,1) + '</td>' +
         '<td>' + arrow(r.direction) + '</td>' +
-        '<td>' + (r.isReversal ? '&#9888;' : '') + '</td>' +
-        '<td>' + signalCell + '</td>' +
+        '<td style="border-left:2px solid #5a6b85;">' + eventCell + '</td>' +
         '</tr>');
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
       '<th style="width:62px;">UTC+2</th>' +
-      '<th style="width:18px; padding:2px 1px;">Rg</th>' +
-      '<th style="width:18px; padding:2px 1px;">P3</th>' +
-      '<th style="width:26px; padding:2px 1px;">PM</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP3</th><th>SlopeV3</th><th>x0</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Pente</th><th>VWAP15</th><th>SlopeV15</th><th>x0</th>' +
-      '<th>Cadence</th><th>Mult.</th><th>Sens3</th><th>NetMove</th><th>NMx</th><th>Amplitude</th><th>WinSec</th>' +
-      '<th>Dir.</th><th>Retourn.</th><th>Signal</th>' +
+      '<th style="width:52px;">PRIX</th>' +
+      '<th style="width:18px; padding:2px 1px;" title="Regime directionnel vague MCB 15m">Rg</th>' +
+      '<th style="width:18px; padding:2px 1px;" title="Pivot de trajectoire VWAP">Pivot</th>' +
+      '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
+      '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
+      '<th>Cadence</th><th>nMx</th><th>NetMove</th><th>NMx</th><th>Sens3</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Amplitude</th><th>WinSec</th><th>Dir.</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Evenement</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
     html += '</tbody></table>';
     wrap.innerHTML = html;

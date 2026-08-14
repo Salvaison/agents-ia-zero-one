@@ -237,6 +237,20 @@ function evaluateEntryFromBaton(batonState, lastConsumedTs, config) {
    * continue, alors que toutes les pentes pointaient vers le haut.
    * Desactiver : waveRegimeFilter.enabled = false. */
   const _wrCfg = (config && config.tradeSimulator && config.tradeSimulator.waveRegimeFilter) || {};
+
+  /* GARDE-FOU REGIME INDETERMINE (14/08/2026) -- avant ce patch, un
+   * waveRegime15 a null faisait tomber toute la condition a faux, donc
+   * sautait le filtre ENTIER : regime inconnu = toutes les entrees
+   * autorisees, dans les deux sens. C'est l'inverse du comportement voulu.
+   * Un regime inconnu doit conduire a s'abstenir, pas a tout permettre --
+   * surtout au moment de la bascule vers le signal MCB natif, ou le CSV 15m
+   * met plusieurs heures a fournir de quoi determiner un regime.
+   * Revenir a l'ancien comportement : allowWhenRegimeUnknown = true. */
+  if (_wrCfg.enabled !== false && !batonState.waveRegime15
+      && _wrCfg.allowWhenRegimeUnknown !== true) {
+    return null; // regime de vague 15m indetermine -- abstention par prudence
+  }
+
   if (_wrCfg.enabled !== false && batonState.waveRegime15) {
     const allowed = batonState.waveRegime15 === 'haussier' ? 'long' : 'short';
     if (direction !== allowed) {
