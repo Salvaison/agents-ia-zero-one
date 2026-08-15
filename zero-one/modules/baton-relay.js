@@ -56,6 +56,11 @@ const CONFIG_PATH_BR = path.join(__dirname, '../config.json');
  * ne contient qu'une ligne : on accumule ici un historique glissant pour
  * pouvoir calculer une pente par regression. */
 const LIVE_CSV_PATH = '/root/agents-ia-zero-one/data/mcb-live/mcb_3m_live.csv';
+/* Snapshot 15m (15/08/2026) -- ecrit par tab2-collector.js, qui alterne
+ * entre ses cinq timeframes : ce fichier n'est donc PAS mis a jour en
+ * continu, il fige pendant les rotations. Comparer live15BarTs a l'heure
+ * attendue avant de s'y fier. */
+const LIVE_CSV_PATH_15M = '/root/agents-ia-zero-one/data/mcb-live/mcb_15m_live.csv';
 const LIVE_HISTORY_PATH = path.join(__dirname, '../data/vwap-live-history.json');
 const LIVE_HISTORY_MAX = 40;   // ~20 min a 30s -- assez pour une pente stable
 const LIVE_SLOPE_POINTS = 8;   // regression sur les 8 derniers points (~4 min)
@@ -84,16 +89,43 @@ let _lastPivotSeenAt = null;
 
 /* Lit le snapshot live et retourne { ts, vwap } ou null. Le fichier n'a qu'une
  * ligne de donnees (plus l'en-tete). */
-function readLiveSnapshot() {
+function readLiveSnapshot(csvPath = LIVE_CSV_PATH) {
   try {
-    if (!fs.existsSync(LIVE_CSV_PATH)) return null;
-    const lines = fs.readFileSync(LIVE_CSV_PATH, 'utf8').trim().split('\n');
+    if (!fs.existsSync(csvPath)) return null;
+    const lines = fs.readFileSync(csvPath, 'utf8').trim().split('\n');
     if (lines.length < 2) return null;
     const c = lines[1].split(',');
     const lbw = parseFloat(c[5]);
     const bw = parseFloat(c[6]);
     if (isNaN(lbw) || isNaN(bw)) return null;
-    return { barTs: c[0], vwap: parseFloat((lbw - bw).toFixed(4)) };
+
+    /* ELARGI le 15/08/2026 -- le fichier live contient bien plus que LBW et
+     * BW, mais seules ces deux colonnes etaient lues. Le reste (MoneyFlow,
+     * DBSI, MA200, signaux MCB) etait ecrit en continu puis jete.
+     * Colonnes : 0=ts 1=open 2=high 3=low 4=close 5=LBW 6=BW 7=moneyFlow
+     *            8=buy 9=sell 10=dbsiTop 11=dbsiBottom 12=ma200
+     *            13=wt1_cross_up 14=wt1_cross_dn
+     * num() rend null sur une colonne vide ou absente -- les anciennes
+     * lignes a 13 colonnes restent lisibles sans produire de NaN. */
+    const num = (s) => {
+      if (s === undefined || s === null || s === '') return null;
+      const v = parseFloat(s);
+      return isNaN(v) ? null : v;
+    };
+
+    return {
+      barTs: c[0],
+      vwap: parseFloat((lbw - bw).toFixed(4)),
+      lbw,
+      bw,
+      moneyFlow: num(c[7]),
+      dbsiTop: num(c[10]),
+      dbsiBottom: num(c[11]),
+      ma200: num(c[12]),
+      signalUp: num(c[13]),
+      signalDn: num(c[14]),
+      close: num(c[4]),
+    };
   } catch (e) { return null; }
 }
 
@@ -211,6 +243,10 @@ function tick() {
   // minute) de la pente par bougie : ordres de grandeur non comparables.
   let vwapLive = null, vwapLiveSlope = null, vwapLiveSlopeDir = null;
   const liveSnap = readLiveSnapshot();
+  /* Snapshot 15m -- OBSERVATION SEULEMENT a ce stade. Pas d'historique ni de
+   * pente : on veut d'abord mesurer si le signal apparait avant la cloture
+   * et si son type reste stable. */
+  const liveSnap15 = readLiveSnapshot(LIVE_CSV_PATH_15M);
   if (liveSnap) {
     vwapLive = liveSnap.vwap;
     const last = liveHistory[liveHistory.length - 1];
@@ -542,6 +578,34 @@ function tick() {
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     wavePivotAgeCycles: wavePivot.ageCycles !== undefined ? wavePivot.ageCycles : null,
     wavePivotAgeRealCycles,
+    /* VALEURS DYNAMIQUES INTRA-BOUGIE (15/08/2026) -- etat de la bougie 3m
+     * EN FORMATION au moment ou ce baton est ecrit, et non la derniere
+     * valeur figee a la cloture precedente. OBSERVATION SEULEMENT : aucune
+     * decision ne s'en sert. Objectif : comparer, sur donnees reelles,
+     * l'ecart entre valeur en cours et valeur confirmee, et mesurer
+     * combien de temps la seconde est connue avant la premiere. */
+    liveLbw: liveSnap ? liveSnap.lbw : null,
+    liveBw: liveSnap ? liveSnap.bw : null,
+    liveMoneyFlow: liveSnap ? liveSnap.moneyFlow : null,
+    liveDbsiTop: liveSnap ? liveSnap.dbsiTop : null,
+    liveDbsiBottom: liveSnap ? liveSnap.dbsiBottom : null,
+    liveMa200: liveSnap ? liveSnap.ma200 : null,
+    liveSignalUp: liveSnap ? liveSnap.signalUp : null,
+    liveSignalDn: liveSnap ? liveSnap.signalDn : null,
+    liveBarTs: liveSnap ? liveSnap.barTs : null,
+    /* Valeurs intra-bougie du 15m (15/08/2026). live15BarTs sert a verifier
+     * la fraicheur : si l'horodatage ne correspond pas a la bougie 15m en
+     * cours, le collecteur etait pose sur un autre timeframe et la valeur
+     * est perimee. */
+    live15BarTs: liveSnap15 ? liveSnap15.barTs : null,
+    live15Lbw: liveSnap15 ? liveSnap15.lbw : null,
+    live15Bw: liveSnap15 ? liveSnap15.bw : null,
+    live15Vwap: liveSnap15 ? liveSnap15.vwap : null,
+    live15MoneyFlow: liveSnap15 ? liveSnap15.moneyFlow : null,
+    live15DbsiTop: liveSnap15 ? liveSnap15.dbsiTop : null,
+    live15DbsiBottom: liveSnap15 ? liveSnap15.dbsiBottom : null,
+    live15SignalUp: liveSnap15 ? liveSnap15.signalUp : null,
+    live15SignalDn: liveSnap15 ? liveSnap15.signalDn : null,
     waveRegime15,
     waveRegime15Value,
     waveRegime15Since: _lastRegime15Since,

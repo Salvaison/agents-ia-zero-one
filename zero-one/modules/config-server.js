@@ -581,6 +581,21 @@ async function loadAudit() {
              'background:' + col + '; margin-right:4px; vertical-align:middle;"></span>' + px;
     }
 
+    /* Cellule DBSI (15/08/2026) : les deux valeurs cote a cote, "top / bottom".
+     * Top en rouge (pression vendeuse au-dessus de la bougie), bottom en vert
+     * (pression acheteuse en dessous) -- convention demandee par Benjamin.
+     * Valeurs INTRA-BOUGIE : elles bougent pendant la formation de la bougie,
+     * contrairement aux colonnes du CSV qui ne changent qu'a la cloture. */
+    function dbsiCell(r) {
+      const t = r.liveDbsiTop;
+      const b = r.liveDbsiBottom;
+      if ((t === null || t === undefined) && (b === null || b === undefined)) return '';
+      const fmtV = (v) => (v === null || v === undefined) ? '-' : Math.round(v);
+      return '<span style="color:#e74c3c; font-weight:600;">' + fmtV(t) + '</span>' +
+             '<span style="color:#6b7d95;"> / </span>' +
+             '<span style="color:#2ecc71; font-weight:600;">' + fmtV(b) + '</span>';
+    }
+
     // Deplacement de prix sur 5 min (10 releves) -- meme calcul que le baton.
     function disp5(idx, arr) {
       if (idx < 10) return null;
@@ -720,6 +735,7 @@ async function loadAudit() {
         '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
         '<td style="border-left:2px solid #5a6b85;">' + fmt(r.amplitude,4) + '</td>' +
         '<td>' + fmt(r.winSec,1) + '</td>' +
+        '<td style="text-align:center; white-space:nowrap;">' + dbsiCell(r) + '</td>' +
         '<td>' + arrow(r.direction) + '</td>' +
         '<td style="border-left:2px solid #5a6b85;">' + eventCell + '</td>' +
         '</tr>');
@@ -734,7 +750,8 @@ async function loadAudit() {
       '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
       '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
       '<th>Cadence</th><th>nMx</th><th style="border-left:3px solid #5a6b85;">NetMove</th><th>NMx</th><th>Sens3</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Amplitude</th><th>WinSec</th><th>Dir.</th>' +
+      '<th style="border-left:2px solid #5a6b85;">Amplitude</th><th>WinSec</th>' +
+      '<th title="DBSI intra-bougie : top (rouge) / bottom (vert)">DBSI</th><th>Dir.</th>' +
       '<th style="border-left:2px solid #5a6b85;">Evenement</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
     html += '</tbody></table>';
