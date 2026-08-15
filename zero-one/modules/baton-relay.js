@@ -629,6 +629,23 @@ function tick() {
     vwapLive,
     vwapLiveSlope,
     vwapLiveSlopeDir,
+    /* VALEURS INTRA-BOUGIE (15/08/2026) -- ajoutees a l'historique d'audit,
+     * et non plus seulement a baton-state.json. Permettent de comparer, sur
+     * une meme ligne, la valeur confirmee de la derniere cloture et la
+     * valeur EN COURS de la bougie qui se forme. Mesure du meme jour : le BW
+     * d'une bougie 3m a ete revise 20 fois en 3 minutes, chaque releve porte
+     * donc une information distincte. */
+    liveBw: liveSnap ? liveSnap.bw : null,
+    liveLbw: liveSnap ? liveSnap.lbw : null,
+    liveMoneyFlow: liveSnap ? liveSnap.moneyFlow : null,
+    liveDbsiTop: liveSnap ? liveSnap.dbsiTop : null,
+    liveDbsiBottom: liveSnap ? liveSnap.dbsiBottom : null,
+    liveSignalUp: liveSnap ? liveSnap.signalUp : null,
+    liveSignalDn: liveSnap ? liveSnap.signalDn : null,
+    live15Bw: liveSnap15 ? liveSnap15.bw : null,
+    live15Vwap: liveSnap15 ? liveSnap15.vwap : null,
+    live15SignalUp: liveSnap15 ? liveSnap15.signalUp : null,
+    live15SignalDn: liveSnap15 ? liveSnap15.signalDn : null,
     wavePivotType: wavePivot.type || null,
     wavePivotValue: wavePivot.value !== undefined ? wavePivot.value : null,
     waveRegime15,
