@@ -15,3 +15,4 @@ test-mexc-auth.js
 # Sauvegardes locales
 *.backup-*
 *.bak
+watch-signal-15m.log
