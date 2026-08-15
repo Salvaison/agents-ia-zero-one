@@ -1,59 +1,64 @@
 /**
- * price-stream.js — Bybit V5
- * ---------------------------
- * Connexion WebSocket Bybit V5 (contrats lineaires USDT) — prix BTCUSDT en
- * temps reel, tick par tick.
+ * price-stream.js — Flux tick-par-tick BTC via WebSocket public OKX.
  *
- * REECRIT LE 12/08/2026 : bascule MEXC -> Bybit. Motif : depuis le passage a
- * MEXC le 30/07, la collecte 15m perdait 10 a 49% des bougies (trous
- * systematiques de 30 min, 15 morts du collecteur en une nuit). Quatre
- * hypotheses ont ete explorees et ecartees (doublons de processus, popup
- * Chrome, WebSocket non rebascule, watchdog). Decision de Benjamin : basculer
- * TOUTE la chaine sur Bybit, exchange plus etabli, pour retrouver une collecte
- * fiable -- tout le reste en depend.
+ * REECRIT LE 15/08/2026 : bascule Bybit -> OKX global (BTC-USDT-SWAP).
+ * Motif : migration de l'execution vers OKX Europe. Rester sur Bybit pour
+ * les donnees alors qu'on execute sur OKX recreerait le desalignement
+ * diagnostique le 30/07 (signaux d'un marche, execution sur un autre).
  *
- * Canal public "publicTrade" : chaque transaction executee (le plus granulaire),
- * equivalent du "push.deal" de MEXC. Aucune authentification requise pour le
- * market data public.
+ * POURQUOI BTC-USDT-SWAP (global) ET NON L'INSTRUMENT D'EXECUTION :
+ *   L'execution se fera sur BTC-USD_UM_XPERP-310404 (X-Perp EU, seul produit
+ *   a levier autorise aux particuliers europeens sous MiFID II). Mais ce
+ *   contrat est 31x moins liquide : mesure du 15/08, 1359 BTC de volume 24h
+ *   contre 42190 pour BTC-USDT-SWAP, soit 1 transaction toutes les 17.4s
+ *   contre une toutes les 0.60s. A 1.7 tick par baton de 30s, la cadence et
+ *   le displacementMap n'auraient plus aucun sens statistique.
  *
- * PROTOCOLE (verifie sur la doc officielle le 12/08/2026) :
- *   URL          wss://stream.bybit.com/v5/public/linear
- *   Souscription {"op":"subscribe","args":["publicTrade.BTCUSDT","tickers.BTCUSDT"]}
- *   Heartbeat    {"op":"ping"} — recommande toutes les 20s
- *   Timeout      la connexion est coupee apres 10 min sans ping-pong ni data
- *   Trade        {"topic":"publicTrade.BTCUSDT","ts":...,"data":[{...}]}
+ *   Ecarts de prix mesures le 15/08 :
+ *     OKX global - Bybit  : +0.014%  (marches quasi identiques)
+ *     X-Perp - OKX global : -0.095%  (decote structurelle du contrat EU)
  *
- * ATTENTION — DIFFERENCE DE FORMAT AVEC MEXC :
- * Bybit envoie le sens en TEXTE ("Buy"/"Sell") la ou MEXC envoyait un ENTIER
- * (1/2). Or volume-analyzer.js fait `if (t.side === 1) buyVol += v`. Le sens
- * est donc converti ici en 1/2 pour preserver la compatibilite de toute la
- * chaine aval — ne PAS retirer cette conversion sans verifier les consommateurs.
+ *   La decote du X-Perp est un NIVEAU, pas une variation : elle affecte
+ *   identiquement l'entree et la sortie, donc s'annule dans le PNL. Le
+ *   risque reel est la VARIATION de ce basis pendant qu'une position est
+ *   ouverte -- non mesuree a ce jour, a surveiller.
  *
- * Usage (inchange, l'interface publique est identique) :
- *   const priceStream = require('./price-stream');
- *   priceStream.start();
- *   priceStream.on('price', (tick) => { ... });
- *   const last = priceStream.getLastPrice();
+ * DIFFERENCES DE FORMAT AVEC BYBIT (source de bugs si oubliees) :
+ *   - side : "buy"/"sell" en MINUSCULES (Bybit envoyait "Buy"/"Sell")
+ *   - sz   : en CONTRATS, pas en BTC. ctVal = 0.01 BTC pour BTC-USDT-SWAP
+ *            (verifie : volCcy24h/vol24h = 42190/4219046 = 0.01).
+ *            On convertit avant d'emettre, pour que le champ volume reste
+ *            en BTC comme l'attend volume-analyzer.js.
+ *   - ping : OKX attend la CHAINE BRUTE 'ping' (pas du JSON comme Bybit) et
+ *            repond 'pong'. Connexion coupee apres 30s sans trafic.
+ *   - souscription : args est un tableau d'OBJETS {channel, instId}, pas de
+ *            chaines "topic.SYMBOL" comme chez Bybit.
+ *
+ * Le format emis en aval (evenements 'price' et 'ticker') est INCHANGE --
+ * side reste 1/2, volume reste en BTC. Aucun autre module a modifier.
  */
 
 const WebSocket = require('ws');
 const EventEmitter = require('events');
 
-const WS_URL = 'wss://stream.bybit.com/v5/public/linear';
-const SYMBOL = 'BTCUSDT';
+const WS_URL = 'wss://ws.okx.com:8443/ws/v5/public';
+const INST_ID = 'BTC-USDT-SWAP';
 
-/* 20s recommande par la doc Bybit. La connexion est coupee apres 10 min sans
- * ping-pong NI data — large marge, mais un marche calme peut etre silencieux. */
+/* 1 contrat = 0.01 BTC sur BTC-USDT-SWAP. Verifie via /api/v5/public/instruments
+ * et confirme par le rapport volCcy24h/vol24h. A revoir si l'instrument change. */
+const CT_VAL = 0.01;
+
+/* OKX coupe apres 30s sans trafic. 20s laisse une marge confortable. */
 const PING_INTERVAL_MS = 20000;
 const RECONNECT_DELAY_MS = 3000;
 
-/* Connexion "zombie" : ws.readyState reste OPEN mais plus rien n'arrive.
- * Sans ce controle, une connexion figee silencieusement ne serait jamais
- * rechargee. Mecanisme conserve du module MEXC — il avait fait ses preuves. */
+/* Connexion "zombie" : readyState reste OPEN mais plus rien n'arrive.
+ * Mecanisme conserve depuis les versions MEXC et Bybit -- il a fait ses
+ * preuves, il n'y a aucune raison de le retirer en changeant d'exchange. */
 const DATA_STALE_MS = 60000;
 const STALE_CHECK_INTERVAL_MS = 15000;
 
-/* Conversion du sens Bybit -> format MEXC attendu en aval (voir en-tete). */
+/* Conversion du sens OKX -> format attendu en aval (voir en-tete). */
 const SIDE_BUY = 1;
 const SIDE_SELL = 2;
 
@@ -65,13 +70,12 @@ class PriceStream extends EventEmitter {
     this.staleCheckTimer = null;
     this.lastPrice = null;
     this.lastUpdateTs = null;
-    /* horloge murale — mise a jour sur TOUT message recu, pas juste a l'ouverture */
     this.lastMessageReceivedAt = null;
     this._shouldRun = false;
   }
 
   start() {
-    if (this._shouldRun) return; /* deja demarre */
+    if (this._shouldRun) return;
     this._shouldRun = true;
     this._connect();
   }
@@ -90,11 +94,10 @@ class PriceStream extends EventEmitter {
   _connect() {
     console.log('[price-stream] Connexion a', WS_URL);
     this.ws = new WebSocket(WS_URL);
-    /* evite un faux positif immediat avant le premier message */
     this.lastMessageReceivedAt = Date.now();
 
     this.ws.on('open', () => {
-      console.log('[price-stream] Connecte. Abonnement a publicTrade pour', SYMBOL);
+      console.log('[price-stream] Connecte. Abonnement a trades+tickers pour', INST_ID);
       this._subscribe();
       this._startPing();
       this._startStaleCheck();
@@ -120,10 +123,6 @@ class PriceStream extends EventEmitter {
     });
   }
 
-  /* Detecte une connexion "zombie" : ws.readyState reste OPEN mais plus aucun
-   * message n'arrive (ni tick, ni pong). Sans ce controle, une connexion figee
-   * silencieusement ne serait jamais rechargee — elle reste "ouverte"
-   * indefiniment. terminate() coupe immediatement, sans attendre le handshake. */
   _startStaleCheck() {
     clearInterval(this.staleCheckTimer);
     this.staleCheckTimer = setInterval(() => {
@@ -140,11 +139,14 @@ class PriceStream extends EventEmitter {
   }
 
   _subscribe() {
-    /* Une seule requete pour les deux topics — Bybit l'accepte et c'est plus
-     * economique en connexions (limite : 500 connexions par 5 min et par IP). */
+    /* Format OKX : args est un tableau d'objets, un par canal.
+     * Les deux canaux dans une seule requete, comme on le faisait chez Bybit. */
     this.ws.send(JSON.stringify({
       op: 'subscribe',
-      args: [`publicTrade.${SYMBOL}`, `tickers.${SYMBOL}`],
+      args: [
+        { channel: 'trades', instId: INST_ID },
+        { channel: 'tickers', instId: INST_ID },
+      ],
     }));
   }
 
@@ -152,7 +154,10 @@ class PriceStream extends EventEmitter {
     clearInterval(this.pingTimer);
     this.pingTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ op: 'ping' }));
+        /* CHAINE BRUTE, pas du JSON — specificite OKX. Envoyer {"op":"ping"}
+         * comme chez Bybit ne serait pas reconnu et la connexion tomberait
+         * au bout de 30s. */
+        this.ws.send('ping');
       }
     }, PING_INTERVAL_MS);
   }
@@ -163,44 +168,48 @@ class PriceStream extends EventEmitter {
   }
 
   _handleMessage(raw) {
+    const text = raw.toString();
+
+    /* Reponse au ping : chaine brute 'pong', pas du JSON. A intercepter
+     * AVANT le JSON.parse, qui echouerait dessus. */
+    if (text === 'pong') return;
+
     let msg;
     try {
-      msg = JSON.parse(raw.toString());
+      msg = JSON.parse(text);
     } catch (e) {
-      return; /* frame non-JSON, ignoree */
+      return; /* frame non-JSON inattendue, ignoree */
     }
 
-    /* Reponse au ping : {"success":true,"ret_msg":"pong","op":"ping"} */
-    if (msg.op === 'ping' || msg.op === 'pong') return;
-
-    /* Confirmation de souscription : {"success":true,"op":"subscribe",...}
-     * Un echec est signale explicitement — sans ce log, une souscription
-     * refusee rendrait le bot aveugle sans qu'on le voie. */
-    if (msg.op === 'subscribe') {
-      if (msg.success) {
-        console.log('[price-stream] Souscription confirmee (conn_id:', msg.conn_id, ')');
-      } else {
-        console.error('[price-stream] ECHEC de souscription:', msg.ret_msg);
-      }
+    /* Confirmation ou refus de souscription. Un echec silencieux rendrait
+     * le bot aveugle sans qu'on le voie -- d'ou le log explicite. */
+    if (msg.event === 'subscribe') {
+      console.log('[price-stream] Souscription confirmee:', JSON.stringify(msg.arg));
       return;
     }
+    if (msg.event === 'error') {
+      console.error('[price-stream] ECHEC OKX:', msg.code, msg.msg);
+      return;
+    }
+    if (msg.event) return; /* autres evenements de service */
 
-    if (!msg.topic) return;
+    if (!msg.arg || !Array.isArray(msg.data)) return;
 
-    /* Flux tick-par-tick. data est TOUJOURS un tableau chez Bybit, parfois
-     * plusieurs transactions dans le meme message. */
-    if (msg.topic.startsWith('publicTrade.') && Array.isArray(msg.data)) {
+    /* Flux tick-par-tick. data peut contenir plusieurs transactions. */
+    if (msg.arg.channel === 'trades') {
       for (const d of msg.data) {
-        const price = parseFloat(d.p);
+        const price = parseFloat(d.px);
         if (!isFinite(price)) continue;
+        const szContracts = parseFloat(d.sz);
         const tick = {
-          symbol: d.s || SYMBOL,
+          symbol: d.instId || INST_ID,
           price,
-          volume: d.v,
-          /* "Buy"/"Sell" -> 1/2 : format attendu par volume-analyzer.js.
-           * Voir l'avertissement en en-tete de fichier. */
-          side: d.S === 'Buy' ? SIDE_BUY : (d.S === 'Sell' ? SIDE_SELL : null),
-          ts: d.T || msg.ts,
+          /* contrats -> BTC, pour rester coherent avec ce que les modules
+           * en aval attendaient du temps de Bybit (taille en BTC). */
+          volume: isFinite(szContracts) ? szContracts * CT_VAL : null,
+          /* "buy"/"sell" minuscules -> 1/2. Voir en-tete. */
+          side: d.side === 'buy' ? SIDE_BUY : (d.side === 'sell' ? SIDE_SELL : null),
+          ts: d.ts ? parseInt(d.ts, 10) : Date.now(),
         };
         this.lastPrice = tick.price;
         this.lastUpdateTs = tick.ts;
@@ -209,17 +218,18 @@ class PriceStream extends EventEmitter {
       return;
     }
 
-    /* Flux ticker agrege (fallback / stats). Bybit envoie un "snapshot"
-     * complet puis des "delta" partiels : lastPrice peut etre absent d'un
-     * delta, on ne l'emet que s'il est present. */
-    if (msg.topic.startsWith('tickers.') && msg.data) {
-      const d = msg.data;
-      if (d.lastPrice === undefined) return;
+    /* Flux ticker agrege (fallback / stats). */
+    if (msg.arg.channel === 'tickers') {
+      const d = msg.data[0];
+      if (!d || d.last === undefined) return;
       this.emit('ticker', {
-        symbol: d.symbol || SYMBOL,
-        lastPrice: parseFloat(d.lastPrice),
-        fundingRate: d.fundingRate,
-        ts: msg.ts,
+        symbol: d.instId || INST_ID,
+        lastPrice: parseFloat(d.last),
+        /* OKX n'expose pas le funding sur ce canal -- il faudrait souscrire
+         * a 'funding-rate' separement. Laisse a null tant qu'aucun module
+         * ne s'en sert, plutot que d'ajouter une souscription inutile. */
+        fundingRate: null,
+        ts: d.ts ? parseInt(d.ts, 10) : Date.now(),
       });
     }
   }
