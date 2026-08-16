@@ -46,9 +46,14 @@ const OUT_PATH = path.join(__dirname, '../data/trendlines.json');
  * pas assez de pivots pour trouver des alignements. */
 const WINDOW_HOURS = 48;
 
-/* Zone de tolerance. 40 USD = 48% de reussite prospective pour 5.8% au hasard.
- * Monter a 60 donne 62% mais une zone de 120 USD de large, moins exploitable. */
-const TOLERANCE_USD = 40;
+/* Zone de tolerance, en POURCENTAGE du prix (16/08/2026). Un seuil en dollars
+ * absolus se perime des que le prix bouge -- meme raison qui avait fait passer
+ * srZone de 250 USD a 0.39% le 17/07.
+ * 0.048% = 30.2 USD a 63 000, valeur choisie par Benjamin.
+ * Reperes mesures (a 40 USD absolus) : 48% de reussite prospective contre
+ * 5.8% au hasard. Un seuil plus serre reduit le taux mais gagne en precision. */
+const TOLERANCE_PCT = 0.048;
+let TOLERANCE_USD = 30;   // recalcule a chaque run() sur le prix courant
 
 /* Extraction des pivots : un extremum doit dominer une fenetre de +/-8 bougies
  * (48 min) et s'inscrire dans une amplitude d'au moins MIN_AMPLITUDE, pour
@@ -167,6 +172,8 @@ function run() {
   }
   const nowTs = bars[bars.length - 1].ts;
   const nowPrice = bars[bars.length - 1].close;
+  /* Tolerance recalculee sur le prix courant, pas figee en dollars. */
+  TOLERANCE_USD = +(nowPrice * TOLERANCE_PCT / 100).toFixed(1);
   const recent = bars.filter(b => b.ts >= nowTs - WINDOW_HOURS * 3600);
 
   const pivots = extractPivots(recent);
@@ -191,7 +198,8 @@ function run() {
                             nature: below.nature, points: below.points } : null,
     inZone: lines.some(l => l.inZone),
     lines,
-    params: { WINDOW_HOURS, TOLERANCE_USD, PIVOT_LOOKBACK, MIN_AMPLITUDE_USD, MIN_SPAN_HOURS },
+    params: { WINDOW_HOURS, TOLERANCE_PCT, TOLERANCE_USD, PIVOT_LOOKBACK,
+              MIN_AMPLITUDE_USD, MIN_SPAN_HOURS },
   };
 
   try {

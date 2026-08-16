@@ -745,9 +745,13 @@ async function loadAudit() {
       let lgiCell = '';
       if (r.lgiPoints) {
         const lc = r.lgiNature === 'SUPPORT' ? '#2ecc71' : '#e74c3c';
+        const conf = (r.lgiConfluence && r.lgiConfluence > 1) ? 'x' + r.lgiConfluence : '';
         lgiCell = '<span title="Ligne imaginaire ' + (r.lgiNature || '') + ', ' +
-                  r.lgiPoints + ' touches" style="color:' + lc +
-                  '; font-size:9px; font-weight:600; margin-right:5px;">Lgi ' + r.lgiPoints + '</span>';
+                  r.lgiPoints + ' touches' +
+                  (conf ? ' -- ' + r.lgiConfluence + ' lignes confluentes' : '') +
+                  '" style="color:' + lc +
+                  '; font-size:9px; font-weight:600; margin-right:5px;">Lgi ' +
+                  r.lgiPoints + conf + '</span>';
       }
       const eventCell = (r.isReversal ? '<span style="color:#f1c40f; margin-right:4px;" title="Retournement imminent">&#9888;</span>' : '') + lgiCell + signalCell;
       // mcbPivotCell() dedoublonne en interne (_lastPivKey) : un second

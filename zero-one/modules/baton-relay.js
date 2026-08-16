@@ -664,6 +664,17 @@ function tick() {
       inz.sort((a, b) => b.points - a.points);
       return inz[0].nature;
     })(),
+    /* CONFLUENCE (16/08/2026) : nombre de lignes dont le prix est dans la
+     * zone au meme moment. Plusieurs lignes convergentes signalent un niveau
+     * ou le prix a deja reagi de plusieurs facons -- Benjamin y voit un point
+     * de controle local, et le cas du 16/08 15h43-16h20 (prix fige 13 min sur
+     * une telle zone) lui donne raison. */
+    lgiConfluence: (function () {
+      const tl = getTrendlines();
+      if (!tl || !Array.isArray(tl.lines)) return null;
+      const n = tl.lines.filter(l => l.inZone).length;
+      return n > 0 ? n : null;
+    })(),
     vwapSlope,
     vwapSlopeDir,
     vwap3Slope,
