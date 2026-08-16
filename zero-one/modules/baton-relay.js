@@ -622,6 +622,15 @@ function tick() {
     cadence: currentCadence,
     cadenceMult: cadenceMultiplier,
     priceSens3: trig.priceSens3 !== undefined ? trig.priceSens3 : null,
+    /* CONVICTION ET COHERENCE (16/08/2026) -- exposes dans l'audit apres
+     * le constat qu'aucune mesure visible ne predit la direction du prix.
+     * convictionScore : coherence du delta de volume signe (achats moins
+     * ventes) sur les 8 tranches -- mesure le FLUX, pas le prix.
+     * coherence : coherence du mouvement de prix sur les memes tranches.
+     * Lus ensemble : conviction haute + coherence basse = le flux pousse
+     * sans que le prix suive. */
+    convictionScore: trig.convictionScore !== undefined ? trig.convictionScore : null,
+    coherence: trig.coherence !== undefined ? trig.coherence : null,
     vwapSlope,
     vwapSlopeDir,
     vwap3Slope,

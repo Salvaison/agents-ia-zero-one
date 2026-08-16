@@ -411,6 +411,13 @@ app.get('/audit-view', requireAuth, (req, res) => {
   </div>
 
   <div class="stats" id="stats"></div>
+  <div id="tabs" style="margin:8px 0 10px 0;">
+    <button id="tab-intention" onclick="switchTab('intention')"
+      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">INTENTION</button>
+    <button id="tab-effet" onclick="switchTab('effet')"
+      style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">EFFET</button>
+    <span style="margin-left:12px; font-size:11px; opacity:0.6;">INTENTION : pression exercee (DBSI, MoneyFlow, vague) &nbsp;|&nbsp; EFFET : ce qu'elle produit (cadence, netMove, amplitude)</span>
+  </div>
   <div id="wrap"><div class="empty">Chargement des donnees</div></div>
 
 <script>
@@ -430,6 +437,17 @@ function arrow(d) {
 }
 function timeParis(ts) {
   return new Date(ts).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+/* Onglet actif -- conserve entre deux rafraichissements automatiques, sinon
+ * la vue reviendrait a INTENTION toutes les 30 secondes. */
+var _activeTab = 'intention';
+function switchTab(t) {
+  _activeTab = t;
+  var on = 'padding:5px 14px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;';
+  var off = 'padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;';
+  document.getElementById('tab-intention').style.cssText = (t === 'intention' ? on : off) + 'margin-right:6px;';
+  document.getElementById('tab-effet').style.cssText = (t === 'effet' ? on : off);
+  loadAudit();
 }
 
 async function loadAudit() {
@@ -581,6 +599,17 @@ async function loadAudit() {
              'background:' + col + '; margin-right:4px; vertical-align:middle;"></span>' + px;
     }
 
+    /* Cellule conviction / coherence (16/08/2026) : valeur de 0 a 1, coloree
+     * par palier. Au-dela de 0.75 le flux (ou le prix) va dans le meme sens
+     * sur au moins 6 tranches sur 8 -- c'est la que la mesure devient
+     * interessante. En dessous de 0.5, les tranches se contredisent. */
+    function convCell(v) {
+      if (v === null || v === undefined || isNaN(v)) return '';
+      var col = v >= 0.75 ? '#2ecc71' : (v >= 0.5 ? '#f1c40f' : '#8fa3bf');
+      var w = v >= 0.75 ? 'font-weight:700;' : '';
+      return '<span style="color:' + col + ';' + w + '">' + v.toFixed(2) + '</span>';
+    }
+
     /* Cellule DBSI (15/08/2026) : les deux valeurs cote a cote, "top / bottom".
      * Top en rouge (pression vendeuse au-dessus de la bougie), bottom en vert
      * (pression acheteuse en dessous) -- convention demandee par Benjamin.
@@ -721,22 +750,31 @@ async function loadAudit() {
         '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + mcbCell + '</td>' +
         '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
+        '<td class="' + cls(r.vwapLive) + '" style="opacity:0.75; font-size:10px;">' + fmt(r.vwapLive,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td style="text-align:center;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
         '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
         '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
+        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.75; font-size:10px;">' + fmt(r.live15Vwap,2) + '</td>' +
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
         '<td style="text-align:center;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
-        '<td>' + fmt(r.cadence,2) + '</td>' +
-        '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
-        '<td class="' + cls(r.netMove) + '" style="border-left:3px solid #5a6b85;">' + fmt(r.netMove,4) + '</td>' +
-        '<td>' + fmt(r.netMoveMult,2) + '</td>' +
-        '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
-        '<td style="border-left:2px solid #5a6b85;">' + fmt(r.amplitude,4) + '</td>' +
-        '<td>' + fmt(r.winSec,1) + '</td>' +
-        '<td style="text-align:center; white-space:nowrap;">' + dbsiCell(r) + '</td>' +
-        '<td>' + arrow(r.direction) + '</td>' +
+        (_activeTab === 'intention'
+          ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsiCell(r) + '</td>' +
+            '<td style="text-align:center;">' + convCell(r.convictionScore) + '</td>' +
+            '<td style="text-align:center;">' + convCell(r.coherence) + '</td>' +
+            '<td class="' + cls(r.liveMoneyFlow) + '">' + fmt(r.liveMoneyFlow,2) + '</td>' +
+            '<td class="' + cls(r.liveBw) + '">' + fmt(r.liveBw,2) + '</td>' +
+            '<td class="' + cls(r.liveLbw) + '">' + fmt(r.liveLbw,2) + '</td>' +
+            '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
+            '<td>' + arrow(r.direction) + '</td>'
+          : '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
+            '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
+            '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,4) + '</td>' +
+            '<td>' + fmt(r.netMoveMult,2) + '</td>' +
+            '<td>' + fmt(r.amplitude,4) + '</td>' +
+            '<td>' + fmt(r.winSec,1) + '</td>'
+        ) +
         '<td style="border-left:2px solid #5a6b85;">' + eventCell + '</td>' +
         '</tr>');
     }
@@ -747,11 +785,17 @@ async function loadAudit() {
       '<th style="width:18px; padding:2px 1px;" title="Regime directionnel vague MCB 15m">Rg</th>' +
       '<th style="width:18px; padding:2px 1px;" title="Pivot de trajectoire VWAP">Pivot</th>' +
       '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
-      '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
-      '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
-      '<th>Cadence</th><th>nMx</th><th style="border-left:3px solid #5a6b85;">NetMove</th><th>NMx</th><th>Sens3</th>' +
-      '<th style="border-left:2px solid #5a6b85;">Amplitude</th><th>WinSec</th>' +
-      '<th title="DBSI intra-bougie : top (rouge) / bottom (vert)">DBSI</th><th>Dir.</th>' +
+      '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th title="VWAP 3m intra-bougie (en cours)">VW3L</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th title="VWAP 15m intra-bougie (en cours)">VW15L</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
+      (_activeTab === 'intention'
+        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : top (rouge) / bottom (vert)">DBSI</th>' +
+          '<th title="Conviction : coherence du flux achat/vente sur les 8 tranches (0 a 1)">Conv</th>' +
+          '<th title="Coherence : constance du mouvement de prix sur les 8 tranches (0 a 1)">Coh</th>' +
+          '<th title="MoneyFlow intra-bougie">MFlow</th><th title="Blue Wave intra-bougie">BW</th>' +
+          '<th title="Lt Blue Wave intra-bougie">LBW</th><th>Sens3</th><th>Dir.</th>'
+        : '<th style="border-left:3px solid #5a6b85;">Cadence</th><th>nMx</th><th>NetMove</th><th>NMx</th>' +
+          '<th>Amplitude</th><th>WinSec</th>'
+      ) +
       '<th style="border-left:2px solid #5a6b85;">Evenement</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
     html += '</tbody></table>';
