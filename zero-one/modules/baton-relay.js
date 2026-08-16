@@ -35,6 +35,20 @@ const fs = require('fs');
 const path = require('path');
 const priceStream = require('./price-stream');
 const { analyzeVwap, analyzeTrigger, analyzeWavePivot } = require('./volume-analyzer');
+/* Detecteur de trendlines (16/08/2026) -- OBSERVATION SEULEMENT. */
+const trendline = require('./trendline-detector');
+/* Recalcul espace : les lignes bougent lentement et le calcul parcourt
+ * ~2400 paires de pivots. Toutes les 2 minutes suffit largement. */
+let _tlCache = null;
+let _tlLastRun = 0;
+function getTrendlines() {
+  const now = Date.now();
+  if (!_tlCache || (now - _tlLastRun) > 120000) {
+    try { _tlCache = trendline.run(); _tlLastRun = now; }
+    catch (e) { /* best-effort, ne doit jamais casser le baton */ }
+  }
+  return _tlCache;
+}
 
 const STATE_PATH = path.join(__dirname, '../data/baton-state.json');
 const HISTORY_PATH = path.join(__dirname, '../data/baton-cadence-history.json');
@@ -631,6 +645,25 @@ function tick() {
      * sans que le prix suive. */
     convictionScore: trig.convictionScore !== undefined ? trig.convictionScore : null,
     coherence: trig.coherence !== undefined ? trig.coherence : null,
+    /* LIGNES IMAGINAIRES (16/08/2026) -- trendlines obliques detectees sur les
+     * extremes de prix. lgiPoints = nombre de touches de la ligne la plus
+     * proche quand le prix entre dans sa zone (+/-40 USD), null sinon.
+     * OBSERVATION SEULEMENT : aucune decision ne s'en sert. */
+    lgiPoints: (function () {
+      const tl = getTrendlines();
+      if (!tl || !Array.isArray(tl.lines)) return null;
+      const inz = tl.lines.filter(l => l.inZone);
+      if (!inz.length) return null;
+      return Math.max.apply(null, inz.map(l => l.points));
+    })(),
+    lgiNature: (function () {
+      const tl = getTrendlines();
+      if (!tl || !Array.isArray(tl.lines)) return null;
+      const inz = tl.lines.filter(l => l.inZone);
+      if (!inz.length) return null;
+      inz.sort((a, b) => b.points - a.points);
+      return inz[0].nature;
+    })(),
     vwapSlope,
     vwapSlopeDir,
     vwap3Slope,

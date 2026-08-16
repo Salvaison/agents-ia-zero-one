@@ -401,12 +401,12 @@ app.get('/audit-view', requireAuth, (req, res) => {
   <div class="sub">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.<br><span style="opacity:0.7;">Seuils par defaut alignes sur ceux du baton (11/08/2026). La colonne Trade montre les entrees/sorties REELLES du simulateur.</span></div>
 
   <div class="controls">
-    <label>Retournement Delta VWAP3 &gt;= <input type="number" id="rDelta" value="6" step="0.5"></label>
-    <label>et VWAP3 proche de &lt;= <input type="number" id="rProx" value="7" step="0.5"></label>
-    <label>Confirm. cadence &gt;= <input type="number" id="cCad" value="2" step="0.1"></label>
-    <label>ou netMove &gt;= <input type="number" id="cNet" value="0.06" step="0.01"></label>
-    <label>Bypass cadence &gt;= <input type="number" id="bCad" value="3" step="0.5"></label>
-    <label>ou netMove &gt;= <input type="number" id="bNet" value="0.03" step="0.01"></label>
+    <label title="Ecart de VWAP3 entre deux releves. p90 mesure = 2.6">Retournement Delta VWAP3 &gt;= <input type="number" id="rDelta" value="3" step="0.5"></label>
+    <label title="Distance de VWAP3 a zero. p25 mesure = 2.45">et VWAP3 proche de &lt;= <input type="number" id="rProx" value="2" step="0.5"></label>
+    <label title="MULTIPLICATEUR de cadence, pas la cadence brute. p90 = 1.62">Confirm. cadence x &gt;= <input type="number" id="cCad" value="1.6" step="0.1"></label>
+    <label title="MULTIPLICATEUR de netMove, pas netMove brut. p90 = 2.52">ou netMove x &gt;= <input type="number" id="cNet" value="2.5" step="0.1"></label>
+    <label title="MULTIPLICATEUR de cadence. p99 = 5.77">Bypass cadence x &gt;= <input type="number" id="bCad" value="5.8" step="0.5"></label>
+    <label title="MULTIPLICATEUR de netMove. p99 = 10.14">ou netMove x &gt;= <input type="number" id="bNet" value="10" step="0.5"></label>
     <button onclick="loadAudit()">Rafraichir</button>
   </div>
 
@@ -453,12 +453,15 @@ function switchTab(t) {
 async function loadAudit() {
   const wrap = document.getElementById('wrap');
   const statsEl = document.getElementById('stats');
-  const rDelta = parseFloat(document.getElementById('rDelta').value) || 6;
-  const rProx = parseFloat(document.getElementById('rProx').value) || 7;
-  const cCad = parseFloat(document.getElementById('cCad').value) || 3;
-  const cNet = parseFloat(document.getElementById('cNet').value) || 2;
-  const bCad = parseFloat(document.getElementById('bCad').value) || 7;
-  const bNet = parseFloat(document.getElementById('bNet').value) || 5;
+  /* Valeurs de repli alignees sur les percentiles OKX (16/08/2026) -- elles
+   * doivent correspondre aux valeurs par defaut des champs, sinon un champ
+   * vide reintroduit silencieusement les anciens seuils Bybit. */
+  const rDelta = parseFloat(document.getElementById('rDelta').value) || 3;
+  const rProx = parseFloat(document.getElementById('rProx').value) || 2;
+  const cCad = parseFloat(document.getElementById('cCad').value) || 1.6;
+  const cNet = parseFloat(document.getElementById('cNet').value) || 2.5;
+  const bCad = parseFloat(document.getElementById('bCad').value) || 5.8;
+  const bNet = parseFloat(document.getElementById('bNet').value) || 10;
 
   try {
     const res = await fetch('/api/audit-history');
@@ -604,10 +607,14 @@ async function loadAudit() {
      * sur au moins 6 tranches sur 8 -- c'est la que la mesure devient
      * interessante. En dessous de 0.5, les tranches se contredisent. */
     function convCell(v) {
-      if (v === null || v === undefined || isNaN(v)) return '';
-      var col = v >= 0.75 ? '#2ecc71' : (v >= 0.5 ? '#f1c40f' : '#8fa3bf');
-      var w = v >= 0.75 ? 'font-weight:700;' : '';
-      return '<span style="color:' + col + ';' + w + '">' + v.toFixed(2) + '</span>';
+      /* parseFloat obligatoire : analyzeTrigger() renvoie certains champs
+       * en CHAINE (il utilise .toFixed() en interne), et v.toFixed() sur une
+       * chaine casse le rendu de toute la page. */
+      var n = parseFloat(v);
+      if (v === null || v === undefined || isNaN(n)) return '';
+      var col = n >= 0.75 ? '#2ecc71' : (n >= 0.5 ? '#f1c40f' : '#8fa3bf');
+      var w = n >= 0.75 ? 'font-weight:700;' : '';
+      return '<span style="color:' + col + ';' + w + '">' + n.toFixed(2) + '</span>';
     }
 
     /* Cellule DBSI (15/08/2026) : les deux valeurs cote a cote, "top / bottom".
@@ -732,7 +739,17 @@ async function loadAudit() {
       // Retournement fusionne dans la colonne Evenement (14/08/2026) au lieu
       // d'occuper sa propre colonne -- il appartient a la meme famille
       // d'information que les evenements du baton.
-      const eventCell = (r.isReversal ? '<span style="color:#f1c40f; margin-right:4px;" title="Retournement imminent">&#9888;</span>' : '') + signalCell;
+      /* Marqueur Lgi (16/08/2026) : le prix est entre dans la zone d'une
+       * ligne imaginaire. Le chiffre est son nombre de touches. Vert pour un
+       * support, rouge pour une resistance. */
+      let lgiCell = '';
+      if (r.lgiPoints) {
+        const lc = r.lgiNature === 'SUPPORT' ? '#2ecc71' : '#e74c3c';
+        lgiCell = '<span title="Ligne imaginaire ' + (r.lgiNature || '') + ', ' +
+                  r.lgiPoints + ' touches" style="color:' + lc +
+                  '; font-size:9px; font-weight:600; margin-right:5px;">Lgi ' + r.lgiPoints + '</span>';
+      }
+      const eventCell = (r.isReversal ? '<span style="color:#f1c40f; margin-right:4px;" title="Retournement imminent">&#9888;</span>' : '') + lgiCell + signalCell;
       // mcbPivotCell() dedoublonne en interne (_lastPivKey) : un second
       // appel sur la meme ligne renverrait toujours vide. On capture donc
       // le resultat une seule fois, pour la cellule ET pour le fond de ligne.
