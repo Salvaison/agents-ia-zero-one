@@ -35,17 +35,22 @@ const fs = require('fs');
 const path = require('path');
 const priceStream = require('./price-stream');
 const { analyzeVwap, analyzeTrigger, analyzeWavePivot } = require('./volume-analyzer');
-/* Detecteur de trendlines (16/08/2026) -- OBSERVATION SEULEMENT. */
-const trendline = require('./trendline-detector');
-/* Recalcul espace : les lignes bougent lentement et le calcul parcourt
- * ~2400 paires de pivots. Toutes les 2 minutes suffit largement. */
+/* Lignes imaginaires (17/08/2026) -- OBSERVATION SEULEMENT.
+ * Le detecteur tourne desormais comme processus PM2 autonome et ecrit
+ * data/trendlines.json chaque minute. Le baton se contente de lire ce
+ * fichier : cout CPU isole, et un plantage du detecteur ne peut plus
+ * affecter le baton, qui lira au pire une valeur legerement perimee.
+ *   pm2 start modules/trendline-detector.js --name trendline -- --daemon */
+const TRENDLINES_PATH = path.join(__dirname, '../data/trendlines.json');
 let _tlCache = null;
-let _tlLastRun = 0;
+let _tlLastRead = 0;
 function getTrendlines() {
   const now = Date.now();
-  if (!_tlCache || (now - _tlLastRun) > 120000) {
-    try { _tlCache = trendline.run(); _tlLastRun = now; }
-    catch (e) { /* best-effort, ne doit jamais casser le baton */ }
+  if (!_tlCache || (now - _tlLastRead) > 30000) {
+    try {
+      _tlCache = JSON.parse(fs.readFileSync(TRENDLINES_PATH, 'utf8'));
+      _tlLastRead = now;
+    } catch (e) { /* fichier absent ou en cours d'ecriture : on garde le cache */ }
   }
   return _tlCache;
 }
@@ -669,11 +674,10 @@ function tick() {
      * ou le prix a deja reagi de plusieurs facons -- Benjamin y voit un point
      * de controle local, et le cas du 16/08 15h43-16h20 (prix fige 13 min sur
      * une telle zone) lui donne raison. */
+    /* La confluence est desormais calculee par le detecteur lui-meme. */
     lgiConfluence: (function () {
       const tl = getTrendlines();
-      if (!tl || !Array.isArray(tl.lines)) return null;
-      const n = tl.lines.filter(l => l.inZone).length;
-      return n > 0 ? n : null;
+      return (tl && tl.confluence) ? tl.confluence : null;
     })(),
     vwapSlope,
     vwapSlopeDir,

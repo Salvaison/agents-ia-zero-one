@@ -1,77 +1,90 @@
 /**
- * trendline-detector.js — Detection des "lignes imaginaires" (Benjamin, 16/08/2026).
+ * trendline-detector.js — Detection des "lignes imaginaires" (Benjamin).
  *
- * Trace des trendlines obliques a partir des extremes de prix, et mesure a
- * quelle distance le prix courant se trouve de chacune.
+ * VERSION DU 17/08/2026 : deux changements par rapport a la version du 16/08.
  *
- * OBSERVATION SEULEMENT : ecrit data/trendlines.json, ne pilote aucune decision.
+ * ── 1. LES PIVOTS VIENNENT DES SIGNAUX MCB 15m ─────────────────────────
  *
- * ── MESURES QUI ONT FIXE LES PARAMETRES (16/08/2026, 72h de donnees 3m) ──
+ * La version precedente calculait ses propres extrema locaux sur le 3m
+ * (fenetre glissante de 8 bougies, filtre d'amplitude a 25 USD). Resultat :
+ * 71 pivots sur 48h au lieu de 35, donc environ quatre fois plus de paires
+ * candidates, et des lignes tracees sur des oscillations qui ne correspondent
+ * a aucun retournement reel. Benjamin : "clairement il n'utilise pas
+ * uniquement les extremes de prix recences pour tracer ses lignes, resultat
+ * on a des Luigi all over rendant la fonction inutilisable".
+ *
+ * C'etait un ecart avec sa conception initiale : l'extreme de prix doit etre
+ * celui rattache a un signal MCB. On revient a cette definition, et sur le
+ * 15m plutot que le 3m -- les extremes du 15m sont des pivots de structure,
+ * ceux qui portent de vraies lignes ; le 3m donne des oscillations trop fines
+ * pour ancrer une trendline de 48 heures.
+ *
+ * Volume attendu : environ 37 signaux 15m sur 48h contre 164 sur le 3m.
+ *
+ * ── 2. PROCESSUS PM2 AUTONOME ──────────────────────────────────────────
+ *
+ * Le detecteur etait appele depuis baton-relay avec un cache de 2 minutes.
+ * Il tourne desormais seul et ecrit data/trendlines.json ; baton-relay se
+ * contente de lire ce fichier. Avantages : cout CPU isole, rythme propre,
+ * et un plantage du detecteur ne peut plus affecter le baton.
+ *
+ *   pm2 start modules/trendline-detector.js --name trendline -- --daemon
+ *
+ * ── MESURES QUI FONDENT LES PARAMETRES (16/08/2026) ────────────────────
  *
  * Test prospectif : une ligne construite sur 3 pivots alignes annonce-t-elle
- * ou se formera le pivot SUIVANT (inconnu au moment du trace) ?
+ * ou se formera le pivot SUIVANT, inconnu au moment du trace ?
  *
  *   zone +/-15$ : 22% de reussite  (hasard 2.2%)  -- x10
  *   zone +/-25$ : 36%              (hasard 3.6%)  -- x10
  *   zone +/-40$ : 48%              (hasard 5.8%)  -- x8
  *   zone +/-60$ : 62%              (hasard 8.6%)  -- x7
- *   zone +/-80$ : 73%              (hasard 11.5%) -- x6
  *
- * Le "hasard" est la probabilite qu'un niveau tire au sort dans la fourchette
- * du prix tombe a la meme distance d'un pivot. Le detecteur fait 6 a 10 fois
- * mieux quelle que soit la zone -- le choix de TOLERANCE_USD est donc un
- * arbitrage entre fiabilite et precision, pas un seuil de validite.
- *
- * DEUX RESULTATS CONTRE-INTUITIFS, mesures et non supposes :
- *   - La REDONDANCE n'aide pas : 3 points donnent 36%, 6 points 34%. Une ligne
- *     tres touchee ne vaut pas mieux qu'une ligne a trois points.
- *   - Les lignes ANCIENNES sont meilleures : moins de 6h -> 27%, plus de 48h
- *     -> 36%. Il faut laisser a une ligne le temps de s'etablir.
+ * Deux resultats contre-intuitifs, mesures et non supposes :
+ *   - La REDONDANCE n'aide pas : 3 points donnent 36%, 6 points 34%.
+ *   - Les lignes ANCIENNES sont meilleures : moins de 6h -> 27%, plus de
+ *     48h -> 36%. Il faut laisser a une ligne le temps de s'etablir.
  *
  * PIEGE EVITE : une premiere version mesurait la "reaction du prix apres
- * contact" et trouvait 100% de rebonds sur toutes les lignes. C'etait une
- * tautologie -- un minimum local est suivi d'une remontee par definition.
- * Mesure de reference : apres un point bas quelconque, le prix remonte de
- * 47 USD en moyenne dans 65% des cas, ligne ou pas ligne. Seul le test
- * PROSPECTIF (predire ou sera le prochain pivot) a du sens.
+ * contact" et trouvait 100% de rebonds partout. C'etait une tautologie --
+ * un minimum local est suivi d'une remontee par definition. Reference
+ * mesuree : apres un point bas quelconque, le prix remonte de 47 USD dans
+ * 65% des cas, ligne ou pas ligne. Seul le test PROSPECTIF a du sens.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const CSV_PATH = '/root/agents-ia-zero-one/data/mcb-live/mcb_3m.csv';
+const CSV_15M = '/root/agents-ia-zero-one/data/mcb-live/mcb_15m.csv';
 const OUT_PATH = path.join(__dirname, '../data/trendlines.json');
 
-/* Fenetre d'historique. 48h : au-dela, le marche a change de regime ; en deca,
- * pas assez de pivots pour trouver des alignements. */
+/* Fenetre d'historique. 48h = 192 bougies de 15m. */
 const WINDOW_HOURS = 48;
 
-/* Zone de tolerance, en POURCENTAGE du prix (16/08/2026). Un seuil en dollars
- * absolus se perime des que le prix bouge -- meme raison qui avait fait passer
- * srZone de 250 USD a 0.39% le 17/07.
- * 0.048% = 30.2 USD a 63 000, valeur choisie par Benjamin.
- * Reperes mesures (a 40 USD absolus) : 48% de reussite prospective contre
- * 5.8% au hasard. Un seuil plus serre reduit le taux mais gagne en precision. */
+/* Zone de tolerance en POURCENTAGE du prix : un seuil en dollars absolus se
+ * perime des que le prix bouge. 0.048% = 30 USD a 63 000, valeur choisie par
+ * Benjamin le 16/08 ("l'equivalent de 30 dollars aujourd'hui, en pourcent"). */
 const TOLERANCE_PCT = 0.048;
-let TOLERANCE_USD = 30;   // recalcule a chaque run() sur le prix courant
+let TOLERANCE_USD = 30;
 
-/* Extraction des pivots : un extremum doit dominer une fenetre de +/-8 bougies
- * (48 min) et s'inscrire dans une amplitude d'au moins MIN_AMPLITUDE, pour
- * ecarter les micro-oscillations. */
-const PIVOT_LOOKBACK = 8;
-const MIN_AMPLITUDE_USD = 25;
+/* Recul pour retrouver l'extreme de prix precedant un signal. Le signal
+ * confirme un retournement deja passe : mesure du 15/08, le decalage median
+ * etait de 2 bougies. 5 laisse de la marge sans remonter trop loin. */
+const EXTREME_LOOKBACK = 5;
 
-/* Deux ancres doivent etre separees d'au moins 3h : en deca, la pente est
- * dictee par le bruit local. */
+/* Deux ancres separees d'au moins 3h : en deca, la pente est dictee par le
+ * bruit local. */
 const MIN_SPAN_HOURS = 3;
 
-/* Nombre de lignes conservees. Sans limite, 72h de donnees produisent plus de
- * 2000 lignes candidates -- inexploitable. */
+/* Nombre de lignes conservees. */
 const MAX_LINES = 12;
 
+/* Rythme du mode demon. Les lignes bougent lentement -- une minute suffit. */
+const DAEMON_INTERVAL_MS = 60000;
+
 function readCsv() {
-  if (!fs.existsSync(CSV_PATH)) return [];
-  const lines = fs.readFileSync(CSV_PATH, 'utf8').trim().split('\n');
+  if (!fs.existsSync(CSV_15M)) return [];
+  const lines = fs.readFileSync(CSV_15M, 'utf8').trim().split('\n');
   const out = [];
   for (const line of lines.slice(1)) {
     const c = line.split(',');
@@ -80,34 +93,52 @@ function readCsv() {
     const low = parseFloat(c[3]);
     const close = parseFloat(c[4]);
     if (!isFinite(ts) || !isFinite(high) || !isFinite(low)) continue;
-    out.push({ ts: Math.floor(ts / 1000), high, low, close });
+    /* Colonnes 13 et 14 : signal MCB natif. Vides sur la plupart des bougies
+     * -- le signal est ponctuel. Absentes des lignes anterieures au 14/08. */
+    const up = (c[13] !== undefined && c[13] !== '') ? parseFloat(c[13]) : null;
+    const dn = (c[14] !== undefined && c[14] !== '') ? parseFloat(c[14]) : null;
+    out.push({
+      ts: Math.floor(ts / 1000), high, low, close,
+      sigUp: (up !== null && isFinite(up)) ? up : null,
+      sigDn: (dn !== null && isFinite(dn)) ? dn : null,
+    });
   }
   return out.sort((a, b) => a.ts - b.ts);
 }
 
+/**
+ * Un pivot = l'extreme de prix qui a PRECEDE un signal MCB.
+ * wt1_cross_up (point vert, creux de vague) -> on cherche le plus BAS.
+ * wt1_cross_dn (point rouge, pic de vague)  -> on cherche le plus HAUT.
+ */
 function extractPivots(bars) {
   const pv = [];
-  for (let i = PIVOT_LOOKBACK; i < bars.length - PIVOT_LOOKBACK; i++) {
-    const win = bars.slice(i - PIVOT_LOOKBACK, i + PIVOT_LOOKBACK + 1);
-    const hi = Math.max(...win.map(b => b.high));
-    const lo = Math.min(...win.map(b => b.low));
-    if ((hi - lo) < MIN_AMPLITUDE_USD) continue;
-    if (bars[i].high === hi) pv.push({ ts: bars[i].ts, type: 'HAUT', price: hi });
-    else if (bars[i].low === lo) pv.push({ ts: bars[i].ts, type: 'BAS', price: lo });
-  }
-  /* Fusionner les pivots consecutifs de meme type et rapproches : un sommet
-   * etale sur plusieurs bougies ne doit compter qu'une fois. */
-  const ded = [];
-  for (const p of pv) {
-    const last = ded[ded.length - 1];
-    if (last && last.type === p.type && (p.ts - last.ts) < PIVOT_LOOKBACK * 180) {
-      if ((p.type === 'HAUT' && p.price > last.price) ||
-          (p.type === 'BAS' && p.price < last.price)) ded[ded.length - 1] = p;
-      continue;
+  for (let i = 0; i < bars.length; i++) {
+    const b = bars[i];
+    if (b.sigUp === null && b.sigDn === null) continue;
+    const cherchHaut = (b.sigDn !== null);
+    const from = Math.max(0, i - EXTREME_LOOKBACK);
+    let bestIdx = null, bestVal = null;
+    for (let j = from; j <= i; j++) {
+      const v = cherchHaut ? bars[j].high : bars[j].low;
+      if (!isFinite(v)) continue;
+      if (bestVal === null || (cherchHaut ? v > bestVal : v < bestVal)) {
+        bestVal = v; bestIdx = j;
+      }
     }
-    ded.push(p);
+    if (bestIdx === null) continue;
+    /* Plusieurs signaux peuvent designer le meme extreme -- on ne le compte
+     * qu'une fois, sinon le nombre de touches d'une ligne est gonfle. */
+    if (pv.length && pv[pv.length - 1].ts === bars[bestIdx].ts) continue;
+    pv.push({
+      ts: bars[bestIdx].ts,
+      type: cherchHaut ? 'HAUT' : 'BAS',
+      price: bestVal,
+      sigValue: cherchHaut ? b.sigDn : b.sigUp,
+      lagBars: i - bestIdx,
+    });
   }
-  return ded;
+  return pv;
 }
 
 function buildLines(pivots, nowTs, nowPrice) {
@@ -115,15 +146,14 @@ function buildLines(pivots, nowTs, nowPrice) {
   for (let i = 0; i < pivots.length; i++) {
     for (let j = i + 1; j < pivots.length; j++) {
       const a = pivots[i], b = pivots[j];
-      if (a.type !== b.type) continue;                  // support OU resistance, pas les deux
+      if (a.type !== b.type) continue;
       if ((b.ts - a.ts) < MIN_SPAN_HOURS * 3600) continue;
 
       const slope = (b.price - a.price) / (b.ts - a.ts);
       const at = (t) => a.price + slope * (t - a.ts);
 
-      /* Points confirmant la ligne entre les deux ancres. Il en faut au moins
-       * un -> 3 points au total. La mesure montre qu'aller au-dela n'ameliore
-       * pas la prediction, donc on ne l'exige pas. */
+      /* Au moins un point confirmant entre les deux ancres -> 3 points au
+       * total. Exiger davantage n'ameliore pas la prediction (mesure). */
       const conf = pivots.filter(p =>
         p.type === a.type && p.ts > a.ts && p.ts < b.ts &&
         Math.abs(p.price - at(p.ts)) <= TOLERANCE_USD);
@@ -143,15 +173,13 @@ function buildLines(pivots, nowTs, nowPrice) {
         spanHours: +((b.ts - a.ts) / 3600).toFixed(1),
         projectedNow: +projected.toFixed(1),
         distanceUsd: +distance.toFixed(1),
-        /* Le prix est-il dans la zone de la ligne en ce moment ? */
         inZone: Math.abs(distance) <= TOLERANCE_USD,
         lastAnchorTs: b.ts,
       });
     }
   }
 
-  /* Dedoublonnage : deux lignes de pente et de niveau proches decrivent la
-   * meme chose. On garde celle qui a le plus de points. */
+  /* Deux lignes de pente et de niveau proches decrivent la meme chose. */
   lines.sort((x, y) => y.points - x.points || Math.abs(x.distanceUsd) - Math.abs(y.distanceUsd));
   const uniq = [];
   for (const l of lines) {
@@ -166,40 +194,42 @@ function buildLines(pivots, nowTs, nowPrice) {
 
 function run() {
   const bars = readCsv();
-  if (bars.length < 50) {
-    console.warn('[trendline] pas assez de bougies');
+  if (bars.length < 20) {
+    console.warn('[trendline] pas assez de bougies 15m');
     return null;
   }
   const nowTs = bars[bars.length - 1].ts;
   const nowPrice = bars[bars.length - 1].close;
-  /* Tolerance recalculee sur le prix courant, pas figee en dollars. */
   TOLERANCE_USD = +(nowPrice * TOLERANCE_PCT / 100).toFixed(1);
-  const recent = bars.filter(b => b.ts >= nowTs - WINDOW_HOURS * 3600);
 
+  const recent = bars.filter(b => b.ts >= nowTs - WINDOW_HOURS * 3600);
   const pivots = extractPivots(recent);
   const lines = buildLines(pivots, nowTs, nowPrice);
 
-  /* La plus proche au-dessus et en dessous : c'est ce qui interesse pour
-   * savoir ou le prix peut reagir a la hausse comme a la baisse. */
   const above = lines.filter(l => l.distanceUsd < 0)
     .sort((a, b) => b.distanceUsd - a.distanceUsd)[0] || null;
   const below = lines.filter(l => l.distanceUsd > 0)
     .sort((a, b) => a.distanceUsd - b.distanceUsd)[0] || null;
+  const inZone = lines.filter(l => l.inZone);
 
   const state = {
     timestamp: new Date().toISOString(),
     barTs: new Date(nowTs * 1000).toISOString(),
     price: nowPrice,
+    source: 'signaux MCB 15m',
     pivotCount: pivots.length,
     lineCount: lines.length,
     nearestAbove: above ? { projected: above.projectedNow, distance: Math.abs(above.distanceUsd),
                             nature: above.nature, points: above.points } : null,
     nearestBelow: below ? { projected: below.projectedNow, distance: below.distanceUsd,
                             nature: below.nature, points: below.points } : null,
-    inZone: lines.some(l => l.inZone),
+    inZone: inZone.length > 0,
+    confluence: inZone.length,
+    maxPointsInZone: inZone.length ? Math.max(...inZone.map(l => l.points)) : null,
+    natureInZone: inZone.length ? inZone.slice().sort((a, b) => b.points - a.points)[0].nature : null,
     lines,
-    params: { WINDOW_HOURS, TOLERANCE_PCT, TOLERANCE_USD, PIVOT_LOOKBACK,
-              MIN_AMPLITUDE_USD, MIN_SPAN_HOURS },
+    params: { WINDOW_HOURS, TOLERANCE_PCT, TOLERANCE_USD, EXTREME_LOOKBACK,
+              MIN_SPAN_HOURS, MAX_LINES },
   };
 
   try {
@@ -210,13 +240,22 @@ function run() {
   return state;
 }
 
+function logState(s) {
+  if (!s) return;
+  console.log(`[trendline] ${s.pivotCount} pivots 15m, ${s.lineCount} lignes, prix ${s.price}`);
+  if (s.nearestAbove) console.log(`  resistance : ${s.nearestAbove.projected} (+${s.nearestAbove.distance} USD, ${s.nearestAbove.points} pts)`);
+  if (s.nearestBelow) console.log(`  support    : ${s.nearestBelow.projected} (-${s.nearestBelow.distance} USD, ${s.nearestBelow.points} pts)`);
+  if (s.inZone) console.log(`  EN ZONE : ${s.confluence} ligne(s), max ${s.maxPointsInZone} touches, ${s.natureInZone}`);
+}
+
 if (require.main === module) {
-  const s = run();
-  if (s) {
-    console.log(`[trendline] ${s.pivotCount} pivots, ${s.lineCount} lignes, prix ${s.price}`);
-    if (s.nearestAbove) console.log(`  resistance la plus proche : ${s.nearestAbove.projected} (+${s.nearestAbove.distance} USD)`);
-    if (s.nearestBelow) console.log(`  support le plus proche    : ${s.nearestBelow.projected} (-${s.nearestBelow.distance} USD)`);
-    if (s.inZone) console.log('  PRIX ACTUELLEMENT DANS UNE ZONE DE LIGNE');
+  if (process.argv.includes('--daemon')) {
+    console.log(`[trendline] demon demarre, cycle ${DAEMON_INTERVAL_MS / 1000}s`);
+    logState(run());
+    setInterval(() => { try { logState(run()); } catch (e) { console.error('[trendline]', e.message); } },
+                DAEMON_INTERVAL_MS);
+  } else {
+    logState(run());
   }
 }
 
