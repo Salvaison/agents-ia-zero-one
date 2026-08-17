@@ -378,7 +378,10 @@ app.get('/audit-view', requireAuth, (req, res) => {
   .stats { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
   .stats b { color: var(--text); }
   table { width: 100%; border-collapse: collapse; font-family: "SF Mono", Menlo, monospace; font-size: 12px; }
-  th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
+  th, td { text-align: right; padding: 5px 4px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
+  /* Infobulle au survol des en-tetes : les libelles sont abreges pour tenir
+     en largeur, l'explication complete reste accessible via l'attribut title. */
+  th[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
   th:first-child, td:first-child { text-align: left; }
   th:last-child, td:last-child { border-right: none; }
   th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--bg); }
@@ -413,10 +416,10 @@ app.get('/audit-view', requireAuth, (req, res) => {
   <div class="stats" id="stats"></div>
   <div id="tabs" style="margin:8px 0 10px 0;">
     <button id="tab-intention" onclick="switchTab('intention')"
-      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">INTENTION</button>
+      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">MARKETCIPHER</button>
     <button id="tab-effet" onclick="switchTab('effet')"
-      style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">EFFET</button>
-    <span style="margin-left:12px; font-size:11px; opacity:0.6;">INTENTION : pression exercee (DBSI, MoneyFlow, vague) &nbsp;|&nbsp; EFFET : ce qu'elle produit (cadence, netMove, amplitude)</span>
+      style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">OKX</button>
+    <span style="margin-left:12px; font-size:11px; opacity:0.6;">MARKETCIPHER : donnees TradingView (DBSI, MoneyFlow, vague) &nbsp;|&nbsp; OKX : donnees du flux de ticks (cadence, netMove, amplitude, conviction)</span>
   </div>
   <div id="wrap"><div class="empty">Chargement des donnees</div></div>
 
@@ -491,6 +494,11 @@ async function loadAudit() {
       const prior = rows.slice(start, i).filter(function(p) { return p.netMove !== null && p.netMove !== undefined; });
       const baseline = prior.length > 0 ? prior.reduce(function(a, p) { return a + Math.abs(p.netMove); }, 0) / prior.length : null;
       r.netMoveMult = (baseline !== null && baseline > 0 && r.netMove !== null) ? Math.abs(r.netMove) / baseline : null;
+      /* Multiplicateur d'amplitude (17/08/2026), meme principe que netMoveMult :
+       * rapport a la moyenne des releves precedents de la meme fenetre. */
+      const priorA = rows.slice(start, i).filter(function(p) { return p.amplitude !== null && p.amplitude !== undefined; });
+      const baseA = priorA.length > 0 ? priorA.reduce(function(a, p) { return a + Math.abs(p.amplitude); }, 0) / priorA.length : null;
+      r.amplitudeMult = (baseA !== null && baseA > 0 && r.amplitude !== null) ? Math.abs(r.amplitude) / baseA : null;
 
       r.isReversal = (r.deltaVwap3 !== null && Math.abs(r.deltaVwap3) >= rDelta) && (r.vwap3 !== null && Math.abs(r.vwap3) <= rProx);
       r.isConfirm = (r.cadenceMult !== null && r.cadenceMult >= cCad) || (r.netMoveMult !== null && r.netMoveMult >= cNet);
@@ -591,15 +599,24 @@ async function loadAudit() {
      * elle-meme. L'infobulle donne le decalage reel en minutes, pour
      * verifier sur donnees reelles la fourchette "3 a 5 bougies". */
     function priceCell(r) {
-      const px = (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
-      if (!r.mcbExtreme) return px;
-      const col = r.mcbExtreme === 'creux' ? '#2ecc71' : '#e74c3c';
-      const lagMin = ((r.mcbExtremeLagRows || 0) * 30 / 60).toFixed(1);
-      const tip = (r.mcbExtreme === 'creux' ? 'Plus bas' : 'Plus haut') +
-                  ' ' + (r.mcbExtremeVal !== null && r.mcbExtremeVal !== undefined ? Math.round(r.mcbExtremeVal) : '') +
-                  ' -- point MCB confirme ' + lagMin + ' min plus tard';
+      return (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
+    }
+    /* Cellule d'extreme de prix (17/08/2026). CONVENTION : vert = plus HAUT,
+     * rouge = plus BAS -- convention historique du projet, distincte de celle
+     * du signal MCB (ou vert = creux annoncant une hausse).
+     * Le 15m utilise rouge/vert francs, le 3m rose/vert clair pour rester
+     * lisible sans ecraser le 15m. */
+    function extCell(r, field, colHaut, colBas) {
+      const t = r[field];
+      if (!t) return '';
+      const val = r[field + 'Val'];
+      const lag = ((r[field + 'Lag'] || 0) * 30 / 60).toFixed(1);
+      const col = (t === 'HAUT') ? colHaut : colBas;
+      const tip = (t === 'HAUT' ? 'Plus haut ' : 'Plus bas ') +
+                  (val !== null && val !== undefined ? Math.round(val) : '') +
+                  ' -- signal confirme ' + lag + ' min plus tard';
       return '<span title="' + tip + '" style="display:inline-block; width:7px; height:7px; ' +
-             'background:' + col + '; margin-right:4px; vertical-align:middle;"></span>' + px;
+             'background:' + col + '; vertical-align:middle;"></span>';
     }
 
     /* Cellule conviction / coherence (16/08/2026) : valeur de 0 a 1, coloree
@@ -689,35 +706,44 @@ async function loadAudit() {
      * la confirmation.
      * 30 releves de 30s = 15 min = 5 bougies de 3m (borne haute de la
      * fourchette "3 a 5 bougies"). Passer a 18 pour 3 bougies. */
-    const MCB_LOOKBACK_ROWS = 30;
-    let _prePivKey = null;
-    for (let i = 0; i < recent.length; i++) {
-      const r = recent[i];
-      if (!r.wavePivotType) { _prePivKey = null; continue; }
-      const key = r.wavePivotType + ':' + r.wavePivotValue;
-      if (key === _prePivKey) continue;   // meme point, deja traite
-      _prePivKey = key;
-
-      const from = Math.max(0, i - MCB_LOOKBACK_ROWS);
-      let bestIdx = null, bestVal = null;
-      for (let j = from; j <= i; j++) {
-        const cand = recent[j];
-        if (r.wavePivotType === 'pic') {
-          const h = (cand.priceHigh !== null && cand.priceHigh !== undefined) ? cand.priceHigh : cand.lastPrice;
-          if (h === null || h === undefined) continue;
-          if (bestVal === null || h > bestVal) { bestVal = h; bestIdx = j; }
-        } else {
-          const l = (cand.priceLow !== null && cand.priceLow !== undefined) ? cand.priceLow : cand.lastPrice;
-          if (l === null || l === undefined) continue;
-          if (bestVal === null || l < bestVal) { bestVal = l; bestIdx = j; }
+    /* Recherche generique de l'extreme de prix precedant un signal.
+     * Utilisee pour le 3m et le 15m, avec des fenetres differentes. */
+    function markExtremes(arr, typeField, valField, lookback, outField) {
+      let lastKey = null;
+      for (let i = 0; i < arr.length; i++) {
+        const r = arr[i];
+        const typ = r[typeField];
+        if (!typ) { lastKey = null; continue; }
+        const key = typ + ':' + r[valField];
+        if (key === lastKey) continue;
+        lastKey = key;
+        /* 'pic'/'baissier' -> chercher le plus HAUT ; sinon le plus BAS. */
+        const cherchHaut = (typ === 'pic' || typ === 'baissier');
+        const from = Math.max(0, i - lookback);
+        let bestIdx = null, bestVal = null;
+        for (let j = from; j <= i; j++) {
+          const c = arr[j];
+          if (cherchHaut) {
+            const h = (c.priceHigh !== null && c.priceHigh !== undefined) ? c.priceHigh : c.lastPrice;
+            if (h === null || h === undefined) continue;
+            if (bestVal === null || h > bestVal) { bestVal = h; bestIdx = j; }
+          } else {
+            const l = (c.priceLow !== null && c.priceLow !== undefined) ? c.priceLow : c.lastPrice;
+            if (l === null || l === undefined) continue;
+            if (bestVal === null || l < bestVal) { bestVal = l; bestIdx = j; }
+          }
+        }
+        if (bestIdx !== null) {
+          arr[bestIdx][outField] = cherchHaut ? 'HAUT' : 'BAS';
+          arr[bestIdx][outField + 'Val'] = bestVal;
+          arr[bestIdx][outField + 'Lag'] = i - bestIdx;
         }
       }
-      if (bestIdx !== null) {
-        recent[bestIdx].mcbExtreme = r.wavePivotType;
-        recent[bestIdx].mcbExtremeVal = bestVal;
-        recent[bestIdx].mcbExtremeLagRows = i - bestIdx;
-      }
     }
+    /* 3m : 30 releves = 15 min. 15m : 80 releves = 40 min -- le decalage
+     * mesure entre extreme et confirmation est d'environ 2 bougies. */
+    markExtremes(recent, 'wavePivotType', 'wavePivotValue', 30, 'ext3');
+    markExtremes(recent, 'waveRegime15', 'waveRegime15Value', 80, 'ext15');
 
     let inVigilance = false;
     const rowsHtml = [];
@@ -767,34 +793,37 @@ async function loadAudit() {
       rowsHtml.push('<tr class="' + rowCls + '"' + rowStyle + '>' +
         '<td>' + timeParis(r.ts) + '</td>' +
         '<td style="font-weight:600;">' + priceCell(r) + '</td>' +
+        '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext15', '#2ecc71', '#e74c3c') + '</td>' +
+        '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext3', '#a9dfbf', '#f5b7b1') + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + mcbCell + '</td>' +
         '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
-        '<td class="' + cls(r.vwapLive) + '" style="opacity:0.75; font-size:10px;">' + fmt(r.vwapLive,2) + '</td>' +
+        '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.vwapLive,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
-        '<td style="text-align:center;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
-        '<td>' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
+        '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
+        '<td style="padding:2px 0;">' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
         '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
-        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.75; font-size:10px;">' + fmt(r.live15Vwap,2) + '</td>' +
+        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.live15Vwap,2) + '</td>' +
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
-        '<td style="text-align:center;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
-        '<td style="border-right:2px solid #5a6b85;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
+        '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
+        '<td style="border-right:2px solid #5a6b85; padding:2px 0;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
         (_activeTab === 'intention'
           ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsiCell(r) + '</td>' +
-            '<td style="text-align:center;">' + convCell(r.convictionScore) + '</td>' +
-            '<td style="text-align:center;">' + convCell(r.coherence) + '</td>' +
             '<td class="' + cls(r.liveMoneyFlow) + '">' + fmt(r.liveMoneyFlow,2) + '</td>' +
             '<td class="' + cls(r.liveBw) + '">' + fmt(r.liveBw,2) + '</td>' +
-            '<td class="' + cls(r.liveLbw) + '">' + fmt(r.liveLbw,2) + '</td>' +
-            '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
-            '<td>' + arrow(r.direction) + '</td>'
+            '<td class="' + cls(r.liveLbw) + '">' + fmt(r.liveLbw,2) + '</td>'
           : '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
             '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
-            '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,4) + '</td>' +
-            '<td>' + fmt(r.netMoveMult,2) + '</td>' +
-            '<td>' + fmt(r.amplitude,4) + '</td>' +
-            '<td>' + fmt(r.winSec,1) + '</td>'
+            '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,3) + '</td>' +
+            '<td>' + fmt(r.netMoveMult,1) + '</td>' +
+            '<td>' + fmt(r.amplitude,3) + '</td>' +
+            '<td>' + fmt(r.amplitudeMult,1) + '</td>' +
+            '<td style="text-align:center; font-size:11px;">' + convCell(r.convictionScore) + '</td>' +
+            '<td style="text-align:center; font-size:11px;">' + convCell(r.coherence) + '</td>' +
+            '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
+            '<td>' + fmt(r.winSec,1) + '</td>' +
+            '<td>' + arrow(r.direction) + '</td>'
         ) +
         '<td style="border-left:2px solid #5a6b85;">' + eventCell + '</td>' +
         '</tr>');
@@ -803,19 +832,37 @@ async function loadAudit() {
     let html = '<table><thead><tr>' +
       '<th style="width:62px;">UTC+2</th>' +
       '<th style="width:52px;">PRIX</th>' +
+      '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 15m -- vert = plus haut, rouge = plus bas">E15</th>' +
+      '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 3m -- vert clair = plus haut, rose = plus bas">E3</th>' +
       '<th style="width:18px; padding:2px 1px;" title="Regime directionnel vague MCB 15m">Rg</th>' +
       '<th style="width:18px; padding:2px 1px;" title="Pivot de trajectoire VWAP">Pivot</th>' +
       '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
-      '<th style="border-left:2px solid #5a6b85;">VWAP3</th><th title="VWAP 3m intra-bougie (en cours)">VW3L</th><th>Vslope3</th><th>Pente3</th><th>x0</th>' +
-      '<th style="border-left:2px solid #5a6b85;">VWAP15</th><th title="VWAP 15m intra-bougie (en cours)">VW15L</th><th>Vslope15</th><th>Pente15</th><th>x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;" title="VWAP 3m confirme a la cloture (LBW moins BW)">VW3</th>' +
+      '<th title="VWAP 3m INTRA-BOUGIE, mis a jour en continu. Decroche parfois du confirme une a deux minutes avant.">VW3L</th>' +
+      '<th title="Pente du VWAP 3m, en unites par minute">Vsl3</th>' +
+      '<th style="width:16px; padding:2px 0;" title="Direction de la pente VWAP 3m : montant, plat, descendant">P3</th>' +
+      '<th style="width:14px; padding:2px 0;" title="Passage a zero du VWAP 3m. Mesure du 16/08 : aucune valeur predictive (ratio 0.92 a 0.98 contre la reference).">x0</th>' +
+      '<th style="border-left:2px solid #5a6b85;" title="VWAP 15m confirme a la cloture">VW15</th>' +
+      '<th title="VWAP 15m INTRA-BOUGIE. Mesure du 16/08 : a bascule 15 minutes et 46 USD avant le prix.">VW15L</th>' +
+      '<th title="Pente du VWAP 15m">Vsl15</th>' +
+      '<th style="width:16px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
+      '<th style="width:14px; padding:2px 0;" title="Passage a zero du VWAP 15m">x0</th>' +
       (_activeTab === 'intention'
-        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : top (rouge) / bottom (vert)">DBSI</th>' +
-          '<th title="Conviction : coherence du flux achat/vente sur les 8 tranches (0 a 1)">Conv</th>' +
-          '<th title="Coherence : constance du mouvement de prix sur les 8 tranches (0 a 1)">Coh</th>' +
-          '<th title="MoneyFlow intra-bougie">MFlow</th><th title="Blue Wave intra-bougie">BW</th>' +
-          '<th title="Lt Blue Wave intra-bougie">LBW</th><th>Sens3</th><th>Dir.</th>'
-        : '<th style="border-left:3px solid #5a6b85;">Cadence</th><th>nMx</th><th>NetMove</th><th>NMx</th>' +
-          '<th>Amplitude</th><th>WinSec</th>'
+        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous)">DBSI</th>' +
+          '<th title="MoneyFlow intra-bougie. Seul facteur dont la correlation MONTE avec l horizon : +0.18 a 5 min, +0.26 a 30 min. Action lente, precede le marche.">MF</th>' +
+          '<th title="Blue Wave intra-bougie (WT2). Bonne confirmation d entree, mauvais signal de sortie : continue de chuter longtemps apres le creux du prix.">BW</th>' +
+          '<th title="Lt Blue Wave intra-bougie (WT1)">LBW</th>'
+        : '<th style="border-left:3px solid #5a6b85;" title="Cadence : transactions par seconde sur la fenetre de 200 ticks">Cad</th>' +
+          '<th title="Multiplicateur de cadence contre la moyenne glissante 4h. Seuil d evenement du baton : 2. Marque le MOMENT, jamais la direction.">nMx</th>' +
+          '<th title="NetMove : deplacement net de prix sur la fenetre, en pourcent. Correlation avec la direction future : -0.028, soit rien.">NM</th>' +
+          '<th title="Multiplicateur de netMove contre la moyenne des 30 releves precedents">NMx</th>' +
+          '<th title="Amplitude : ecart haut-bas sur la fenetre de 200 ticks, en pourcent">Ampl</th>' +
+          '<th title="Multiplicateur d amplitude contre la moyenne des 30 releves precedents">AMx</th>' +
+          '<th title="Conviction : part des 8 tranches ou le flux achat/vente va dans le meme sens. Distribution verifiee non saturee, moyenne 0.66.">Cv</th>' +
+          '<th title="Coherence : part des 8 tranches ou le mouvement de prix va dans le meme sens. 41 pourcent des releves a zero -- le prix zigzague.">Ch</th>' +
+          '<th title="Sens lisse du prix sur les 3 dernieres tranches">S3</th>' +
+          '<th title="Duree pour accumuler 200 ticks. Fenetre courte = marche actif (17 USD a 5 min), longue = marche endormi (9 USD).">WSec</th>' +
+          '<th title="Direction du prix entre deux releves. Zero signifie prix immobile.">Dir</th>'
       ) +
       '<th style="border-left:2px solid #5a6b85;">Evenement</th>' +
       '</tr></thead><tbody>' + rowsHtml.join('');
