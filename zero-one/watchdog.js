@@ -74,6 +74,37 @@ function alertOnce(type, text) {
   sendTelegram(`⚠️ ZeroOne — ${text}`);
 }
 
+/* Timeframes surveilles, avec leur periode en minutes. Tout fichier hors de
+ * cette liste est ignore -- mcb_closes.csv et consorts sont obsoletes et
+ * declenchaient des alertes permanentes. */
+const TIMEFRAMES = { '3m': 3, '15m': 15, '1h': 60, '4h': 240, '1d': 1440, '1w': 10080 };
+
+/* Seuil de fraicheur = deux periodes plus une marge de 10 min. Une bougie qui
+ * tarde d'une periode est normale (cloture en cours) ; deux signalent un
+ * probleme. */
+function staleThresholdMin(tf) {
+  return TIMEFRAMES[tf] * 2 + 10;
+}
+
+/* Lit les N derniers horodatages d'un CSV, du plus ancien au plus recent. */
+function readTimestamps(full, n) {
+  const lines = fs.readFileSync(full, 'utf8').trim().split('\n');
+  const out = [];
+  for (let i = Math.max(1, lines.length - n); i < lines.length; i++) {
+    const ts = Date.parse(lines[i].split(',')[0]);
+    if (isFinite(ts)) out.push(ts);
+  }
+  return out;
+}
+
+/* Dernier prix de cloture d'un CSV, pour le controle de plausibilite. */
+function lastClose(full) {
+  const lines = fs.readFileSync(full, 'utf8').trim().split('\n');
+  const c = lines[lines.length - 1].split(',');
+  const v = parseFloat(c[4]);
+  return isFinite(v) ? v : null;
+}
+
 function checkCsvFreshness() {
   let files;
   try {
@@ -86,17 +117,86 @@ function checkCsvFreshness() {
     alertOnce('csv-empty', `Aucun fichier CSV trouve dans ${CSV_DIR}`);
     return;
   }
+
   const now = Date.now();
   const stale = [];
+  const incoherent = [];
+  const trous = [];
+  const aberrant = [];
+
   for (const f of files) {
+    /* Nomenclature attendue : mcb_<tf>.csv ou mcb_<tf>_live.csv */
+    const m = f.match(/^mcb_(3m|15m|1h|4h|1d|1w)(_live)?\.csv$/);
+    if (!m) continue;
+    const tf = m[1];
+    const isLive = !!m[2];
+    const periodMin = TIMEFRAMES[tf];
     const full = path.join(CSV_DIR, f);
+
+    /* 1. FRAICHEUR, avec un seuil propre au timeframe. */
     try {
       const ageMin = (now - fs.statSync(full).mtimeMs) / 60000;
-      if (ageMin > CSV_STALE_MINUTES) stale.push(`${f} (${Math.round(ageMin)} min)`);
-    } catch (e) { /* fichier disparu entre le readdir et le stat -- ignore */ }
+      const seuil = isLive ? Math.max(5, periodMin) : staleThresholdMin(tf);
+      if (ageMin > seuil) {
+        stale.push(`${f} (${Math.round(ageMin)} min, seuil ${seuil})`);
+      }
+    } catch (e) { continue; }
+
+    if (isLive) continue;   /* le fichier live n'a qu'une ligne : pas de trous a compter */
+
+    /* 2. COHERENCE DE PERIODE. Si l'ecart entre les deux dernieres bougies
+     * est INFERIEUR a la periode, le fichier contient des bougies d'un autre
+     * timeframe -- c'est arrive deux fois cette semaine apres un changement
+     * d'intervalle de l'onglet TradingView. */
+    try {
+      const ts = readTimestamps(full, 3);
+      if (ts.length >= 2) {
+        const gapMin = (ts[ts.length - 1] - ts[ts.length - 2]) / 60000;
+        if (gapMin > 0 && gapMin < periodMin * 0.9) {
+          incoherent.push(`${f} (ecart ${Math.round(gapMin)} min au lieu de ${periodMin})`);
+        }
+      }
+    } catch (e) { /* lecture impossible, la fraicheur l'aura signale */ }
+
+    /* 3. TROUS sur les dernieres 24h. Quelques-uns sont tolerables ; au-dela
+     * de 10% des bougies attendues, la collecte est degradee. */
+    try {
+      const attendu = Math.floor(1440 / periodMin);
+      if (attendu >= 4) {
+        const ts = readTimestamps(full, attendu + 5);
+        const recents = ts.filter(t => t > now - 24 * 3600 * 1000);
+        let manquantes = 0;
+        for (let i = 1; i < recents.length; i++) {
+          const gap = (recents[i] - recents[i - 1]) / 60000;
+          if (gap > periodMin * 1.5) manquantes += Math.round(gap / periodMin) - 1;
+        }
+        if (manquantes > attendu * 0.1) {
+          trous.push(`${f} (${manquantes} bougies manquantes sur ${attendu} attendues)`);
+        }
+      }
+    } catch (e) { /* idem */ }
+
+    /* 4. PLAUSIBILITE DU PRIX. Un CSV correctement horodate peut contenir des
+     * valeurs aberrantes -- fichier tronque, colonnes decalees. */
+    try {
+      const px = lastClose(full);
+      if (px === null || px < 1000 || px > 500000) {
+        aberrant.push(`${f} (dernier close ${px})`);
+      }
+    } catch (e) { /* idem */ }
   }
+
   if (stale.length) {
-    alertOnce('csv-stale', `CSV non mis a jour depuis plus de ${CSV_STALE_MINUTES} min : ${stale.join(', ')}. Collecteur iMac probablement arrete.`);
+    alertOnce('csv-stale', `CSV perimes : ${stale.join(', ')}. Collecteur iMac probablement arrete.`);
+  }
+  if (incoherent.length) {
+    alertOnce('csv-timeframe', `INCOHERENCE DE TIMEFRAME : ${incoherent.join(', ')}. L'onglet TradingView affiche probablement un autre intervalle -- verifier et nettoyer les lignes polluees.`);
+  }
+  if (trous.length) {
+    alertOnce('csv-trous', `Collecte degradee : ${trous.join(', ')}.`);
+  }
+  if (aberrant.length) {
+    alertOnce('csv-aberrant', `Valeurs aberrantes : ${aberrant.join(', ')}. Fichier tronque ou colonnes decalees ?`);
   }
 }
 
