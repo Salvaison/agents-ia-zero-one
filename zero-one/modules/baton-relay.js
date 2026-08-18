@@ -654,20 +654,16 @@ function tick() {
      * extremes de prix. lgiPoints = nombre de touches de la ligne la plus
      * proche quand le prix entre dans sa zone (+/-40 USD), null sinon.
      * OBSERVATION SEULEMENT : aucune decision ne s'en sert. */
+    /* Le detecteur v4 marque les lignes allumees avec 'active' et non plus
+     * 'inZone' -- il expose aussi directement maxPointsInZone et natureInZone,
+     * autant les lire plutot que de recalculer. */
     lgiPoints: (function () {
       const tl = getTrendlines();
-      if (!tl || !Array.isArray(tl.lines)) return null;
-      const inz = tl.lines.filter(l => l.inZone);
-      if (!inz.length) return null;
-      return Math.max.apply(null, inz.map(l => l.points));
+      return (tl && tl.maxPointsInZone) ? tl.maxPointsInZone : null;
     })(),
     lgiNature: (function () {
       const tl = getTrendlines();
-      if (!tl || !Array.isArray(tl.lines)) return null;
-      const inz = tl.lines.filter(l => l.inZone);
-      if (!inz.length) return null;
-      inz.sort((a, b) => b.points - a.points);
-      return inz[0].nature;
+      return (tl && tl.natureInZone) ? tl.natureInZone : null;
     })(),
     /* CONFLUENCE (16/08/2026) : nombre de lignes dont le prix est dans la
      * zone au meme moment. Plusieurs lignes convergentes signalent un niveau
