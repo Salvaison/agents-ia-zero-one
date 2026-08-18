@@ -58,6 +58,14 @@ const path = require('path');
 
 const CSV_15M = '/root/agents-ia-zero-one/data/mcb-live/mcb_15m.csv';
 const OUT_PATH = path.join(__dirname, '../data/trendlines.json');
+/* Prix courant (18/08/2026). Le detecteur utilisait la cloture de la
+ * derniere bougie 15m, qui ne bouge que tous les quarts d'heure -- la ligne
+ * ne pivotait donc jamais entre deux clotures et le catalogue restait vide.
+ * baton-state.json est reecrit toutes les 30s a partir du flux de ticks. */
+const BATON_PATH = path.join(__dirname, '../data/baton-state.json');
+/* Au-dela de cet age, on ne fait plus confiance au fichier du baton et on
+ * retombe sur la cloture 15m. */
+const BATON_MAX_AGE_MS = 120000;
 
 /* Memoire du catalogue. Benjamin : "48h sur le 15min est bien assez". */
 const WINDOW_HOURS = 48;
@@ -66,6 +74,19 @@ const WINDOW_HOURS = 48;
  * marche bouge. 0.048% = 30 USD a 63 000. */
 const TOLERANCE_PCT = 0.048;
 let TOLERANCE_USD = 30;
+
+/* Tolerance de RECHERCHE, distincte de celle d'allumage (18/08/2026).
+ * Depuis la correction de la fusion des pivots, plus aucune ligne ne se
+ * validait : l'alignement de trois pivots sur une ligne qui pivote en
+ * continu est trop fugace pour etre attrape une fois par minute.
+ * On cherche donc large (60 USD) et on n'allume que serre (30 USD) : le
+ * systeme repere une ligne en formation, la fige par regression sur ses
+ * points -- ce qui la resserre -- puis attend que le prix vienne vraiment
+ * a moins de 30 USD pour la signaler.
+ * Mesure du 16/08 : a +/-60 USD, 62% de reussite prospective contre 8.6%
+ * au hasard (contre 48% / 5.8% a +/-40). */
+const SEARCH_TOLERANCE_PCT = 0.096;
+let SEARCH_TOLERANCE_USD = 60;
 
 /* Recul pour retrouver l'extreme de prix precedant un signal MCB. */
 const EXTREME_LOOKBACK = 5;
@@ -126,15 +147,33 @@ function extractPivots(bars) {
   }
   const merged = [];
   for (const p of raw) {
-    const last = merged[merged.length - 1];
-    if (last && last.type === p.type &&
+    /* Dernier pivot de MEME TYPE, quel que soit ce qui s'est intercale
+     * (18/08/2026). L'ancienne version ne comparait qu'au pivot precedent
+     * immediat : un sommet glisse entre deux creux proches rompait la chaine
+     * et empechait leur fusion. C'est ainsi que 63004 / 63016 / 63018, tous
+     * a moins de 45 min et 14 USD les uns des autres, ont ete comptes comme
+     * trois contacts distincts. */
+    let idx = -1;
+    for (let i = merged.length - 1; i >= 0; i--) {
+      if (merged[i].type === p.type) { idx = i; break; }
+    }
+    const last = idx >= 0 ? merged[idx] : null;
+
+    /* Doublon : un meme extreme peut etre designe par plusieurs signaux MCB
+     * successifs. Teste sur tous les pivots retenus du meme type, et non
+     * seulement sur le dernier -- c'est ce qui laissait passer le point du
+     * 17/08 22:00, compte deux fois dans trois lignes du catalogue. */
+    if (merged.some(m => m.type === p.type && m.ts === p.ts)) continue;
+
+    if (last &&
         (p.ts - last.ts) <= MERGE_MINUTES * 60 &&
         Math.abs(p.price - last.price) <= MERGE_USD) {
       const plusExtreme = (p.type === 'HAUT') ? (p.price > last.price) : (p.price < last.price);
-      if (plusExtreme) merged[merged.length - 1] = p;
+      /* On conserve l'horodatage du prix retenu : l'extreme appartient a la
+       * meche ou il a ete atteint, pas a la derniere de la grappe. */
+      if (plusExtreme) merged[idx] = p;
       continue;
     }
-    if (last && last.ts === p.ts) continue;
     merged.push(p);
   }
   return merged;
@@ -175,7 +214,10 @@ function searchFromAnchor(pivots, type, nowTs, nowPrice) {
   /* Tous les pivots de meme type alignes sur cette ligne provisoire --
    * avant, entre ou apres l'ancre : un point qui vient se poser sur le
    * prolongement est justement la confirmation la plus interessante. */
-  const contacts = same.filter(p => Math.abs(p.price - at(p.ts)) <= TOLERANCE_USD);
+  /* Recherche large : on veut reperer une ligne en formation, pas seulement
+   * une ligne deja parfaite. Le resserrement vient ensuite, par la
+   * regression sur les points retenus. */
+  const contacts = same.filter(p => Math.abs(p.price - at(p.ts)) <= SEARCH_TOLERANCE_USD);
   if (contacts.length < 3) return null;
 
   /* Ligne figee par regression sur ses seuls points de contact -- pas sur le
@@ -218,11 +260,25 @@ function run() {
     console.warn('[trendline] pas assez de bougies 15m');
     return null;
   }
-  const nowTs = bars[bars.length - 1].ts;
-  const nowPrice = bars[bars.length - 1].close;
+  const nowTs = Math.floor(Date.now() / 1000);
+  /* Prix courant issu du baton, avec repli sur la cloture 15m. */
+  let nowPrice = bars[bars.length - 1].close;
+  let priceSource = 'cloture 15m';
+  try {
+    const b = JSON.parse(fs.readFileSync(BATON_PATH, 'utf8'));
+    const age = Date.now() - Date.parse(b.timestamp);
+    if (isFinite(b.lastPrice) && age >= 0 && age < BATON_MAX_AGE_MS) {
+      nowPrice = b.lastPrice;
+      priceSource = 'baton (temps reel)';
+    }
+  } catch (e) { /* repli silencieux sur la cloture */ }
   TOLERANCE_USD = +(nowPrice * TOLERANCE_PCT / 100).toFixed(1);
+  SEARCH_TOLERANCE_USD = +(nowPrice * SEARCH_TOLERANCE_PCT / 100).toFixed(1);
 
-  const recent = bars.filter(b => b.ts >= nowTs - WINDOW_HOURS * 3600);
+  /* La fenetre se cale sur la derniere BOUGIE, pas sur l'heure courante --
+   * nowTs est desormais l'horodatage reel et non celui de la cloture. */
+  const lastBarTs = bars[bars.length - 1].ts;
+  const recent = bars.filter(b => b.ts >= lastBarTs - WINDOW_HOURS * 3600);
   const pivots = extractPivots(recent);
 
   /* Deux candidates au maximum : une par type de pivot. */
@@ -234,7 +290,7 @@ function run() {
 
   /* Catalogue : on ajoute les nouvelles, on rafraichit la position des
    * anciennes, on retire celles dont le dernier contact sort de la fenetre. */
-  const cat = loadCatalogue().filter(l => l.lastTs >= nowTs - WINDOW_HOURS * 3600);
+  const cat = loadCatalogue().filter(l => l.lastTs >= lastBarTs - WINDOW_HOURS * 3600);
   for (const l of found) {
     const dup = cat.find(c => Math.abs(c.slopeUsdPerHour - l.slopeUsdPerHour) < 2 &&
                               Math.abs(c.fit.at0 - l.fit.at0) < TOLERANCE_USD);
@@ -257,9 +313,10 @@ function run() {
 
   const state = {
     timestamp: new Date().toISOString(),
-    barTs: new Date(nowTs * 1000).toISOString(),
+    barTs: new Date(lastBarTs * 1000).toISOString(),
     price: nowPrice,
     source: 'ancre sur avant-dernier extreme confirme + prix courant',
+    priceSource,
     pivotCount: pivots.length,
     foundNow: found.length,
     lineCount: cat.length,
@@ -274,7 +331,8 @@ function run() {
     natureInZone: actives.length ? actives.slice().sort((a, b) => b.points - a.points)[0].nature : null,
     catalogue: cat,
     lines: cat,
-    params: { WINDOW_HOURS, TOLERANCE_PCT, TOLERANCE_USD, EXTREME_LOOKBACK,
+    params: { WINDOW_HOURS, TOLERANCE_PCT, TOLERANCE_USD,
+              SEARCH_TOLERANCE_PCT, SEARCH_TOLERANCE_USD, EXTREME_LOOKBACK,
               MERGE_MINUTES, MERGE_USD, MIN_SPAN_HOURS },
   };
 
@@ -289,7 +347,8 @@ function run() {
 function logState(s) {
   if (!s) return;
   console.log(`[trendline] ${s.pivotCount} pivots, ${s.foundNow} ligne(s) trouvee(s) ce cycle, ` +
-              `catalogue ${s.lineCount} dont ${s.activeCount} allumee(s), prix ${s.price}`);
+              `catalogue ${s.lineCount} dont ${s.activeCount} allumee(s), ` +
+              `prix ${s.price} [${s.priceSource}]`);
   if (s.nearestAbove) console.log(`  au-dessus : ${s.nearestAbove.projected} (+${s.nearestAbove.distance} USD, ${s.nearestAbove.points} pts)`);
   if (s.nearestBelow) console.log(`  en dessous: ${s.nearestBelow.projected} (-${s.nearestBelow.distance} USD, ${s.nearestBelow.points} pts)`);
   if (s.inZone) console.log(`  ALLUMEE : ${s.confluence} ligne(s), max ${s.maxPointsInZone} contacts, ${s.natureInZone}`);
