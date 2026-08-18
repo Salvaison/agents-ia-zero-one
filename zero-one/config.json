@@ -404,5 +404,11 @@
     },
     "waveScale": 200,
     "_note": "Duree max d'une chaine de divergence avant expiration (heures), et echelle de normalisation de la Blue Wave (-100/+100). Etaient en dur dans divergence.js, remontes ici le 18/07/2026."
+  },
+  "execution": {
+    "enabled": false,
+    "dryRun": true,
+    "maxContractsPerOrder": 200,
+    "leverage": 10
   }
 }
