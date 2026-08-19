@@ -415,11 +415,13 @@ app.get('/audit-view', requireAuth, (req, res) => {
 
   <div class="stats" id="stats"></div>
   <div id="tabs" style="margin:8px 0 10px 0;">
-    <button id="tab-intention" onclick="switchTab('intention')"
-      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">MARKETCIPHER</button>
-    <button id="tab-effet" onclick="switchTab('effet')"
-      style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">OKX</button>
-    <span style="margin-left:12px; font-size:11px; opacity:0.6;">MARKETCIPHER : donnees TradingView (DBSI, MoneyFlow, vague) &nbsp;|&nbsp; OKX : donnees du flux de ticks (cadence, netMove, amplitude, conviction)</span>
+    <button id="tab-vague" onclick="switchTab('vague')"
+      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">VAGUE</button>
+    <button id="tab-mouvement" onclick="switchTab('mouvement')"
+      style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">MOUVEMENT</button>
+    <button id="tab-engagement" onclick="switchTab('engagement')"
+      style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">ENGAGEMENT</button>
+    <span style="margin-left:12px; font-size:11px; opacity:0.6;">VAGUE : ce que dit MarketCipher &nbsp;|&nbsp; MOUVEMENT : ce que le prix a fait &nbsp;|&nbsp; ENGAGEMENT : qui pousse et avec quelle constance</span>
   </div>
   <div id="wrap"><div class="empty">Chargement des donnees</div></div>
 
@@ -443,13 +445,14 @@ function timeParis(ts) {
 }
 /* Onglet actif -- conserve entre deux rafraichissements automatiques, sinon
  * la vue reviendrait a INTENTION toutes les 30 secondes. */
-var _activeTab = 'intention';
+var _activeTab = 'vague';
 function switchTab(t) {
   _activeTab = t;
   var on = 'padding:5px 14px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;';
   var off = 'padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;';
-  document.getElementById('tab-intention').style.cssText = (t === 'intention' ? on : off) + 'margin-right:6px;';
-  document.getElementById('tab-effet').style.cssText = (t === 'effet' ? on : off);
+  document.getElementById('tab-vague').style.cssText = (t === 'vague' ? on : off) + 'margin-right:6px;';
+  document.getElementById('tab-mouvement').style.cssText = (t === 'mouvement' ? on : off) + 'margin-right:6px;';
+  document.getElementById('tab-engagement').style.cssText = (t === 'engagement' ? on : off);
   loadAudit();
 }
 
@@ -824,18 +827,19 @@ async function loadAudit() {
         '<td style="border-right:2px solid #5a6b85;' +
           ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
           '">' + fmt(r.priceMoveMult,1) + '</td>' +
-        (_activeTab === 'intention'
+        (_activeTab === 'vague'
           ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsiCell(r) + '</td>' +
             '<td class="' + cls(r.liveMoneyFlow) + '">' + fmt(r.liveMoneyFlow,2) + '</td>' +
             '<td class="' + cls(r.liveBw) + '">' + fmt(r.liveBw,2) + '</td>' +
             '<td class="' + cls(r.liveLbw) + '">' + fmt(r.liveLbw,2) + '</td>'
-          : '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
+          : _activeTab === 'mouvement'
+          ? '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
             '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
             '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,3) + '</td>' +
             '<td>' + fmt(r.netMoveMult,1) + '</td>' +
             '<td>' + fmt(r.amplitude,3) + '</td>' +
-            '<td>' + fmt(r.amplitudeMult,1) + '</td>' +
-            '<td style="text-align:center; font-size:11px;">' + convCell(r.convictionScore) + '</td>' +
+            '<td>' + fmt(r.amplitudeMult,1) + '</td>'
+          : '<td style="text-align:center; font-size:11px; border-left:3px solid #5a6b85;">' + convCell(r.convictionScore) + '</td>' +
             '<td style="text-align:center; font-size:11px;">' + convCell(r.coherence) + '</td>' +
             '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
             '<td>' + fmt(r.winSec,1) + '</td>' +
@@ -865,18 +869,19 @@ async function loadAudit() {
       '<th style="width:34px; padding:2px 1px; background:rgba(143,163,191,0.10);" title="Ecart VW15L moins VWAP15 : de combien le live decroche du confirme. Meilleur indicateur directionnel mesure -- correlation +0.228 a 30 min ; au-dela de 10, 136 USD de mouvement avec 72 pourcent de hausses.">dW15</th>' +
       '<th style="border-left:2px solid #5a6b85; width:44px;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
       '<th style="width:34px;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, mouvement violent.">PMx</th>' +
-      (_activeTab === 'intention'
-        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous)">DBSI</th>' +
+      (_activeTab === 'vague'
+        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous). Lecture isolee sans valeur -- lisse sur 10 min, la correlation passe de +0.02 a -0.16.">DBSI</th>' +
           '<th title="MoneyFlow intra-bougie. Seul facteur dont la correlation MONTE avec l horizon : +0.18 a 5 min, +0.26 a 30 min. Action lente, precede le marche.">MF</th>' +
           '<th title="Blue Wave intra-bougie (WT2). Bonne confirmation d entree, mauvais signal de sortie : continue de chuter longtemps apres le creux du prix.">BW</th>' +
           '<th title="Lt Blue Wave intra-bougie (WT1)">LBW</th>'
-        : '<th style="border-left:3px solid #5a6b85;" title="Cadence : transactions par seconde sur la fenetre de 200 ticks">Cad</th>' +
+        : _activeTab === 'mouvement'
+        ? '<th style="border-left:3px solid #5a6b85;" title="Cadence : transactions par seconde sur la fenetre de 200 ticks">Cad</th>' +
           '<th title="Multiplicateur de cadence contre la moyenne glissante 4h. Seuil d evenement du baton : 2. Marque le MOMENT, jamais la direction.">nMx</th>' +
           '<th title="NetMove : deplacement net de prix sur la fenetre, en pourcent. Correlation avec la direction future : -0.028, soit rien.">NM</th>' +
           '<th title="Multiplicateur de netMove contre la moyenne des 30 releves precedents">NMx</th>' +
           '<th title="Amplitude : ecart haut-bas sur la fenetre de 200 ticks, en pourcent">Ampl</th>' +
-          '<th title="Multiplicateur d amplitude contre la moyenne des 30 releves precedents">AMx</th>' +
-          '<th title="Conviction : part des 8 tranches ou le flux achat/vente va dans le meme sens. Distribution verifiee non saturee, moyenne 0.66.">Cv</th>' +
+          '<th title="Multiplicateur d amplitude contre la moyenne des 30 releves precedents">AMx</th>'
+        : '<th style="border-left:3px solid #5a6b85;" title="Conviction : part des 8 tranches ou le flux achat/vente va dans le meme sens. Distribution verifiee non saturee, moyenne 0.66.">Cv</th>' +
           '<th title="Coherence : part des 8 tranches ou le mouvement de prix va dans le meme sens. 41 pourcent des releves a zero -- le prix zigzague.">Ch</th>' +
           '<th title="Sens lisse du prix sur les 3 dernieres tranches">S3</th>' +
           '<th title="Duree pour accumuler 200 ticks. Fenetre courte = marche actif (17 USD a 5 min), longue = marche endormi (9 USD).">WSec</th>' +
