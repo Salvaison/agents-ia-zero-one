@@ -601,6 +601,15 @@ async function loadAudit() {
     function priceCell(r) {
       return (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
     }
+    /* Ecart entre le VWAP live et le VWAP confirme (19/08/2026). Il mesure de
+     * combien le live decroche -- donc dans quel sens le confirme va rattraper,
+     * et le prix avec lui. Sur le 15m c'est le meilleur indicateur directionnel
+     * mesure a ce jour ; sur le 3m il ne vaut rien. */
+    function ecartVw(live, confirme) {
+      if (live === null || live === undefined) return null;
+      if (confirme === null || confirme === undefined) return null;
+      return live - confirme;
+    }
     /* Cellule d'extreme de prix (17/08/2026). CONVENTION : vert = plus HAUT,
      * rouge = plus BAS -- convention historique du projet, distincte de celle
      * du signal MCB (ou vert = creux annoncant une hausse).
@@ -792,7 +801,7 @@ async function loadAudit() {
       }
       rowsHtml.push('<tr class="' + rowCls + '"' + rowStyle + '>' +
         '<td>' + timeParis(r.ts) + '</td>' +
-        '<td style="font-weight:600;">' + priceCell(r) + '</td>' +
+        '<td class="' + cls(r.priceMove) + '" style="font-weight:600;">' + priceCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext15', '#2ecc71', '#e74c3c') + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext3', '#a9dfbf', '#f5b7b1') + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
@@ -802,12 +811,19 @@ async function loadAudit() {
         '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.vwapLive,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
-        '<td style="padding:2px 0;">' + (r.vwap3Cross ? '&#10003;' : '') + '</td>' +
-        '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
-        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.live15Vwap,2) + '</td>' +
-        '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
-        '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
-        '<td style="border-right:2px solid #5a6b85; padding:2px 0;">' + (r.vwap15Cross ? '&#10003;' : '') + '</td>' +
+        '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="padding:2px 1px;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
+        /* Bloc 15m sur fond plus clair (19/08/2026) : c'est de lui que vient
+         * la direction -- ecart VW15L-VWAP15 a +0.228 et Vslope15 a +0.243,
+         * les deux meilleures mesures directionnelles mesurees. */
+        '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85; background:rgba(143,163,191,0.10);">' + fmt(r.vwap15,2) + '</td>' +
+        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px; background:rgba(143,163,191,0.10);">' + fmt(r.live15Vwap,2) + '</td>' +
+        '<td class="' + cls(r.vwapSlope) + '" style="background:rgba(143,163,191,0.10);">' + fmt(r.vwapSlope,2) + '</td>' +
+        '<td style="text-align:center; padding:2px 0; background:rgba(143,163,191,0.10);">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
+        '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '" style="border-right:2px solid #5a6b85; padding:2px 1px; background:rgba(143,163,191,0.10);">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
+        '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600;">' + fmt(r.priceMove,0) + '</td>' +
+        '<td style="border-right:2px solid #5a6b85;' +
+          ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
+          '">' + fmt(r.priceMoveMult,1) + '</td>' +
         (_activeTab === 'intention'
           ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsiCell(r) + '</td>' +
             '<td class="' + cls(r.liveMoneyFlow) + '">' + fmt(r.liveMoneyFlow,2) + '</td>' +
@@ -841,12 +857,14 @@ async function loadAudit() {
       '<th title="VWAP 3m INTRA-BOUGIE, mis a jour en continu. Decroche parfois du confirme une a deux minutes avant.">VW3L</th>' +
       '<th title="Pente du VWAP 3m, en unites par minute">Vsl3</th>' +
       '<th style="width:16px; padding:2px 0;" title="Direction de la pente VWAP 3m : montant, plat, descendant">P3</th>' +
-      '<th style="width:14px; padding:2px 0;" title="Passage a zero du VWAP 3m. Mesure du 16/08 : aucune valeur predictive (ratio 0.92 a 0.98 contre la reference).">x0</th>' +
-      '<th style="border-left:2px solid #5a6b85;" title="VWAP 15m confirme a la cloture">VW15</th>' +
-      '<th title="VWAP 15m INTRA-BOUGIE. Mesure du 16/08 : a bascule 15 minutes et 46 USD avant le prix.">VW15L</th>' +
-      '<th title="Pente du VWAP 15m">Vsl15</th>' +
-      '<th style="width:16px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
-      '<th style="width:14px; padding:2px 0;" title="Passage a zero du VWAP 15m">x0</th>' +
+      '<th style="width:34px; padding:2px 1px;" title="Ecart VW3L moins VWAP3 : de combien le live decroche du confirme. Sur le 3m, mesure du 18/08 : aucune valeur predictive (+0.05 a 5 min).">dW3</th>' +
+      '<th style="border-left:2px solid #5a6b85; background:rgba(143,163,191,0.10);" title="VWAP 15m confirme a la cloture">VW15</th>' +
+      '<th style="background:rgba(143,163,191,0.10);" title="VWAP 15m INTRA-BOUGIE. Mesure du 16/08 : a bascule 15 minutes et 46 USD avant le prix.">VW15L</th>' +
+      '<th style="background:rgba(143,163,191,0.10);" title="Pente du VWAP 15m. Correlation +0.243 avec le mouvement a 30 min -- la plus elevee du systeme.">Vsl15</th>' +
+      '<th style="width:16px; padding:2px 0; background:rgba(143,163,191,0.10);" title="Direction de la pente VWAP 15m">P15</th>' +
+      '<th style="width:34px; padding:2px 1px; background:rgba(143,163,191,0.10);" title="Ecart VW15L moins VWAP15 : de combien le live decroche du confirme. Meilleur indicateur directionnel mesure -- correlation +0.228 a 30 min ; au-dela de 10, 136 USD de mouvement avec 72 pourcent de hausses.">dW15</th>' +
+      '<th style="border-left:2px solid #5a6b85; width:44px;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
+      '<th style="width:34px;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, mouvement violent.">PMx</th>' +
       (_activeTab === 'intention'
         ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous)">DBSI</th>' +
           '<th title="MoneyFlow intra-bougie. Seul facteur dont la correlation MONTE avec l horizon : +0.18 a 5 min, +0.26 a 30 min. Action lente, precede le marche.">MF</th>' +

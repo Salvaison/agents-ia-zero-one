@@ -109,7 +109,7 @@ let ANCHOR_PLAY_USD = 10;
  * La plus recente est toujours exclue -- elle peut encore evoluer. Avec une
  * seule ancre (l'avant-dernier), le detecteur ne trouvait rien des que ce
  * pivot precis ne donnait aucun alignement. */
-const ANCHOR_CANDIDATES = 4;
+const ANCHOR_CANDIDATES = 10;
 
 function readCsv() {
   if (!fs.existsSync(CSV_15M)) return [];
@@ -278,14 +278,21 @@ function chaineRompueA(pivots, type, contacts, at, tol) {
     if (contacts.some(c => c.ts === p.ts)) continue;
 
     const ecart = p.price - at(p.ts);
-    /* TOLERANCE ASYMETRIQUE (19/08/2026). Un pivot qui DEPASSE la ligne la
-     * perce sans la casser -- c'est meme la marque d'un niveau eprouve.
-     * Seul un pivot qui reste EN DECA rompt la structure : il montre que le
-     * prix n'est pas alle chercher le niveau, donc que la ligne ne le
-     * gouvernait pas a ce moment. */
-    const perce = (type === 'HAUT') ? (ecart > 0) : (ecart < 0);
-    const marge = perce ? tol * 2 : tol;
-    if (Math.abs(ecart) > marge) {
+    /* ASYMETRIE (corrigee le 19/08/2026, elle etait a l'envers).
+     *
+     * Sur une resistance, un sommet PLUS BAS que la ligne est le
+     * comportement normal : le prix ne va pas chercher le niveau a chaque
+     * oscillation. Ce qui invalide une resistance, c'est un sommet qui la
+     * DEPASSE franchement.
+     *
+     * La version precedente rompait sur les pivots en deca, ce qui a bloque
+     * une resistance a trois sommets alignes a 4 USD pres sur dix-huit
+     * heures : ses six sommets intermediaires etaient tous en dessous, de
+     * 119 a 282 USD -- exactement ce qu'on attend d'une resistance qui
+     * tient. */
+    const enDeca = (type === 'HAUT') ? (ecart < 0) : (ecart > 0);
+    if (enDeca) continue;                       /* normal, ne rompt jamais */
+    if (Math.abs(ecart) > tol) {                /* depassement franc */
       if (rupture === null || p.ts < rupture) rupture = p.ts;
     }
   }
@@ -317,6 +324,29 @@ function searchFromAnchor(pivots, type, nowTs, nowPrice) {
     const alignes = same.filter(p => Math.abs(p.price - at(p.ts)) <= SEARCH_TOLERANCE_USD);
     if (alignes.length < 3) continue;
     collectLines(out, pivots, type, alignes, nowTs, nowPrice);
+  }
+
+  /* SECONDE METHODE (19/08/2026) : les paires de pivots passes.
+   *
+   * La recherche par ancre mobile ne trouve que les lignes dont la
+   * projection actuelle passe par le prix courant. Une resistance
+   * descendante que le prix n'a pas encore rejointe echappe donc a la
+   * detection -- alors que c'est le cas le plus interessant : on veut la
+   * connaitre AVANT que le prix y arrive.
+   *
+   * Ici on relie deux pivots passes et on compte les alignements. Le prix
+   * n'intervient que plus tard, pour savoir si la ligne est allumee. */
+  for (let i = 0; i < same.length - 1; i++) {
+    for (let j = i + 1; j < same.length; j++) {
+      const A = same[i], B = same[j];
+      if ((B.ts - A.ts) < MIN_SPAN_HOURS * 3600) continue;
+      const sl = (B.price - A.price) / (B.ts - A.ts);
+      const f = (t) => A.price + sl * (t - A.ts);
+      const alignes = same.filter(p => Math.abs(p.price - f(p.ts)) <= SEARCH_TOLERANCE_USD);
+      /* Trois contacts minimum, comme partout ailleurs. */
+      if (alignes.length < 3) continue;
+      collectLines(out, pivots, type, alignes, nowTs, nowPrice);
+    }
   }
   return out;
 }

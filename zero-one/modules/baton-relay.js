@@ -42,6 +42,35 @@ const { analyzeVwap, analyzeTrigger, analyzeWavePivot } = require('./volume-anal
  * affecter le baton, qui lira au pire une valeur legerement perimee.
  *   pm2 start modules/trendline-detector.js --name trendline -- --daemon */
 const TRENDLINES_PATH = path.join(__dirname, '../data/trendlines.json');
+
+/* ── PRICEMOVE (19/08/2026) ────────────────────────────────────────────────
+ * Deplacement du prix d'un baton au suivant, et son intensite rapportee au
+ * regime recent. Meme principe que netMoveMult, mais sur le prix lui-meme.
+ * 20 releves de 30s = 10 minutes de reference glissante. */
+const PRICEMOVE_BASELINE = 20;
+let _pmPrev = null;
+let _pmLast = null;
+const _pmHist = [];
+
+function _priceMove(prix) {
+  if (typeof prix !== 'number' || !isFinite(prix)) return null;
+  if (_pmPrev === null) { _pmPrev = prix; _pmLast = 0; return 0; }
+  const d = prix - _pmPrev;
+  _pmPrev = prix;
+  _pmLast = d;
+  if (d !== 0) {
+    _pmHist.push(Math.abs(d));
+    while (_pmHist.length > PRICEMOVE_BASELINE) _pmHist.shift();
+  }
+  return +d.toFixed(1);
+}
+
+function _priceMoveMult() {
+  if (_pmLast === null || _pmHist.length < 5) return null;
+  const moy = _pmHist.reduce(function (a, v) { return a + v; }, 0) / _pmHist.length;
+  if (!(moy > 0)) return null;
+  return +(Math.abs(_pmLast) / moy).toFixed(2);
+}
 let _tlCache = null;
 let _tlLastRead = 0;
 function getTrendlines() {
@@ -650,6 +679,13 @@ function tick() {
      * sans que le prix suive. */
     convictionScore: trig.convictionScore !== undefined ? trig.convictionScore : null,
     coherence: trig.coherence !== undefined ? trig.coherence : null,
+    /* PRICEMOVE (19/08/2026) : deplacement du prix entre deux batons, en USD,
+     * et son multiplicateur contre la moyenne glissante des dix dernieres
+     * minutes. Le Vslope donne l'inflexion, le priceMove donne l'intensite
+     * ET le sens -- un mouvement violent de Vslope se confirme par un
+     * priceMove violent. */
+    priceMove: _priceMove(currentPrice),
+    priceMoveMult: _priceMoveMult(),
     /* LIGNES IMAGINAIRES (16/08/2026) -- trendlines obliques detectees sur les
      * extremes de prix. lgiPoints = nombre de touches de la ligne la plus
      * proche quand le prix entre dans sa zone (+/-40 USD), null sinon.
