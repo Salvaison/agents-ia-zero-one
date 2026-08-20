@@ -47,6 +47,9 @@ const CONFIG_PATH = path.join(__dirname, '../config.json');
 const DIAGNOSTIC_PATH = path.join(__dirname, '../data/latest-evaluation.json');
 const TRADES_STATE_PATH = path.join(__dirname, '../data/trade-sim-state.json');
 const TRADES_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-history.json');
+/* Moteur Boono (19/08/2026) -- seconde logique, fichiers separes. */
+const BOONO_STATE_PATH = path.join(__dirname, '../data/moteur-boono-state.json');
+const BOONO_HISTORY_PATH = path.join(__dirname, '../data/moteur-boono-history.json');
 const AUDIT_HISTORY_PATH = path.join(__dirname, '../data/audit-history.json');
 
 if (!PASSWORD || !SESSION_SECRET) {
@@ -331,6 +334,27 @@ app.get('/api/trades', requireAuth, (req, res) => {
   } catch (e) { /* liste vide */ }
   res.json({ ongoing, executed });
 });
+/* Moteur Boono (19/08/2026) -- seconde logique, fichiers separes.
+ * Meme protection que les autres routes : requireAuth. */
+app.get('/api/boono', requireAuth, (req, res) => {
+  let position = null;
+  let history = [];
+  let abstention = null;
+  try {
+    if (fs.existsSync(BOONO_STATE_PATH)) {
+      const s = JSON.parse(fs.readFileSync(BOONO_STATE_PATH, 'utf8'));
+      position = s.position || null;
+      abstention = s.derniereAbstention || null;
+    }
+  } catch (e) { /* garde les valeurs par defaut */ }
+  try {
+    if (fs.existsSync(BOONO_HISTORY_PATH)) {
+      const h = JSON.parse(fs.readFileSync(BOONO_HISTORY_PATH, 'utf8'));
+      history = Array.isArray(h) ? h : [];
+    }
+  } catch (e) { /* le moteur n'a peut-etre encore rien produit */ }
+  res.json({ position, history, abstention });
+});
 
 app.get('/api/audit-history', requireAuth, (req, res) => {
   let history = [];
@@ -601,6 +625,15 @@ async function loadAudit() {
      * l'extreme de prix qui a PRECEDE le point MCB, pas la confirmation
      * elle-meme. L'infobulle donne le decalage reel en minutes, pour
      * verifier sur donnees reelles la fourchette "3 a 5 bougies". */
+    /* DBSI du 15m (20/08/2026). Meme rendu que la version 3m, sur les champs
+     * live15DbsiTop / live15DbsiBottom que le baton exposait deja. */
+    function dbsi15Cell(r) {
+      const t = r.live15DbsiTop, b = r.live15DbsiBottom;
+      if (t === null || t === undefined || b === null || b === undefined) return '';
+      return '<span class="down">' + Math.round(t) + '</span>' +
+             '<span style="opacity:0.4;"> / </span>' +
+             '<span class="up">' + Math.round(b) + '</span>';
+    }
     function priceCell(r) {
       return (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
     }
@@ -808,7 +841,9 @@ async function loadAudit() {
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext15', '#2ecc71', '#e74c3c') + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext3', '#a9dfbf', '#f5b7b1') + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
-        '<td style="text-align:center; padding:2px 1px;">' + pivotCell + '</td>' +
+        /* Colonne Pivot retiree le 20/08/2026 : le champ r.pivot est absent de
+         * tous les releves recents (verifie sur 500), elle affichait du vide.
+         * Les colonnes E15 et E3 la remplacent avantageusement. */
         '<td style="text-align:center; padding:2px 1px;">' + mcbCell + '</td>' +
         '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
         '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.vwapLive,2) + '</td>' +
@@ -828,10 +863,12 @@ async function loadAudit() {
           ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
           '">' + fmt(r.priceMoveMult,1) + '</td>' +
         (_activeTab === 'vague'
-          ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsiCell(r) + '</td>' +
-            '<td class="' + cls(r.liveMoneyFlow) + '">' + fmt(r.liveMoneyFlow,2) + '</td>' +
-            '<td class="' + cls(r.liveBw) + '">' + fmt(r.liveBw,2) + '</td>' +
-            '<td class="' + cls(r.liveLbw) + '">' + fmt(r.liveLbw,2) + '</td>'
+          /* 15m et non 3m (20/08/2026) : la strategie se decide sur le 15m,
+           * les donnees de vague doivent venir du meme timeframe. */
+          ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsi15Cell(r) + '</td>' +
+            '<td class="' + cls(r.live15MoneyFlow) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
+            '<td class="' + cls(r.live15Bw) + '">' + fmt(r.live15Bw,2) + '</td>' +
+            '<td class="' + cls(r.live15Lbw) + '">' + fmt(r.live15Lbw,2) + '</td>'
           : _activeTab === 'mouvement'
           ? '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
             '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
@@ -855,7 +892,7 @@ async function loadAudit() {
       '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 15m -- vert = plus haut, rouge = plus bas">E15</th>' +
       '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 3m -- vert clair = plus haut, rose = plus bas">E3</th>' +
       '<th style="width:18px; padding:2px 1px;" title="Regime directionnel vague MCB 15m">Rg</th>' +
-      '<th style="width:18px; padding:2px 1px;" title="Pivot de trajectoire VWAP">Pivot</th>' +
+
       '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
       '<th style="border-left:2px solid #5a6b85;" title="VWAP 3m confirme a la cloture (LBW moins BW)">VW3</th>' +
       '<th title="VWAP 3m INTRA-BOUGIE, mis a jour en continu. Decroche parfois du confirme une a deux minutes avant.">VW3L</th>' +
@@ -870,10 +907,10 @@ async function loadAudit() {
       '<th style="border-left:2px solid #5a6b85; width:44px;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
       '<th style="width:34px;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, mouvement violent.">PMx</th>' +
       (_activeTab === 'vague'
-        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous). Lecture isolee sans valeur -- lisse sur 10 min, la correlation passe de +0.02 a -0.16.">DBSI</th>' +
-          '<th title="MoneyFlow intra-bougie. Seul facteur dont la correlation MONTE avec l horizon : +0.18 a 5 min, +0.26 a 30 min. Action lente, precede le marche.">MF</th>' +
-          '<th title="Blue Wave intra-bougie (WT2). Bonne confirmation d entree, mauvais signal de sortie : continue de chuter longtemps apres le creux du prix.">BW</th>' +
-          '<th title="Lt Blue Wave intra-bougie (WT1)">LBW</th>'
+        ? '<th style="border-left:3px solid #5a6b85;" title="DBSI 15m intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous). Lecture isolee sans valeur -- il faut la moyenne sur dix minutes.">DBSI15</th>' +
+          '<th title="MoneyFlow 15m intra-bougie. Timeframe de pilotage de la strategie.">MF15</th>' +
+          '<th title="Blue Wave 15m intra-bougie (WT2).">BW15</th>' +
+          '<th title="Lt Blue Wave 15m intra-bougie (WT1)">LBW15</th>'
         : _activeTab === 'mouvement'
         ? '<th style="border-left:3px solid #5a6b85;" title="Cadence : transactions par seconde sur la fenetre de 200 ticks">Cad</th>' +
           '<th title="Multiplicateur de cadence contre la moyenne glissante 4h. Seuil d evenement du baton : 2. Marque le MOMENT, jamais la direction.">nMx</th>' +
@@ -1248,6 +1285,7 @@ app.get('/', requireAuth, (req, res) => {
             <span class="tab active" data-tab2="ongoing">Ongoing</span>
             <span class="tab" data-tab2="executed">Executed</span>
             <span class="tab" data-tab2="pnl">PNL</span>
+            <span class="tab" data-tab2="boono">BOONO</span>
           </div>
           <div class="tab-panel active" id="tab2-ongoing">
             <div class="placeholder-note">Aucun trade en cours.<br>Le paper trading n'a pas encore demarre.</div>
@@ -1257,6 +1295,9 @@ app.get('/', requireAuth, (req, res) => {
           </div>
           <div class="tab-panel" id="tab2-pnl">
             <div class="placeholder-note">P/L -- aucune donnee disponible.<br>S'alimentera automatiquement une fois des trades executes.</div>
+          </div>
+          <div class="tab-panel" id="tab2-boono">
+            <div class="placeholder-note">Moteur Boono -- chargement.</div>
           </div>
         </div>
       </div>
@@ -1332,7 +1373,7 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
 document.querySelectorAll('.tab[data-tab2]').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.tab[data-tab2]').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#tab2-ongoing, #tab2-executed, #tab2-pnl').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#tab2-ongoing, #tab2-executed, #tab2-pnl, #tab2-boono').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
     document.getElementById('tab2-' + el.dataset.tab2).classList.add('active');
   });
@@ -1688,7 +1729,127 @@ function renderExecutedRow(t) {
     '</div></div>';
 }
 
+async function loadBoono() {
+  const el = document.getElementById('tab2-boono');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/boono');
+    if (!res.ok) throw new Error('reponse HTTP ' + res.status);
+    const d = await res.json();
+    let html = '';
+
+    /* Position en cours, avec la chaine de decision qui l'a produite. */
+    if (d.position) {
+      const p = d.position;
+      const col = p.direction === 'long' ? 'var(--support)' : 'var(--resistance)';
+      const usd = (p.pnlCourant !== undefined && p.notionnel)
+        ? (p.pnlCourant / 100 * p.notionnel * p.restant / 100) : null;
+      html += '<div style="border:1px solid #5a6b85; border-radius:4px; padding:10px; margin-bottom:14px;">' +
+        '<div style="font-weight:600; color:' + col + '; margin-bottom:6px;">' +
+        p.direction.toUpperCase() + ' @ ' + p.entryPrice +
+        '  <span style="opacity:0.7; font-weight:400;">depuis ' + (p.dureeMin || 0) + ' min</span></div>' +
+        '<div>PNL ' + (p.pnlCourant !== undefined ? p.pnlCourant.toFixed(2) + '%' : 'n/a') +
+        (usd !== null ? '  (' + (usd >= 0 ? '+' : '') + usd.toFixed(2) + ' USD)' : '') +
+        (p.levier && p.pnlCourant !== undefined
+          ? '  --  ' + (p.pnlCourant * p.levier >= 0 ? '+' : '') + (p.pnlCourant * p.levier).toFixed(1) + '% de marge' : '') +
+        '  --  restant ' + p.restant + '%</div>' +
+        (p.direction_source ? '<div style="opacity:0.75; font-size:11px; margin-top:4px;">direction : ' + p.direction_source +
+          (p.voix ? ' (' + p.voix.map(v => v.source).join(', ') + ')' : '') + '</div>' : '') +
+        (p.moneyFlowControle ? '<div style="opacity:0.75; font-size:11px;">MoneyFlow : ' + p.moneyFlowControle + '</div>' : '') +
+        (p.engagement ? '<div style="opacity:0.75; font-size:11px;">engagement : ' + p.engagement + '</div>' : '') +
+        (p.lieu ? '<div style="opacity:0.75; font-size:11px;">lieu : ' + p.lieu.contacts + ' contacts, ' +
+          p.lieu.lignes + ' ligne(s)</div>' : '') +
+        '</div>';
+    } else {
+      html += '<div class="placeholder-note" style="margin-bottom:14px;">Aucune position en cours.' +
+        (d.abstention ? '<br>Derniere abstention : <b>' + d.abstention + '</b>' : '') + '</div>';
+    }
+
+    const h = d.history || [];
+    if (!h.length) {
+      html += '<div class="placeholder-note">Aucune sortie enregistree.</div>';
+      el.innerHTML = html;
+      return;
+    }
+
+    /* Bilan. Une position produit une ligne par tranche : on regroupe pour
+     * compter les ENTREES distinctes, comme dans l'onglet PNL. */
+    const entrees = {};
+    h.forEach(function (t) {
+      if (!entrees[t.entryTimestamp]) entrees[t.entryTimestamp] = { pnl: 0, prix: t.entryPrice };
+      entrees[t.entryTimestamp].pnl += (t.fraction / 100) * t.pnlPercent;
+    });
+    const listeEntrees = Object.values(entrees);
+    const total = listeEntrees.reduce(function (a, e) { return a + e.pnl; }, 0);
+    const gagnantes = listeEntrees.filter(function (e) { return e.pnl > 0; }).length;
+    /* pnlUsd est enregistre depuis le 19/08. Les lignes anterieures retombent
+     * sur l'ancien calcul -- signale par un asterisque. */
+    let usdTotal = 0, approx = false;
+    h.forEach(function (t) {
+      if (typeof t.pnlUsd === 'number') usdTotal += t.pnlUsd;
+      else { usdTotal += (t.fraction / 100) * t.pnlPercent / 100 * t.entryPrice; approx = true; }
+    });
+
+    html += '<div class="stats" style="margin-bottom:12px;">' +
+      '<div>' + listeEntrees.length + ' entree(s), ' + h.length + ' ligne(s) de sortie</div>' +
+      '<div>Taux de reussite : ' + (100 * gagnantes / listeEntrees.length).toFixed(1) + '%</div>' +
+      '<div>PNL cumule : ' + (total >= 0 ? '+' : '') + total.toFixed(2) + '%  (' +
+        (usdTotal >= 0 ? '+' : '') + usdTotal.toFixed(2) + ' USD' + (approx ? '*' : '') + ')</div>' +
+      '<div style="opacity:0.7; font-size:11px;">notionnel ' + (h[0] && h[0].notionnel ? h[0].notionnel : 100) +
+        ' USD par trade (1% de 1000 a 10x)' + (approx ? '  --  * lignes anterieures au 19/08 estimees' : '') + '</div>' +
+      '</div>';
+
+    /* Ventilation par motif de sortie -- c'est elle qui dit quel mecanisme
+     * porte le resultat et lequel le plombe. */
+    const parRaison = {};
+    h.forEach(function (t) {
+      const k = String(t.exitReason || 'inconnu');
+      if (!parRaison[k]) parRaison[k] = { n: 0, pnl: 0, usd: 0 };
+      parRaison[k].n++;
+      parRaison[k].pnl += (t.fraction / 100) * t.pnlPercent;
+      parRaison[k].usd += (typeof t.pnlUsd === 'number')
+        ? t.pnlUsd : (t.fraction / 100) * t.pnlPercent / 100 * t.entryPrice;
+    });
+    html += '<table style="width:100%; margin-bottom:14px;"><thead><tr>' +
+      '<th style="text-align:left;">Motif de sortie</th><th>n</th><th>PNL</th><th>USD</th>' +
+      '</tr></thead><tbody>';
+    Object.keys(parRaison).sort(function (a, b) { return parRaison[a].pnl - parRaison[b].pnl; })
+      .forEach(function (k) {
+        const v = parRaison[k];
+        const c = v.pnl >= 0 ? 'up' : 'down';
+        html += '<tr><td style="text-align:left;">' + k + '</td><td>' + v.n + '</td>' +
+          '<td class="' + c + '">' + (v.pnl >= 0 ? '+' : '') + v.pnl.toFixed(2) + '%</td>' +
+          '<td class="' + c + '">' + (v.usd >= 0 ? '+' : '') + v.usd.toFixed(2) + '</td></tr>';
+      });
+    html += '</tbody></table>';
+
+    /* Detail, du plus recent au plus ancien. */
+    html += '<table style="width:100%;"><thead><tr>' +
+      '<th>Entree</th><th>Sortie</th><th>Sens</th><th>Prix in</th><th>Prix out</th>' +
+      '<th>Part</th><th>PNL</th><th>USD</th><th style="text-align:left;">Motif</th>' +
+      '</tr></thead><tbody>';
+    h.slice().reverse().forEach(function (t) {
+      const c = t.pnlPercent >= 0 ? 'up' : 'down';
+      const usd = (typeof t.pnlUsd === 'number')
+        ? t.pnlUsd : (t.fraction / 100) * t.pnlPercent / 100 * t.entryPrice;
+      const hm = function (s) { return new Date(s).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris' }); };
+      html += '<tr><td>' + hm(t.entryTimestamp) + '</td><td>' + hm(t.exitTimestamp) + '</td>' +
+        '<td class="' + (t.direction === 'long' ? 'up' : 'down') + '">' + t.direction + '</td>' +
+        '<td>' + Math.round(t.entryPrice) + '</td><td>' + Math.round(t.exitPrice) + '</td>' +
+        '<td>' + t.fraction + '%</td>' +
+        '<td class="' + c + '">' + (t.pnlPercent >= 0 ? '+' : '') + t.pnlPercent.toFixed(2) + '%</td>' +
+        '<td class="' + c + '">' + (usd >= 0 ? '+' : '') + usd.toFixed(2) + '</td>' +
+        '<td style="text-align:left; font-size:11px; opacity:0.8;">' + String(t.exitReason || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = '<div class="placeholder-note">Moteur Boono indisponible : ' + e.message + '</div>';
+  }
+}
+
 async function loadTrades() {
+  loadBoono();
   const ongoingEl = document.getElementById('tab2-ongoing');
   const executedEl = document.getElementById('tab2-executed');
   const pnlEl = document.getElementById('tab2-pnl');

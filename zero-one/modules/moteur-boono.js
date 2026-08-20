@@ -102,6 +102,16 @@ const MONEYFLOW_MIN = 3;
 const PRICEMOVE_MULT_MIN = 3;
 const PRICEMOVE_BUFFER = 20;   /* 20 releves de 30s = 10 minutes */
 
+/* DIMENSIONNEMENT (19/08/2026). Capital de depart 1000 USD, 1% engage par
+ * trade soit 10 USD de marge, levier 10x -> notionnel de 100 USD.
+ * Le levier de 10 est le plafond reglementaire europeen pour un particulier,
+ * verifie le 14/08 sur le compte OKX : l'instrument en autorise 50, pas le
+ * compte. */
+const CAPITAL_USD = 1000;
+const POSITION_PERCENT = 1;
+const LEVIER = 10;
+const NOTIONNEL_USD = CAPITAL_USD * POSITION_PERCENT / 100 * LEVIER;
+
 /* Tranches conservees de l'ancienne structure : 25% au premier objectif,
  * 65% au second, 10% laisses courir. */
 const TRANCHES = [
@@ -297,6 +307,14 @@ function gererPosition(state, b, ctx, prix, now) {
   const dureeMin = (now - Date.parse(pos.entryTimestamp)) / 60000;
 
   const sortir = (raison, fraction) => {
+    /* PNL en USD sur le NOTIONNEL engage, et non sur le prix du sous-jacent.
+     * Un mouvement de 0.67% donne 0.67 USD sur 100 de notionnel -- pas 435,
+     * qui etait le mouvement rapporte a un bitcoin entier. */
+    const notionnelTranche = (pos.notionnel || NOTIONNEL_USD) * fraction / 100;
+    const usd = pnl / 100 * notionnelTranche;
+    /* Part de la marge engagee : c'est cette lecture qui dit si le trade
+     * fait mal. Avec un levier de 10, 0.67% de mouvement fait 6.7% de marge. */
+    const pctMarge = pnl * (pos.levier || LEVIER);
     appendHistory({
       entryTimestamp: pos.entryTimestamp,
       exitTimestamp: new Date(now).toISOString(),
@@ -304,13 +322,16 @@ function gererPosition(state, b, ctx, prix, now) {
       entryPrice: pos.entryPrice,
       exitPrice: prix,
       pnlPercent: +pnl.toFixed(4),
+      pnlUsd: +usd.toFixed(2),
+      pnlMargePercent: +pctMarge.toFixed(2),
+      notionnel: +notionnelTranche.toFixed(2),
       fraction,
       exitReason: raison,
       contexteEntree: pos.contexte,
       declencheur: pos.declencheur,
     });
     console.log(`[moteur] SORTIE ${fraction}% ${pos.direction} @ ${prix} ` +
-                `(${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%) -- ${raison}`);
+                `(${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}% = ${usd >= 0 ? '+' : ''}${usd.toFixed(2)} USD) -- ${raison}`);
   };
 
   /* Filets, evalues en premier. */
@@ -442,6 +463,12 @@ function tick() {
     entryTimestamp: new Date(now).toISOString(),
     restant: 100,
     trancheStage: 0,
+    /* Dimensionnement fige a l'entree : si les parametres changent en cours
+     * de route, la position garde ceux avec lesquels elle a ete ouverte. */
+    capital: CAPITAL_USD,
+    positionPercent: POSITION_PERCENT,
+    levier: LEVIER,
+    notionnel: NOTIONNEL_USD,
     direction_source: dv.raison,
     voix: dv.voix,
     moneyFlowControle: mf,
