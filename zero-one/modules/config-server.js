@@ -375,7 +375,7 @@ app.get('/audit-view', requireAuth, (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Audit ZeroOne</title>
+<title>Audit BOONOTRADE</title>
 <style>
   :root {
     --bg: #0f1419;
@@ -424,20 +424,17 @@ app.get('/audit-view', requireAuth, (req, res) => {
 </style>
 </head>
 <body>
-  <h1>Audit ZeroOne</h1>
-  <div class="sub">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.<br><span style="opacity:0.7;">Seuils par defaut alignes sur ceux du baton (11/08/2026). La colonne Trade montre les entrees/sorties REELLES du simulateur.</span></div>
-
-  <div class="controls">
-    <label title="Ecart de VWAP3 entre deux releves. p90 mesure = 2.6">Retournement Delta VWAP3 &gt;= <input type="number" id="rDelta" value="3" step="0.5"></label>
-    <label title="Distance de VWAP3 a zero. p25 mesure = 2.45">et VWAP3 proche de &lt;= <input type="number" id="rProx" value="2" step="0.5"></label>
-    <label title="MULTIPLICATEUR de cadence, pas la cadence brute. p90 = 1.62">Confirm. cadence x &gt;= <input type="number" id="cCad" value="1.6" step="0.1"></label>
-    <label title="MULTIPLICATEUR de netMove, pas netMove brut. p90 = 2.52">ou netMove x &gt;= <input type="number" id="cNet" value="2.5" step="0.1"></label>
-    <label title="MULTIPLICATEUR de cadence. p99 = 5.77">Bypass cadence x &gt;= <input type="number" id="bCad" value="5.8" step="0.5"></label>
-    <label title="MULTIPLICATEUR de netMove. p99 = 10.14">ou netMove x &gt;= <input type="number" id="bNet" value="10" step="0.5"></label>
-    <button onclick="loadAudit()">Rafraichir</button>
+  <div style="display:flex; align-items:baseline; gap:22px; margin-bottom:2px;">
+    <h1 style="margin:0; white-space:nowrap; width:395px; flex:none;">Audit BOONOTRADE</h1>
+    <div class="sub" style="margin:0; flex:1;">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.
+      &nbsp;&nbsp;<button onclick="loadAudit()" style="padding:3px 10px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:11px;">Rafraichir</button></div>
   </div>
-
-  <div class="stats" id="stats"></div>
+  <div class="stats" id="stats" style="font-size:11px; opacity:0.75; margin:0 0 8px 0;"></div>
+  <div style="display:none;">
+    <input type="number" id="rDelta" value="3"><input type="number" id="rProx" value="2">
+    <input type="number" id="cCad" value="1.6"><input type="number" id="cNet" value="2.5">
+    <input type="number" id="bCad" value="5.8"><input type="number" id="bNet" value="10">
+  </div>
   <div id="tabs" style="margin:8px 0 10px 0;">
     <button id="tab-vague" onclick="switchTab('vague')"
       style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#2c3e50; color:#e8eef5; cursor:pointer; border-radius:3px; font-size:12px;">VAGUE</button>
@@ -574,6 +571,26 @@ async function loadAudit() {
       const v = (r.wavePivotValue !== null && r.wavePivotValue !== undefined)
         ? Math.round(r.wavePivotValue) : '';
       const col = r.wavePivotType === 'creux' ? '#2ecc71' : '#e74c3c';
+      return '<span style="color:' + col + '; font-size:10px; font-weight:600;">' + v + '</span>';
+    }
+
+    /* Signal MCB 15m (20/08/2026). Meme rendu que Sig3, sur waveRegime15 --
+     * soit analyzeWavePivot('15m'), la source de la colonne Rg et du
+     * marqueur E15. Affiche uniquement au releve ou la valeur change.
+     * Lu cote a cote avec Sig3, il rend visible la LOI 4 : deux signaux
+     * rapproches designant le meme extreme donnent 83% de justesse, contre
+     * 42% quand un seul est present. */
+    let _lastSig15 = null;
+    function mcb15Cell(r) {
+      if (!r.waveRegime15) { _lastSig15 = null; return ''; }
+      const key = r.waveRegime15 + ':' + r.waveRegime15Value;
+      if (key === _lastSig15) return '';
+      _lastSig15 = key;
+      const v = (r.waveRegime15Value !== null && r.waveRegime15Value !== undefined)
+        ? Math.round(r.waveRegime15Value) : '';
+      /* haussier vient d'un creux, baissier d'un pic -- meme convention de
+       * couleur que le 3m. */
+      const col = r.waveRegime15 === 'haussier' ? '#2ecc71' : '#e74c3c';
       return '<span style="color:' + col + '; font-size:10px; font-weight:600;">' + v + '</span>';
     }
 
@@ -836,8 +853,8 @@ async function loadAudit() {
           : ' style="background:rgba(231,76,60,0.14);"';
       }
       rowsHtml.push('<tr class="' + rowCls + '"' + rowStyle + '>' +
-        '<td>' + timeParis(r.ts) + '</td>' +
-        '<td class="' + cls(r.priceMove) + '" style="font-weight:600;">' + priceCell(r) + '</td>' +
+        '<td style="background:#171f2c;">' + timeParis(r.ts) + '</td>' +
+        '<td class="' + cls(r.priceMove) + '" style="font-weight:600; background:#171f2c;">' + priceCell(r) + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext15', '#2ecc71', '#e74c3c') + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + extCell(r, 'ext3', '#a9dfbf', '#f5b7b1') + '</td>' +
         '<td style="text-align:center; padding:2px 1px;">' + regimeCell(r) + '</td>' +
@@ -845,21 +862,22 @@ async function loadAudit() {
          * tous les releves recents (verifie sur 500), elle affichait du vide.
          * Les colonnes E15 et E3 la remplacent avantageusement. */
         '<td style="text-align:center; padding:2px 1px;">' + mcbCell + '</td>' +
-        '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap3,2) + '</td>' +
-        '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.vwapLive,2) + '</td>' +
-        '<td class="' + cls(r.vwap3Slope) + '">' + fmt(r.vwap3Slope,2) + '</td>' +
-        '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
-        '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="padding:2px 1px;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
+        '<td style="text-align:center; padding:2px 1px;">' + mcb15Cell(r) + '</td>' +
+        '<td class="' + cls(r.vwap3) + '" style="border-left:2px solid #5a6b85; background:#171f2c;">' + fmt(r.vwap3,2) + '</td>' +
+        '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px; background:#171f2c;">' + fmt(r.vwapLive,2) + '</td>' +
+        '<td class="' + cls(r.vwap3Slope) + '" style="background:#171f2c;">' + fmt(r.vwap3Slope,2) + '</td>' +
+        '<td style="text-align:center; padding:2px 0; background:#171f2c;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
+        '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="padding:2px 1px; background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
         /* Bloc 15m sur fond plus clair (19/08/2026) : c'est de lui que vient
          * la direction -- ecart VW15L-VWAP15 a +0.228 et Vslope15 a +0.243,
          * les deux meilleures mesures directionnelles mesurees. */
-        '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85; background:rgba(143,163,191,0.10);">' + fmt(r.vwap15,2) + '</td>' +
-        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px; background:rgba(143,163,191,0.10);">' + fmt(r.live15Vwap,2) + '</td>' +
-        '<td class="' + cls(r.vwapSlope) + '" style="background:rgba(143,163,191,0.10);">' + fmt(r.vwapSlope,2) + '</td>' +
-        '<td style="text-align:center; padding:2px 0; background:rgba(143,163,191,0.10);">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
-        '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '" style="border-right:2px solid #5a6b85; padding:2px 1px; background:rgba(143,163,191,0.10);">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
-        '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600;">' + fmt(r.priceMove,0) + '</td>' +
-        '<td style="border-right:2px solid #5a6b85;' +
+        '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
+        '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.live15Vwap,2) + '</td>' +
+        '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
+        '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
+        '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '" style="border-right:2px solid #5a6b85; padding:2px 1px;">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
+        '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#171f2c;">' + fmt(r.priceMove,0) + '</td>' +
+        '<td style="border-right:2px solid #5a6b85; background:#171f2c;' +
           ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
           '">' + fmt(r.priceMoveMult,1) + '</td>' +
         (_activeTab === 'vague'
@@ -867,18 +885,18 @@ async function loadAudit() {
            * les donnees de vague doivent venir du meme timeframe. */
           ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsi15Cell(r) + '</td>' +
             '<td class="' + cls(r.live15MoneyFlow) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
-            '<td class="' + cls(r.live15Bw) + '">' + fmt(r.live15Bw,2) + '</td>' +
-            '<td class="' + cls(r.live15Lbw) + '">' + fmt(r.live15Lbw,2) + '</td>'
+            '<td class="' + cls(r.live15Bw) + '" style="background:#171f2c;">' + fmt(r.live15Bw,2) + '</td>' +
+            '<td class="' + cls(r.live15Lbw) + '" style="background:#171f2c;">' + fmt(r.live15Lbw,2) + '</td>'
           : _activeTab === 'mouvement'
           ? '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
             '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
-            '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,3) + '</td>' +
-            '<td>' + fmt(r.netMoveMult,1) + '</td>' +
-            '<td>' + fmt(r.amplitude,3) + '</td>' +
-            '<td>' + fmt(r.amplitudeMult,1) + '</td>'
+            '<td class="' + cls(r.netMove) + '" style="background:#171f2c;">' + fmt(r.netMove,3) + '</td>' +
+            '<td style="background:#171f2c;">' + fmt(r.netMoveMult,1) + '</td>' +
+            '<td style="background:#171f2c;">' + fmt(r.amplitude,3) + '</td>' +
+            '<td style="background:#171f2c;">' + fmt(r.amplitudeMult,1) + '</td>'
           : '<td style="text-align:center; font-size:11px; border-left:3px solid #5a6b85;">' + convCell(r.convictionScore) + '</td>' +
             '<td style="text-align:center; font-size:11px;">' + convCell(r.coherence) + '</td>' +
-            '<td>' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
+            '<td style="background:#171f2c;">' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
             '<td>' + fmt(r.winSec,1) + '</td>' +
             '<td>' + arrow(r.direction) + '</td>'
         ) +
@@ -887,40 +905,41 @@ async function loadAudit() {
     }
     rowsHtml.reverse();
     let html = '<table><thead><tr>' +
-      '<th style="width:62px;">UTC+2</th>' +
-      '<th style="width:52px;">PRIX</th>' +
+      '<th style="width:62px; background:#171f2c;">UTC+2</th>' +
+      '<th style="width:52px; background:#171f2c;">PRIX</th>' +
       '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 15m -- vert = plus haut, rouge = plus bas">E15</th>' +
       '<th style="width:14px; padding:2px 0;" title="Extreme de prix rattache a un signal MCB 3m -- vert clair = plus haut, rose = plus bas">E3</th>' +
       '<th style="width:18px; padding:2px 1px;" title="Regime directionnel vague MCB 15m">Rg</th>' +
 
-      '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif (point rouge/vert)">Signal</th>' +
-      '<th style="border-left:2px solid #5a6b85;" title="VWAP 3m confirme a la cloture (LBW moins BW)">VW3</th>' +
-      '<th title="VWAP 3m INTRA-BOUGIE, mis a jour en continu. Decroche parfois du confirme une a deux minutes avant.">VW3L</th>' +
-      '<th title="Pente du VWAP 3m, en unites par minute">Vsl3</th>' +
-      '<th style="width:16px; padding:2px 0;" title="Direction de la pente VWAP 3m : montant, plat, descendant">P3</th>' +
-      '<th style="width:34px; padding:2px 1px;" title="Ecart VW3L moins VWAP3 : de combien le live decroche du confirme. Sur le 3m, mesure du 18/08 : aucune valeur predictive (+0.05 a 5 min).">dW3</th>' +
-      '<th style="border-left:2px solid #5a6b85; background:rgba(143,163,191,0.10);" title="VWAP 15m confirme a la cloture">VW15</th>' +
-      '<th style="background:rgba(143,163,191,0.10);" title="VWAP 15m INTRA-BOUGIE. Mesure du 16/08 : a bascule 15 minutes et 46 USD avant le prix.">VW15L</th>' +
-      '<th style="background:rgba(143,163,191,0.10);" title="Pente du VWAP 15m. Correlation +0.243 avec le mouvement a 30 min -- la plus elevee du systeme.">Vsl15</th>' +
-      '<th style="width:16px; padding:2px 0; background:rgba(143,163,191,0.10);" title="Direction de la pente VWAP 15m">P15</th>' +
-      '<th style="width:34px; padding:2px 1px; background:rgba(143,163,191,0.10);" title="Ecart VW15L moins VWAP15 : de combien le live decroche du confirme. Meilleur indicateur directionnel mesure -- correlation +0.228 a 30 min ; au-dela de 10, 136 USD de mouvement avec 72 pourcent de hausses.">dW15</th>' +
-      '<th style="border-left:2px solid #5a6b85; width:44px;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
-      '<th style="width:34px;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, mouvement violent.">PMx</th>' +
+      '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif du 3m (point rouge/vert). Ne vaut que confirme par le 15m -- LOI 4.">Sig3</th>' +
+      '<th style="width:26px; padding:2px 1px;" title="Signal MCB natif du 15m. Quand les deux signaux se rapprochent sur le meme extreme : 83 pourcent de justesse, contre 42 pourcent quand un seul est present.">Sig15</th>' +
+      '<th style="border-left:2px solid #5a6b85; background:#171f2c;" title="VWAP 3m confirme a la cloture (LBW moins BW)">VW3</th>' +
+      '<th style="background:#171f2c;" title="VWAP 3m INTRA-BOUGIE, mis a jour en continu. Decroche parfois du confirme une a deux minutes avant.">VW3L</th>' +
+      '<th style="background:#171f2c;" title="Pente du VWAP 3m, en unites par minute">Vsl3</th>' +
+      '<th style="width:26px; padding:2px 0; background:#171f2c;" title="Direction de la pente VWAP 3m : montant, plat, descendant">P3</th>' +
+      '<th style="width:34px; padding:2px 1px; background:#171f2c;" title="Ecart VW3L moins VWAP3 : de combien le live decroche du confirme. Sur le 3m, mesure du 18/08 : aucune valeur predictive (+0.05 a 5 min).">dW3</th>' +
+      '<th style="border-left:2px solid #5a6b85;" title="VWAP 15m confirme a la cloture. Timeframe de pilotage : c est lui qui porte la direction.">VW15</th>' +
+      '<th title="VWAP 15m INTRA-BOUGIE. Mesure du 16/08 : a bascule 15 minutes et 46 USD avant le prix.">VW15L</th>' +
+      '<th title="Pente du VWAP 15m. Sa zone neutre declenche la vigilance (LOI 1).">Vsl15</th>' +
+      '<th style="width:26px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
+      '<th style="width:34px; padding:2px 1px;" title="Ecart VW15L moins VWAP15. Voix de direction (LOI 3), seuil 3.">dW15</th>' +
+      '<th style="border-left:2px solid #5a6b85; width:44px; background:#171f2c;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
+      '<th style="width:34px; background:#171f2c;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, evenement (LOI 5).">PMx</th>' +
       (_activeTab === 'vague'
         ? '<th style="border-left:3px solid #5a6b85;" title="DBSI 15m intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous). Lecture isolee sans valeur -- il faut la moyenne sur dix minutes.">DBSI15</th>' +
           '<th title="MoneyFlow 15m intra-bougie. Timeframe de pilotage de la strategie.">MF15</th>' +
-          '<th title="Blue Wave 15m intra-bougie (WT2).">BW15</th>' +
-          '<th title="Lt Blue Wave 15m intra-bougie (WT1)">LBW15</th>'
+          '<th style="background:#171f2c;" title="Blue Wave 15m intra-bougie (WT2). Porte la tendance de fond avec MF15 (LOI 3).">BW15</th>' +
+          '<th style="background:#171f2c;" title="Lt Blue Wave 15m intra-bougie (WT1)">LBW15</th>'
         : _activeTab === 'mouvement'
         ? '<th style="border-left:3px solid #5a6b85;" title="Cadence : transactions par seconde sur la fenetre de 200 ticks">Cad</th>' +
-          '<th title="Multiplicateur de cadence contre la moyenne glissante 4h. Seuil d evenement du baton : 2. Marque le MOMENT, jamais la direction.">nMx</th>' +
-          '<th title="NetMove : deplacement net de prix sur la fenetre, en pourcent. Correlation avec la direction future : -0.028, soit rien.">NM</th>' +
-          '<th title="Multiplicateur de netMove contre la moyenne des 30 releves precedents">NMx</th>' +
-          '<th title="Amplitude : ecart haut-bas sur la fenetre de 200 ticks, en pourcent">Ampl</th>' +
-          '<th title="Multiplicateur d amplitude contre la moyenne des 30 releves precedents">AMx</th>'
+          '<th title="Multiplicateur de cadence contre la moyenne glissante 4h. Marque le MOMENT, jamais la direction (LOI 5).">nMx</th>' +
+          '<th style="background:#171f2c;" title="NetMove : deplacement net de prix sur la fenetre, en pourcent. Correlation avec la direction future : -0.028, soit rien.">NM</th>' +
+          '<th style="background:#171f2c;" title="Multiplicateur de netMove contre la moyenne des 30 releves precedents">NMx</th>' +
+          '<th style="background:#171f2c;" title="Amplitude : ecart haut-bas sur la fenetre de 200 ticks, en pourcent">Ampl</th>' +
+          '<th style="background:#171f2c;" title="Multiplicateur d amplitude contre la moyenne des 30 releves precedents">AMx</th>'
         : '<th style="border-left:3px solid #5a6b85;" title="Conviction : part des 8 tranches ou le flux achat/vente va dans le meme sens. Distribution verifiee non saturee, moyenne 0.66.">Cv</th>' +
           '<th title="Coherence : part des 8 tranches ou le mouvement de prix va dans le meme sens. 41 pourcent des releves a zero -- le prix zigzague.">Ch</th>' +
-          '<th title="Sens lisse du prix sur les 3 dernieres tranches">S3</th>' +
+          '<th style="background:#171f2c;" title="Sens lisse du prix sur les 3 dernieres tranches">S3</th>' +
           '<th title="Duree pour accumuler 200 ticks. Fenetre courte = marche actif (17 USD a 5 min), longue = marche endormi (9 USD).">WSec</th>' +
           '<th title="Direction du prix entre deux releves. Zero signifie prix immobile.">Dir</th>'
       ) +
