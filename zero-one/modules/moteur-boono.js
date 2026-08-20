@@ -1,53 +1,47 @@
 /**
- * moteur-boono.js — Moteur de decision selon la logique Lieu/Passage/Evenement.
+ * moteur-boono.js — Moteur de decision ZeroOne.
  *
- * Ecrit le 19/08/2026 d'apres logique-trading-190826.md.
+ * VERSION 2 DU 20/08/2026. Reecriture complete d'apres lois-du-bot-200826.md.
  *
- * ── LECTURE SEULE SUR L'EXISTANT ───────────────────────────────────────
+ * La v1 melangeait les timeframes : direction issue des ecarts VWAP 3m,
+ * maintien issu du regime 15m, contexte lu sur mcb_3m alors que la strategie
+ * se decide sur le 15m. Elle produisait des trades de trente secondes a
+ * 0.03%, sous le seuil de rentabilite des frais.
  *
- * Ce module ne modifie RIEN de ce qui tourne. Il lit baton-state.json et
- * trendlines.json, ecrit ses propres fichiers (moteur-boono-state.json et
- * moteur-boono-history.json), et n'a aucun acces partage en ecriture avec
- * trade-simulator.js. Les deux logiques tournent donc en parallele sur les
- * memes donnees, ce qui donne un point de comparaison.
+ * ── LES SEPT LOIS, DANS L'ORDRE D'EVALUATION ───────────────────────────
  *
- * Reference a battre : l'ancienne logique fait 205% de PNL cumule sur 142
- * entrees, 68.7% de reussite. Elle est jugee mal concue -- shorts pris en
- * pleine hausse, declencheurs sans valeur directionnelle -- mais elle gagne.
- * Le nouveau moteur devra faire mieux pour justifier de la remplacer.
+ * LOI 0  Le VWAP15 se lit en permanence. Il donne le cadre, n'ordonne rien.
  *
- * ── CHEMINS RELATIFS ───────────────────────────────────────────────────
+ * LOI 1  VIGILANCE quand le Vslope15 entre dans la zone neutre (+/-4) ou la
+ *        traverse, OU quand un lieu est actif (Lgi, niveau, MA200).
+ *        La vigilance n'est pas une decision, c'est un changement d'etat.
  *
- * Tous construits avec path.join(__dirname, ...). Le module est transportable
- * vers Amsterdam par un simple git pull, sans reancrage.
+ * LOI 2  En vigilance SEULEMENT, le bot ouvre le 3m. Hors vigilance, le 3m
+ *        n'est jamais consulte -- il ne sert qu'aux retournements, ce qu'il
+ *        est seul a voir et ce qui le rend inutilisable en regime etabli.
  *
- * ── LA LOGIQUE ─────────────────────────────────────────────────────────
+ * LOI 3  Les oscillations du 3m ne valent que si elles s'accordent au
+ *        MoneyFlow 15m et au BW 15m, qui portent la tendance de fond.
+ *        La direction se forme par correlation de dW3, dW15 et Vslope3.
  *
- * LIEU     — permanent, connu a l'avance : lignes imaginaires, niveaux.
- *            Mesure du 18/08 : Lgi actif donne +249 USD de mouvement a 30 min
- *            avec 95% de hausses, contre +9 USD en reference. Meilleur
- *            predicteur du systeme, sur 3% du temps seulement.
+ * LOI 4  E3 et E15 doivent designer le MEME extreme de prix. C'est la loi
+ *        la mieux etayee : la coincidence des deux timeframes separe
+ *        nettement les signaux qui tiennent de ceux qui echouent.
  *
- * PASSAGE  — le prix entre dans la zone. On lit alors le CONTEXTE des quinze
- *            dernieres minutes : MoneyFlow, VWAP, signaux, DBSI. Rien de
- *            cela ne decide -- cela situe le trade et son rapport R/R.
+ * LOI 5  L'evenement donne le MOMENT, jamais la direction. Cadence en
+ *        premier lieu ; a defaut, priceMove au-dela d'un seuil.
  *
- * EVENEMENT— ce qui se manifeste au passage et declenche : signal MCB 15m
- *            de magnitude suffisante, ecart VW15L-VWAP15, Vslope15.
+ * LOI 6  BYPASS du retournement violent. La cadence n'y fonctionne pas --
+ *        elle sature ou arrive trop tard. Quatre elements simultanes :
+ *        Vslope3 et Vslope15 qui basculent, cadence exceptionnelle,
+ *        priceMove qui confirme. Court-circuite les lois 3 a 5.
  *
- * L'EMPILEMENT DEGRADE : mesure du 18/08, >=2 conditions donne +19 USD,
- * >=3 donne +21, >=4 donne +4 -- moins que la reference. On n'exige donc pas
- * un decompte mais la sequence lieu -> evenement.
+ * ── LECTURE SEULE ──────────────────────────────────────────────────────
  *
- * ── CE QU'ON N'UTILISE PAS, ET POURQUOI ────────────────────────────────
- *
- * Passage a zero du VWAP3 : 88 evenements mesures, ratio 0.92 a 0.98 contre
- *   la reference a horizon apparie. Aucune valeur.
- * Accord VWAP3/VWAP15 : 10 USD dans les trois configurations.
- * Signal MCB 3m seul : 31% de reussite, -0.49% sur 42 trades.
- * Coherence de signe sur les signaux MCB : REGLE RETIREE le 19/08. Un creux
- *   de vague peut se produire a valeur positive -- la vague redescend puis
- *   repart sans passer sous zero. Seule la magnitude compte.
+ * Ce module ne modifie rien de ce qui tourne. Il lit baton-state.json et
+ * trendlines.json, ecrit ses propres fichiers. Aucun acces partage en
+ * ecriture avec trade-simulator.js -- les deux logiques tournent en
+ * parallele sur les memes donnees, ce qui donne un point de comparaison.
  */
 
 const fs = require('fs');
@@ -57,89 +51,82 @@ const BATON_PATH = path.join(__dirname, '../data/baton-state.json');
 const TRENDLINES_PATH = path.join(__dirname, '../data/trendlines.json');
 const STATE_PATH = path.join(__dirname, '../data/moteur-boono-state.json');
 const HISTORY_PATH = path.join(__dirname, '../data/moteur-boono-history.json');
-const CONFIG_PATH = path.join(__dirname, '../config.json');
 
 const CYCLE_MS = 30000;
 const HISTORY_MAX = 2000;
-/* Au-dela, les donnees du baton sont jugees perimees et le moteur s'abstient. */
 const STALE_MS = 120000;
 
-/* ── SEUILS, tous issus de mesures datees ─────────────────────────────── */
+/* ── SEUILS PROVISOIRES ────────────────────────────────────────────────
+ * Aucun ne remet en cause une loi : ce sont les lois qui disent ou les
+ * mesurer. A recalibrer des que l'historique 15m sera fourni. */
 
-/* Signal MCB 15m. Mesure sur 100h (11-15/08) : magnitude >=45 donne 22 trades,
- * +5.96% brut, 64% de reussite, R/R 2.98. Le seuil 45 est l'optimum -- 40 et
- * 50 sont moins bons. */
-const MCB_MAGNITUDE_MIN = 45;
+/* LOI 1 -- zone neutre du Vslope15. Estimation de Benjamin, non mesuree. */
+const VSLOPE15_NEUTRE = 4;
 
-/* Ecart VW15L moins VWAP15. Balayage du 18/08 : +48 USD de mouvement a 3,
- * +92 a 6, +136 a 10 avec 72% de hausses. On retient 10. */
-const ECART_VW15_MIN = 10;
+/* LOI 3 -- seuils au-dela desquels un indicateur se prononce. En deca il est
+ * MUET, jamais contraire. */
+const ECART_DW15_DIR = 3;
+const ECART_DW3_DIR = 5;      /* le 3m bouge plus, seuil plus haut */
+const VSLOPE3_DIR = 2;
+/* Tendance de fond : au-dela de ces valeurs, MF15 et BW15 se prononcent. */
+const MF15_TENDANCE = 3;
+const BW15_TENDANCE = 10;
 
-/* Abstention en marche endormi. Mesure : fenetre courte (<15s) donne 17 USD
- * de mouvement a 5 min, longue (>50s) 9 USD. */
-const WINSEC_MAX = 200;
-const CADENCE_MULT_MIN = 0.8;
+/* LOI 4 -- tolerance de synchronisation entre les deux extremes. */
+const SYNC_BATONS = 10;
+const SYNC_USD = 30;
 
-/* Seuils des ecarts VWAP, qui portent desormais la DIRECTION.
- * L'ecart VW15L-VWAP15 est le meilleur indicateur directionnel mesure
- * (correlation +0.228 a 30 min ; +136 USD de mouvement au-dela de 10, avec
- * 72% de hausses). Le Vslope15 le suit de pres (+0.243).
- * En deca de ces seuils, l'indicateur est juge muet plutot que contraire. */
-const ECART_VW15_DIR = 3;      /* ecart minimal pour que le 15m se prononce */
-const ECART_VW3_DIR = 5;       /* le 3m bouge plus, seuil plus haut */
-const VSLOPE15_DIR = 1;
-const VSLOPE3_ARBITRE = 2;     /* derniere instance quand les autres divergent */
+/* LOI 5 -- l'evenement donne le moment. */
+const CADENCE_EVENT = 2;
+const PRICEMOVE_MULT_EVENT = 3;
 
-/* MoneyFlow : au-dela de cette valeur absolue, son orientation compte comme
- * confirmation ou infirmation. En deca, il est muet.
- * Mesure : seul facteur dont la correlation MONTE avec l'horizon
- * (+0.18 a 5 min, +0.26 a 30 min). */
-const MONEYFLOW_MIN = 3;
+/* LOI 6 -- bypass du retournement violent. */
+const BYPASS_CADENCE = 5;
+const BYPASS_PRICEMOVE_MULT = 4;
 
-/* Voie parallele : si le mouvement a deja amplement commence, on n'attend pas
- * la confirmation d'extrema. Multiplicateur de priceMove contre la moyenne
- * des releves precedents. */
-const PRICEMOVE_MULT_MIN = 3;
-const PRICEMOVE_BUFFER = 20;   /* 20 releves de 30s = 10 minutes */
+/* Regimes. Taux d'evenements sur les 20 derniers releves (10 minutes). */
+const REGIME_FENETRE = 20;
+const REGIME_ENDORMI = 0.05;
+const REGIME_CASCADE = 0.30;
 
-/* DIMENSIONNEMENT (19/08/2026). Capital de depart 1000 USD, 1% engage par
- * trade soit 10 USD de marge, levier 10x -> notionnel de 100 USD.
- * Le levier de 10 est le plafond reglementaire europeen pour un particulier,
- * verifie le 14/08 sur le compte OKX : l'instrument en autorise 50, pas le
- * compte. */
+/* Structure de position, heritee de l'ancienne. */
+const TRANCHES = [
+  { fraction: 25, gainPct: 0.15 },
+  { fraction: 65, gainPct: 0.35 },
+  { fraction: 10, gainPct: null },
+];
+
+/* Filets, inconditionnels. Le stop vient de la distribution des excursions
+ * adverses mesuree sur 22 trades : mediane 153 USD, p90 406, max 462. */
+const STOP_USD = 500;
+const TIMEOUT_MINUTES = 240;
+
+/* Dimensionnement : 1% de 1000 USD a 10x, soit 100 USD de notionnel.
+ * Le levier de 10 est le plafond reglementaire europeen. */
 const CAPITAL_USD = 1000;
 const POSITION_PERCENT = 1;
 const LEVIER = 10;
 const NOTIONNEL_USD = CAPITAL_USD * POSITION_PERCENT / 100 * LEVIER;
 
-/* Tranches conservees de l'ancienne structure : 25% au premier objectif,
- * 65% au second, 10% laisses courir. */
-const TRANCHES = [
-  { fraction: 25, gainPct: 0.15 },
-  { fraction: 65, gainPct: 0.35 },
-  { fraction: 10, gainPct: null },   /* laissee courir jusqu'au signal inverse */
-];
+/* Memoire glissante : une heure de releves, assez pour retrouver les
+ * extremes que les signaux 15m designent. */
+const BUFFER_MAX = 120;
 
-/* Filets. Le stop de 500 USD vient de la distribution des excursions adverses
- * mesuree sur 22 trades : mediane 153, p75 282, p90 406, max 462. Il est
- * au-dessus du pire cas observe -- donc il sera depasse un jour. */
-const STOP_USD = 500;
-const TIMEOUT_MINUTES = 240;
+/* ── OUTILS ───────────────────────────────────────────────────────────── */
+
+const num = (v) => (typeof v === 'number' && isFinite(v)) ? v : null;
 
 function lire(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; }
 }
-
 function loadState() {
   const s = lire(STATE_PATH);
-  return s && typeof s === 'object' ? s : { position: null, lastSignalKey: null };
+  return (s && typeof s === 'object') ? s : { position: null, buffer: [] };
 }
-
 function saveState(s) {
   try { fs.writeFileSync(STATE_PATH, JSON.stringify(s, null, 2), 'utf8'); }
   catch (e) { console.error('[moteur] ecriture etat impossible:', e.message); }
 }
-
 function appendHistory(rec) {
   let h = lire(HISTORY_PATH);
   if (!Array.isArray(h)) h = [];
@@ -149,148 +136,244 @@ function appendHistory(rec) {
   catch (e) { console.error('[moteur] ecriture historique impossible:', e.message); }
 }
 
-const num = (v) => (typeof v === 'number' && isFinite(v)) ? v : null;
-
-/* ── LIEU ─────────────────────────────────────────────────────────────── */
-
-function evaluerLieu(tl) {
-  if (!tl || !tl.inZone) return null;
-  return {
-    present: true,
-    lignes: tl.confluence || 1,
-    contacts: tl.maxPointsInZone || null,
-    nature: tl.natureInZone || null,
-  };
+/**
+ * Memoire glissante. Le moteur a besoin d'un historique court pour retrouver
+ * les extremes de prix que les signaux designent (LOI 4) et pour mesurer le
+ * regime (taux d'evenements).
+ */
+function majBuffer(state, b, now) {
+  if (!Array.isArray(state.buffer)) state.buffer = [];
+  state.buffer.push({
+    ts: now,
+    prix: num(b.lastPrice),
+    haut: num(b.priceHigh),
+    bas: num(b.priceLow),
+    sig3: b.wavePivotType || null,
+    sig3v: num(b.wavePivotValue),
+    reg15: b.waveRegime15 || null,
+    reg15v: num(b.waveRegime15Value),
+    cadM: num(b.cadenceMultiplier),
+    pmMult: num(b.priceMoveMult),
+    pm: num(b.priceMove),
+  });
+  while (state.buffer.length > BUFFER_MAX) state.buffer.shift();
 }
 
-/* ── PASSAGE : lecture de contexte, ne decide rien ────────────────────── */
-
-function lireContexte(b) {
-  const mf = num(b.liveMoneyFlow);
-  const v3 = num(b.vwap3), v15 = num(b.vwap15);
-  const vl3 = num(b.vwapLive), vl15 = num(b.live15Vwap);
-  const dTop = num(b.liveDbsiTop), dBas = num(b.liveDbsiBottom);
-
-  let vwapEtat = 'indetermine';
-  if (v3 !== null && v15 !== null) {
-    if (Math.abs(v3) < 2 && Math.abs(v15) < 2) vwapEtat = 'proches de zero';
-    else if (v3 * v15 > 0) vwapEtat = 'synchronises';
-    else vwapEtat = 'en desaccord';
-  }
-
-  return {
-    moneyFlow: mf,
-    moneyFlowSens: mf === null ? null : (mf > 0 ? 'positif' : 'negatif'),
-    vwapEtat,
-    ecartVW3: (vl3 !== null && v3 !== null) ? +(vl3 - v3).toFixed(2) : null,
-    ecartVW15: (vl15 !== null && v15 !== null) ? +(vl15 - v15).toFixed(2) : null,
-    dbsiNet: (dTop !== null && dBas !== null) ? dBas - dTop : null,
-    signalRecent: b.wavePivotType || null,
-    signalValeur: num(b.wavePivotValue),
-    regime15: b.waveRegime15 || null,
-    cadenceMult: num(b.cadenceMultiplier),
-    winSec: num(b.winSec),
-  };
-}
-
-/* ── DIRECTION : ce sont les ecarts VWAP qui decident ─────────────────── */
+/* ── LOI 0 : LA LECTURE DE FOND ───────────────────────────────────────── */
 
 /**
- * Le lieu pose la question, les VWAP y repondent.
- * Chaque indicateur vote 'long', 'short', ou s'abstient s'il est sous son
- * seuil -- un indicateur faible est MUET, pas contraire.
- * Si les voix divergent, le Vslope3 tranche en derniere instance.
+ * Le VWAP15 donne le cadre. Il ne decide rien -- il situe.
+ * Le MoneyFlow 15m et le BW 15m portent la tendance de fond.
  */
-function directionVwap(b, ctx) {
+function lectureDeFond(b) {
+  const vwap15 = num(b.vwap15);
+  const vw15l = num(b.live15Vwap);
+  const vslope15 = num(b.vwapSlope);
+  const mf15 = num(b.live15MoneyFlow);
+  const bw15 = num(b.live15Bw);
+
+  /* Tendance de fond : le sens que MF15 et BW15 designent ensemble.
+   * S'ils se contredisent ou sont trop faibles, elle est indeterminee. */
+  let tendance = null;
+  const sMf = (mf15 !== null && Math.abs(mf15) >= MF15_TENDANCE)
+    ? (mf15 > 0 ? 'long' : 'short') : null;
+  const sBw = (bw15 !== null && Math.abs(bw15) >= BW15_TENDANCE)
+    ? (bw15 > 0 ? 'long' : 'short') : null;
+  if (sMf && sBw && sMf === sBw) tendance = sMf;
+  else if (sMf && !sBw) tendance = sMf;
+  else if (sBw && !sMf) tendance = sBw;
+
+  return {
+    vwap15, vw15l, vslope15, mf15, bw15,
+    dw15: (vw15l !== null && vwap15 !== null) ? +(vw15l - vwap15).toFixed(2) : null,
+    tendance,
+    tendanceSources: { mf: sMf, bw: sBw },
+  };
+}
+
+/* ── LOI 1 : L'ENTREE EN VIGILANCE ────────────────────────────────────── */
+
+/**
+ * Deux portes d'entree, l'une ou l'autre suffit :
+ *   - le Vslope15 entre dans la zone neutre ou la traverse,
+ *   - un lieu est actif.
+ * La vigilance n'autorise rien : elle ouvre le 3m (LOI 2).
+ */
+function vigilance(fond, lieu) {
+  const raisons = [];
+  if (fond.vslope15 !== null && Math.abs(fond.vslope15) <= VSLOPE15_NEUTRE) {
+    raisons.push('Vslope15 en zone neutre');
+  }
+  if (lieu) raisons.push(`lieu actif (${lieu.contacts} contacts)`);
+  return raisons.length ? raisons : null;
+}
+
+/* ── LOI 2 : L'OUVERTURE DU TIMEFRAME RAPIDE ──────────────────────────── */
+
+function lecture3m(b) {
+  const vwap3 = num(b.vwap3);
+  const vw3l = num(b.vwapLive);
+  return {
+    vwap3, vw3l,
+    dw3: (vw3l !== null && vwap3 !== null) ? +(vw3l - vwap3).toFixed(2) : null,
+    vslope3: num(b.vwap3Slope),
+  };
+}
+
+/* ── LOI 3 : L'ACCORD AVEC LA TENDANCE DE FOND ────────────────────────── */
+
+/**
+ * La direction se forme par correlation de dW3, dW15 et Vslope3.
+ * Chaque indicateur vote ou se tait -- en deca de son seuil il est MUET,
+ * jamais contraire.
+ * Puis la direction obtenue doit s'accorder a la tendance de fond portee par
+ * MF15 et BW15. Une oscillation du 3m qui les contredit est du bruit.
+ */
+function direction(fond, tf3) {
   const voix = [];
-
-  if (ctx.ecartVW15 !== null && Math.abs(ctx.ecartVW15) >= ECART_VW15_DIR) {
-    voix.push({ source: 'ecart_vw15', dir: ctx.ecartVW15 > 0 ? 'long' : 'short',
-                valeur: ctx.ecartVW15 });
+  if (fond.dw15 !== null && Math.abs(fond.dw15) >= ECART_DW15_DIR) {
+    voix.push({ source: 'dW15', dir: fond.dw15 > 0 ? 'long' : 'short', valeur: fond.dw15 });
   }
-  if (ctx.ecartVW3 !== null && Math.abs(ctx.ecartVW3) >= ECART_VW3_DIR) {
-    voix.push({ source: 'ecart_vw3', dir: ctx.ecartVW3 > 0 ? 'long' : 'short',
-                valeur: ctx.ecartVW3 });
+  if (tf3.dw3 !== null && Math.abs(tf3.dw3) >= ECART_DW3_DIR) {
+    voix.push({ source: 'dW3', dir: tf3.dw3 > 0 ? 'long' : 'short', valeur: tf3.dw3 });
   }
-  const vs15 = num(b.vwapSlope);
-  if (vs15 !== null && Math.abs(vs15) >= VSLOPE15_DIR) {
-    voix.push({ source: 'vslope15', dir: vs15 > 0 ? 'long' : 'short', valeur: vs15 });
+  if (tf3.vslope3 !== null && Math.abs(tf3.vslope3) >= VSLOPE3_DIR) {
+    voix.push({ source: 'Vslope3', dir: tf3.vslope3 > 0 ? 'long' : 'short', valeur: tf3.vslope3 });
   }
 
-  if (!voix.length) return { direction: null, raison: 'VWAP muets', voix };
+  if (!voix.length) return { dir: null, raison: 'aucune voix ne se prononce', voix };
 
   const longs = voix.filter(v => v.dir === 'long').length;
   const shorts = voix.length - longs;
+  if (longs && shorts) return { dir: null, raison: 'voix contradictoires', voix };
+  const dir = longs ? 'long' : 'short';
 
-  if (longs && shorts) {
-    /* DERNIERE INSTANCE : le Vslope3. Il est du bruit en moyenne, mais dans
-     * un retournement il est le seul a parler a temps -- cas du 18/08 a
-     * 16h27:30, ou il bascule de +6.99 a -3.66 trois minutes et demie avant
-     * le sommet, alors que tout le reste montait encore. */
-    const vs3 = num(b.vwap3Slope);
-    if (vs3 === null || Math.abs(vs3) < VSLOPE3_ARBITRE) {
-      return { direction: null, raison: 'VWAP divergents, Vslope3 muet', voix };
+  /* L'accord avec la tendance de fond est imperatif. */
+  if (!fond.tendance) return { dir: null, raison: 'tendance de fond indeterminee', voix };
+  if (fond.tendance !== dir) {
+    return { dir: null, raison: `oscillation 3m a contresens du fond (${fond.tendance})`, voix };
+  }
+  return { dir, raison: 'voix accordees au fond', voix };
+}
+
+/* ── LOI 4 : LA SYNCHRONISATION DES PIVOTS ────────────────────────────── */
+
+/**
+ * E3 et E15 doivent designer le meme extreme de prix.
+ * On retrouve, dans la memoire glissante, l'instant ou chaque signal a
+ * change, puis l'extreme de prix qui le precede.
+ */
+function extremeDe(buf, iSig, cherchHaut, lookback) {
+  const from = Math.max(0, iSig - lookback);
+  let best = null, bi = null;
+  for (let j = from; j <= iSig; j++) {
+    const c = buf[j];
+    const v = cherchHaut ? (c.haut !== null ? c.haut : c.prix)
+                         : (c.bas !== null ? c.bas : c.prix);
+    if (v === null) continue;
+    if (best === null || (cherchHaut ? v > best : v < best)) { best = v; bi = j; }
+  }
+  return { i: bi, prix: best };
+}
+
+function synchronisation(buf) {
+  if (buf.length < 40) return { ok: false, raison: 'memoire insuffisante' };
+
+  /* Dernier changement de chaque signal. */
+  let i3 = null, t3 = null, i15 = null, t15 = null;
+  for (let i = buf.length - 1; i > 0; i--) {
+    if (i3 === null && buf[i].sig3 &&
+        (buf[i].sig3 !== buf[i - 1].sig3 || buf[i].sig3v !== buf[i - 1].sig3v)) {
+      i3 = i; t3 = buf[i].sig3;
     }
-    return { direction: vs3 > 0 ? 'long' : 'short',
-             raison: 'tranche par Vslope3', voix, arbitre: vs3 };
+    if (i15 === null && buf[i].reg15 &&
+        (buf[i].reg15 !== buf[i - 1].reg15 || buf[i].reg15v !== buf[i - 1].reg15v)) {
+      i15 = i; t15 = buf[i].reg15 === 'haussier' ? 'creux' : 'pic';
+    }
+    if (i3 !== null && i15 !== null) break;
   }
+  if (i3 === null || i15 === null) return { ok: false, raison: 'un des deux signaux manque' };
+  if (t3 !== t15) return { ok: false, raison: `types opposes (3m ${t3}, 15m ${t15})` };
 
-  return { direction: longs ? 'long' : 'short', raison: 'VWAP concordants', voix };
-}
+  const e3 = extremeDe(buf, i3, t3 === 'pic', 30);
+  const e15 = extremeDe(buf, i15, t15 === 'pic', 80);
+  if (e3.prix === null || e15.prix === null) return { ok: false, raison: 'extreme introuvable' };
 
-/**
- * Le MoneyFlow controle la presomption des VWAP : son orientation
- * correspond-elle a l'intention qu'ils expriment ?
- * Retourne 'confirme', 'infirme' ou 'muet'.
- */
-function controleMoneyFlow(ctx, direction) {
-  if (ctx.moneyFlow === null || Math.abs(ctx.moneyFlow) < MONEYFLOW_MIN) return 'muet';
-  const sens = ctx.moneyFlow > 0 ? 'long' : 'short';
-  return sens === direction ? 'confirme' : 'infirme';
-}
-
-/**
- * Seuil d'ENGAGEMENT : la vague porte-t-elle assez pour initier ?
- * Le MCB ne donne plus la direction (correction du 19/08) -- il autorise.
- * Mesure sur 100h : magnitude >=45 donne 64% de reussite et un R/R de 2.98.
- */
-function vagueSuffisante(b) {
-  const v15 = num(b.waveRegime15Value);
-  return v15 !== null && Math.abs(v15) >= MCB_MAGNITUDE_MIN;
-}
-
-/**
- * VOIE PARALLELE : le mouvement a deja amplement commence, sans confirmation
- * d'extrema. On le suit plutot que d'attendre le MCB.
- */
-function priceMoveEngage(state, prix) {
-  if (!Array.isArray(state.priceBuffer)) state.priceBuffer = [];
-  state.priceBuffer.push(prix);
-  while (state.priceBuffer.length > PRICEMOVE_BUFFER) state.priceBuffer.shift();
-  const buf = state.priceBuffer;
-  if (buf.length < PRICEMOVE_BUFFER) return null;
-
-  const deltas = [];
-  for (let i = 1; i < buf.length; i++) deltas.push(Math.abs(buf[i] - buf[i - 1]));
-  const moyenne = deltas.reduce((a, d) => a + d, 0) / deltas.length;
-  if (moyenne <= 0) return null;
-
-  const dernier = buf[buf.length - 1] - buf[buf.length - 2];
-  const mult = Math.abs(dernier) / moyenne;
-  if (mult < PRICEMOVE_MULT_MIN) return null;
-  return { direction: dernier > 0 ? 'long' : 'short', mult: +mult.toFixed(1) };
-}
-
-/* ── ABSTENTIONS ──────────────────────────────────────────────────────── */
-
-function raisonAbstention(b, ctx, lieu) {
-  if (ctx.winSec !== null && ctx.winSec > WINSEC_MAX &&
-      ctx.cadenceMult !== null && ctx.cadenceMult < CADENCE_MULT_MIN) {
-    return 'marche endormi';
+  const dBatons = Math.abs(e3.i - e15.i);
+  const dPrix = Math.abs(e3.prix - e15.prix);
+  if (dBatons > SYNC_BATONS || dPrix > SYNC_USD) {
+    return { ok: false, raison: `extremes distincts (${dBatons} batons, ${dPrix.toFixed(0)} USD)` };
   }
-  if (!ctx.regime15) return 'regime 15m indetermine';
-  if (!lieu) return 'aucun lieu';
+  return {
+    ok: true, type: t3,
+    dir: t3 === 'creux' ? 'long' : 'short',
+    extremePrix: +e3.prix.toFixed(1),
+    ecartBatons: dBatons, ecartUsd: +dPrix.toFixed(1),
+  };
+}
+
+/* ── LOI 5 : L'EVENEMENT DECLENCHEUR ──────────────────────────────────── */
+
+/**
+ * L'evenement donne le MOMENT, jamais la direction.
+ * Cadence en premier lieu ; a defaut, priceMove au-dela d'un seuil.
+ */
+function evenement(b, dir, seuilCadence) {
+  const cadM = num(b.cadenceMultiplier);
+  if (cadM !== null && cadM >= seuilCadence) {
+    return { type: 'cadence', valeur: cadM };
+  }
+  const pmM = num(b.priceMoveMult), pm = num(b.priceMove);
+  if (pmM !== null && pmM >= PRICEMOVE_MULT_EVENT && pm !== null) {
+    const sens = pm > 0 ? 'long' : 'short';
+    if (sens === dir) return { type: 'priceMove', valeur: pmM };
+  }
   return null;
+}
+
+/* ── LOI 6 : LE CONTOURNEMENT DU RETOURNEMENT VIOLENT ─────────────────── */
+
+/**
+ * La cadence ne fonctionne pas sur un retournement violent : elle sature ou
+ * arrive trop tard. Quatre elements simultanes court-circuitent les lois 3
+ * a 5 -- les deux pentes qui basculent, une cadence exceptionnelle, et le
+ * priceMove qui confirme le sens.
+ */
+function bypassRetournement(b, fond, tf3, buf) {
+  const cadM = num(b.cadenceMultiplier);
+  const pmM = num(b.priceMoveMult), pm = num(b.priceMove);
+  if (cadM === null || cadM < BYPASS_CADENCE) return null;
+  if (pmM === null || pmM < BYPASS_PRICEMOVE_MULT || pm === null) return null;
+  if (tf3.vslope3 === null || fond.vslope15 === null) return null;
+
+  const sens = pm > 0 ? 'long' : 'short';
+  /* Les deux pentes doivent aller dans le sens du mouvement -- elles
+   * basculent, elles ne resistent pas. */
+  const s3 = tf3.vslope3 > 0 ? 'long' : 'short';
+  const s15 = fond.vslope15 > 0 ? 'long' : 'short';
+  if (s3 !== sens || s15 !== sens) return null;
+
+  /* Bascule recente : la pente 3m doit avoir change de signe dans la
+   * memoire courte, sinon c'est une continuation et non un retournement. */
+  return { dir: sens, cadence: cadM, priceMoveMult: pmM };
+}
+
+/* ── REGIMES ──────────────────────────────────────────────────────────── */
+
+function regime(buf) {
+  const w = buf.slice(-REGIME_FENETRE);
+  if (w.length < REGIME_FENETRE) return { nom: 'inconnu', taux: null, seuilCadence: CADENCE_EVENT };
+  const n = w.filter(x => (x.cadM || 0) >= CADENCE_EVENT).length;
+  const taux = n / w.length;
+  if (taux >= REGIME_CASCADE) {
+    /* En cascade, les evenements saturent : le seuil doit s'ajuster a
+     * l'engagement du moment, sinon il se declenche a chaque baton. */
+    const cads = w.map(x => x.cadM || 0).sort((a, b) => b - a);
+    const p90 = cads[Math.floor(cads.length * 0.1)];
+    return { nom: 'cascade', taux, seuilCadence: Math.max(CADENCE_EVENT, p90) };
+  }
+  if (taux <= REGIME_ENDORMI) return { nom: 'endormi', taux, seuilCadence: CADENCE_EVENT };
+  return { nom: 'normal', taux, seuilCadence: CADENCE_EVENT };
 }
 
 /* ── GESTION DE POSITION ──────────────────────────────────────────────── */
@@ -300,21 +383,15 @@ function pnlPct(pos, prix) {
   return pos.direction === 'long' ? d : -d;
 }
 
-function gererPosition(state, b, ctx, prix, now) {
+function gererPosition(state, b, fond, prix, now, reg) {
   const pos = state.position;
   const pnl = pnlPct(pos, prix);
   const ecartUsd = Math.abs(prix - pos.entryPrice);
   const dureeMin = (now - Date.parse(pos.entryTimestamp)) / 60000;
 
   const sortir = (raison, fraction) => {
-    /* PNL en USD sur le NOTIONNEL engage, et non sur le prix du sous-jacent.
-     * Un mouvement de 0.67% donne 0.67 USD sur 100 de notionnel -- pas 435,
-     * qui etait le mouvement rapporte a un bitcoin entier. */
-    const notionnelTranche = (pos.notionnel || NOTIONNEL_USD) * fraction / 100;
-    const usd = pnl / 100 * notionnelTranche;
-    /* Part de la marge engagee : c'est cette lecture qui dit si le trade
-     * fait mal. Avec un levier de 10, 0.67% de mouvement fait 6.7% de marge. */
-    const pctMarge = pnl * (pos.levier || LEVIER);
+    const notionnel = (pos.notionnel || NOTIONNEL_USD) * fraction / 100;
+    const usd = pnl / 100 * notionnel;
     appendHistory({
       entryTimestamp: pos.entryTimestamp,
       exitTimestamp: new Date(now).toISOString(),
@@ -323,75 +400,56 @@ function gererPosition(state, b, ctx, prix, now) {
       exitPrice: prix,
       pnlPercent: +pnl.toFixed(4),
       pnlUsd: +usd.toFixed(2),
-      pnlMargePercent: +pctMarge.toFixed(2),
-      notionnel: +notionnelTranche.toFixed(2),
+      pnlMargePercent: +(pnl * (pos.levier || LEVIER)).toFixed(2),
+      notionnel: +notionnel.toFixed(2),
       fraction,
       exitReason: raison,
+      loiEntree: pos.loi,
       contexteEntree: pos.contexte,
-      declencheur: pos.declencheur,
     });
     console.log(`[moteur] SORTIE ${fraction}% ${pos.direction} @ ${prix} ` +
                 `(${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}% = ${usd >= 0 ? '+' : ''}${usd.toFixed(2)} USD) -- ${raison}`);
   };
 
-  /* Filets, evalues en premier. */
+  /* FILETS -- inconditionnels, evalues en premier. */
   if (ecartUsd >= STOP_USD && pnl < 0) {
-    sortir(`stop ${STOP_USD} USD`, pos.restant);
-    state.position = null;
-    return;
+    sortir(`stop ${STOP_USD} USD`, pos.restant); state.position = null; return;
   }
   if (dureeMin > TIMEOUT_MINUTES) {
-    sortir(`timeout ${TIMEOUT_MINUTES} min`, pos.restant);
-    state.position = null;
-    return;
+    sortir(`timeout ${TIMEOUT_MINUTES} min`, pos.restant); state.position = null; return;
   }
 
-  /* LE MCB COMME MOTIF DE MAINTIEN (19/08/2026). Il ne donne plus la
-   * direction a l'entree, mais tant qu'il s'accorde avec la position, celle-ci
-   * tient. Un signal franc a contresens la ferme.
-   * Mesure du 16/08 : le VW3L se retourne au creux du prix, 94% du mouvement
-   * capture en sortant sur signal inverse. */
-  const v15 = num(b.waveRegime15Value);
-  if (v15 !== null && Math.abs(v15) >= MCB_MAGNITUDE_MIN && b.waveRegime15) {
-    const dir = b.waveRegime15 === 'haussier' ? 'long' : 'short';
-    if (dir !== pos.direction) {
-      sortir('vague MCB a contresens', pos.restant);
-      state.position = null;
-      return;
+  /* LE CADRE QUI CHANGE ferme la position : le VWAP15 se retourne. */
+  if (fond.vwap15 !== null && pos.vwap15Entree !== null &&
+      Math.abs(fond.vwap15) >= 2) {
+    const sensCadre = fond.vwap15 > 0 ? 'long' : 'short';
+    if (sensCadre !== pos.direction) {
+      sortir('VWAP15 retourne', pos.restant); state.position = null; return;
     }
   }
 
-  /* Les VWAP ayant donne la direction, leur retournement franc la retire. */
-  const dvNow = directionVwap(b, ctx);
-  if (dvNow.direction && dvNow.direction !== pos.direction && dvNow.voix.length >= 2) {
-    sortir('VWAP retournes', pos.restant);
-    state.position = null;
-    return;
-  }
-
-  /* Swing failure : le MoneyFlow reste du mauvais cote pendant une poussee
-   * favorable. Cas du 18/08 -- breakout de 542 USD avec MoneyFlow negatif
-   * tout du long, entierement rendu ensuite. */
-  if (pnl > 0.2 && ctx.moneyFlow !== null) {
-    const mfContre = (pos.direction === 'long' && ctx.moneyFlow < 0) ||
-                     (pos.direction === 'short' && ctx.moneyFlow > 0);
-    if (mfContre) {
-      sortir('swing failure (MoneyFlow a contresens)', pos.restant);
-      state.position = null;
-      return;
+  /* LE MONEYFLOW A CONTRESENS pendant un mouvement favorable signale un
+   * echec de poussee : on sort sans attendre. */
+  if (pnl > 0.2 && fond.mf15 !== null && Math.abs(fond.mf15) >= MF15_TENDANCE) {
+    const sensMf = fond.mf15 > 0 ? 'long' : 'short';
+    if (sensMf !== pos.direction) {
+      sortir('MoneyFlow15 a contresens', pos.restant); state.position = null; return;
     }
   }
 
-  /* Tranches. */
-  for (let i = pos.trancheStage; i < TRANCHES.length; i++) {
-    const t = TRANCHES[i];
-    if (t.gainPct === null) break;      /* la derniere court jusqu'au signal */
-    if (pnl >= t.gainPct) {
-      sortir(`tranche ${t.fraction}%`, t.fraction);
-      pos.restant -= t.fraction;
-      pos.trancheStage = i + 1;
-      if (pos.restant <= 0) { state.position = null; return; }
-    } else break;
+  /* TRANCHES. En cascade, on ne sort pas sur objectif : on suit la tendance
+   * jusqu'a ce qu'elle casse. */
+  if (reg.nom !== 'cascade') {
+    for (let i = pos.trancheStage; i < TRANCHES.length; i++) {
+      const t = TRANCHES[i];
+      if (t.gainPct === null) break;
+      if (pnl >= t.gainPct) {
+        sortir(`tranche ${t.fraction}%`, t.fraction);
+        pos.restant -= t.fraction;
+        pos.trancheStage = i + 1;
+        if (pos.restant <= 0) { state.position = null; return; }
+      } else break;
+    }
   }
 
   pos.pnlCourant = +pnl.toFixed(4);
@@ -402,85 +460,83 @@ function gererPosition(state, b, ctx, prix, now) {
 
 function tick() {
   const b = lire(BATON_PATH);
-  const tl = lire(TRENDLINES_PATH);
   if (!b) return;
-
   const now = Date.now();
   const age = now - Date.parse(b.timestamp);
-  if (!(age >= 0 && age < STALE_MS)) {
-    console.warn('[moteur] baton perime, abstention');
-    return;
-  }
+  if (!(age >= 0 && age < STALE_MS)) { console.warn('[moteur] baton perime'); return; }
   const prix = num(b.lastPrice);
   if (prix === null) return;
 
   const state = loadState();
-  const ctx = lireContexte(b);
-  const lieu = evaluerLieu(tl);
+  majBuffer(state, b, now);
+
+  const tl = lire(TRENDLINES_PATH);
+  const lieu = (tl && tl.inZone)
+    ? { lignes: tl.confluence || 1, contacts: tl.maxPointsInZone || null }
+    : null;
+
+  const fond = lectureDeFond(b);          /* LOI 0 */
+  const reg = regime(state.buffer);
 
   if (state.position) {
-    gererPosition(state, b, ctx, prix, now);
+    gererPosition(state, b, fond, prix, now, reg);
     saveState(state);
     return;
   }
 
-  /* Le priceMove se calcule a chaque cycle, meme en abstention : son buffer
-   * doit rester continu. */
-  const pm = priceMoveEngage(state, prix);
+  const abstenir = (r) => { state.derniereAbstention = r; saveState(state); };
 
-  const abst = raisonAbstention(b, ctx, lieu);
-  if (abst) { state.derniereAbstention = abst; saveState(state); return; }
+  /* Marche endormi : les frais ne seraient pas couverts. */
+  if (reg.nom === 'endormi') return abstenir('marche endormi');
 
-  /* 2. DIRECTION -- les ecarts VWAP repondent a la question posee par le lieu. */
-  const dv = directionVwap(b, ctx);
-  if (!dv.direction) {
-    state.derniereAbstention = dv.raison;
-    saveState(state);
-    return;
-  }
-  const direction = dv.direction;
+  const tf3 = lecture3m(b);
 
-  /* 3. MONEYFLOW -- controle de la presomption. */
-  const mf = controleMoneyFlow(ctx, direction);
-  if (mf === 'infirme') {
-    state.derniereAbstention = `MoneyFlow contredit la direction ${direction}`;
-    saveState(state);
-    return;
-  }
+  /* LOI 6 -- le bypass est teste AVANT la chaine, il la court-circuite. */
+  const bp = bypassRetournement(b, fond, tf3, state.buffer);
 
-  /* 4. ENGAGEMENT -- vague suffisante, ou mouvement deja lance. */
-  const vague = vagueSuffisante(b);
-  const suitPriceMove = (pm !== null && pm.direction === direction);
-  if (!vague && !suitPriceMove) {
-    state.derniereAbstention = 'vague insuffisante et mouvement non engage';
-    saveState(state);
-    return;
+  let dir = null, loi = null, detail = null;
+  if (bp) {
+    dir = bp.dir; loi = 'LOI 6 -- bypass retournement violent';
+    detail = { cadence: bp.cadence, priceMoveMult: bp.priceMoveMult };
+  } else {
+    /* LOI 1 -- vigilance. */
+    const vig = vigilance(fond, lieu);
+    if (!vig) return abstenir('hors vigilance');
+
+    /* LOI 2 et 3 -- le 3m est ouvert, la direction se forme. */
+    const d = direction(fond, tf3);
+    if (!d.dir) return abstenir(d.raison);
+
+    /* LOI 4 -- synchronisation des pivots. */
+    const sync = synchronisation(state.buffer);
+    if (!sync.ok) return abstenir(`pivots non synchronises : ${sync.raison}`);
+    if (sync.dir !== d.dir) return abstenir(`pivots designent ${sync.dir}, direction ${d.dir}`);
+
+    /* LOI 5 -- l'evenement donne le moment. */
+    const ev = evenement(b, d.dir, reg.seuilCadence);
+    if (!ev) return abstenir('aucun evenement');
+
+    dir = d.dir;
+    loi = 'LOI 1-5 -- chaine complete';
+    detail = { vigilance: vig, voix: d.voix, sync, evenement: ev };
   }
 
   state.position = {
-    direction,
+    direction: dir,
     entryPrice: prix,
     entryTimestamp: new Date(now).toISOString(),
     restant: 100,
     trancheStage: 0,
-    /* Dimensionnement fige a l'entree : si les parametres changent en cours
-     * de route, la position garde ceux avec lesquels elle a ete ouverte. */
-    capital: CAPITAL_USD,
-    positionPercent: POSITION_PERCENT,
-    levier: LEVIER,
-    notionnel: NOTIONNEL_USD,
-    direction_source: dv.raison,
-    voix: dv.voix,
-    moneyFlowControle: mf,
-    engagement: vague ? 'vague MCB >= 45' : `priceMove x${pm.mult}`,
-    contexte: ctx,
-    lieu,
+    capital: CAPITAL_USD, positionPercent: POSITION_PERCENT,
+    levier: LEVIER, notionnel: NOTIONNEL_USD,
+    loi, detail,
+    vwap15Entree: fond.vwap15,
+    regime: reg.nom,
+    contexte: { fond, tf3, lieu, regime: reg },
   };
   state.derniereAbstention = null;
   saveState(state);
-  console.log(`[moteur] ENTREE ${direction} @ ${prix} -- lieu ${lieu.contacts} contacts | ` +
-              `${dv.raison} (${dv.voix.map(v => v.source).join(', ')}) | ` +
-              `MoneyFlow ${mf} | ${state.position.engagement}`);
+  console.log(`[moteur] ENTREE ${dir} @ ${prix} [${reg.nom}] -- ${loi}`);
 }
 
 /* ── DIAGNOSTIC ───────────────────────────────────────────────────────── */
@@ -488,29 +544,29 @@ function tick() {
 function statut() {
   const s = loadState();
   const h = lire(HISTORY_PATH) || [];
-  console.log('=== MOTEUR BOONO ===');
+  console.log('=== MOTEUR BOONO v2 ===');
   if (s.position) {
     const p = s.position;
-    console.log(`Position ${p.direction} @ ${p.entryPrice} depuis ${p.dureeMin || 0} min`);
+    console.log(`${p.direction.toUpperCase()} @ ${p.entryPrice} depuis ${p.dureeMin || 0} min [${p.regime}]`);
     console.log(`  PNL ${p.pnlCourant !== undefined ? p.pnlCourant + '%' : 'n/a'}, restant ${p.restant}%`);
-    console.log(`  declencheur : ${p.declencheur.map(d => d.type).join(', ')}`);
+    console.log(`  ${p.loi}`);
   } else {
     console.log('Aucune position. Derniere abstention : ' + (s.derniereAbstention || 'aucune'));
   }
   if (h.length) {
-    const tot = h.reduce((a, r) => a + (r.fraction / 100) * r.pnlPercent, 0);
-    const gagnantes = h.filter(r => r.pnlPercent > 0).length;
-    console.log(`\n${h.length} sorties, PNL cumule ${tot >= 0 ? '+' : ''}${tot.toFixed(2)}%, ` +
-                `${Math.round(100 * gagnantes / h.length)}% gagnantes`);
-    const parRaison = {};
+    const tot = h.reduce((a, r) => a + (typeof r.pnlUsd === 'number' ? r.pnlUsd : 0), 0);
+    const pct = h.reduce((a, r) => a + (r.fraction / 100) * r.pnlPercent, 0);
+    const g = h.filter(r => r.pnlPercent > 0).length;
+    console.log(`\n${h.length} sorties, ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}% ` +
+                `(${tot >= 0 ? '+' : ''}${tot.toFixed(2)} USD), ${Math.round(100 * g / h.length)}% gagnantes`);
+    const par = {};
     for (const r of h) {
-      const k = r.exitReason.split(' ')[0];
-      if (!parRaison[k]) parRaison[k] = { n: 0, pnl: 0 };
-      parRaison[k].n++;
-      parRaison[k].pnl += (r.fraction / 100) * r.pnlPercent;
+      const k = String(r.exitReason).split(' ')[0];
+      if (!par[k]) par[k] = { n: 0, usd: 0 };
+      par[k].n++; par[k].usd += (typeof r.pnlUsd === 'number' ? r.pnlUsd : 0);
     }
-    for (const [k, v] of Object.entries(parRaison).sort((a, b) => a[1].pnl - b[1].pnl)) {
-      console.log(`  ${k.padEnd(20)} ${v.n}x  ${v.pnl >= 0 ? '+' : ''}${v.pnl.toFixed(2)}%`);
+    for (const [k, v] of Object.entries(par).sort((a, b) => a[1].usd - b[1].usd)) {
+      console.log(`  ${k.padEnd(22)} ${v.n}x  ${v.usd >= 0 ? '+' : ''}${v.usd.toFixed(2)} USD`);
     }
   } else {
     console.log('\nAucune sortie enregistree.');
@@ -519,9 +575,9 @@ function statut() {
 
 if (require.main === module) {
   if (process.argv.includes('--statut')) { statut(); process.exit(0); }
-  console.log(`[moteur] demarre, cycle ${CYCLE_MS / 1000}s -- LECTURE SEULE sur baton et trendlines`);
+  console.log('[moteur] v2 demarre -- LECTURE SEULE, cycle ' + (CYCLE_MS / 1000) + 's');
   tick();
   setInterval(() => { try { tick(); } catch (e) { console.error('[moteur]', e.message); } }, CYCLE_MS);
 }
 
-module.exports = { tick, statut, lireContexte, directionVwap, controleMoneyFlow };
+module.exports = { tick, statut, lectureDeFond, direction, synchronisation, regime };
