@@ -83,9 +83,8 @@ const VSLOPE3_DIR = 2;
  * Le BW ne peut que REFUSER la tendance, sur contradiction franche. */
 const BW15_VETO = 30;
 
-/* LOI 4 -- tolerance de synchronisation entre les deux extremes. */
-const SYNC_BATONS = 10;
-const SYNC_USD = 30;
+/* LOI 4 -- plus de tolerance de synchronisation : le signal 15m ne valide
+ * plus l'entree. Il confirme apres coup, avec 500 a 700 USD de retard. */
 
 /* LOI 5 -- l'evenement donne le moment.
  * Le priceMove s'evalue EN DOLLARS et non en multiple : c'est une entite
@@ -316,39 +315,57 @@ function extremeDe(buf, iSig, cherchHaut, lookback) {
   return { i: bi, prix: best };
 }
 
-function synchronisation(buf) {
+/**
+ * LOI 4 (revue le 22/08/2026) -- le signal 3m suffit.
+ *
+ * L'ancienne version exigeait que E3 et E15 designent le meme extreme. Mais
+ * le signal 15m confirme avec 500 a 700 USD de retard : attendre sa
+ * confirmation revient a payer ce retard. Il ne valide plus l'entree, il
+ * confirme apres coup qu'on avait raison.
+ *
+ * Le signal 15m reste lu et rapporte -- son age et son accord eventuel sont
+ * enregistres dans le contexte du trade -- mais il ne bloque rien.
+ */
+function signal3m(buf) {
   if (buf.length < 40) return { ok: false, raison: 'memoire insuffisante' };
 
-  /* Dernier changement de chaque signal. */
-  let i3 = null, t3 = null, i15 = null, t15 = null;
+  let i3 = null, t3 = null;
   for (let i = buf.length - 1; i > 0; i--) {
-    if (i3 === null && buf[i].sig3 &&
+    if (buf[i].sig3 &&
         (buf[i].sig3 !== buf[i - 1].sig3 || buf[i].sig3v !== buf[i - 1].sig3v)) {
-      i3 = i; t3 = buf[i].sig3;
+      i3 = i; t3 = buf[i].sig3; break;
     }
-    if (i15 === null && buf[i].reg15 &&
-        (buf[i].reg15 !== buf[i - 1].reg15 || buf[i].reg15v !== buf[i - 1].reg15v)) {
-      i15 = i; t15 = buf[i].reg15 === 'haussier' ? 'creux' : 'pic';
-    }
-    if (i3 !== null && i15 !== null) break;
   }
-  if (i3 === null || i15 === null) return { ok: false, raison: 'un des deux signaux manque' };
-  if (t3 !== t15) return { ok: false, raison: `types opposes (3m ${t3}, 15m ${t15})` };
+  if (i3 === null) return { ok: false, raison: 'aucun signal 3m' };
 
   const e3 = extremeDe(buf, i3, t3 === 'pic', 30);
-  const e15 = extremeDe(buf, i15, t15 === 'pic', 80);
-  if (e3.prix === null || e15.prix === null) return { ok: false, raison: 'extreme introuvable' };
+  if (e3.prix === null) return { ok: false, raison: 'extreme 3m introuvable' };
 
-  const dBatons = Math.abs(e3.i - e15.i);
-  const dPrix = Math.abs(e3.prix - e15.prix);
-  if (dBatons > SYNC_BATONS || dPrix > SYNC_USD) {
-    return { ok: false, raison: `extremes distincts (${dBatons} batons, ${dPrix.toFixed(0)} USD)` };
+  /* Le 15m, pour information seulement. */
+  let i15 = null, t15 = null;
+  for (let i = buf.length - 1; i > 0; i--) {
+    if (buf[i].reg15 &&
+        (buf[i].reg15 !== buf[i - 1].reg15 || buf[i].reg15v !== buf[i - 1].reg15v)) {
+      i15 = i; t15 = buf[i].reg15 === 'haussier' ? 'creux' : 'pic'; break;
+    }
   }
+  let accord15 = null;
+  if (i15 !== null) {
+    const e15 = extremeDe(buf, i15, t15 === 'pic', 80);
+    accord15 = {
+      type: t15,
+      ageMin: Math.round((buf.length - 1 - i15) * 0.5),
+      memeType: t15 === t3,
+      ecartUsd: (e15.prix !== null) ? +Math.abs(e3.prix - e15.prix).toFixed(1) : null,
+    };
+  }
+
   return {
     ok: true, type: t3,
     dir: t3 === 'creux' ? 'long' : 'short',
     extremePrix: +e3.prix.toFixed(1),
-    ecartBatons: dBatons, ecartUsd: +dPrix.toFixed(1),
+    ageMin: Math.round((buf.length - 1 - i3) * 0.5),
+    accord15,
   };
 }
 
@@ -563,10 +580,10 @@ function tick() {
     const d = direction(fond, tf3);
     if (!d.dir) return abstenir(d.raison);
 
-    /* LOI 4 -- synchronisation des pivots. */
-    const sync = synchronisation(state.buffer);
-    if (!sync.ok) return abstenir(`pivots non synchronises : ${sync.raison}`);
-    if (sync.dir !== d.dir) return abstenir(`pivots designent ${sync.dir}, direction ${d.dir}`);
+    /* LOI 4 -- le signal 3m declenche. Le 15m est lu mais ne bloque pas. */
+    const sync = signal3m(state.buffer);
+    if (!sync.ok) return abstenir(`signal 3m : ${sync.raison}`);
+    if (sync.dir !== d.dir) return abstenir(`signal 3m designe ${sync.dir}, direction ${d.dir}`);
 
     /* LOI 5 -- l'evenement donne le moment. */
     const ev = evenement(b, d.dir, reg.seuilCadence, reg.nom);
@@ -637,4 +654,4 @@ if (require.main === module) {
   setInterval(() => { try { tick(); } catch (e) { console.error('[moteur]', e.message); } }, CYCLE_MS);
 }
 
-module.exports = { tick, statut, lectureDeFond, direction, synchronisation, regime };
+module.exports = { tick, statut, lectureDeFond, direction, signal3m, regime };
