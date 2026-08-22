@@ -60,34 +60,61 @@ const STALE_MS = 120000;
  * Aucun ne remet en cause une loi : ce sont les lois qui disent ou les
  * mesurer. A recalibrer des que l'historique 15m sera fourni. */
 
-/* LOI 1 -- zone neutre du Vslope15. Estimation de Benjamin, non mesuree. */
-const VSLOPE15_NEUTRE = 4;
+/* LOI 1 -- DEUX zones distinctes sur le Vslope15 (22/08/2026).
+ * La vigilance se declenche largement, a +/-4 : c'est l'approche de
+ * l'equilibre qui doit eveiller l'attention.
+ * Mais le Vslope15 continue de se prononcer sur la direction entre 2 et 4 --
+ * il n'est vraiment muet qu'en deca de 2. */
+const VSLOPE15_VIGILANCE = 4;
+const VSLOPE15_NEUTRE = 2;
 
 /* LOI 3 -- seuils au-dela desquels un indicateur se prononce. En deca il est
  * MUET, jamais contraire. */
 const ECART_DW15_DIR = 3;
 const ECART_DW3_DIR = 5;      /* le 3m bouge plus, seuil plus haut */
 const VSLOPE3_DIR = 2;
-/* Tendance de fond : au-dela de ces valeurs, MF15 et BW15 se prononcent. */
-const MF15_TENDANCE = 3;
-const BW15_TENDANCE = 10;
+/* TENDANCE DE FOND (revue le 22/08/2026). Le MoneyFlow la porte SEUL, par
+ * son SIGNE, sans aucun seuil.
+ * Motif : exiger l'accord de MF15 et BW15 en signe bloquait le moteur un
+ * quart du temps. Leurs echelles sont incomparables et aucun des deux n'est
+ * centre sur zero -- MF15 positif 88% du temps, BW15 69%, alors que les
+ * trois VWAP le sont. Un seuil symetrique sur un indicateur asymetrique
+ * filtre dans un seul sens.
+ * Le BW ne peut que REFUSER la tendance, sur contradiction franche. */
+const BW15_VETO = 30;
 
 /* LOI 4 -- tolerance de synchronisation entre les deux extremes. */
 const SYNC_BATONS = 10;
 const SYNC_USD = 30;
 
-/* LOI 5 -- l'evenement donne le moment. */
+/* LOI 5 -- l'evenement donne le moment.
+ * Le priceMove s'evalue EN DOLLARS et non en multiple : c'est une entite
+ * absolue, elle ne doit pas etre comparee a sa propre trace. Seuils cales
+ * sur le p90 mesure de chaque regime (75, 98, 119 sur 24h). */
 const CADENCE_EVENT = 2;
-const PRICEMOVE_MULT_EVENT = 3;
+const PRICEMOVE_USD = { endormi: 75, normal: 100, cascade: 120 };
 
 /* LOI 6 -- bypass du retournement violent. */
 const BYPASS_CADENCE = 5;
-const BYPASS_PRICEMOVE_MULT = 4;
+/* Le bypass exige un mouvement franc : le double du seuil d'evenement. */
+const BYPASS_PRICEMOVE_USD = 200;
 
-/* Regimes. Taux d'evenements sur les 20 derniers releves (10 minutes). */
+/* REGIMES (revus le 22/08/2026). Ils se jugent sur le MOUVEMENT du prix et
+ * non sur l'activite du carnet : un marche peu frequente peut avancer
+ * fortement -- carnet mince apres une cascade -- et l'ancien calcul le
+ * declarait endormi. Ce desaccord representait 30% des releves.
+ *
+ * Seuils sur la moyenne du |priceMove| des 20 derniers releves.
+ * Distribution mesuree sur 24h : p25 = 28, median = 36, p75 = 49, p90 = 64.
+ *
+ * La cadence garde un role : elle ne peut plus declarer un marche endormi,
+ * mais elle DURCIT la cascade -- il faut du mouvement ET de l'agitation.
+ * Les deux ensemble ne surviennent que 3% du temps, ce qui correspond bien
+ * a un regime exceptionnel. */
 const REGIME_FENETRE = 20;
-const REGIME_ENDORMI = 0.05;
-const REGIME_CASCADE = 0.30;
+const REGIME_PM_ENDORMI = 28;
+const REGIME_PM_CASCADE = 64;
+const REGIME_CAD_CASCADE = 0.30;
 
 /* Structure de position, heritee de l'ancienne. */
 const TRANCHES = [
@@ -108,9 +135,14 @@ const POSITION_PERCENT = 1;
 const LEVIER = 10;
 const NOTIONNEL_USD = CAPITAL_USD * POSITION_PERCENT / 100 * LEVIER;
 
-/* Memoire glissante : une heure de releves, assez pour retrouver les
- * extremes que les signaux 15m designent. */
-const BUFFER_MAX = 120;
+/* Memoire glissante : TROIS heures (22/08/2026, etait une heure).
+ * Espacement mesure entre deux signaux MCB : 3m median 12 min, max 60 ;
+ * 15m median 60 min, p75 90, max 225. Une heure ne contenait donc aucun
+ * signal 15m la moitie du temps, et le moteur restait bloque sur "un des
+ * deux signaux manque".
+ * Allonger ne cree pas de fausses validations : la LOI 4 exige que les deux
+ * designent le MEME extreme, a dix batons et trente dollars pres. */
+const BUFFER_MAX = 360;
 
 /* ── OUTILS ───────────────────────────────────────────────────────────── */
 
@@ -172,19 +204,21 @@ function lectureDeFond(b) {
   const mf15 = num(b.live15MoneyFlow);
   const bw15 = num(b.live15Bw);
 
-  /* Tendance de fond : le sens que MF15 et BW15 designent ensemble.
-   * S'ils se contredisent ou sont trop faibles, elle est indeterminee. */
-  let tendance = null;
-  const sMf = (mf15 !== null && Math.abs(mf15) >= MF15_TENDANCE)
-    ? (mf15 > 0 ? 'long' : 'short') : null;
-  const sBw = (bw15 !== null && Math.abs(bw15) >= BW15_TENDANCE)
-    ? (bw15 > 0 ? 'long' : 'short') : null;
-  if (sMf && sBw && sMf === sBw) tendance = sMf;
-  else if (sMf && !sBw) tendance = sMf;
-  else if (sBw && !sMf) tendance = sBw;
+  /* Le MoneyFlow porte la tendance, seul, par son signe. */
+  let tendance = (mf15 !== null) ? (mf15 > 0 ? 'long' : 'short') : null;
+  const sMf = tendance;
+  let sBw = null;
+  if (tendance && bw15 !== null && Math.abs(bw15) >= BW15_VETO) {
+    sBw = bw15 > 0 ? 'long' : 'short';
+    /* Veto : le BW contredit franchement ce que dit le MoneyFlow. */
+    if (sBw !== tendance) tendance = null;
+  }
 
   return {
     vwap15, vw15l, vslope15, mf15, bw15,
+    /* Pente du MoneyFlow 15m, alignee sur la bougie. Mesure sur 19 extremes :
+     * elle reste orientee dans le sens du mouvement qui se termine. */
+    mf15Pente: num(b.mf15Pente),
     dw15: (vw15l !== null && vwap15 !== null) ? +(vw15l - vwap15).toFixed(2) : null,
     tendance,
     tendanceSources: { mf: sMf, bw: sBw },
@@ -201,8 +235,8 @@ function lectureDeFond(b) {
  */
 function vigilance(fond, lieu) {
   const raisons = [];
-  if (fond.vslope15 !== null && Math.abs(fond.vslope15) <= VSLOPE15_NEUTRE) {
-    raisons.push('Vslope15 en zone neutre');
+  if (fond.vslope15 !== null && Math.abs(fond.vslope15) <= VSLOPE15_VIGILANCE) {
+    raisons.push('Vslope15 approche l equilibre');
   }
   if (lieu) raisons.push(`lieu actif (${lieu.contacts} contacts)`);
   return raisons.length ? raisons : null;
@@ -239,6 +273,12 @@ function direction(fond, tf3) {
   }
   if (tf3.vslope3 !== null && Math.abs(tf3.vslope3) >= VSLOPE3_DIR) {
     voix.push({ source: 'Vslope3', dir: tf3.vslope3 > 0 ? 'long' : 'short', valeur: tf3.vslope3 });
+  }
+  /* Le Vslope15 se prononce encore hors de sa zone de neutralite (+/-2),
+   * meme s'il reste dans la zone de vigilance (+/-4). */
+  if (fond.vslope15 !== null && Math.abs(fond.vslope15) > VSLOPE15_NEUTRE) {
+    voix.push({ source: 'Vslope15', dir: fond.vslope15 > 0 ? 'long' : 'short',
+                valeur: fond.vslope15 });
   }
 
   if (!voix.length) return { dir: null, raison: 'aucune voix ne se prononce', voix };
@@ -318,15 +358,17 @@ function synchronisation(buf) {
  * L'evenement donne le MOMENT, jamais la direction.
  * Cadence en premier lieu ; a defaut, priceMove au-dela d'un seuil.
  */
-function evenement(b, dir, seuilCadence) {
+function evenement(b, dir, seuilCadence, nomRegime) {
   const cadM = num(b.cadenceMultiplier);
   if (cadM !== null && cadM >= seuilCadence) {
     return { type: 'cadence', valeur: cadM };
   }
-  const pmM = num(b.priceMoveMult), pm = num(b.priceMove);
-  if (pmM !== null && pmM >= PRICEMOVE_MULT_EVENT && pm !== null) {
+  /* Le priceMove s'evalue en DOLLARS, contre un seuil propre au regime. */
+  const pm = num(b.priceMove);
+  const seuil = PRICEMOVE_USD[nomRegime] || PRICEMOVE_USD.normal;
+  if (pm !== null && Math.abs(pm) >= seuil) {
     const sens = pm > 0 ? 'long' : 'short';
-    if (sens === dir) return { type: 'priceMove', valeur: pmM };
+    if (sens === dir) return { type: 'priceMove', valeur: pm, seuil };
   }
   return null;
 }
@@ -341,9 +383,9 @@ function evenement(b, dir, seuilCadence) {
  */
 function bypassRetournement(b, fond, tf3, buf) {
   const cadM = num(b.cadenceMultiplier);
-  const pmM = num(b.priceMoveMult), pm = num(b.priceMove);
+  const pm = num(b.priceMove);
   if (cadM === null || cadM < BYPASS_CADENCE) return null;
-  if (pmM === null || pmM < BYPASS_PRICEMOVE_MULT || pm === null) return null;
+  if (pm === null || Math.abs(pm) < BYPASS_PRICEMOVE_USD) return null;
   if (tf3.vslope3 === null || fond.vslope15 === null) return null;
 
   const sens = pm > 0 ? 'long' : 'short';
@@ -355,25 +397,39 @@ function bypassRetournement(b, fond, tf3, buf) {
 
   /* Bascule recente : la pente 3m doit avoir change de signe dans la
    * memoire courte, sinon c'est une continuation et non un retournement. */
-  return { dir: sens, cadence: cadM, priceMoveMult: pmM };
+  return { dir: sens, cadence: cadM, priceMove: pm };
 }
 
 /* ── REGIMES ──────────────────────────────────────────────────────────── */
 
 function regime(buf) {
   const w = buf.slice(-REGIME_FENETRE);
-  if (w.length < REGIME_FENETRE) return { nom: 'inconnu', taux: null, seuilCadence: CADENCE_EVENT };
+  if (w.length < REGIME_FENETRE) {
+    return { nom: 'inconnu', pmMoyen: null, taux: null, seuilCadence: CADENCE_EVENT };
+  }
+
+  /* Le mouvement decide. */
+  const pms = w.map(x => x.pm).filter(v => typeof v === 'number' && isFinite(v)).map(Math.abs);
+  const pmMoyen = pms.length ? pms.reduce((a, v) => a + v, 0) / pms.length : null;
+
+  /* L'activite ne fait que durcir la cascade. */
   const n = w.filter(x => (x.cadM || 0) >= CADENCE_EVENT).length;
   const taux = n / w.length;
-  if (taux >= REGIME_CASCADE) {
-    /* En cascade, les evenements saturent : le seuil doit s'ajuster a
+
+  if (pmMoyen === null) {
+    return { nom: 'inconnu', pmMoyen, taux, seuilCadence: CADENCE_EVENT };
+  }
+  if (pmMoyen > REGIME_PM_CASCADE && taux >= REGIME_CAD_CASCADE) {
+    /* En cascade, les evenements de cadence saturent : le seuil s'ajuste a
      * l'engagement du moment, sinon il se declenche a chaque baton. */
     const cads = w.map(x => x.cadM || 0).sort((a, b) => b - a);
     const p90 = cads[Math.floor(cads.length * 0.1)];
-    return { nom: 'cascade', taux, seuilCadence: Math.max(CADENCE_EVENT, p90) };
+    return { nom: 'cascade', pmMoyen, taux, seuilCadence: Math.max(CADENCE_EVENT, p90) };
   }
-  if (taux <= REGIME_ENDORMI) return { nom: 'endormi', taux, seuilCadence: CADENCE_EVENT };
-  return { nom: 'normal', taux, seuilCadence: CADENCE_EVENT };
+  if (pmMoyen < REGIME_PM_ENDORMI) {
+    return { nom: 'endormi', pmMoyen, taux, seuilCadence: CADENCE_EVENT };
+  }
+  return { nom: 'normal', pmMoyen, taux, seuilCadence: CADENCE_EVENT };
 }
 
 /* ── GESTION DE POSITION ──────────────────────────────────────────────── */
@@ -430,7 +486,7 @@ function gererPosition(state, b, fond, prix, now, reg) {
 
   /* LE MONEYFLOW A CONTRESENS pendant un mouvement favorable signale un
    * echec de poussee : on sort sans attendre. */
-  if (pnl > 0.2 && fond.mf15 !== null && Math.abs(fond.mf15) >= MF15_TENDANCE) {
+  if (pnl > 0.2 && fond.mf15 !== null) {
     const sensMf = fond.mf15 > 0 ? 'long' : 'short';
     if (sensMf !== pos.direction) {
       sortir('MoneyFlow15 a contresens', pos.restant); state.position = null; return;
@@ -497,7 +553,7 @@ function tick() {
   let dir = null, loi = null, detail = null;
   if (bp) {
     dir = bp.dir; loi = 'LOI 6 -- bypass retournement violent';
-    detail = { cadence: bp.cadence, priceMoveMult: bp.priceMoveMult };
+    detail = { cadence: bp.cadence, priceMove: bp.priceMove };
   } else {
     /* LOI 1 -- vigilance. */
     const vig = vigilance(fond, lieu);
@@ -513,7 +569,7 @@ function tick() {
     if (sync.dir !== d.dir) return abstenir(`pivots designent ${sync.dir}, direction ${d.dir}`);
 
     /* LOI 5 -- l'evenement donne le moment. */
-    const ev = evenement(b, d.dir, reg.seuilCadence);
+    const ev = evenement(b, d.dir, reg.seuilCadence, reg.nom);
     if (!ev) return abstenir('aucun evenement');
 
     dir = d.dir;
@@ -536,7 +592,8 @@ function tick() {
   };
   state.derniereAbstention = null;
   saveState(state);
-  console.log(`[moteur] ENTREE ${dir} @ ${prix} [${reg.nom}] -- ${loi}`);
+  console.log(`[moteur] ENTREE ${dir} @ ${prix} ` +
+              `[${reg.nom}, pm ${reg.pmMoyen !== null ? reg.pmMoyen.toFixed(0) : '?'} USD] -- ${loi}`);
 }
 
 /* ── DIAGNOSTIC ───────────────────────────────────────────────────────── */

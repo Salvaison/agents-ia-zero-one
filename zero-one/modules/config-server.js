@@ -884,7 +884,9 @@ async function loadAudit() {
           /* 15m et non 3m (20/08/2026) : la strategie se decide sur le 15m,
            * les donnees de vague doivent venir du meme timeframe. */
           ? '<td style="text-align:center; white-space:nowrap; border-left:3px solid #5a6b85;">' + dbsi15Cell(r) + '</td>' +
-            '<td class="' + cls(r.live15MoneyFlow) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
+            /* Couleur sur la PENTE et non sur le signe (22/08/2026) : c'est
+             * l'inflexion qui porte l'information, pas le niveau. */
+            '<td class="' + cls(r.mf15Pente) + '" title="pente ' + fmt(r.mf15Pente,2) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
             '<td class="' + cls(r.live15Bw) + '" style="background:#171f2c;">' + fmt(r.live15Bw,2) + '</td>' +
             '<td class="' + cls(r.live15Lbw) + '" style="background:#171f2c;">' + fmt(r.live15Lbw,2) + '</td>'
           : _activeTab === 'mouvement'
@@ -924,10 +926,10 @@ async function loadAudit() {
       '<th style="width:26px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
       '<th style="width:34px; padding:2px 1px;" title="Ecart VW15L moins VWAP15. Voix de direction (LOI 3), seuil 3.">dW15</th>' +
       '<th style="border-left:2px solid #5a6b85; width:44px; background:#171f2c;" title="priceMove : deplacement du prix en USD depuis le releve precedent. L evolution du prix est le facteur premier de toutes les comparaisons.">PM</th>' +
-      '<th style="width:34px; background:#171f2c;" title="Multiplicateur du priceMove contre la moyenne glissante de dix minutes. Au-dela de 3, evenement (LOI 5).">PMx</th>' +
+      '<th style="width:34px; background:#171f2c;" title="priceMove rapporte a une base FIXE par regime : 80 USD endormi, 100 normal, 120 cascade. Sert a comparer les priceMoves entre eux, ne decide rien -- ce sont les seuils en dollars qui gouvernent.">PMx</th>' +
       (_activeTab === 'vague'
         ? '<th style="border-left:3px solid #5a6b85;" title="DBSI 15m intra-bougie : pression vendeuse (rouge, au-dessus) / acheteuse (vert, en dessous). Lecture isolee sans valeur -- il faut la moyenne sur dix minutes.">DBSI15</th>' +
-          '<th title="MoneyFlow 15m intra-bougie. Timeframe de pilotage de la strategie.">MF15</th>' +
+          '<th title="MoneyFlow 15m intra-bougie. COULEUR = SA PENTE : vert quand il monte, rouge quand il descend -- c est l inflexion qui compte, pas le niveau. Mesure sur 19 extremes : la pente reste orientee dans le sens du mouvement qui se termine, signature de l epuisement.">MF15</th>' +
           '<th style="background:#171f2c;" title="Blue Wave 15m intra-bougie (WT2). Porte la tendance de fond avec MF15 (LOI 3).">BW15</th>' +
           '<th style="background:#171f2c;" title="Lt Blue Wave 15m intra-bougie (WT1)">LBW15</th>'
         : _activeTab === 'mouvement'

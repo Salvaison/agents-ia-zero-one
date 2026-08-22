@@ -47,10 +47,28 @@ const TRENDLINES_PATH = path.join(__dirname, '../data/trendlines.json');
  * Deplacement du prix d'un baton au suivant, et son intensite rapportee au
  * regime recent. Meme principe que netMoveMult, mais sur le prix lui-meme.
  * 20 releves de 30s = 10 minutes de reference glissante. */
-const PRICEMOVE_BASELINE = 20;
+/* BASE FIXE PAR REGIME (22/08/2026), au lieu d'une moyenne glissante.
+ * L'ancienne reference etait la moyenne des dix dernieres minutes : pendant
+ * une poussee elle gonflait avec le mouvement, si bien qu'un priceMove de
+ * 672 USD recevait un multiplicateur de 4.6 quand un de 351 en recevait 7.0.
+ * Le priceMove est une entite absolue : il ne doit pas etre compare a sa
+ * propre trace, mais a un etalon stable.
+ * Valeurs calees sur le p90 mesure de chaque regime : 75, 98, 119. */
+const PM_BASE = { endormi: 80, normal: 100, cascade: 120 };
+/* Regime estime sur les 20 derniers releves, par le taux d'evenements de
+ * cadence -- meme mesure que celle du moteur. */
+const PM_REGIME_FENETRE = 20;
+const _pmCadHist = [];
 let _pmPrev = null;
 let _pmLast = null;
-const _pmHist = [];
+
+/* Pente du MoneyFlow 15m, alignee sur la bougie (22/08/2026).
+ * Mesure sur 19 extremes confirmes : aux creux la pente est negative, aux
+ * sommets positive -- le flux poursuit le mouvement qui se termine. C'est
+ * la signature de l'epuisement.
+ * On compare la valeur courante a celle du meme point de la bougie
+ * precedente, plutot qu'a une fenetre arbitraire. */
+const _mf15Hist = [];   /* { barTs, valeur } */
 
 function _priceMove(prix) {
   if (typeof prix !== 'number' || !isFinite(prix)) return null;
@@ -58,18 +76,58 @@ function _priceMove(prix) {
   const d = prix - _pmPrev;
   _pmPrev = prix;
   _pmLast = d;
-  if (d !== 0) {
-    _pmHist.push(Math.abs(d));
-    while (_pmHist.length > PRICEMOVE_BASELINE) _pmHist.shift();
-  }
   return +d.toFixed(1);
 }
 
-function _priceMoveMult() {
-  if (_pmLast === null || _pmHist.length < 5) return null;
-  const moy = _pmHist.reduce(function (a, v) { return a + v; }, 0) / _pmHist.length;
-  if (!(moy > 0)) return null;
-  return +(Math.abs(_pmLast) / moy).toFixed(2);
+/* Regime courant, pour choisir la base. */
+function _pmRegime(cadenceMult) {
+  if (typeof cadenceMult === 'number' && isFinite(cadenceMult)) {
+    _pmCadHist.push(cadenceMult);
+    while (_pmCadHist.length > PM_REGIME_FENETRE) _pmCadHist.shift();
+  }
+  if (_pmCadHist.length < PM_REGIME_FENETRE) return 'normal';
+  const n = _pmCadHist.filter(function (v) { return v >= 2; }).length;
+  const taux = n / _pmCadHist.length;
+  if (taux >= 0.30) return 'cascade';
+  if (taux <= 0.05) return 'endormi';
+  return 'normal';
+}
+
+function _priceMoveMult(cadenceMult) {
+  if (_pmLast === null) return null;
+  const base = PM_BASE[_pmRegime(cadenceMult)] || PM_BASE.normal;
+  return +(Math.abs(_pmLast) / base).toFixed(2);
+}
+
+/**
+ * Pente du MoneyFlow 15m : ecart entre la valeur courante et celle relevee
+ * au meme moment de la bougie precedente. Alignee sur le rythme de
+ * l'indicateur plutot que sur une fenetre arbitraire.
+ */
+function _mf15Pente(valeur, barTs) {
+  if (typeof valeur !== 'number' || !isFinite(valeur)) return null;
+  if (typeof barTs !== 'number' && typeof barTs !== 'string') return null;
+  const cle = String(barTs);
+  _mf15Hist.push({ barTs: cle, valeur });
+  /* Deux bougies suffisent -- 15m a 30s par releve, soit 60 par bougie. */
+  while (_mf15Hist.length > 130) _mf15Hist.shift();
+
+  /* Position dans la bougie courante. */
+  const courante = _mf15Hist.filter(function (e) { return e.barTs === cle; });
+  const rang = courante.length - 1;
+  /* Meme rang dans la bougie precedente. */
+  const bougies = [];
+  for (const e of _mf15Hist) {
+    if (!bougies.length || bougies[bougies.length - 1].cle !== e.barTs) {
+      bougies.push({ cle: e.barTs, vals: [] });
+    }
+    bougies[bougies.length - 1].vals.push(e.valeur);
+  }
+  if (bougies.length < 2) return null;
+  const prec = bougies[bougies.length - 2].vals;
+  const ref = prec[Math.min(rang, prec.length - 1)];
+  if (typeof ref !== 'number') return null;
+  return +(valeur - ref).toFixed(2);
 }
 let _tlCache = null;
 let _tlLastRead = 0;
@@ -685,7 +743,10 @@ function tick() {
      * ET le sens -- un mouvement violent de Vslope se confirme par un
      * priceMove violent. */
     priceMove: _priceMove(currentPrice),
-    priceMoveMult: _priceMoveMult(),
+    priceMoveMult: _priceMoveMult(cadenceMultiplier),
+    /* Pente du MoneyFlow 15m, alignee sur la bougie. Positive = il monte. */
+    mf15Pente: _mf15Pente(liveSnap15 ? liveSnap15.moneyFlow : null,
+                          liveSnap15 ? liveSnap15.barTs : null),
     /* LIGNES IMAGINAIRES (16/08/2026) -- trendlines obliques detectees sur les
      * extremes de prix. lgiPoints = nombre de touches de la ligne la plus
      * proche quand le prix entre dans sa zone (+/-40 USD), null sinon.
