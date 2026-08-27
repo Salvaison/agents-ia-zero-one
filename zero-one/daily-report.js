@@ -142,7 +142,10 @@ function sectionPm2() {
     const procs = JSON.parse(execSync('pm2 jlist').toString());
     return procs.map(p => {
       const st = p.pm2_env.status;
-      const flag = st === 'online' ? '' : '  <<< ANORMAL';
+      /* chrome-watchdog et chrome-recycle tournent en cron : ils s executent
+       * puis se terminent. Leur statut normal entre deux passages est stopped. */
+      const enCron = (p.name === 'chrome-watchdog' || p.name === 'chrome-recycle');
+      const flag = (st === 'online' || enCron) ? '' : '  <<< ANORMAL';
       return `  ${p.name.padEnd(16)} ${st}, ${p.pm2_env.restart_time} redemarrage(s)${flag}`;
     }).join('\n');
   } catch (e) {

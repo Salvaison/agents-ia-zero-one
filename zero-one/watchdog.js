@@ -214,7 +214,7 @@ function checkPm2Health() {
     const restarts = p.pm2_env.restart_time;
 
     if (status !== 'online') {
-      alertOnce(`pm2-status-${name}`, `Processus ${name} n'est pas en ligne (status: ${status}).`);
+      if (name !== 'chrome-watchdog') alertOnce(`pm2-status-${name}`, `Processus ${name} n'est pas en ligne (status: ${status}).`);
       continue;
     }
 

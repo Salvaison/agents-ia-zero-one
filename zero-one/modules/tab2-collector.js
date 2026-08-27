@@ -41,13 +41,18 @@ const getArg = (name, def) => { const i = args.indexOf(name); return i >= 0 ? ar
 
 const BASE_DIR      = getArg('--dir',      process.cwd());
 const TV_CHART_BASE = getArg('--chart',    'https://www.tradingview.com/chart/2AqpEMfD/');
-const TV_SYMBOL     = getArg('--symbol',   'BYBIT%3ABTCUSD.P');
+const TV_SYMBOL     = getArg('--symbol',   'BYBIT%3ABTCUSDT.P');
 const WS_KEY        = getArg('--ws-key',   'YXeZEi');
 const DBSI_KEY      = getArg('--dbsi-key', 'S8XNwk');
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const RECONNECT_DELAY_MS = 5_000;
-const SETTLE_DELAY_MS    = 2_000;   // settle window after close detection
+/* Snapshot intra-bougie (15/08/2026) -- meme principe que
+ * real-time-collector.js depuis le 11/08. 15s : assez frequent pour capter
+ * l'apparition d'un signal en cours de bougie, assez espace pour ne pas
+ * peser sur le collecteur. */
+const LIVE_SNAPSHOT_INTERVAL_MS = 15_000;
+const SETTLE_DELAY_MS    = 35_000;   // settle window after close detection
 const SENTINEL_THRESHOLD = 1e90;
 const SWITCH_GUARD_SEC   = 120;     // never switch if current TF closes within 2 min
 const SWITCH_LEAD_SEC    = 90;      // switch to a TF if it closes within 90s
@@ -127,7 +132,7 @@ function lastCompletedBarOpenTs(tfCode) {
 }
 
 // ── CSV helpers ───────────────────────────────────────────────────────────────
-const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200\n';
+const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200,wt1_cross_up,wt1_cross_dn\n';
 
 function initCsv(csvPath) {
   if (!existsSync(csvPath)) {
@@ -152,6 +157,28 @@ function fmt(v) {
   return typeof v === 'number' ? +v.toFixed(6) : v;
 }
 
+/* Snapshot INTRA-BOUGIE (15/08/2026) -- etat de la bougie en formation,
+ * fichier ecrase a chaque fois (une seule ligne de donnees). Le CSV
+ * principal et writeClose ne sont pas touches : la chaine existante lit
+ * exactement les memes donnees qu'avant.
+ * Le nom du fichier derive du CSV du timeframe : mcb_15m.csv ->
+ * mcb_15m_live.csv, comme le fait real-time-collector.js pour le 3m. */
+function writeLiveSnapshot(csvPath, barTs, v, dbsi, ohlc) {
+  if (!v || !Array.isArray(v) || !csvPath) return;
+  const livePath = csvPath.replace(/\.csv$/, '_live.csv');
+  const isoTs = new Date(barTs * 1000).toISOString();
+  const row = [
+    isoTs,
+    fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close),
+    fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]),
+    fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200),
+    fmt(v[7]), fmt(v[8]),
+  ].join(',') + '\n';
+  try {
+    writeFileSync(livePath, CSV_HEADER + row, 'utf8');
+  } catch (e) { /* best-effort, ne doit jamais casser le collecteur */ }
+}
+
 // Returns true if written, false if duplicate.
 function writeClose(csvPath, barTs, v, dbsi, ohlc) {
   const isoTs = new Date(barTs * 1000).toISOString();
@@ -160,6 +187,7 @@ function writeClose(csvPath, barTs, v, dbsi, ohlc) {
     fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close),
     fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]),
     fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200),
+    fmt(v[7]), fmt(v[8]),
   ].join(',') + '\n';
 
   try {
@@ -176,6 +204,7 @@ function writeClose(csvPath, barTs, v, dbsi, ohlc) {
     open: fmt(ohlc?.open), high: fmt(ohlc?.high), low: fmt(ohlc?.low), close: fmt(ohlc?.close),
     lt_blue_wave: fmt(v[1]), blue_wave: fmt(v[2]), money_flow: fmt(v[4]),
     buy: fmt(v[6]), sell: fmt(v[5]),
+    wt1_cross_up: fmt(v[7]), wt1_cross_dn: fmt(v[8]),
     dbsi_top: dbsi?.top ?? null, dbsi_bottom: dbsi?.bottom ?? null,
   }) + '\n');
   log(`CLOSE → ${row.trim()}`);
@@ -215,9 +244,17 @@ class CloseDetector {
   // catchupPeriods: caughtUp fires when sds_1 is within N periods of now.
   // Default 2 covers short TFs; long TFs (1W) need this raised so their
   // bar open (up to 7 days ago) clears the threshold.
-  constructor(onClose, periodSec = 2 * 86_400) {
+  constructor(onClose, periodSec = 2 * 86_400, csvPath = null) {
     this.catchupThreshSec = 2 * periodSec; // sds_1 must be within 2 bar-lengths of now
+    /* Periode attendue du timeframe -- conservee pour le controle de
+     * coherence (15/08/2026). Sans elle, le detecteur ne peut pas savoir
+     * si les bougies qu'il recoit correspondent bien a son timeframe. */
+    this.periodSec = periodSec;
     this.onClose       = onClose;
+    /* Chemin du CSV de CE timeframe -- necessaire pour ecrire le snapshot
+     * live au bon endroit. tab2-collector a un detecteur par TF, contrairement
+     * a real-time-collector qui n'en a qu'un avec un chemin fixe. */
+    this.csvPath       = csvPath;
     this.pendingFlush  = new Map(); // barTs → { v, timer }
     this.lastSds1T     = null;
     this.mcbCache      = new Map(); // barTs → v[]
@@ -229,6 +266,26 @@ class CloseDetector {
     this.dbsiCache     = new Map(); // barTs → { top, bottom }
     this.dbsiMaCache   = new Map(); // barTs → MA200 (v[1] de la serie DBSI, "Long Term Trend")
     this.ohlcCache     = new Map(); // barTs → { open, high, low, close }
+
+    /* Snapshot intra-bougie : ecrit periodiquement l'etat de la bougie EN
+     * COURS (la plus recente du cache) dans <csv>_live.csv. N'interfere pas
+     * avec la detection de cloture -- best-effort, une erreur ici ne doit
+     * jamais casser le collecteur. */
+    if (this.csvPath) {
+      this.liveTimer = setInterval(() => {
+        try {
+          if (this.mcbCache.size === 0) return;
+          const latestTs = Math.max(...this.mcbCache.keys());
+          const v = this.mcbCache.get(latestTs);
+          if (!v) return;
+          const dbsiEntry = this.dbsiCache.get(latestTs);
+          const dbsi = dbsiEntry
+            ? { top: dbsiEntry.top, bottom: dbsiEntry.bottom, ma200: this.dbsiMaCache.get(latestTs) }
+            : {};
+          writeLiveSnapshot(this.csvPath, latestTs, v, dbsi, this.ohlcCache.get(latestTs));
+        } catch (e) { /* best-effort */ }
+      }, LIVE_SNAPSHOT_INTERVAL_MS);
+    }
   }
 
   _processDbsi(data) {
@@ -386,6 +443,31 @@ class CloseDetector {
 
     if (!this.initialized || prevTs === null) return;
 
+    /* GARDE-FOU DE COHERENCE DE TIMEFRAME (15/08/2026) -- verifie que
+     * l'ecart entre bougies correspond bien a la periode attendue. Voir
+     * l'en-tete du patch pour les deux incidents qui l'ont motive : dans
+     * les deux cas, des bougies 3m ont ete ecrites dans mcb_15m.csv parce
+     * que le graphique avait change d'intervalle a l'insu du collecteur.
+     * Un ecart INFERIEUR a la periode signifie qu'on recoit des bougies
+     * plus rapprochees que le timeframe suppose -- donc que l'onglet
+     * n'affiche pas ce qu'on croit. */
+    const gapSec = newTs - prevTs;
+    if (this.periodSec && gapSec > 0 && gapSec < this.periodSec) {
+      log(`INCOHERENCE TF: ecart de ${gapSec}s entre bougies alors que la periode ` +
+          `attendue est ${this.periodSec}s -- le graphique affiche probablement un ` +
+          `autre intervalle. Ecriture REFUSEE pour ${new Date(prevTs * 1000).toISOString()}.`);
+      return;
+    }
+    /* Ecart non multiple de la periode : anomalie d'alignement. Tolere sur
+     * les timeframes longs (> 4h), ou week-ends et jours feries produisent
+     * des ecarts legitimes non multiples. */
+    if (this.periodSec && this.periodSec <= 4 * 3600 && gapSec % this.periodSec !== 0) {
+      log(`INCOHERENCE TF: ecart de ${gapSec}s non multiple de la periode ` +
+          `${this.periodSec}s -- alignement suspect. Ecriture REFUSEE pour ` +
+          `${new Date(prevTs * 1000).toISOString()}.`);
+      return;
+    }
+
     const mcbValues = this.mcbCache.get(prevTs);
     if (mcbValues) {
       this.mcbCache.delete(prevTs);
@@ -412,7 +494,7 @@ for (const tf of TF_SCHEDULE) {
     if (writeClose(tf.csv, ts, v, dbsi, ohlc)) {
       lastCollectedTs.set(tf.code, ts);
     }
-  }, tf.minutes * 60);
+  }, tf.minutes * 60, tf.csv);
 }
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
@@ -498,6 +580,22 @@ async function runSession() {
   await withTimeout(Network.enable(), CDP_CMD_TIMEOUT, 'Network.enable');
   await withTimeout(Page.enable(),    CDP_CMD_TIMEOUT, 'Page.enable');
 
+  // FIX 2026-08-13: Chrome affiche parfois un dialogue natif bloquant
+  // ("Actualiser le site Web ? Les modifications que vous avez apportees
+  // ne seront peut-etre pas enregistrees") quand on navigue/recharge une
+  // page TradingView que l'appli considere comme ayant un etat non
+  // enregistre. Sans ce listener, toute navigation (switchToTf, watchdog)
+  // reste suspendue indefiniment tant que personne ne clique "Actualiser"
+  // -- ce qui explique le pic nocturne de remplacements de socket bloques
+  // (00h-08h, personne au clavier pour debloquer). On auto-accepte pour
+  // ne jamais dependre d'un clic humain.
+  Page.javascriptDialogOpening(({ message, type }) => {
+    log(`JS dialog [${type}] auto-accepted: "${(message || '').slice(0, 80)}"`);
+    Page.handleJavaScriptDialog({ accept: true }).catch(e => {
+      log(`handleJavaScriptDialog failed: ${e.message}`);
+    });
+  });
+
   let currentTfCode   = null;
   let activeDetector  = null;
   let retroactiveDone = false; // reset on each TF switch
@@ -507,6 +605,18 @@ async function runSession() {
   // ── WS listeners ──────────────────────────────────────────────────────────
   Network.webSocketCreated(({ requestId, url }) => {
     if (/data\.tradingview\.com/i.test(url)) {
+      // FIX 2026-08-12: TradingView remplace parfois son propre socket de
+      // donnees en cours de dwell (hors de tout appel a switchToTf), toutes
+      // les 4 a 11 min selon les logs mcb_tab2.log. Si wsMap contient deja
+      // une entree ici, ce n'est pas le premier connect apres navigation
+      // (qui trouve wsMap vide) -- c'est ce remplacement spontane. On force
+      // un nouveau passage par le rattrapage retroactif sur le nouveau
+      // socket, pour ne pas perdre une cloture tombee dans la fenetre de
+      // transition entre les deux sockets.
+      if (wsMap.size > 0) {
+        retroactiveDone = false;
+        log(`WS replaced mid-dwell [${requestId.slice(-6)}] — forcing retroactive re-check`);
+      }
       wsMap.set(requestId, url);
       lastWsActivityAt = Date.now();
       log(`WS open  [${requestId.slice(-6)}]`);
@@ -544,21 +654,42 @@ async function runSession() {
         : lastCompletedBarOpenTs(currentTfCode);
       const tf    = TF_BY_CODE[currentTfCode];
 
-      if ((lastCollectedTs.get(currentTfCode) ?? 0) >= barTs) {
+      const lastTs = lastCollectedTs.get(currentTfCode) ?? 0;
+      if (lastTs >= barTs) {
         log(`Retroactive: ${tf.label} already up to date`);
       } else {
-        const v = activeDetector.mcbCache.get(barTs);
-        if (v) {
-          const dbsi    = activeDetector.dbsiCache.get(barTs) ?? {};
-          dbsi.ma200    = activeDetector.dbsiMaCache.get(barTs);
-          const ohlc    = activeDetector.ohlcCache.get(barTs);
-          const written = writeClose(tf.csv, barTs, v, dbsi, ohlc);
-          if (written) {
-            lastCollectedTs.set(currentTfCode, barTs);
-            log(`Retroactive: ${tf.label} ${new Date(barTs * 1000).toISOString()}`);
+        // FIX 2026-08-13: boucle sur toutes les bougies manquantes entre
+        // lastTs et barTs, pas seulement barTs -- un trou de 2+ bougies
+        // d'affilee (sous le seuil FATAL de 1800s) laissait auparavant
+        // toutes les bougies sauf la derniere perdues definitivement.
+        // Plafonne a MAX_RETRO_BARS pour ne pas tenter de rattraper un
+        // historique demesure si lastTs est tres ancien.
+        const MAX_RETRO_BARS = 20;
+        let startTs = lastTs > 0 ? lastTs + periodSec : barTs;
+        if (lastTs > 0 && (barTs - lastTs) / periodSec > MAX_RETRO_BARS) {
+          startTs = barTs - (MAX_RETRO_BARS - 1) * periodSec;
+        }
+        let recovered = 0;
+        let missing = 0;
+        for (let ts = startTs; ts <= barTs; ts += periodSec) {
+          const v = activeDetector.mcbCache.get(ts);
+          if (v) {
+            const dbsi    = activeDetector.dbsiCache.get(ts) ?? {};
+            dbsi.ma200    = activeDetector.dbsiMaCache.get(ts);
+            const ohlc    = activeDetector.ohlcCache.get(ts);
+            const written = writeClose(tf.csv, ts, v, dbsi, ohlc);
+            if (written) {
+              lastCollectedTs.set(currentTfCode, ts);
+              recovered += 1;
+            }
+          } else {
+            missing += 1;
           }
-        } else {
-          log(`Retroactive: ${tf.label} bar ${new Date(barTs * 1000).toISOString().slice(0, 16)} not in cache — will catch live`);
+        }
+        if (recovered > 0) {
+          log(`Retroactive: ${tf.label} ${recovered} bougie(s) recuperee(s) jusqu'a ${new Date(barTs * 1000).toISOString()}${missing > 0 ? `, ${missing} introuvable(s) en cache` : ''}`);
+        } else if (missing > 0) {
+          log(`Retroactive: ${tf.label} ${missing} bougie(s) manquante(s) jusqu'a ${new Date(barTs * 1000).toISOString()} — not in cache, will catch live`);
         }
       }
     }

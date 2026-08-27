@@ -66,7 +66,9 @@ const DBSI_KEY   = getArg('--dbsi-key',  'S8XNwk');
 const EXPECTED_TF = getArg('--timeframe', null);   // e.g. "240", "60", "D"
 
 const RECONNECT_DELAY_MS = 5_000;
-const SETTLE_DELAY_MS    = 2_000;  // wait after close detection for EMA settle
+const SETTLE_DELAY_MS    = 35_000;  // wait after close detection for EMA settle
+const LIVE_INTERVAL_MS   = 15_000; // intra-bar snapshot interval (11/08/2026)
+const LIVE_CSV_PATH      = CSV_PATH.replace(/\.csv$/, '_live.csv');
 const SENTINEL_THRESHOLD = 1e90;
 
 // Stale threshold = 2 full bar durations, minimum 5 min.
@@ -184,7 +186,7 @@ writeFileSync(PID_FILE, String(process.pid), 'utf8');
 process.on('exit', () => { try { unlinkSync(PID_FILE); } catch {} });
 
 // ── CSV ───────────────────────────────────────────────────────────────────────
-const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200\n';
+const CSV_HEADER = 'timestamp,open,high,low,close,lt_blue_wave,blue_wave,money_flow,buy,sell,dbsi_top,dbsi_bottom,ma200,wt1_cross_up,wt1_cross_dn\n';
 
 function initCsv() {
   if (!existsSync(CSV_PATH)) {
@@ -206,9 +208,31 @@ function fmt(v) {
   return typeof v === 'number' ? +v.toFixed(6) : v;
 }
 
+/**
+ * Snapshot INTRA-BOUGIE (11/08/2026) -- ecrit l'etat courant de la bougie en
+ * formation dans un fichier separe, ecrase a chaque fois (une seule ligne).
+ * Le CSV principal et writeClose ne sont pas touches : la chaine existante
+ * (volume-analyzer.js cote VPS) lit exactement les memes donnees qu'avant.
+ * Objectif : permettre le calcul d'une VRAIE pente instantanee du VWAP, au
+ * lieu de la derniere variation figee entre deux clotures.
+ */
+function writeLiveSnapshot(barTs, v, dbsi, ohlc) {
+  if (!v || !Array.isArray(v)) return;
+  const isoTs = new Date(barTs * 1000).toISOString();
+  const row = [isoTs, fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close),
+               fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]),
+               fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200),
+               fmt(v[7]), fmt(v[8])].join(',') + '\n';
+  try {
+    writeFileSync(LIVE_CSV_PATH, CSV_HEADER + row, 'utf8');
+  } catch (e) {
+    log(`WARN: live snapshot write failed: ${e.message}`);
+  }
+}
+
 function writeClose(barTs, v, dbsi, ohlc) {
   const isoTs = new Date(barTs * 1000).toISOString();
-  const row   = [isoTs, fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close), fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]), fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200)].join(",") + "\n";
+  const row   = [isoTs, fmt(ohlc?.open), fmt(ohlc?.high), fmt(ohlc?.low), fmt(ohlc?.close), fmt(v[1]), fmt(v[2]), fmt(v[4]), fmt(v[6]), fmt(v[5]), fmt(dbsi?.top), fmt(dbsi?.bottom), fmt(dbsi?.ma200), fmt(v[7]), fmt(v[8])].join(",") + "\n";
   // Secondary dedup guard: skip if last CSV line already has this timestamp.
   try {
     const existing = readFileSync(CSV_PATH, 'utf8');
@@ -289,6 +313,23 @@ class CloseDetector {
     this.dbsiCache      = new Map(); // barTs → { top, bottom }
     this.dbsiMaCache    = new Map(); // barTs → MA200 (v[1] de la serie DBSI, "Long Term Trend")
     this.ohlcCache      = new Map(); // barTs → { open, high, low, close }
+
+    /* Snapshot intra-bougie (11/08/2026) : ecrit periodiquement l'etat de la
+     * bougie EN COURS (la plus recente du cache) dans le fichier _live.csv.
+     * N'interfere pas avec la detection de cloture. */
+    this.liveTimer = setInterval(() => {
+      try {
+        if (this.mcbCache.size === 0) return;
+        const latestTs = Math.max(...this.mcbCache.keys());
+        const v = this.mcbCache.get(latestTs);
+        const dbsi = this.dbsiCache.get(latestTs)
+          ? { top: this.dbsiCache.get(latestTs).top,
+              bottom: this.dbsiCache.get(latestTs).bottom,
+              ma200: this.dbsiMaCache.get(latestTs) }
+          : null;
+        writeLiveSnapshot(latestTs, v, dbsi, this.ohlcCache.get(latestTs));
+      } catch (e) { /* snapshot best-effort, ne doit jamais casser le collecteur */ }
+    }, LIVE_INTERVAL_MS);
   }
 
   // Update the DBSI bar-index→timestamp map and decode any fresh label graphics.
@@ -582,7 +623,7 @@ async function navigateToChart(Page, target) {
   }
   const urlInterval = TF_TO_URL_INTERVAL[EXPECTED_TF] ?? EXPECTED_TF;
   const base  = target.url.split('?')[0];
-  const sym   = new URL(target.url).searchParams.get('symbol') ?? 'BYBIT%3ABTCUSD.P';
+  const sym   = 'BYBIT%3ABTCUSDT.P'; // force MEXC USDT (30/07/2026) -- ne lit plus l'URL existante, qui pouvait garder l'ancien Bybit
   const navUrl = `${base}?symbol=${sym}&interval=${urlInterval}`;
   await withTimeout(Page.navigate({ url: navUrl }), CDP_CMD_TIMEOUT, 'Page.navigate');
 }
