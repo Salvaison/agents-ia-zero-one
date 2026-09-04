@@ -70,6 +70,30 @@ let _pmLast = null;
  * precedente, plutot qu'a une fenetre arbitraire. */
 const _mf15Hist = [];   /* { barTs, valeur } */
 
+/* VAGUE 15m CONFIRMEE (04/09/2026). Les champs live15Bw, live15Lbw et
+ * live15MoneyFlow venaient du fichier live, donc des valeurs intra-bougie
+ * qui oscillent en continu. Or c est la VAGUE qui compte -- celle que
+ * MarketCipher trace sur le graphique, lissee et confirmee a la cloture.
+ * Benjamin : "pour ces derniers nous avons besoin des donnees lissees et
+ * confirmees".
+ * On lit donc la derniere ligne de mcb_15m.csv, ecrite au settle de 35s.
+ * Colonnes : 5=lt_blue_wave, 6=blue_wave, 7=money_flow. */
+const MCB15_CSV = '/root/agents-ia-zero-one/data/mcb-live/mcb_15m.csv';
+let _vg15 = { ts: 0, bw: null, lbw: null, mf: null };
+function _vague15() {
+  const now = Date.now();
+  /* Une bougie 15m ne change qu au quart d heure : relire toutes les 30s
+   * suffit largement, et evite d ouvrir le fichier a chaque appel. */
+  if (now - _vg15.ts < 25000) return _vg15;
+  _vg15.ts = now;
+  try {
+    const txt = fs.readFileSync(MCB15_CSV, 'utf8').trimEnd();
+    const der = txt.slice(txt.lastIndexOf('\n') + 1).split(',');
+    const n = (v) => { const x = parseFloat(v); return isFinite(x) ? x : null; };
+    _vg15.lbw = n(der[5]); _vg15.bw = n(der[6]); _vg15.mf = n(der[7]);
+  } catch (e) { /* fichier illisible : on garde les dernieres valeurs */ }
+  return _vg15;
+}
 function _priceMove(prix) {
   if (typeof prix !== 'number' || !isFinite(prix)) return null;
   if (_pmPrev === null) { _pmPrev = prix; _pmLast = 0; return 0; }
@@ -93,10 +117,36 @@ function _pmRegime(cadenceMult) {
   return 'normal';
 }
 
+/* MEDIANE GLISSANTE DE 48H (03/09/2026), au lieu des trois bases fixes.
+ * Celles-ci -- 80, 100, 120 USD -- avaient ete calees sur des p90 mesures
+ * quand le bitcoin valait 64000. A 81500 les mouvements ont grandi en
+ * proportion mais la base est restee : la mediane de |priceMove| tombait a
+ * 16.4 USD, donc un mouvement ordinaire donnait 0.16 et il fallait 300 USD
+ * de deplacement pour atteindre 3. Benjamin, apres une montee de 3800 USD :
+ * "tous les PMx sont en dessous de 1 alors quil devrait montrer des
+ * multiples".
+ * La mediane s adapte seule au prix et au regime, et ignore les pics par
+ * construction. Mesure sur le 03/09 : le pic du sommet passe de 0.72 a 5.3,
+ * distribution mediane 1.0 / p90 3.1 / p99 6.5. */
+const PM_FENETRE = 5760;      /* 48h de releves a 30s */
+const PM_MIN_ECHANT = 60;     /* 30 min avant de se prononcer */
+const _pmHist = [];
+let _pmBase = null, _pmTick = 0;
 function _priceMoveMult(cadenceMult) {
   if (_pmLast === null) return null;
-  const base = PM_BASE[_pmRegime(cadenceMult)] || PM_BASE.normal;
-  return +(Math.abs(_pmLast) / base).toFixed(2);
+  if (_pmLast !== 0) {
+    _pmHist.push(Math.abs(_pmLast));
+    while (_pmHist.length > PM_FENETRE) _pmHist.shift();
+  }
+  if (_pmHist.length < PM_MIN_ECHANT) return null;
+  /* Tri de 5760 valeurs toutes les 30s serait du gaspillage pour une base
+   * qui bouge a peine : recalcul toutes les dix minutes. */
+  if ((_pmTick++ % 20) === 0 || _pmBase === null) {
+    const t = _pmHist.slice().sort(function (a, b) { return a - b; });
+    _pmBase = t[Math.floor(t.length / 2)];
+  }
+  if (!(_pmBase > 0)) return null;
+  return +(Math.abs(_pmLast) / _pmBase).toFixed(2);
 }
 
 /**
@@ -704,10 +754,10 @@ function tick() {
      * cours, le collecteur etait pose sur un autre timeframe et la valeur
      * est perimee. */
     live15BarTs: liveSnap15 ? liveSnap15.barTs : null,
-    live15Lbw: liveSnap15 ? liveSnap15.lbw : null,
-    live15Bw: liveSnap15 ? liveSnap15.bw : null,
+    live15Lbw: _vague15().lbw,   /* confirme, plus le live (04/09/2026) */
+    live15Bw: _vague15().bw,   /* confirme, plus le live (04/09/2026) */
     live15Vwap: liveSnap15 ? liveSnap15.vwap : null,
-    live15MoneyFlow: liveSnap15 ? liveSnap15.moneyFlow : null,
+    live15MoneyFlow: _vague15().mf,   /* confirme, plus le live (04/09/2026) */
     live15DbsiTop: liveSnap15 ? liveSnap15.dbsiTop : null,
     live15DbsiBottom: liveSnap15 ? liveSnap15.dbsiBottom : null,
     live15SignalUp: liveSnap15 ? liveSnap15.signalUp : null,
@@ -792,9 +842,9 @@ function tick() {
     liveDbsiBottom: liveSnap ? liveSnap.dbsiBottom : null,
     liveSignalUp: liveSnap ? liveSnap.signalUp : null,
     liveSignalDn: liveSnap ? liveSnap.signalDn : null,
-    live15Bw: liveSnap15 ? liveSnap15.bw : null,
-    live15Lbw: liveSnap15 ? liveSnap15.lbw : null,
-    live15MoneyFlow: liveSnap15 ? liveSnap15.moneyFlow : null,
+    live15Bw: _vague15().bw,   /* confirme, plus le live (04/09/2026) */
+    live15Lbw: _vague15().lbw,   /* confirme, plus le live (04/09/2026) */
+    live15MoneyFlow: _vague15().mf,   /* confirme, plus le live (04/09/2026) */
     live15DbsiTop: liveSnap15 ? liveSnap15.dbsiTop : null,
     live15DbsiBottom: liveSnap15 ? liveSnap15.dbsiBottom : null,
     live15Vwap: liveSnap15 ? liveSnap15.vwap : null,

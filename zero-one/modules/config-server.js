@@ -620,7 +620,7 @@ async function loadAudit() {
       if (r.cadenceMult !== null && r.cadenceMult !== undefined && r.cadenceMult >= 2) {
         marks.push('EVT x' + r.cadenceMult.toFixed(1));
       }
-      if (d5 !== null && Math.abs(d5) >= 0.067) marks.push('DEPL');
+      if (d5 !== null && Math.abs(d5) >= 0.20) marks.push('DEPL');
       if (r.netMove !== null && r.netMove !== undefined && Math.abs(r.netMove) >= 0.06) {
         marks.push(r.netMove > 0 ? 'NM+' : 'NM-');
       }
@@ -651,7 +651,18 @@ async function loadAudit() {
              '<span style="opacity:0.4;"> / </span>' +
              '<span class="up">' + Math.round(b) + '</span>';
     }
-    function priceCell(r) {
+    /* Pente du BW15 sur cinq minutes (04/09/2026). Le champ mf15Pente existe
+ * deja cote baton pour le MoneyFlow ; le BW se calcule ici, a l affichage.
+ * Sous 0.5 la vague est jugee plate -- c est la mediane des variations
+ * mesurees sur 24h. */
+function bwPente(r, i, arr) {
+  if (i < 10) return null;
+  const v1 = r.live15Bw, v0 = arr[i-10] && arr[i-10].live15Bw;
+  if (v1 === null || v1 === undefined || v0 === null || v0 === undefined) return null;
+  const d = v1 - v0;
+  return Math.abs(d) < 0.5 ? 0 : d;
+}
+function priceCell(r) {
       return (r.lastPrice !== null && r.lastPrice !== undefined) ? Math.round(r.lastPrice) : '';
     }
     /* Ecart entre le VWAP live et le VWAP confirme (19/08/2026). Il mesure de
@@ -887,8 +898,15 @@ async function loadAudit() {
             /* Couleur sur la PENTE et non sur le signe (22/08/2026) : c'est
              * l'inflexion qui porte l'information, pas le niveau. */
             '<td class="' + cls(r.mf15Pente) + '" title="pente ' + fmt(r.mf15Pente,2) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
-            '<td class="' + cls(r.live15Bw) + '" style="background:#171f2c;">' + fmt(r.live15Bw,2) + '</td>' +
-            '<td class="' + cls(r.live15Lbw) + '" style="background:#171f2c;">' + fmt(r.live15Lbw,2) + '</td>'
+            /* BW colore par sa PENTE et non par son signe (04/09/2026) : ce
+             * qui compte est le sens de la vague, pas sa position. Seuil 0.5
+             * sur cinq minutes -- la mediane mesuree des variations. */
+            '<td class="' + cls(bwPente(r, i, recent)) + '" style="background:#171f2c;" title="pente " + fmt(bwPente(r, i, recent),2) + "">' + fmt(r.live15Bw,2) + '</td>' +
+            /* LBW colore par sa POSITION par rapport au BW : vert au-dessus,
+             * rouge en dessous. Rend le croisement visible d un coup d oeil.
+             * Mesure du 03/09 : 60 croisements en 24h, dont 43 pourcent
+             * seulement tiennent plus de dix minutes. */
+            '<td class="' + ((r.live15Lbw !== null && r.live15Bw !== null) ? (r.live15Lbw > r.live15Bw ? 'up' : 'down') : '') + '" style="background:#171f2c;">' + fmt(r.live15Lbw,2) + '</td>'
           : _activeTab === 'mouvement'
           ? '<td style="border-left:3px solid #5a6b85;">' + fmt(r.cadence,2) + '</td>' +
             '<td>' + fmt(r.cadenceMult,2) + 'x</td>' +
