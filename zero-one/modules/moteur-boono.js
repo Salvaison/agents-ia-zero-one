@@ -83,6 +83,20 @@ const VSLOPE3_DIR = 2;
  * Le BW ne peut que REFUSER la tendance, sur contradiction franche. */
 const BW15_VETO = 30;
 
+/* SORTIE PAR LA VAGUE (04/09/2026). Le sommet d'une vague est sa zone
+ * neutre : c'est la que le retournement se joue.
+ * Seuils mesures sur 24h de vague 15m confirmee -- le BW varie de 0.88 en
+ * mediane sur cinq minutes et 10.05 au p90, le MoneyFlow de 0.33 et 2.42.
+ * Le BW bouge quatre fois plus vite, d'ou des seuils proportionnes. */
+const BW_PLAT = 7;          /* sous cette pente sur 5 min, la vague stagne */
+const MF_PLAT = 2;
+/* Retournement du Vslope3 entre deux releves consecutifs. Mesure : un ecart
+ * de 5 survient sur 6.5% des releves, 3 sur 9.7%, 8 sur 3.3%. */
+const VSLOPE3_RETOURNEMENT = 5;
+/* Fenetre de lecture de la pente des vagues : dix releves, soit cinq
+ * minutes -- l'echelle a laquelle les seuils ci-dessus ont ete mesures. */
+const PENTE_FENETRE = 10;
+
 /* LOI 4 -- plus de tolerance de synchronisation : le signal 15m ne valide
  * plus l'entree. Il confirme apres coup, avec 500 a 700 USD de retard. */
 
@@ -186,8 +200,33 @@ function majBuffer(state, b, now) {
     cadM: num(b.cadenceMultiplier),
     pmMult: num(b.priceMoveMult),
     pm: num(b.priceMove),
+    /* Vagues confirmees et pente 3m, pour la lecture de sortie (04/09/2026). */
+    bw15: num(b.live15Bw),
+    lbw15: num(b.live15Lbw),
+    mf15: num(b.live15MoneyFlow),
+    vsl3: num(b.vwap3Slope),
   });
   while (state.buffer.length > BUFFER_MAX) state.buffer.shift();
+}
+
+/**
+ * Pente d'un champ de la memoire glissante, sur une fenetre de releves.
+ * Sert a lire la PROGRESSION des vagues plutot que leur niveau -- une vague
+ * au sommet est plate, quel que soit ce sommet.
+ */
+function pente(buf, champ, fen) {
+  if (!Array.isArray(buf) || buf.length <= fen) return null;
+  const v1 = buf[buf.length - 1][champ];
+  const v0 = buf[buf.length - 1 - fen][champ];
+  if (v1 === null || v1 === undefined || v0 === null || v0 === undefined) return null;
+  return v1 - v0;
+}
+
+/** Valeur du releve precedent, pour mesurer un ecart entre deux cycles. */
+function precedent(buf, champ) {
+  if (!Array.isArray(buf) || buf.length < 2) return null;
+  const v = buf[buf.length - 2][champ];
+  return (v === null || v === undefined) ? null : v;
 }
 
 /* ── LOI 0 : LA LECTURE DE FOND ───────────────────────────────────────── */
@@ -496,8 +535,39 @@ function gererPosition(state, b, fond, prix, now, reg) {
   if (fond.vwap15 !== null && pos.vwap15Entree !== null &&
       Math.abs(fond.vwap15) >= 2) {
     const sensCadre = fond.vwap15 > 0 ? 'long' : 'short';
-    if (sensCadre !== pos.direction) {
+    if (false && sensCadre !== pos.direction) {
       sortir('VWAP15 retourne', pos.restant); state.position = null; return;
+    }
+  }
+
+  /* ── LA SORTIE SE LIT SUR LA VAGUE (04/09/2026) ─────────────────────────
+   * Le VWAP15 a ete neutralise juste au-dessus : il indique la continuation,
+   * pas le retournement, et se trouve donc toujours du mauvais cote au
+   * moment ou la sortie serait la meilleure. Il fermait 137 positions sur
+   * 216 pour -4.40 USD, avec une duree mediane de trente secondes.
+   *
+   * Trois temps : la vague arrive en zone neutre -- son sommet -- le
+   * MoneyFlow dit ce qu'il en est, le Vslope3 confirme par un retournement
+   * franc. */
+  const bwP = pente(state.buffer, 'bw15', PENTE_FENETRE);
+  const mfP = pente(state.buffer, 'mf15', PENTE_FENETRE);
+  const vagueNeutre = (bwP !== null && Math.abs(bwP) < BW_PLAT) &&
+                      (mfP === null || Math.abs(mfP) < MF_PLAT);
+  if (vagueNeutre) {
+    const vs3 = num(b.vwap3Slope);
+    const vs3Prec = precedent(state.buffer, 'vsl3');
+    if (vs3 !== null && vs3Prec !== null) {
+      const ecart = vs3 - vs3Prec;
+      /* Retournement consequent ET direction franche au-dela du neutre :
+       * un simple passage par zero ne suffit pas. */
+      if (Math.abs(ecart) >= VSLOPE3_RETOURNEMENT) {
+        const sensVs3 = vs3 > 0 ? 'long' : 'short';
+        if (sensVs3 !== pos.direction && Math.abs(vs3) >= 2) {
+          sortir('vague neutre + Vslope3 retourne (' + ecart.toFixed(1) + ')',
+                 pos.restant);
+          state.position = null; return;
+        }
+      }
     }
   }
 
