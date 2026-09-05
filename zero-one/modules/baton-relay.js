@@ -756,6 +756,12 @@ function tick() {
     live15BarTs: liveSnap15 ? liveSnap15.barTs : null,
     live15Lbw: _vague15().lbw,   /* confirme, plus le live (04/09/2026) */
     live15Bw: _vague15().bw,   /* confirme, plus le live (04/09/2026) */
+    /* Valeurs LIVE intra-bougie, pour comparaison (05/09/2026). Le moteur
+     * decide toujours sur le confirme ; celles-ci ne servent qu'a la
+     * lecture. */
+    live15BwRaw: liveSnap15 ? liveSnap15.bw : null,
+    live15LbwRaw: liveSnap15 ? liveSnap15.lbw : null,
+    live15MfRaw: liveSnap15 ? liveSnap15.moneyFlow : null,
     live15Vwap: liveSnap15 ? liveSnap15.vwap : null,
     live15MoneyFlow: _vague15().mf,   /* confirme, plus le live (04/09/2026) */
     live15DbsiTop: liveSnap15 ? liveSnap15.dbsiTop : null,
@@ -843,6 +849,12 @@ function tick() {
     liveSignalUp: liveSnap ? liveSnap.signalUp : null,
     liveSignalDn: liveSnap ? liveSnap.signalDn : null,
     live15Bw: _vague15().bw,   /* confirme, plus le live (04/09/2026) */
+    /* Valeurs LIVE intra-bougie, pour comparaison (05/09/2026). Le moteur
+     * decide toujours sur le confirme ; celles-ci ne servent qu'a la
+     * lecture. */
+    live15BwRaw: liveSnap15 ? liveSnap15.bw : null,
+    live15LbwRaw: liveSnap15 ? liveSnap15.lbw : null,
+    live15MfRaw: liveSnap15 ? liveSnap15.moneyFlow : null,
     live15Lbw: _vague15().lbw,   /* confirme, plus le live (04/09/2026) */
     live15MoneyFlow: _vague15().mf,   /* confirme, plus le live (04/09/2026) */
     live15DbsiTop: liveSnap15 ? liveSnap15.dbsiTop : null,
