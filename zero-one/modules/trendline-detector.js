@@ -77,9 +77,9 @@ const WINDOW_HOURS = 48;
 /* Zone d'allumage et zone de recherche, en pourcentage du prix. La recherche
  * est plus large : on repere une ligne en formation, on ne l'allume que si le
  * prix vient vraiment dessus. */
-const TOLERANCE_PCT = 0.048;
+const TOLERANCE_PCT = 0.015;
 const SEARCH_TOLERANCE_PCT = 0.096;
-let TOLERANCE_USD = 30;
+let TOLERANCE_USD = 12;
 let SEARCH_TOLERANCE_USD = 60;
 
 const EXTREME_LOOKBACK = 5;
@@ -354,6 +354,10 @@ function searchFromAnchor(pivots, type, nowTs, nowPrice) {
 /* Teste chaque sous-ensemble terminal d'un groupe de pivots alignes : A→B,
  * A→C, etc. Les lignes valides peuvent coexister -- c'est le prix qui
  * tranchera entre elles. */
+/* Deux lignes projetant a moins de cette distance l'une de l'autre sont
+ * considerees comme une seule (05/09/2026, valeur proposee par Benjamin). */
+const DEDOUBLON_USD = 5;
+
 function collectLines(out, pivots, type, alignes, nowTs, nowPrice) {
   {
   for (let fin = 2; fin < alignes.length; fin++) {
@@ -508,6 +512,28 @@ function run() {
   }
   cat.sort((a, b) => Math.abs(a.distanceUsd) - Math.abs(b.distanceUsd));
 
+  /* DEDOUBLONNAGE (05/09/2026). Deux lignes qui projettent au meme prix a
+   * DEDOUBLON_USD pres sont la meme ligne : les deux methodes de recherche --
+   * ancre mobile et paires de pivots -- en produisent naturellement des
+   * doublons, parfois sur les memes pivots dans un ordre different.
+   * Chacune allumait le marqueur Lgi, d'ou un catalogue pletorique et un
+   * marqueur presque permanent alors que les lignes sont justes.
+   * On garde celle qui a le plus de contacts ; a contacts egaux, la moins
+   * dispersee. Le catalogue etant trie par distance, les candidates
+   * redondantes se suivent. */
+  const garde = [];
+  for (const l of cat) {
+    const jumelle = garde.find(g => Math.abs(g.projectedNow - l.projectedNow) <= DEDOUBLON_USD);
+    if (!jumelle) { garde.push(l); continue; }
+    /* La nouvelle est-elle meilleure que celle deja retenue ? */
+    const mieux = (l.points > jumelle.points) ||
+                  (l.points === jumelle.points &&
+                   (l.residual || 0) < (jumelle.residual || 0));
+    if (mieux) garde[garde.indexOf(jumelle)] = l;
+  }
+  const avant = cat.length;
+  cat = garde;
+
   const actives = cat.filter(l => l.active);
   const above = cat.filter(l => l.distanceUsd < 0)[0] || null;
   const below = cat.filter(l => l.distanceUsd > 0)[0] || null;
@@ -521,6 +547,7 @@ function run() {
     pivotCount: pivots.length,
     foundNow: found.length,
     lineCount: cat.length,
+    lineCountBrut: avant,
     activeCount: actives.length,
     nearestAbove: above ? { projected: above.projectedNow, distance: Math.abs(above.distanceUsd),
                             points: above.points } : null,
