@@ -553,7 +553,15 @@ function gererPosition(state, b, fond, prix, now, reg) {
   const mfP = pente(state.buffer, 'mf15', PENTE_FENETRE);
   const vagueNeutre = (bwP !== null && Math.abs(bwP) < BW_PLAT) &&
                       (mfP === null || Math.abs(mfP) < MF_PLAT);
-  if (vagueNeutre) {
+
+  /* La vague a-t-elle quitte la zone neutre depuis l'entree ? Tant que non,
+   * on est encore dans le plat ou la position a ete ouverte : le Vslope3 y
+   * oscille et ses retournements ne signifient rien. */
+  if (!vagueNeutre && bwP !== null && Math.abs(bwP) >= BW_PLAT) {
+    pos.vagueSortie = true;
+  }
+
+  if (vagueNeutre && pos.vagueSortie) {
     const vs3 = num(b.vwap3Slope);
     const vs3Prec = precedent(state.buffer, 'vsl3');
     if (vs3 !== null && vs3Prec !== null) {
@@ -674,6 +682,12 @@ function tick() {
     levier: LEVIER, notionnel: NOTIONNEL_USD,
     loi, detail,
     vwap15Entree: fond.vwap15,
+    /* CYCLE DE VAGUE (05/09/2026). On entre en zone neutre -- au sommet ou au
+     * creux d'une vague. Tant qu'on n'en est pas SORTI, le Vslope3 y oscille
+     * et ses retournements sont du bruit : le moteur ne l'ecoute pas.
+     * Il suit le BW jusqu'a la PROCHAINE zone neutre, en haut de la vague
+     * suivante, ou le Vslope3 redevient audible. */
+    vagueSortie: false,
     regime: reg.nom,
     contexte: { fond, tf3, lieu, regime: reg },
   };
