@@ -664,7 +664,20 @@ async function loadAudit() {
  * mesurees sur 24h. */
     /* Pente d'un champ sur cinq minutes, pour colorer les vagues du panneau
      * composite. Sous 0.5 la vague est jugee plate. */
-    function pente10(i, arr, champ) {
+    /* Variation de l ecart live/confirme sur cinq minutes (06/09/2026).
+ * Ce qui compte n est pas le signe de l ecart mais son MOUVEMENT : le live
+ * s ecarte-t-il davantage du confirme, ou revient-il vers lui ? */
+function varEcart(i, arr, champLive, champConf) {
+  if (i < 10) return null;
+  const e = (x) => (x && x[champLive] !== null && x[champLive] !== undefined
+                    && x[champConf] !== null && x[champConf] !== undefined)
+                   ? x[champLive] - x[champConf] : null;
+  const v1 = e(arr[i]), v0 = e(arr[i-10]);
+  if (v1 === null || v0 === null) return null;
+  const d = v1 - v0;
+  return Math.abs(d) < 0.5 ? 0 : d;
+}
+function pente10(i, arr, champ) {
       if (i < 10) return null;
       const v1 = arr[i] && arr[i][champ], v0 = arr[i-10] && arr[i-10][champ];
       if (v1 === null || v1 === undefined || v0 === null || v0 === undefined) return null;
@@ -954,7 +967,7 @@ function priceCell(r) {
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
         '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '" style="border-right:2px solid #5a6b85; padding:2px 1px;">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
-        '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#171f2c;">' + fmt(r.priceMove,0) + '</td>' +
+        '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#1e2a3d;">' + fmt(r.priceMove,0) + '</td>' +
         '<td style="border-right:2px solid #5a6b85; background:#171f2c;' +
           ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
           '">' + fmt(r.priceMoveMult,1) + '</td>') +
@@ -986,23 +999,26 @@ function priceCell(r) {
             '<td class="' + cls(r.vwap3) + '" style="border-left:3px solid #5a6b85; background:#171f2c;">' + fmt(r.vwap3,2) + '</td>' +
             '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
             '<td class="' + cls(r.vwap3Slope) + '" style="background:#171f2c;">' + fmt(r.vwap3Slope,2) + '</td>' +
+            '<td style="text-align:center; padding:2px 0; background:#171f2c;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
+            '<td class="' + cls(r.vwapLiveSlope) + '" style="background:#171f2c;">' + fmt(r.vwapLiveSlope,2) + '</td>' +
             '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
             '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
             '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
+            '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
             /* Mouvement */
-            '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#171f2c;">' + fmt(r.priceMove,0) + '</td>' +
-            '<td style="background:#171f2c;' + ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') + '">' + fmt(r.priceMoveMult,1) + '</td>' +
+            '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#1e2a3d;">' + fmt(r.priceMove,0) + '</td>' +
+            '<td style="background:#1e2a3d;' + ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') + '">' + fmt(r.priceMoveMult,1) + '</td>' +
             '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,3) + '</td>' +
             '<td>' + fmt(r.netMoveMult,1) + '</td>' +
             '<td style="background:#171f2c;">' + fmt(r.cadence,2) + '</td>' +
             '<td style="background:#171f2c;">' + fmt(r.cadenceMult,2) + 'x</td>' +
             /* Vagues : confirme puis live, pour comparaison */
             '<td class="' + cls(r.mf15Pente) + '" style="border-left:2px solid #5a6b85;" title="pente ' + fmt(r.mf15Pente,2) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
-            '<td class="' + cls(pente10(i, recent, 'live15MfRaw')) + '">' + fmt(r.live15MfRaw,2) + '</td>' +
+            '<td class="' + cls(varEcart(i, recent, 'live15MfRaw', 'live15MoneyFlow')) + '">' + fmt(ecartVw(r.live15MfRaw, r.live15MoneyFlow),1) + '</td>' +
             '<td class="' + cls(pente10(i, recent, 'live15Bw')) + '" style="background:#171f2c;">' + fmt(r.live15Bw,2) + '</td>' +
-            '<td class="' + cls(pente10(i, recent, 'live15BwRaw')) + '" style="background:#171f2c;">' + fmt(r.live15BwRaw,2) + '</td>' +
+            '<td class="' + cls(varEcart(i, recent, 'live15BwRaw', 'live15Bw')) + '" style="background:#171f2c;">' + fmt(ecartVw(r.live15BwRaw, r.live15Bw),1) + '</td>' +
             '<td class="' + rel(r.live15Lbw, r.live15Bw) + '">' + fmt(r.live15Lbw,2) + '</td>' +
-            '<td class="' + rel(r.live15LbwRaw, r.live15BwRaw) + '">' + fmt(r.live15LbwRaw,2) + '</td>'
+            '<td class="' + cls(varEcart(i, recent, 'live15LbwRaw', 'live15Lbw')) + '">' + fmt(ecartVw(r.live15LbwRaw, r.live15Lbw),1) + '</td>'
           : '<td style="text-align:center; font-size:11px; border-left:3px solid #5a6b85;">' + convCell(r.convictionScore) + '</td>' +
             '<td style="text-align:center; font-size:11px;">' + convCell(r.coherence) + '</td>' +
             '<td style="background:#171f2c;">' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
@@ -1051,9 +1067,12 @@ function priceCell(r) {
         ? '<th style="border-left:3px solid #5a6b85; background:#171f2c;" title="VWAP 3m confirme">VW3</th>' +
           '<th style="background:#171f2c;" title="Ecart VW3L moins VWAP3">dW3</th>' +
           '<th style="background:#171f2c;" title="Pente du VWAP 3m. En vigilance, c est lui qui tranche.">Vsl3</th>' +
+          '<th style="width:26px; padding:2px 0; background:#171f2c;" title="Direction de la pente VWAP 3m">P3</th>' +
+          '<th style="background:#171f2c;" title="Pente du VWAP 3m LIVE, calculee en continu sur l intra-bougie. Mesure du 06/09 : elle anticipe le Vsl3 confirme de une a trois minutes, et affiche parfois le sens oppose pendant que celui-ci reste fige.">VslL3</th>' +
           '<th style="border-left:2px solid #5a6b85;" title="VWAP 15m confirme">VW15</th>' +
           '<th title="Ecart VW15L moins VWAP15">dW15</th>' +
           '<th title="Pente du VWAP 15m">Vsl15</th>' +
+          '<th style="width:26px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
           '<th style="border-left:2px solid #5a6b85; background:#171f2c;" title="priceMove : deplacement du prix en USD depuis le releve precedent">PM</th>' +
           '<th style="background:#171f2c;" title="Multiplicateur du priceMove contre la mediane glissante de 48h. Au-dela de 3, evenement.">PMx</th>' +
           '<th title="NetMove : deplacement net sur la fenetre de 200 ticks, en pourcent">NM</th>' +
@@ -1061,11 +1080,11 @@ function priceCell(r) {
           '<th style="background:#171f2c;" title="Cadence : transactions par seconde">Cad</th>' +
           '<th style="background:#171f2c;" title="Multiplicateur de cadence">nMx</th>' +
           '<th style="border-left:2px solid #5a6b85;" title="MoneyFlow 15m CONFIRME a la cloture. Colore par sa pente.">Mf15</th>' +
-          '<th title="MoneyFlow 15m LIVE intra-bougie. Colore par sa pente.">MfL15</th>' +
+          '<th title="Ecart entre le MoneyFlow 15m live et le confirme : de combien la vague en formation decroche du trace.">dwMFL</th>' +
           '<th style="background:#171f2c;" title="Blue Wave 15m CONFIRMEE. Coloree par sa pente sur cinq minutes.">BW15</th>' +
-          '<th style="background:#171f2c;" title="Blue Wave 15m LIVE intra-bougie.">BWL15</th>' +
+          '<th style="background:#171f2c;" title="Ecart entre la Blue Wave live et la confirmee.">dwBWL</th>' +
           '<th title="Lt Blue Wave 15m CONFIRMEE. Verte au-dessus du BW, rouge en dessous.">Lbw15</th>' +
-          '<th title="Lt Blue Wave 15m LIVE. Le croisement se voit ici avant le confirme.">LbwL15</th>'
+          '<th title="Ecart entre la Lt Blue Wave live et la confirmee. Le croisement se prepare ici avant d apparaitre dans le confirme.">dwLBWL</th>'
         : '<th style="border-left:3px solid #5a6b85;" title="Conviction : part des 8 tranches ou le flux achat/vente va dans le meme sens. Distribution verifiee non saturee, moyenne 0.66.">Cv</th>' +
           '<th title="Coherence : part des 8 tranches ou le mouvement de prix va dans le meme sens. 41 pourcent des releves a zero -- le prix zigzague.">Ch</th>' +
           '<th style="background:#171f2c;" title="Sens lisse du prix sur les 3 dernieres tranches">S3</th>' +
@@ -1943,7 +1962,7 @@ async function loadBoono() {
       '<div>Taux de reussite : ' + (100 * gagnantes / listeEntrees.length).toFixed(1) + '%</div>' +
       '<div>PNL cumule : ' + (total >= 0 ? '+' : '') + total.toFixed(2) + '%  (' +
         (usdTotal >= 0 ? '+' : '') + usdTotal.toFixed(2) + ' USD' + (approx ? '*' : '') + ')</div>' +
-      '<div style="opacity:0.7; font-size:11px;">notionnel ' + (h[0] && h[0].notionnel ? h[0].notionnel : 100) +
+      '<div style="opacity:0.7; font-size:11px;">notionnel ' + 100 +
         ' USD par trade (1% de 1000 a 10x)' + (approx ? '  --  * lignes anterieures au 19/08 estimees' : '') + '</div>' +
       '</div>';
 
