@@ -782,6 +782,11 @@ function tick() {
     vwap3: (vwap3 && vwap3.current !== undefined) ? parseFloat(vwap3.current) : null,
     vwap3Cross: !!(vwap3 && vwap3.crossedZero),
     cadence: currentCadence,
+    /* Taille moyenne des transactions sur la fenetre de 200 ticks, en BTC
+     * (06/09/2026). Distingue un gros ordre d un carnet vide : deux
+     * situations qui produisent le meme impact par transaction. */
+    tailleMoyenneBtc: trig.tailleMoyenneBtc !== undefined ? trig.tailleMoyenneBtc : null,
+    volumeFenetreBtc: trig.volumeFenetreBtc !== undefined ? trig.volumeFenetreBtc : null,
     cadenceMult: cadenceMultiplier,
     priceSens3: trig.priceSens3 !== undefined ? trig.priceSens3 : null,
     /* CONVICTION ET COHERENCE (16/08/2026) -- exposes dans l'audit apres

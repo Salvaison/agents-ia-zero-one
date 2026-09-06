@@ -411,13 +411,27 @@ function analyzeTrigger() {
   let windowSeconds = null;
   let priceHigh = null;
   let priceLow = null;
+  /* TAILLE MOYENNE DES TRANSACTIONS (06/09/2026). Le flux OKX porte la taille
+   * de chaque transaction ; price-stream la convertit deja en BTC. Elle
+   * n etait pas agregee.
+   * Motif : le 05/09 a 22h14, un priceMove de 85 USD avec une cadence de 14
+   * seulement, contre 56 USD avec une cadence de 142 six minutes plus tot --
+   * vingt fois plus d impact par transaction. Deux lectures possibles : un
+   * gros ordre traversant un carnet normal, ou un ordre ordinaire dans un
+   * carnet vide. La taille moyenne tranche entre les deux. */
+  let tailleMoyenne = null;
+  let volumeTotal = null;
   if (windowTicks.length >= 2) {
     let hi = -Infinity, lo = Infinity;
+    let vSum = 0, vN = 0;
     for (const t of windowTicks) {
       const p = parseFloat(t.price);
       if (p > hi) hi = p;
       if (p < lo) lo = p;
+      const v = parseFloat(t.volume);
+      if (isFinite(v) && v > 0) { vSum += v; vN++; }
     }
+    if (vN) { tailleMoyenne = vSum / vN; volumeTotal = vSum; }
     priceHigh = hi;
     priceLow = lo;
     amplitudePct = lo > 0 ? ((hi - lo) / lo * 100) : null;
@@ -436,6 +450,8 @@ function analyzeTrigger() {
     coherence: coherence.toFixed(2),
     convictionScore: convictionScore.toFixed(2),
     cadenceTicksPerSec: cadence,
+    tailleMoyenneBtc: tailleMoyenne !== null ? +tailleMoyenne.toFixed(6) : null,
+    volumeFenetreBtc: volumeTotal !== null ? +volumeTotal.toFixed(4) : null,
     cadenceScore,
     priceSens3,
     avgPctMove3: (avgPctMove3 * 100).toFixed(4) + '%',

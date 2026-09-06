@@ -85,6 +85,11 @@ app.get('/login', (req, res) => {
     <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion</title>
     <style>
+/* En-tete de tableau fixe au defilement (06/09/2026) : les noms de colonnes
+ * restent lisibles quand on parcourt les releves. */
+#tabs { position: sticky; top: 0; z-index: 5; background: #0d1117; padding: 6px 0; }
+thead th { position: sticky; z-index: 3; }
+
       body { font-family: -apple-system, sans-serif; background: #0d0d0f; color: #e8e8ea; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
       form { background: #1a1a1d; padding: 32px; border-radius: 12px; width: 280px; }
       input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #333; background: #0d0d0f; color: #e8e8ea; box-sizing: border-box; }
@@ -424,7 +429,8 @@ app.get('/audit-view', requireAuth, (req, res) => {
 </style>
 </head>
 <body>
-  <div style="display:flex; align-items:baseline; gap:22px; margin-bottom:2px;">
+  <div id="entete" style="position:sticky; top:0; z-index:10; background:#0d1117; padding-bottom:6px; border-bottom:1px solid #2a3444;">
+    <div style="display:flex; align-items:baseline; gap:22px; margin-bottom:2px;">
     <h1 style="margin:0; white-space:nowrap; width:395px; flex:none;">Audit BOONOTRADE</h1>
     <div class="sub" style="margin:0; flex:1;">Historique glissant 24h, mis a jour toutes les 30s. Heure affichee : Europe / Paris.
       &nbsp;&nbsp;<button onclick="loadAudit()" style="padding:3px 10px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:11px;">Rafraichir</button></div>
@@ -444,7 +450,9 @@ app.get('/audit-view', requireAuth, (req, res) => {
       style="padding:5px 14px; margin-right:6px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">COMPOSITE</button>
     <button id="tab-engagement" onclick="switchTab('engagement')"
       style="padding:5px 14px; border:1px solid #5a6b85; background:#1a2332; color:#8fa3bf; cursor:pointer; border-radius:3px; font-size:12px;">ENGAGEMENT</button>
-    <span style="margin-left:12px; font-size:11px; opacity:0.6;">VAGUE : ce que dit MarketCipher &nbsp;|&nbsp; MOUVEMENT : ce que le prix a fait &nbsp;|&nbsp; ENGAGEMENT : qui pousse et avec quelle constance</span>
+    <span id="flux" style="margin-left:18px; font-size:13px; color:#8fa3bf;"></span>
+    <span style="margin-left:12px; font-size:11px; opacity:0.6; display:block; margin-top:4px;">VAGUE : ce que dit MarketCipher &nbsp;|&nbsp; MOUVEMENT : ce que le prix a fait &nbsp;|&nbsp; ENGAGEMENT : qui pousse et avec quelle constance</span>
+  </div>
   </div>
   <div id="wrap"><div class="empty">Chargement des donnees</div></div>
 
@@ -1008,10 +1016,10 @@ function priceCell(r) {
             /* Mouvement */
             '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#1e2a3d;">' + fmt(r.priceMove,0) + '</td>' +
             '<td style="background:#1e2a3d;' + ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') + '">' + fmt(r.priceMoveMult,1) + '</td>' +
-            '<td class="' + cls(r.netMove) + '">' + fmt(r.netMove,3) + '</td>' +
-            '<td>' + fmt(r.netMoveMult,1) + '</td>' +
             '<td style="background:#171f2c;">' + fmt(r.cadence,2) + '</td>' +
             '<td style="background:#171f2c;">' + fmt(r.cadenceMult,2) + 'x</td>' +
+            '<td>' + (r.tailleMoyenneBtc !== null && r.tailleMoyenneBtc !== undefined ? r.tailleMoyenneBtc.toFixed(3) : '') + '</td>' +
+            '<td>' + fmt(r.volumeFenetreBtc,1) + '</td>' +
             /* Vagues : confirme puis live, pour comparaison */
             '<td class="' + cls(r.mf15Pente) + '" style="border-left:2px solid #5a6b85;" title="pente ' + fmt(r.mf15Pente,2) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
             '<td class="' + cls(varEcart(i, recent, 'live15MfRaw', 'live15MoneyFlow')) + '">' + fmt(ecartVw(r.live15MfRaw, r.live15MoneyFlow),1) + '</td>' +
@@ -1075,10 +1083,10 @@ function priceCell(r) {
           '<th style="width:26px; padding:2px 0;" title="Direction de la pente VWAP 15m">P15</th>' +
           '<th style="border-left:2px solid #5a6b85; background:#171f2c;" title="priceMove : deplacement du prix en USD depuis le releve precedent">PM</th>' +
           '<th style="background:#171f2c;" title="Multiplicateur du priceMove contre la mediane glissante de 48h. Au-dela de 3, evenement.">PMx</th>' +
-          '<th title="NetMove : deplacement net sur la fenetre de 200 ticks, en pourcent">NM</th>' +
-          '<th title="Multiplicateur de netMove">NMx</th>' +
           '<th style="background:#171f2c;" title="Cadence : transactions par seconde">Cad</th>' +
           '<th style="background:#171f2c;" title="Multiplicateur de cadence">nMx</th>' +
+          '<th title="Taille moyenne d une transaction sur la fenetre de 200 ticks, en BTC. Distingue un gros ordre d un carnet vide -- deux situations qui produisent le meme impact par transaction.">Tx</th>' +
+          '<th title="Volume total echange sur la fenetre de 200 ticks, en BTC.">Vol</th>' +
           '<th style="border-left:2px solid #5a6b85;" title="MoneyFlow 15m CONFIRME a la cloture. Colore par sa pente.">Mf15</th>' +
           '<th title="Ecart entre le MoneyFlow 15m live et le confirme : de combien la vague en formation decroche du trace.">dwMFL</th>' +
           '<th style="background:#171f2c;" title="Blue Wave 15m CONFIRMEE. Coloree par sa pente sur cinq minutes.">BW15</th>' +
@@ -1095,6 +1103,14 @@ function priceCell(r) {
       '</tr></thead><tbody>' + rowsHtml.join('');
     html += '</tbody></table>';
     wrap.innerHTML = html;
+    const der = recent[recent.length - 1], fx = document.getElementById('flux');
+    if (der && fx && der.tailleMoyenneBtc && der.lastPrice) {
+      const t = der.tailleMoyenneBtc, v = der.volumeFenetreBtc, px = der.lastPrice;
+      fx.innerHTML = 'Taille moyenne de <b>' + t.toFixed(3) + ' BTC</b> par transaction, soit environ <b>'
+        + Math.round(t * px).toLocaleString('fr-FR') + ' USD</b>, et <b>'
+        + (v ? v.toFixed(2) : '-') + ' BTC</b> sur les 200 derniers ticks'
+        + '<span style="opacity:0.5;"> // </span>PRIX : <b>' + Math.round(px).toLocaleString('fr-FR') + '</b>';
+    }
   } catch (e) {
     wrap.innerHTML = '<div class="empty">Erreur reseau : ' + e.message + '</div>';
   }
@@ -1102,6 +1118,9 @@ function priceCell(r) {
 
 loadAudit();
 setInterval(loadAudit, 30000);
+function calerEntete(){var e=document.getElementById("entete");if(!e)return;var h=e.offsetHeight;document.querySelectorAll("thead th").forEach(function(t){t.style.top=h+"px";});}
+window.addEventListener("resize",calerEntete);
+setInterval(calerEntete,1000);
 </script>
 </body>
 </html>`);
