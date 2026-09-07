@@ -390,6 +390,24 @@ function computeAdaptiveThreshold(priceHistoryLong, multiplier, floor, ceiling) 
 function checkInvalidation(trade, batonState, config, price) {
   const cfg = (config && config.tradeSimulator && config.tradeSimulator.invalidation) || {};
   if (cfg.enabled === false) return null;
+  /* AUCUNE INVALIDATION TANT QUE LA VAGUE PORTE (06/09/2026).
+   * Benjamin : "l idee est que MCB arrive en neutre, entre en vigilance et
+   * reagit sur les evenements et Vsl3". Tant que la Blue Wave 15m progresse
+   * dans le sens de la position, le flux eteint ou inverse ne signifie rien --
+   * c est le zigzag ordinaire d un mouvement qui se poursuit. La vigilance ne
+   * s ouvre qu au plat de la vague, ou le retournement se joue reellement. */
+  const bwInv = batonState && typeof batonState.live15Bw === 'number' ? batonState.live15Bw : null;
+  if (bwInv !== null) {
+    if (trade.bw15RefInv === undefined || trade.bw15RefInv === null) trade.bw15RefInv = bwInv;
+    const pInv = bwInv - trade.bw15RefInv;
+    if (Math.abs(pInv) >= 2 &&
+        ((pInv > 0 && trade.direction === 'long') ||
+         (pInv < 0 && trade.direction === 'short'))) {
+      trade.bw15RefInv = bwInv;
+      return null;
+    }
+    trade.bw15RefInv = bwInv;
+  }
 
   // Buffer long pour le seuil adaptatif (03/08/2026) -- alimente a chaque
   // appel, independant de trade.entryPrice (persiste entre les trades).
@@ -597,6 +615,24 @@ function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
   trade.lastCrossedZeroSeen = crossedNow;
 
   if (!eventIsNew && !crossIsNew && !netMoveIsNew) return null;
+  /* LA VAGUE PORTE-T-ELLE ENCORE LE TRADE ? (06/09/2026)
+   * Aucune tranche tant que la Blue Wave 15m progresse dans le sens de la
+   * position. Benjamin, apres avoir vu un short ferme en dix-sept minutes
+   * juste avant la descente qui a produit 6.32% deux heures plus tard :
+   * "le grand defaut a ete de ne pas tenir car sans le savoir il etait au
+   * bon endroit... quand il est coherent avec la vague, il s y tient".
+   * Un evenement de cadence marque un moment d activite -- il peut aussi bien
+   * etre le debut du vrai mouvement que sa fin. Seule la vague le dit. */
+  const bwNow = batonState && typeof batonState.live15Bw === 'number' ? batonState.live15Bw : null;
+  if (bwNow !== null) {
+    if (trade.bw15Ref === undefined || trade.bw15Ref === null) trade.bw15Ref = bwNow;
+    const penteBw = bwNow - trade.bw15Ref;
+    const porte = Math.abs(penteBw) >= 2 &&
+                  ((penteBw > 0 && trade.direction === 'long') ||
+                   (penteBw < 0 && trade.direction === 'short'));
+    if (porte) { trade.lastVaguePorte = new Date().toISOString(); return null; }
+    trade.bw15Ref = bwNow;
+  }
 
   // FILTRE DIRECTIONNEL (02/08/2026) : ne pas consommer de tranche quand le
   // mouvement va contre la position au-dela de la tolerance. Sans ce filtre,
