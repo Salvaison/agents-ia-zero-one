@@ -219,10 +219,13 @@ function majBuffer(state, b, now) {
     cadM: num(b.cadenceMultiplier),
     pmMult: num(b.priceMoveMult),
     pm: num(b.priceMove),
-    /* Vagues confirmees et pente 3m, pour la lecture de sortie (04/09/2026). */
-    bw15: num(b.live15Bw),
-    lbw15: num(b.live15Lbw),
-    mf15: num(b.live15MoneyFlow),
+    /* Vagues en LIVE et non confirmees (07/09/2026) : la pente d une valeur
+     * qui ne bouge qu au quart d heure est nulle la plupart du temps, donc la
+     * vague n etait jamais jugee portante. C est le live qui dit ce qu elle
+     * fait maintenant. Pente 3m pour la lecture de sortie. */
+    bw15: num(b.live15BwRaw),
+    lbw15: num(b.live15LbwRaw),
+    mf15: num(b.live15MfRaw),
     vsl3: num(b.vwap3Slope),
   });
   while (state.buffer.length > BUFFER_MAX) state.buffer.shift();

@@ -396,7 +396,7 @@ function checkInvalidation(trade, batonState, config, price) {
    * dans le sens de la position, le flux eteint ou inverse ne signifie rien --
    * c est le zigzag ordinaire d un mouvement qui se poursuit. La vigilance ne
    * s ouvre qu au plat de la vague, ou le retournement se joue reellement. */
-  const bwInv = batonState && typeof batonState.live15Bw === 'number' ? batonState.live15Bw : null;
+  const bwInv = batonState && typeof batonState.live15BwRaw === 'number' ? batonState.live15BwRaw : null;
   if (bwInv !== null) {
     if (trade.bw15RefInv === undefined || trade.bw15RefInv === null) trade.bw15RefInv = bwInv;
     const pInv = bwInv - trade.bw15RefInv;
@@ -623,7 +623,7 @@ function checkTrancheProgress(trade, batonState, primaryVol, volByTf, config) {
    * bon endroit... quand il est coherent avec la vague, il s y tient".
    * Un evenement de cadence marque un moment d activite -- il peut aussi bien
    * etre le debut du vrai mouvement que sa fin. Seule la vague le dit. */
-  const bwNow = batonState && typeof batonState.live15Bw === 'number' ? batonState.live15Bw : null;
+  const bwNow = batonState && typeof batonState.live15BwRaw === 'number' ? batonState.live15BwRaw : null;
   if (bwNow !== null) {
     if (trade.bw15Ref === undefined || trade.bw15Ref === null) trade.bw15Ref = bwNow;
     const penteBw = bwNow - trade.bw15Ref;
