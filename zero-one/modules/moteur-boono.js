@@ -144,7 +144,17 @@ const TIMEOUT_MINUTES = 240;
 /* Dimensionnement : 1% de 1000 USD a 10x, soit 100 USD de notionnel.
  * Le levier de 10 est le plafond reglementaire europeen. */
 const CAPITAL_USD = 1000;
-const POSITION_PERCENT = 1;
+/* DIMENSIONNEMENT REVU (06/09/2026). L ancienne regle engageait 1% du
+ * capital -- 100 USD de notionnel -- ce qui n est pas la meme chose que
+ * RISQUER 1%. Benjamin : "la strategie de preservation du capital est de ne
+ * pas risquer plus que 1% du capital et non de seulement engager 1%".
+ * Mesure sur 108 sorties : les six stops ont coupe entre 507 et 546 USD
+ * d ecart, la pire sortie hors stop a 354 USD, la mediane des perdantes a
+ * 219. Un stop de 545 USD sur 1500 de notionnel coute 1.03 USD, soit 0.1%
+ * du capital -- dix fois moins que le risque autorise.
+ * Reste conservateur a dessein : ces trades n ont pas encore traverse un
+ * mouvement violent comme le squeeze du 19/08. */
+const POSITION_PERCENT = 15;
 const LEVIER = 10;
 const NOTIONNEL_USD = CAPITAL_USD * POSITION_PERCENT / 100 * LEVIER;
 
