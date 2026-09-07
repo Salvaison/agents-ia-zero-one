@@ -186,7 +186,15 @@ function computePnlPercent(trade, exitPrice) {
 }
 
 const ORDER_DEFAULTS = {
-  leverage: 25, // baisse de 50x le 04/08/2026 -- comparaison risque/PnL sur 5 jours, decision Benjamin
+  /* Levier ramene a 10 le 06/09/2026 : c est le plafond reglementaire
+   * europeen pour un particulier, verifie sur le compte OKX, donc la seule
+   * valeur executable en reel.
+   * Effet sur le seul filet du simulateur -- il n a pas de stop manuel, la
+   * liquidation le protege : a 25x elle coupait a 4% de mouvement adverse,
+   * a 10x elle recule a 10%, soit environ 8000 USD au prix actuel. Benjamin :
+   * un trade engage dans une zone neutre doit pouvoir attendre que le range
+   * se resolve plutot que d etre coupe par impatience. */
+  leverage: 10,
   orderType: 'market',
   openType: 'isolated', // marge isolee -- necessaire pour que la liquidation par levier soit un vrai plafond
 };
@@ -760,6 +768,37 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
       return `[TRADE-SIM] ${module.toUpperCase()} ${direction} LIQUIDER @ ${price} (mouvement violent ${moveOneCycle.toFixed(3)}%, tranche 0)`;
     }
   }
+  /* STOP MANUEL (06/09/2026). Le simulateur n avait pour tout filet que la
+   * liquidation par levier et la liquidation instantanee sur mouvement
+   * violent. Avec le levier ramene a 10 et la position portee a 15% du
+   * capital, une liquidation couterait 15% -- bien au-dela du 1% que la
+   * regle autorise.
+   * Le stop coupe a STOP_USD d ecart adverse, soit environ 0.95% du capital
+   * sur 1500 USD de notionnel. Il ne remplace pas les deux autres filets :
+   * il agit avant eux, et leur laisse les cas ou le prix saute par-dessus. */
+  const STOP_USD = 500;
+  const ecartAdverse = trade.direction === 'long'
+    ? trade.entryPrice - price : price - trade.entryPrice;
+  if (ecartAdverse >= STOP_USD) {
+    const direction = trade.direction;
+    appendHistory({
+      module, direction,
+      entryPrice: trade.entryPrice,
+      entryTimestamp: trade.entryTimestamp,
+      exitPrice: price,
+      exitTimestamp: new Date().toISOString(),
+      exitReason: 'stop ' + STOP_USD + ' USD (ecart ' + ecartAdverse.toFixed(0) + ')',
+      leverage: trade.leverage,
+      positionSizePercent: trade.positionSizePercent,
+      pnlPercent: computePnlPercent(trade, price),
+    });
+    recordLossExit(module);
+    state[module] = null;
+    saveState(state);
+    return '[TRADE-SIM] ' + module.toUpperCase() + ' ' + direction + ' STOP @ ' + price
+           + ' (ecart ' + ecartAdverse.toFixed(0) + ' USD)';
+  }
+
   trade.lastPriceSeen = price;
 
   // 0. Liquidation par levier -- verifiee a CHAQUE tick DES L'ENTREE (mode

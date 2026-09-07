@@ -46,7 +46,8 @@
     }
   },
   "positionSizing": {
-    "maxCapitalPercentPerTrade": 1
+    "maxCapitalPercentPerTrade": 15,
+    "_note": "Pourcentage du capital ENGAGE en marge par trade. Passe de 1 a 15 le 06/09/2026 : la regle est de ne pas RISQUER plus de 1% du capital, pas de n engager que 1%. A 15% de marge et levier 10, le notionnel vaut 1500 USD sur 1000 de capital, et un mouvement adverse de 0.7% coute 10 USD -- soit 1% du capital."
   },
   "leverage": {
     "scalp": {
