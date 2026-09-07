@@ -88,7 +88,16 @@ const BW15_VETO = 30;
  * Seuils mesures sur 24h de vague 15m confirmee -- le BW varie de 0.88 en
  * mediane sur cinq minutes et 10.05 au p90, le MoneyFlow de 0.33 et 2.42.
  * Le BW bouge quatre fois plus vite, d'ou des seuils proportionnes. */
-const BW_PLAT = 7;          /* sous cette pente sur 5 min, la vague stagne */
+/* ZONE NEUTRE A QUATRE CRITERES (06/09/2026). Le BW seul la declarait 82%
+ * du temps -- parce qu il ne s actualise qu au quart d heure, sa pente est
+ * nulle la plupart du temps. Un indicateur fige ne peut pas dire si la vague
+ * progresse maintenant.
+ * Benjamin : "il ne faut pas que prendre en compte BW mais aussi et surtout
+ * MF PM et Vol, la liquidite". Les quatre reunis ramenent la vigilance a
+ * 22% du temps -- un etat rare, donc significatif. */
+const BW_PLAT = 2;
+const PM_CALME = 1;        /* multiplicateur de priceMove */
+const VOL_CALME = 10;      /* BTC sur la fenetre de 200 ticks */          /* sous cette pente sur 5 min, la vague stagne */
 const MF_PLAT = 2;
 /* Retournement du Vslope3 entre deux releves consecutifs. Mesure : un ecart
  * de 5 survient sur 6.5% des releves, 3 sur 9.7%, 8 sur 3.3%. */
@@ -561,8 +570,11 @@ function gererPosition(state, b, fond, prix, now, reg) {
    * franc. */
   const bwP = pente(state.buffer, 'bw15', PENTE_FENETRE);
   const mfP = pente(state.buffer, 'mf15', PENTE_FENETRE);
+  const pmM = num(b.priceMoveMult), volB = num(b.volumeFenetreBtc);
   const vagueNeutre = (bwP !== null && Math.abs(bwP) < BW_PLAT) &&
-                      (mfP === null || Math.abs(mfP) < MF_PLAT);
+                      (mfP === null || Math.abs(mfP) < MF_PLAT) &&
+                      (pmM === null || pmM < PM_CALME) &&
+                      (volB === null || volB < VOL_CALME);
 
   /* La vague a-t-elle quitte la zone neutre depuis l'entree ? Tant que non,
    * on est encore dans le plat ou la position a ete ouverte : le Vslope3 y
@@ -591,7 +603,7 @@ function gererPosition(state, b, fond, prix, now, reg) {
 
   /* LE MONEYFLOW A CONTRESENS pendant un mouvement favorable signale un
    * echec de poussee : on sort sans attendre. */
-  if (pnl > 0.2 && fond.mf15 !== null) {
+  if (pos.vagueSortie && pnl > 0.2 && fond.mf15 !== null) {
     const sensMf = fond.mf15 > 0 ? 'long' : 'short';
     if (sensMf !== pos.direction) {
       sortir('MoneyFlow15 a contresens', pos.restant); state.position = null; return;
@@ -600,7 +612,15 @@ function gererPosition(state, b, fond, prix, now, reg) {
 
   /* TRANCHES. En cascade, on ne sort pas sur objectif : on suit la tendance
    * jusqu'a ce qu'elle casse. */
-  if (reg.nom !== 'cascade') {
+  /* Les tranches ne se declenchent que si la VAGUE NE PORTE PLUS le trade
+   * (06/09/2026). Tant que la pente du BW va dans le sens de la position, on
+   * laisse courir : Benjamin, apres un short ferme en dix-sept minutes juste
+   * avant la descente qui a produit 6.32% deux heures plus tard -- "quand il
+   * a fait son entree et qu il est coherent avec la vague, il s y tient". */
+  const vaguePorte = bwP !== null && Math.abs(bwP) >= BW_PLAT &&
+                     ((bwP > 0 && pos.direction === 'long') ||
+                      (bwP < 0 && pos.direction === 'short'));
+  if (reg.nom !== 'cascade' && !vaguePorte) {
     for (let i = pos.trancheStage; i < TRANCHES.length; i++) {
       const t = TRANCHES[i];
       if (t.gainPct === null) break;
