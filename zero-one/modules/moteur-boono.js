@@ -226,7 +226,7 @@ function majBuffer(state, b, now) {
     bw15: num(b.live15BwRaw),
     lbw15: num(b.live15LbwRaw),
     mf15: num(b.live15MfRaw),
-    vsl3: num(b.vwap3Slope),
+    vsl3: num(b.vwapLiveSlope),   /* pente LIVE (08/09/2026), voir plus bas */
   });
   while (state.buffer.length > BUFFER_MAX) state.buffer.shift();
 }
@@ -618,7 +618,16 @@ function gererPosition(state, b, fond, prix, now, reg) {
   }
 
   if (vagueNeutre && pos.vagueSortie) {
-    const vs3 = num(b.vwap3Slope);
+    /* PENTE LIVE ET NON CONFIRMEE (08/09/2026). Le vwap3Slope est la
+     * difference entre deux VWAP3 confirmes : il ne bouge qu aux clotures de
+     * bougie, donc par paliers de trois minutes. Mesure du 06/09 : la pente
+     * live le devance d une a trois minutes, et affiche parfois le sens
+     * OPPOSE pendant qu il reste fige -- a 12h33 elle etait deja negative
+     * quand le confirme montrait encore -2.31, puis il a saute a +0.77.
+     * Avec les conditions empilees en amont -- cycle de vague, escalier des
+     * plateaux -- la sortie arrive deja tard : autant qu elle lise ce qui se
+     * passe maintenant. */
+    const vs3 = num(b.vwapLiveSlope);
     const vs3Prec = precedent(state.buffer, 'vsl3');
     if (vs3 !== null && vs3Prec !== null) {
       const ecart = vs3 - vs3Prec;
