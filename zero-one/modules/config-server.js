@@ -966,7 +966,7 @@ function priceCell(r) {
         '<td class="' + cls(r.vwapLive) + '" style="opacity:0.85; font-size:11px; background:#171f2c;">' + fmt(r.vwapLive,2) + '</td>' +
         '<td class="' + cls(r.vwap3Slope) + '" style="background:#171f2c;">' + fmt(r.vwap3Slope,2) + '</td>' +
         '<td style="text-align:center; padding:2px 0; background:#171f2c;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
-        '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="padding:2px 1px; background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
+        '<td class="' + cls(r.vwapLive) + '" style="padding:2px 1px; background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
         /* Bloc 15m sur fond plus clair (19/08/2026) : c'est de lui que vient
          * la direction -- ecart VW15L-VWAP15 a +0.228 et Vslope15 a +0.243,
          * les deux meilleures mesures directionnelles mesurees. */
@@ -974,7 +974,7 @@ function priceCell(r) {
         '<td class="' + cls(r.live15Vwap) + '" style="opacity:0.85; font-size:11px;">' + fmt(r.live15Vwap,2) + '</td>' +
         '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
         '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
-        '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '" style="border-right:2px solid #5a6b85; padding:2px 1px;">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
+        '<td class="' + cls(r.live15Vwap) + '" style="border-right:2px solid #5a6b85; padding:2px 1px;">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
         '<td class="' + cls(r.priceMove) + '" style="border-left:2px solid #5a6b85; font-weight:600; background:#1e2a3d;">' + fmt(r.priceMove,0) + '</td>' +
         '<td style="border-right:2px solid #5a6b85; background:#171f2c;' +
           ((r.priceMoveMult !== null && r.priceMoveMult >= 3) ? ' font-weight:700; color:#f39c12;' : '') +
@@ -1005,12 +1005,12 @@ function priceCell(r) {
           : _activeTab === 'composite'
           ? /* VWAP 3m et 15m */
             '<td class="' + cls(r.vwap3) + '" style="border-left:3px solid #5a6b85; background:#171f2c;">' + fmt(r.vwap3,2) + '</td>' +
-            '<td class="' + cls(ecartVw(r.vwapLive, r.vwap3)) + '" style="background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
+            '<td class="' + cls(r.vwapLive) + '" style="background:#171f2c;">' + fmt(ecartVw(r.vwapLive, r.vwap3),1) + '</td>' +
             '<td class="' + cls(r.vwap3Slope) + '" style="background:#171f2c;">' + fmt(r.vwap3Slope,2) + '</td>' +
             '<td style="text-align:center; padding:2px 0; background:#171f2c;">' + slopeArrow(r.vwap3SlopeDir) + '</td>' +
             '<td class="' + cls(r.vwapLiveSlope) + '" style="background:#171f2c;">' + fmt(r.vwapLiveSlope,2) + '</td>' +
             '<td class="' + cls(r.vwap15) + '" style="border-left:2px solid #5a6b85;">' + fmt(r.vwap15,2) + '</td>' +
-            '<td class="' + cls(ecartVw(r.live15Vwap, r.vwap15)) + '">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
+            '<td class="' + cls(r.live15Vwap) + '">' + fmt(ecartVw(r.live15Vwap, r.vwap15),1) + '</td>' +
             '<td class="' + cls(r.vwapSlope) + '">' + fmt(r.vwapSlope,2) + '</td>' +
             '<td style="text-align:center; padding:2px 0;">' + slopeArrow(r.vwapSlopeDir) + '</td>' +
             /* Mouvement */
@@ -1022,11 +1022,11 @@ function priceCell(r) {
             '<td>' + fmt(r.volumeFenetreBtc,1) + '</td>' +
             /* Vagues : confirme puis live, pour comparaison */
             '<td class="' + cls(r.mf15Pente) + '" style="border-left:2px solid #5a6b85;" title="pente ' + fmt(r.mf15Pente,2) + '">' + fmt(r.live15MoneyFlow,2) + '</td>' +
-            '<td class="' + cls(varEcart(i, recent, 'live15MfRaw', 'live15MoneyFlow')) + '">' + fmt(ecartVw(r.live15MfRaw, r.live15MoneyFlow),1) + '</td>' +
+            '<td class="' + cls(r.live15MfRaw) + '">' + fmt(ecartVw(r.live15MfRaw, r.live15MoneyFlow),1) + '</td>' +
             '<td class="' + cls(pente10(i, recent, 'live15Bw')) + '" style="background:#171f2c;">' + fmt(r.live15Bw,2) + '</td>' +
-            '<td class="' + cls(varEcart(i, recent, 'live15BwRaw', 'live15Bw')) + '" style="background:#171f2c;">' + fmt(ecartVw(r.live15BwRaw, r.live15Bw),1) + '</td>' +
+            '<td class="' + cls(r.live15BwRaw) + '" style="background:#171f2c;">' + fmt(ecartVw(r.live15BwRaw, r.live15Bw),1) + '</td>' +
             '<td class="' + rel(r.live15Lbw, r.live15Bw) + '">' + fmt(r.live15Lbw,2) + '</td>' +
-            '<td class="' + cls(varEcart(i, recent, 'live15LbwRaw', 'live15Lbw')) + '">' + fmt(ecartVw(r.live15LbwRaw, r.live15Lbw),1) + '</td>'
+            '<td class="' + cls(r.live15LbwRaw) + '">' + fmt(ecartVw(r.live15LbwRaw, r.live15Lbw),1) + '</td>'
           : '<td style="text-align:center; font-size:11px; border-left:3px solid #5a6b85;">' + convCell(r.convictionScore) + '</td>' +
             '<td style="text-align:center; font-size:11px;">' + convCell(r.coherence) + '</td>' +
             '<td style="background:#171f2c;">' + (r.priceSens3 > 0 ? '<span class="up">&#9650;</span>' : (r.priceSens3 < 0 ? '<span class="down">&#9660;</span>' : '0')) + '</td>' +
