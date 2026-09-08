@@ -553,6 +553,10 @@ function resolveVwapSource(primaryVol, volByTf, config) {
     : (primaryVol && primaryVol.vwap);
 }
 
+/* Pente minimale de la Blue Wave live pour que le veto d entree s applique.
+ * En dessous, la vague est jugee plate et ne dit rien du sens (08/09/2026). */
+const VETO_PENTE_MIN = 2;
+let vetoRefBw = null;
 const ADVERSE_TOLERANCE_PCT = 0.02; // % de prix -- au-dela, declencheur ignore (02/08/2026)
 
 const COOLDOWN_PATH = path.join(__dirname, '../data/trade-sim-cooldown.json');
@@ -736,10 +740,35 @@ function simulateModule(module, primaryVol, divRaw, config, volByTf) {
     const entry = evaluateEntryFromBaton(batonState, entryTracker[module], config);
     if (!entry) return null;
 
+    /* VETO DE VAGUE (08/09/2026). L entree est pilotee par le baton, qui
+   * tranche la direction sur un mouvement de prix de 0.06% -- sans jamais
+   * regarder la vague. Dans une descente reguliere, chaque respiration de
+   * 0.06% declenchait donc un long : la nuit du 08/09 en a produit deux, a
+   * -6.30% et -3.94%, sur la meme pente descendante.
+   * Ces erreurs ne pouvaient pas etre rattrapees ensuite : l invalidation
+   * rapide sur flux inverse est desactivee depuis aout -- six sur sept
+   * etaient prematurees -- et celle sur pivot MCB n agit qu au prochain
+   * signal, soit cinquante-trois minutes plus tard dans ce cas.
+   * Mieux vaut ne pas entrer que devoir detecter l erreur apres coup. */
+  const bwEntree = batonState && typeof batonState.live15BwRaw === 'number'
+    ? batonState.live15BwRaw : null;
+  if (bwEntree !== null) {
+    if (vetoRefBw === null) vetoRefBw = bwEntree;
+    const penteEntree = bwEntree - vetoRefBw;
+    vetoRefBw = bwEntree;
+    if (Math.abs(penteEntree) >= VETO_PENTE_MIN) {
+      const sensVague = penteEntree > 0 ? 'long' : 'short';
+      if (sensVague !== entry.direction) {
+        return '[TRADE-SIM] ' + module.toUpperCase() + ' entree ' + entry.direction +
+               ' REFUSEE -- vague a contresens (pente ' + penteEntree.toFixed(1) + ')';
+      }
+    }
+  }
+
     entryTracker[module] = entry.actionTimestamp;
     saveEntryTracker(entryTracker);
 
-    const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
+  const positionSizePercent = (config && config.positionSizing && config.positionSizing.maxCapitalPercentPerTrade) || null;
     const liquidationPrice = computeLiquidationPrice(price, entry.direction, ORDER_DEFAULTS.leverage);
 
     state[module] = {
