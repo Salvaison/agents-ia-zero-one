@@ -30,6 +30,8 @@ launch_chrome() {
   export DISPLAY=:99
   nohup "${CHROME_BIN}" \
     --window-position=0,0 \
+    --hide-crash-restore-bubble \
+    --restore-last-session=false \
     --remote-debugging-port="${CDP_PORT}" \
     --remote-debugging-address=127.0.0.1 \
     --user-data-dir="${USER_DATA_DIR}" \
