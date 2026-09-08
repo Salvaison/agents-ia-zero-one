@@ -586,6 +586,37 @@ function gererPosition(state, b, fond, prix, now, reg) {
     pos.vagueSortie = true;
   }
 
+  /* L ESCALIER DES ZONES NEUTRES (08/09/2026). Une zone neutre plus haute
+   * que la precedente n est pas un retournement : c est une RESPIRATION dans
+   * une progression. Benjamin : "d une zone neutre a une autre on peut voir
+   * que chaque plateau neutre est plus haut que le precedent pour un long et
+   * l inverse en short... le moteur est myope".
+   * Observe le 07/09 : trois plateaux montants a 20h26, 20h37 et 20h44 --
+   * BW 13.1 puis 15.4 puis 17.3 -- suivis chacun d une hausse du prix. Et
+   * l inverse de 22h10 a 00h07, BW de 49.5 a -1.2, avec un mouvement qui
+   * s accentue a chaque marche : -22, -14, -58, -101, -356.
+   * On retient donc le niveau des trois vagues a chaque zone neutre. Tant que
+   * l escalier monte pour un long ou descend pour un short, on ne sort pas. */
+  if (vagueNeutre) {
+    const niv = { bw: num(b.live15BwRaw), lbw: num(b.live15LbwRaw), mf: num(b.live15MfRaw) };
+    if (pos.plateauPrec) {
+      const prog = (c) => (niv[c] !== null && pos.plateauPrec[c] !== null)
+                          ? niv[c] - pos.plateauPrec[c] : null;
+      /* Une marche compte si elle depasse le bruit du plateau lui-meme. */
+      const marches = ['bw', 'lbw', 'mf'].map(prog)
+        .filter((d) => d !== null && Math.abs(d) >= 1);
+      if (marches.length) {
+        const montent = marches.filter((d) => d > 0).length;
+        const sensEscalier = montent > marches.length / 2 ? 'long' : 'short';
+        if (sensEscalier === pos.direction) {
+          pos.plateauPrec = niv;
+          return;   /* l escalier porte encore : aucune sortie discretionnaire */
+        }
+      }
+    }
+    pos.plateauPrec = niv;
+  }
+
   if (vagueNeutre && pos.vagueSortie) {
     const vs3 = num(b.vwap3Slope);
     const vs3Prec = precedent(state.buffer, 'vsl3');
