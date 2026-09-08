@@ -58,9 +58,13 @@ fi
 # On verifie CHAQUE onglet par son intervalle, pas par un simple comptage :
 # deux onglets sur le meme intervalle passaient l'ancien test alors qu'ils
 # sont inutiles et se disputent l'attribution des collecteurs.
-HAS_3M=$(echo "$HEALTH" | grep -c "interval=3\"" || true)
-HAS_15M=$(echo "$HEALTH" | grep -c "2AqpEMfD.*interval=15" || true)
-HAS_TA=$(echo "$HEALTH" | grep -c "qljTf3vu" || true)
+# Nettoyage des doublons avant comptage (08/09/2026) -- voir ferme-doublons.py.
+python3 /root/agents-ia-zero-one/zero-one/ferme-doublons.py 2>/dev/null | grep -v "^3 onglet" || true
+HEALTH=$(curl -sf --max-time 5 "http://localhost:${CDP_PORT}/json/list" 2>/dev/null || echo "")
+
+HAS_3M=$(echo "$HEALTH" | grep -o "interval=3\"" | wc -l)
+HAS_15M=$(echo "$HEALTH" | grep -o "2AqpEMfD[^\"]*interval=15" | wc -l)
+HAS_TA=$(echo "$HEALTH" | grep -o "qljTf3vu" | wc -l)
 
 if [ "$HAS_3M" -ge 1 ] && [ "$HAS_15M" -ge 1 ] && [ "$HAS_TA" -ge 1 ]; then
   log "OK — 3 onglets actifs (3m, 15m, TA)"
