@@ -691,3 +691,8 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les hidden/continuation bullish historiques consommées ne restent plus affichées comme relations live.
 - Cas 09/10 : aucune div UP active ; div DOWN 82482,4 / LBW 83,608694 → 83310,9 / LBW 64,855796 conservée.
 - `decisionImpact=false`.
+
+## 2026-10-09 — Wave UI fixed Y-axis overlay
+- Les échelles verticales gauche des bandes 15m et 3m restent fixes au-dessus du défilement horizontal.
+- Overlay limité aux 36 px de marge déjà réservés à l'axe : aucune perte de zone utile pour les courbes.
+- Les graduations reprennent dynamiquement le même `yLimit` que chaque canvas ; aucun impact trading.

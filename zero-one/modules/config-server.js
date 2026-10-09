@@ -2106,7 +2106,13 @@ app.get('/', requireAuth, (req, res) => {
 .wave15-head .wave-band-legend{display:block;text-align:left;margin-top:3px;}
 .wave-band-legend{font-size:9.5px;color:#666;white-space:normal;text-align:right;line-height:1.3;}
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
+.wave-scroll-shell{position:relative;width:100%;}
 .wave-scroll{width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;}
+.wave-y-axis{position:absolute;left:0;top:0;z-index:6;width:36px;height:185px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 78%,rgba(255,255,255,.88) 92%,rgba(255,255,255,0) 100%);}
+.wave-y-axis::after{content:'';position:absolute;right:0;top:13px;bottom:19px;border-right:1px solid rgba(150,150,150,.22);}
+.wave-y-tick{position:absolute;right:5px;transform:translateY(-50%);font:9px 'SF Mono',Menlo,Consolas,monospace;color:#888;white-space:nowrap;text-shadow:0 1px 0 #fff;}
+.wave-y-tick.threshold{font-weight:700;color:#555;}
+.wave-y-tick.zero{font-weight:700;color:#2f80ed;}
 .wave-scroll.top{scrollbar-width:none;}
 .wave-scroll.top::-webkit-scrollbar{display:none;}
 .wave-canvas-track{width:100%;min-width:100%;position:relative;}
@@ -2126,7 +2132,7 @@ app.get('/', requireAuth, (req, res) => {
 .wave-report-body{padding:9px;}
 .wave-report-body .diag-module{margin-bottom:0;}
 .wave-report-loading{font-size:11px;color:#666;padding:12px 4px;}
-@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
+@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-y-axis{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
 </style>
 <div id="waveReplayApp" class="wave-replay-shell">
   <div class="wave-replay-head">
@@ -2137,13 +2143,13 @@ app.get('/', requireAuth, (req, res) => {
   <div class="wave-band">
     <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span><div class="wave-scale-actions"><button id="waveScale24" class="wave-scale-btn active" type="button">24H</button><button id="waveScale48" class="wave-scale-btn" type="button">48H</button></div></div><span class="wave-band-legend">BW noir · LBW noir fin · MF gris · VWAP jaune · UP vert · DN rouge · DIV vert/rouge · plein = régulière · pointillé = continuation</span></div>
     <div id="wave15MaInfo" class="wave-ma-info">MA200 —</div>
-    <div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div>
+    <div class="wave-scroll-shell"><div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div><div id="wave15YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
   </div>
   <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue pour afficher le résumé du trade.</span></div>
   <div class="wave-band">
     <div class="wave-band-head"><span class="wave-band-title">VAGUE 3m — LIVE intra-bougie</span><span class="wave-band-legend">même échelle visuelle · curseur synchronisé</span></div>
     <div id="wave3MaInfo" class="wave-ma-info">MA200 —</div>
-    <div id="wave3Scroll" class="wave-scroll bottom"><div class="wave-canvas-track"><canvas id="wave3Canvas" class="wave-canvas"></canvas></div></div>
+    <div class="wave-scroll-shell"><div id="wave3Scroll" class="wave-scroll bottom"><div class="wave-canvas-track"><canvas id="wave3Canvas" class="wave-canvas"></canvas></div></div><div id="wave3YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
     <div class="wave-scroll-meta"><span id="waveHistoryStatus">6 h visibles · chargement historique…</span></div>
   </div>
   <div id="waveTradeOverlay" class="wave-report-overlay" aria-hidden="true">
@@ -2483,6 +2489,19 @@ function waveMaInfo(ma) {
   return 'MA200 '+waveNum(ma.price,1)+' · '+side+' '+signed+' · '+test;
 }
 
+function waveDrawFixedYAxis(key,yLimit,H,T,B,guides) {
+  const id=key==='wave15'?'wave15YAxis':'wave3YAxis';
+  const axis=document.getElementById(id);
+  if(!axis)return;
+  axis.style.height=H+'px';
+  const h=H-T-B;
+  const y=function(v){return T+(yLimit-Math.max(-yLimit,Math.min(yLimit,Number(v))))/(2*yLimit)*h;};
+  axis.innerHTML=(guides||[]).map(function(v){
+    const cls='wave-y-tick'+(Math.abs(v)===60?' threshold':'')+(v===0?' zero':'');
+    return '<span class="'+cls+'" style="top:'+y(v).toFixed(1)+'px">'+escTrade(String(v))+'</span>';
+  }).join('');
+}
+
 function drawWaveBand(canvas, key, idx) {
   if (!canvas || !waveReplayData || !waveReplayData.frames.length) return;
   const frames = waveReplayData.frames;
@@ -2517,6 +2536,7 @@ function drawWaveBand(canvas, key, idx) {
   const zeroY = y(0);
 
   const guides = [-90,-60,-30,0,30,60,90].filter(function(v){return Math.abs(v)<=yLimit;});
+  waveDrawFixedYAxis(key,yLimit,H,T,B,guides);
   guides.forEach(function(v) {
     const yy=y(v),threshold=Math.abs(v)===60;
     ctx.save();
