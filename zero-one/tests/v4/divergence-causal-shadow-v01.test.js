@@ -62,7 +62,7 @@ assert.strictEqual(daily.points.length,2);
 }
 
 
-// V0.4: local causal E15 bullish model must prefer meaningful local structures,
+// V0.5: local causal E15 bullish model must prefer meaningful local structures,
 // not long-range mathematically-valid weak comparisons.
 {
   const piv=[
@@ -90,4 +90,31 @@ assert.strictEqual(daily.points.length,2);
   assert.strictEqual(r.end.extremeTs,17);
 }
 
-console.log('Divergence causal shadow v0.4 tests OK');
+
+// V0.5: bearish 15m uses the same causal local E15 lineage.
+// Regression for 09/10/2026: price makes a materially higher high while LBW
+// prints a lower crest. The lineage must retain the strong 06:00 anchor and
+// extend to the latest qualifying crest instead of falling back to a smaller
+// persistent-signal divergence.
+{
+  const piv=[
+    {type:'CRETE',extremeTs:1,confirmedAt:2,price:82482.4,lbw:83.608694},
+    {type:'CRETE',extremeTs:3,confirmedAt:4,price:82580.0,lbw:62.756565},
+    {type:'CRETE',extremeTs:5,confirmedAt:6,price:82625.0,lbw:60.081522},
+    {type:'CRETE',extremeTs:7,confirmedAt:8,price:82663.8,lbw:58.994407},
+    {type:'CRETE',extremeTs:9,confirmedAt:10,price:82713.3,lbw:53.126714},
+    {type:'CRETE',extremeTs:11,confirmedAt:12,price:82683.0,lbw:53.306690},
+    {type:'CRETE',extremeTs:13,confirmedAt:14,price:83310.9,lbw:64.855796}
+  ];
+  const lines=d.localBearish15mFromPivots(piv);
+  assert.strictEqual(lines.length,1);
+  const r=lines[0];
+  assert.strictEqual(r.direction,'bearish');
+  assert.strictEqual(r.source,'CAUSAL_E15_LOCAL_DIVERGENCE');
+  assert.strictEqual(r.start.extremeTs,1);
+  assert.strictEqual(r.end.extremeTs,13);
+  assert(r.strength.priceDeltaUsd>800);
+  assert(r.strength.lbwDelta>18);
+}
+
+console.log('Divergence causal shadow v0.5 tests OK');

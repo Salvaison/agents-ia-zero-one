@@ -677,3 +677,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Comptabilité fee-aware par trajectoire ; classement en PNL net, delta/mutilation/bénéfice vs HOLD.
 - Évaluations compactes ; résultat complet écrit une seule fois à la clôture dans `data/trade-sim-v4-tp-shadow.ndjson`.
 - Interface V4 expose état du shadow et classement final.
+
+## 2026-10-09 — Divergence causal shadow v0.5
+- Correction d'une divergence baissière 15m manquante observée visuellement le 09/10.
+- Bearish regular 15m bascule du modèle de signal persistant vers le même flux E15 local causal que le bullish.
+- Cas régression : 82482,4 / LBW 83,608694 → 83310,9 / LBW 64,855796.
+- Sélection par extrémité causale la plus récente ; pour une ancre, extension au plus haut prix qualifiant.
+- Hidden/continuation bearish inchangées ; `decisionImpact=false`.

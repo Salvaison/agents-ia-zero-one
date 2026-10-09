@@ -14,7 +14,7 @@
  * - current forming divergences may use the live/current row.
  */
 
-const VERSION='divergence-causal-shadow-v0.4';
+const VERSION='divergence-causal-shadow-v0.5';
 const DECISION_IMPACT=false;
 const structuralTrajectory=require('../layers/structural-trajectory');
 
@@ -468,6 +468,51 @@ function localBullish15mLines(seriesRows){
   return localBullish15mFromPivots(causalDivergencePivots15m(seriesRows));
 }
 
+function localBearish15mFromPivots(pivots){
+  const cfg=CFG['15m'];
+  const crests=(pivots||[])
+    .filter(p=>p.type==='CRETE')
+    .slice()
+    .sort((a,b)=>Number(a.extremeTs)-Number(b.extremeTs));
+  const candidates=[];
+  for(let i=0;i<crests.length-1;i++){
+    const a=crests[i];
+    const ends=crests.slice(i+1).filter(b=>
+      Number(b.price)>=Number(a.price)+cfg.minPriceDelta&&
+      Number(b.lbw)<=Number(a.lbw)-cfg.minLbwDelta
+    );
+    if(!ends.length)continue;
+    // For one causal anchor, extend to the highest qualifying price crest.
+    // If price ties, prefer the most recent E15.
+    ends.sort((x,y)=>
+      Number(y.price)-Number(x.price)||
+      Number(y.extremeTs)-Number(x.extremeTs)
+    );
+    const b=ends[0];
+    candidates.push({
+      kind:'REGULAR',subtype:'E15_LOCAL_REGULAR',
+      direction:'bearish',status:'CONFIRMED',start:a,end:b,
+      source:'CAUSAL_E15_LOCAL_DIVERGENCE',decisionImpact:false,
+      strength:{
+        priceDeltaUsd:Number(b.price)-Number(a.price),
+        lbwDelta:Number(a.lbw)-Number(b.lbw)
+      }
+    });
+  }
+  // Display only the most recently completed bearish E15 divergence. This is
+  // symmetric with the bullish local model and prevents old valid anchors from
+  // dominating the current Wave chart.
+  candidates.sort((a,b)=>
+    Number(b.end.extremeTs)-Number(a.end.extremeTs)||
+    Number(b.strength.lbwDelta)-Number(a.strength.lbwDelta)
+  );
+  return candidates.slice(0,1);
+}
+
+function localBearish15mLines(seriesRows){
+  return localBearish15mFromPivots(causalDivergencePivots15m(seriesRows));
+}
+
 function causalHiddenCandidates3m(seriesRows,direction){
   const cfg=CFG['3m'],bull=direction==='bullish';
   const series=orderedSeries(seriesRows);
@@ -556,16 +601,15 @@ function detectTimeframe(seriesRows,auditRows,tf){
     ];
     lines=[...(regular.slice(0,1))];
   }else{
-    // 15m bullish divergences use a dedicated non-merged causal E15 stream.
-    // This prevents old, mathematically-valid but structurally weak anchors from
-    // dominating the chart. Bearish regular lineage remains on the validated
-    // persistent-signal model until equivalent bearish cases are reviewed.
+    // 15m regular divergences use the same non-merged causal E15 pivot stream
+    // on both sides. This avoids missing a clear bearish price-HH / LBW-LH
+    // divergence merely because the native/persistent signal did not print at
+    // the strongest oscillator crest. Hidden bearish structures remain
+    // unpromoted until separately validated.
     const localBull=localBullish15mLines(series);
-    const bearConfirmed=lines.filter(x=>
-      x.kind==='REGULAR'&&x.status==='CONFIRMED'&&x.direction==='bearish'
-    ).sort((a,b)=>(b.end.confirmedAt||b.end.extremeTs)-(a.end.confirmedAt||a.end.extremeTs))[0]||null;
+    const localBear=localBearish15mLines(series);
     const bearForming=lines.filter(x=>x.direction==='bearish'&&x.status==='FORMING');
-    lines=[...localBull,bearConfirmed,...bearForming].filter(Boolean);
+    lines=[...localBull,...localBear,...bearForming].filter(Boolean);
   }
 
   lines.sort((a,b)=>(a.start.confirmedAt||a.start.extremeTs)-(b.start.confirmedAt||b.start.extremeTs));
@@ -986,6 +1030,7 @@ module.exports={
   orderedSeries,signalRuns,structuralSignalPivots,regularLineages,
   priceSwingPivots,formingRegular,formingHidden,confirmedHiddenLineage,
   causalDivergencePivots15m,localBullish15mFromPivots,localBullish15mLines,
+  localBearish15mFromPivots,localBearish15mLines,
   causalHiddenCandidates3m,localLbwPivots,localRegularLines,continuationAfterRegular,
   formingHiddenFromLocalLbw,nativeCsvSignalPivots,anchorMultidiv,
   causalPriceSwings,anchoredContinuationChain,
