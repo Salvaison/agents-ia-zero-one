@@ -14,7 +14,7 @@
  * - current forming divergences may use the live/current row.
  */
 
-const VERSION='divergence-causal-shadow-v0.5';
+const VERSION='divergence-causal-shadow-v0.7';
 const DECISION_IMPACT=false;
 const structuralTrajectory=require('../layers/structural-trajectory');
 
@@ -410,9 +410,56 @@ function causalDivergencePivots15m(seriesRows){
   return out;
 }
 
-function localBullish15mFromPivots(pivots){
+function regularAnchorConsumedAt(seriesRows,pivots,anchor,direction){
+  if(!Array.isArray(seriesRows)||!seriesRows.length||!anchor)return null;
+  const cfg=CFG['15m'],bull=direction==='bullish';
+  const sameType=(pivots||[])
+    .filter(p=>p.type===anchor.type&&Number(p.extremeTs)>Number(anchor.extremeTs))
+    .sort((a,b)=>Number(a.extremeTs)-Number(b.extremeTs));
+  const firstDivergent=sameType.find(p=>bull
+    ? Number(p.price)<=Number(anchor.price)-cfg.minPriceDelta&&Number(p.lbw)>=Number(anchor.lbw)+cfg.minLbwDelta
+    : Number(p.price)>=Number(anchor.price)+cfg.minPriceDelta&&Number(p.lbw)<=Number(anchor.lbw)-cfg.minLbwDelta
+  );
+  if(!firstDivergent)return null;
+  const from=Number(firstDivergent.confirmedAt||firstDivergent.extremeTs);
+  // seriesRows is already ordered in detectTimeframe; avoid rebuilding it for
+  // every anchor. Once the first divergence from an anchor exists, the first
+  // causal reclaim of the anchor price consumes that anchor for future lines.
+  for(const r of seriesRows){
+    if(Number(r.ts)<=from)continue;
+    const reclaimed=bull
+      ? Number(r.high)>=Number(anchor.price)
+      : Number(r.low)<=Number(anchor.price);
+    if(reclaimed)return Number(r.ts);
+  }
+  return null;
+}
+
+function regularAnchorConsumedBeforeEnd(seriesRows,pivots,anchor,end,direction){
+  const at=regularAnchorConsumedAt(seriesRows,pivots,anchor,direction);
+  return Number.isFinite(at)&&Number(at)<Number(end&&end.extremeTs);
+}
+
+function hiddenLineConsumed(seriesRows,line){
+  if(!line||line.kind!=='CONTINUATION'||!line.start||!line.end)return false;
+  const bull=line.direction==='bullish';
+  const series=orderedSeries(seriesRows);
+  const a=Number(line.start.extremeTs),b=Number(line.end.extremeTs);
+  const between=series.filter(r=>Number(r.ts)>a&&Number(r.ts)<b);
+  if(!between.length)return false;
+  const barrier=bull
+    ? Math.max(...between.map(r=>Number(r.high)))
+    : Math.min(...between.map(r=>Number(r.low)));
+  const after=series.filter(r=>Number(r.ts)>Number(line.end.confirmedAt||line.end.extremeTs));
+  return bull
+    ? after.some(r=>Number(r.high)>=barrier)
+    : after.some(r=>Number(r.low)<=barrier);
+}
+
+function localBullish15mFromPivots(pivots,seriesRows=null){
   const cfg=CFG['15m'];
   const troughs=(pivots||[]).filter(p=>p.type==='CREUX').slice().sort((a,b)=>a.extremeTs-b.extremeTs);
+  const consumedAtByAnchor=new Map();
   const regularCandidates=[];
   for(let i=0;i<troughs.length-1;i++){
     const a=troughs[i];
@@ -423,6 +470,12 @@ function localBullish15mFromPivots(pivots){
     if(!ends.length)continue;
     ends.sort((x,y)=>(Number(x.price)-Number(y.price))||(Number(y.extremeTs)-Number(x.extremeTs)));
     const b=ends[0];
+    if(seriesRows){
+      const key=Number(a.extremeTs);
+      if(!consumedAtByAnchor.has(key))consumedAtByAnchor.set(key,regularAnchorConsumedAt(seriesRows,pivots,a,'bullish'));
+      const consumedAt=consumedAtByAnchor.get(key);
+      if(Number.isFinite(consumedAt)&&Number(consumedAt)<Number(b.extremeTs))continue;
+    }
     regularCandidates.push({
       kind:'REGULAR',subtype:'E15_LOCAL_REGULAR',
       direction:'bullish',status:'CONFIRMED',start:a,end:b,
@@ -464,8 +517,85 @@ function localBullish15mFromPivots(pivots){
   return [continuation,regular].filter(Boolean);
 }
 
+function latestStructuralAnchor15m(seriesRows,direction){
+  const bull=direction==='bullish';
+  const type=bull?'CREUX':'CRETE';
+  const series=orderedSeries(seriesRows);
+  const turns=structuralTrajectory.structuralTurns({history:series},'15m')
+    .filter(p=>p.type===type);
+  const p=turns[turns.length-1]||null;
+  if(!p)return null;
+  return {
+    type:p.type,
+    direction,
+    confirmedAt:Number(p.confirmedAt),
+    confirmedTimestamp:p.confirmedTimestamp||new Date(Number(p.confirmedAt)).toISOString(),
+    extremeTs:Number(p.extremeTs),
+    extremeTimestamp:p.extremeTimestamp||new Date(Number(p.extremeTs)).toISOString(),
+    drawTs:Number(p.extremeTs),
+    lbw:Number(p.lbw),
+    price:Number(p.price),
+    source:'STRUCTURAL_TRAJECTORY_E15_ANCHOR'
+  };
+}
+
+function activeRegular15mFromStructuralAnchor(seriesRows,direction){
+  const cfg=CFG['15m'],bull=direction==='bullish';
+  const anchor=latestStructuralAnchor15m(seriesRows,direction);
+  if(!anchor)return null;
+  const piv=causalDivergencePivots15m(seriesRows)
+    .filter(p=>p.type===anchor.type&&Number(p.extremeTs)>Number(anchor.extremeTs));
+  const ends=piv.filter(p=>bull
+    ? Number(p.price)<=Number(anchor.price)-cfg.minPriceDelta&&Number(p.lbw)>=Number(anchor.lbw)+cfg.minLbwDelta
+    : Number(p.price)>=Number(anchor.price)+cfg.minPriceDelta&&Number(p.lbw)<=Number(anchor.lbw)-cfg.minLbwDelta
+  );
+  if(!ends.length)return null;
+  // Extend one causal relation to the strongest qualifying price extreme.
+  ends.sort((a,b)=>bull
+    ? (Number(a.price)-Number(b.price))||(Number(b.extremeTs)-Number(a.extremeTs))
+    : (Number(b.price)-Number(a.price))||(Number(b.extremeTs)-Number(a.extremeTs))
+  );
+  const end=ends[0];
+  return {
+    kind:'REGULAR',subtype:'STRUCTURAL_E15_REGULAR',
+    direction,status:'CONFIRMED',start:anchor,end,
+    source:'CAUSAL_E15_STRUCTURAL_ANCHOR_DIVERGENCE',decisionImpact:false,
+    strength:{
+      priceDeltaUsd:bull?Number(anchor.price)-Number(end.price):Number(end.price)-Number(anchor.price),
+      lbwDelta:bull?Number(end.lbw)-Number(anchor.lbw):Number(anchor.lbw)-Number(end.lbw)
+    }
+  };
+}
+
+function activeHidden15mFromStructuralAnchor(seriesRows,direction){
+  const cfg=CFG['15m'],bull=direction==='bullish';
+  const anchor=latestStructuralAnchor15m(seriesRows,direction);
+  if(!anchor)return null;
+  const piv=causalDivergencePivots15m(seriesRows)
+    .filter(p=>p.type===anchor.type&&Number(p.extremeTs)>Number(anchor.extremeTs))
+    .sort((a,b)=>Number(a.extremeTs)-Number(b.extremeTs));
+  const end=piv[piv.length-1]||null;
+  if(!end)return null;
+  const ok=bull
+    ? Number(end.price)>=Number(anchor.price)+cfg.hiddenMinPriceDelta&&Number(end.lbw)<=Number(anchor.lbw)-cfg.hiddenMinLbwDelta
+    : Number(end.price)<=Number(anchor.price)-cfg.hiddenMinPriceDelta&&Number(end.lbw)>=Number(anchor.lbw)+cfg.hiddenMinLbwDelta;
+  if(!ok)return null;
+  return {
+    kind:'CONTINUATION',subtype:'STRUCTURAL_E15_HIDDEN_ACTIVE',
+    direction,status:'CONFIRMED',start:anchor,end,
+    source:'CAUSAL_E15_STRUCTURAL_ANCHOR_HIDDEN',decisionImpact:false,
+    strength:{
+      priceDeltaUsd:Math.abs(Number(end.price)-Number(anchor.price)),
+      lbwDelta:Math.abs(Number(end.lbw)-Number(anchor.lbw))
+    }
+  };
+}
+
 function localBullish15mLines(seriesRows){
-  return localBullish15mFromPivots(causalDivergencePivots15m(seriesRows));
+  return [
+    activeHidden15mFromStructuralAnchor(seriesRows,'bullish'),
+    activeRegular15mFromStructuralAnchor(seriesRows,'bullish')
+  ].filter(Boolean);
 }
 
 function localBearish15mFromPivots(pivots){
@@ -510,7 +640,7 @@ function localBearish15mFromPivots(pivots){
 }
 
 function localBearish15mLines(seriesRows){
-  return localBearish15mFromPivots(causalDivergencePivots15m(seriesRows));
+  return [activeRegular15mFromStructuralAnchor(seriesRows,'bearish')].filter(Boolean);
 }
 
 function causalHiddenCandidates3m(seriesRows,direction){
@@ -1029,7 +1159,9 @@ module.exports={
   VERSION,DECISION_IMPACT,CFG,
   orderedSeries,signalRuns,structuralSignalPivots,regularLineages,
   priceSwingPivots,formingRegular,formingHidden,confirmedHiddenLineage,
-  causalDivergencePivots15m,localBullish15mFromPivots,localBullish15mLines,
+  causalDivergencePivots15m,regularAnchorConsumedAt,regularAnchorConsumedBeforeEnd,hiddenLineConsumed,
+  latestStructuralAnchor15m,activeRegular15mFromStructuralAnchor,activeHidden15mFromStructuralAnchor,
+  localBullish15mFromPivots,localBullish15mLines,
   localBearish15mFromPivots,localBearish15mLines,
   causalHiddenCandidates3m,localLbwPivots,localRegularLines,continuationAfterRegular,
   formingHiddenFromLocalLbw,nativeCsvSignalPivots,anchorMultidiv,

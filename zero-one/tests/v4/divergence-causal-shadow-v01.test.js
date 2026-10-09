@@ -62,7 +62,7 @@ assert.strictEqual(daily.points.length,2);
 }
 
 
-// V0.5: local causal E15 bullish model must prefer meaningful local structures,
+// V0.6: local causal E15 bullish model must prefer meaningful local structures,
 // not long-range mathematically-valid weak comparisons.
 {
   const piv=[
@@ -117,4 +117,72 @@ assert.strictEqual(daily.points.length,2);
   assert(r.strength.lbwDelta>18);
 }
 
-console.log('Divergence causal shadow v0.5 tests OK');
+
+// V0.6: an old bullish anchor cannot be reused after a divergence from that
+// anchor has already translated enough to reclaim the anchor price.
+{
+  const piv=[
+    {type:'CREUX',extremeTs:1,confirmedAt:2,price:100,lbw:-80},
+    {type:'CREUX',extremeTs:10,confirmedAt:11,price:40,lbw:-60},
+    {type:'CREUX',extremeTs:30,confirmedAt:31,price:30,lbw:-50}
+  ];
+  const series=[
+    {ts:1,high:101,low:100,close:100,lt_blue_wave:-80},
+    {ts:10,high:42,low:40,close:41,lt_blue_wave:-60},
+    {ts:12,high:70,low:42,close:68,lt_blue_wave:-40},
+    {ts:20,high:101,low:90,close:100,lt_blue_wave:20},
+    {ts:30,high:32,low:30,close:31,lt_blue_wave:-50},
+    {ts:31,high:34,low:31,close:33,lt_blue_wave:-45}
+  ];
+  assert.strictEqual(d.regularAnchorConsumedBeforeEnd(series,piv,piv[0],piv[2],'bullish'),true);
+}
+
+// V0.6: a hidden bullish continuation is consumed after price breaks the
+// intervening structural high; it must not remain a current Wave relation.
+{
+  const line={
+    kind:'CONTINUATION',direction:'bullish',
+    start:{extremeTs:1,confirmedAt:2,price:100,lbw:-30},
+    end:{extremeTs:10,confirmedAt:11,price:110,lbw:-70}
+  };
+  const series=[
+    {ts:1,high:102,low:100,close:101,lt_blue_wave:-30},
+    {ts:5,high:130,low:115,close:125,lt_blue_wave:40},
+    {ts:10,high:112,low:110,close:111,lt_blue_wave:-70},
+    {ts:11,high:115,low:111,close:114,lt_blue_wave:-60},
+    {ts:20,high:131,low:120,close:130,lt_blue_wave:50}
+  ];
+  assert.strictEqual(d.hiddenLineConsumed(series,line),true);
+}
+
+
+// V0.7: current 15m display anchors to the latest structural E15, while a
+// weaker same-side local pivot may still be the divergence endpoint.
+{
+  const base=1_900_000_000_000,step=15*60*1000;
+  const vals=[20,-80,-60,-40,20,60,40,20,-20,-70,-50,-30,10,50,30,20,-2,-5,-1,2,10,30,10,0];
+  const rows=vals.map((lbw,i)=>({
+    ts:base+i*step,timestamp:new Date(base+i*step).toISOString(),
+    high:90,low:80,close:85,lt_blue_wave:lbw
+  }));
+  rows[1].low=80;
+  rows[5].high=120;
+  rows[9].low=60;
+  rows[13].high=100;
+  rows[17].low=70;   // local trough, too weak in LBW to replace structural CREUX
+  rows[21].high=180; // local crest, lower LBW than structural CRETE -> bearish div
+
+  const bullAnchor=d.latestStructuralAnchor15m(rows,'bullish');
+  const bearAnchor=d.latestStructuralAnchor15m(rows,'bearish');
+  assert(bullAnchor);
+  assert(bearAnchor);
+  assert.strictEqual(bullAnchor.extremeTs,rows[9].ts);
+  assert.strictEqual(bearAnchor.extremeTs,rows[13].ts);
+  assert.strictEqual(d.activeRegular15mFromStructuralAnchor(rows,'bullish'),null);
+  const bear=d.activeRegular15mFromStructuralAnchor(rows,'bearish');
+  assert(bear);
+  assert.strictEqual(bear.start.extremeTs,rows[13].ts);
+  assert.strictEqual(bear.end.extremeTs,rows[21].ts);
+}
+
+console.log('Divergence causal shadow v0.7 tests OK');

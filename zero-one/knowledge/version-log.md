@@ -684,3 +684,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Cas régression : 82482,4 / LBW 83,608694 → 83310,9 / LBW 64,855796.
 - Sélection par extrémité causale la plus récente ; pour une ancre, extension au plus haut prix qualifiant.
 - Hidden/continuation bearish inchangées ; `decisionImpact=false`.
+
+## 2026-10-09 — Divergence causal shadow v0.7
+- Les divergences 15m affichées comme relations actuelles utilisent désormais la dernière ancre E15 structurelle active (`structuralTrajectory`).
+- Les anciennes ancres bullish mathématiquement compatibles mais structurellement périmées ne sont plus réutilisées.
+- Les hidden/continuation bullish historiques consommées ne restent plus affichées comme relations live.
+- Cas 09/10 : aucune div UP active ; div DOWN 82482,4 / LBW 83,608694 → 83310,9 / LBW 64,855796 conservée.
+- `decisionImpact=false`.

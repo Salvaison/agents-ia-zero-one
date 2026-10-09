@@ -601,7 +601,7 @@ function waveUiCausalDivergenceCatalog(auditRows){
     };
   }catch(e){
     return {
-      version:'divergence-causal-shadow-v0.5',
+      version:'divergence-causal-shadow-v0.7',
       decisionImpact:false,
       wave15:{display:false,lines:[],error:e.message},
       wave3:{display:false,lines:[],error:e.message}
