@@ -16,3 +16,14 @@ test-mexc-auth.js
 *.backup-*
 *.bak
 watch-signal-15m.log
+
+# Artefacts locaux / snapshots opérationnels — ne pas versionner
+__pycache__/
+*.pyc
+archives/
+backups/
+*.pre-*
+*.bak-*
+*.tmp
+zero-one/=
+zero-one/knowledge/chromebook-tunnel-ssh-hardening-2026-10-01.md

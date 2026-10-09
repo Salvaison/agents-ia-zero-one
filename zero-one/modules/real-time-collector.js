@@ -202,6 +202,16 @@ function initCsv() {
   }
 }
 
+function readLastCsvTs() {
+  try {
+    const content = readFileSync(CSV_PATH, 'utf8').trimEnd().split('\n');
+    const last = content.at(-1) ?? '';
+    if (!last || last.startsWith('timestamp')) return 0;
+    const ts = Date.parse(last.split(',')[0]);
+    return Number.isFinite(ts) ? Math.floor(ts / 1000) : 0;
+  } catch { return 0; }
+}
+
 function fmt(v) {
   if (v === null || v === undefined) return '';
   if (typeof v === 'number' && Math.abs(v) > SENTINEL_THRESHOLD) return '';
@@ -553,10 +563,14 @@ async function probeTabResolution(targetId) {
 
 async function findTarget() {
   const list = await (await fetch('http://localhost:9222/json/list')).json();
-  const tvTabs = list.filter(t => t.type === 'page' && /tradingview\.com\/chart/i.test(t.url));
+  const allTvTabs = list.filter(t => t.type === 'page' && /tradingview\.com\/chart/i.test(t.url));
+  // Dedicated collector layout only. Never claim Benjamin's TA layout (qljTf3vu),
+  // whatever symbol/timeframe it currently displays.
+  const tvTabs = allTvTabs.filter(t => /tradingview\.com\/chart\/2AqpEMfD\//i.test(t.url));
 
   if (!tvTabs.length) {
-    return list.find(t => t.type === 'page' && /tradingview/i.test(t.url)) || null;
+    log('Dedicated collector layout 2AqpEMfD not found — will retry…');
+    return null;
   }
 
   // Single tab or no TF constraint → return first match immediately.
@@ -623,7 +637,7 @@ async function navigateToChart(Page, target) {
   }
   const urlInterval = TF_TO_URL_INTERVAL[EXPECTED_TF] ?? EXPECTED_TF;
   const base  = target.url.split('?')[0];
-  const sym   = 'BYBIT%3ABTCUSDT.P'; // force MEXC USDT (30/07/2026) -- ne lit plus l'URL existante, qui pouvait garder l'ancien Bybit
+  const sym   = 'OKX%3ABTCUSDT.P'; // aligne TradingView sur le flux moteur OKX BTC-USDT-SWAP
   const navUrl = `${base}?symbol=${sym}&interval=${urlInterval}`;
   await withTimeout(Page.navigate({ url: navUrl }), CDP_CMD_TIMEOUT, 'Page.navigate');
 }
@@ -658,6 +672,7 @@ async function runSession(detector) {
   // ── WebSocket event listeners ─────────────────────────────────────────────
   const wsMap = new Map();
   let lastWsActivityAt = Date.now(); // updated on open + frame received
+  let retroactiveDone = false;
 
   Network.webSocketCreated(({ requestId, url }) => {
     if (!wsMap.has(requestId) && /data\.tradingview\.com/i.test(url)) {
@@ -682,6 +697,36 @@ async function runSession(detector) {
       const p = msg.p;
       if (!Array.isArray(p) || p.length < 2 || typeof p[1] !== 'object' || p[1] === null) continue;
       detector.process(p[1], type);
+    }
+
+    // Causal restart recovery: once TradingView history is initialized and
+    // caught up, recover only trailing CLOSED bars missed while Chrome/CDP was
+    // unavailable. Never fabricates data and never touches the current bar.
+    if (!retroactiveDone && detector.caughtUp && detector.initialized && detector.lastSds1T !== null) {
+      retroactiveDone = true;
+      const minutes = TF_MINUTES_MAP[EXPECTED_TF] ?? null;
+      if (minutes) {
+        const periodSec = minutes * 60;
+        const lastCompleted = detector.lastSds1T - periodSec;
+        const lastWritten = readLastCsvTs();
+        const MAX_RETRO_BARS = 20;
+        let start = lastWritten > 0 ? lastWritten + periodSec : lastCompleted;
+        if (lastWritten > 0 && (lastCompleted - lastWritten) / periodSec > MAX_RETRO_BARS) {
+          start = lastCompleted - (MAX_RETRO_BARS - 1) * periodSec;
+        }
+        let recovered = 0, missing = 0;
+        for (let ts = start; ts <= lastCompleted; ts += periodSec) {
+          const v = detector.mcbCache.get(ts);
+          if (!v) { missing++; continue; }
+          const dbsi = detector.dbsiCache.get(ts) ?? {};
+          dbsi.ma200 = detector.dbsiMaCache.get(ts);
+          const row = writeClose(ts, v, dbsi, detector.ohlcCache.get(ts));
+          log(`RETRO CLOSE → ${row}`);
+          recovered++;
+        }
+        if (recovered > 0) detector.lastCloseAt = Date.now();
+        log(`Retroactive startup check: ${recovered} recovered, ${missing} unavailable in cache`);
+      }
     }
   });
 

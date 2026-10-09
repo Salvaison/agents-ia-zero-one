@@ -5,8 +5,9 @@
 cd /root/agents-ia-zero-one/zero-one
 touch /tmp/chrome-recycle.lock
 echo "[$(date '+%F %T')] recyclage de Chrome"
-pkill -9 -f "remote-debugging-port=9222"
+pkill -TERM -u tradingview -f "remote-debugging-port=9222" 2>/dev/null || true
 sleep 5
+pkill -KILL -u tradingview -f "remote-debugging-port=9222" 2>/dev/null || true
 RECYCLE=1 bash chrome-watchdog.sh
 sleep 25
 RECYCLE=1 bash chrome-watchdog.sh

@@ -386,6 +386,16 @@
       "abstainOnVwap3Disagreement": true,
       "vwap3DeadZone": 2.0,
       "_abstentionNote": "ABSTENTION SUR DESACCORD (11/08/2026) : quand le signe du VWAP3 contredit le regime de la vague 15m et que |VWAP3| >= vwap3DeadZone, AUCUNE entree n'est prise, ni dans un sens ni dans l'autre. Le regime 15m garde l'autorite pour autoriser une direction ; le VWAP3 ne peut que suspendre, jamais inverser -- lui donner le dernier mot ramenerait le bruit (un pivot toutes les 11 min, justesse directionnelle 33-50%). Cas motivant : SHORT du 17:58 (-3.23%), regime baissier mais VWAP3 deja repasse a +2.72 avec une pente de +1.48 (classee 'plate', d'ou le choix du SIGNE et non de la pente comme critere). ENTREES UNIQUEMENT -- les sorties ne sont jamais bloquees, pour ne pas creer de positions bloquees. Desactiver : abstainOnVwap3Disagreement=false."
+    },
+    "fees": {
+      "enabled": true,
+      "makerRate": 0.0002,
+      "takerRate": 0.0005,
+      "entryLiquidity": "taker",
+      "exitLiquidity": "taker",
+      "estimateCloseFeeInLivePnl": true,
+      "_source": "OKX Europe X-Perps reference rates checked 2026-10-09; actual account tier may differ",
+      "_note": "Market orders are modeled as taker. Fee rates are fractions: 0.0005 = 0.05%. Opening, partial closes and final close each pay fees on executed quote notional. Funding and slippage are separate and not modeled here."
     }
   },
   "signalTtl": {

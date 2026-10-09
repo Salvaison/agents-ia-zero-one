@@ -142,9 +142,9 @@ function sectionPm2() {
     const procs = JSON.parse(execSync('pm2 jlist').toString());
     return procs.map(p => {
       const st = p.pm2_env.status;
-      /* chrome-watchdog et chrome-recycle tournent en cron : ils s executent
-       * puis se terminent. Leur statut normal entre deux passages est stopped. */
-      const enCron = (p.name === 'chrome-watchdog' || p.name === 'chrome-recycle');
+      /* Tout processus PM2 ayant cron_restart s'execute puis se termine.
+       * Son statut normal entre deux passages est stopped. */
+      const enCron = !!p.pm2_env.cron_restart;
       const flag = (st === 'online' || enCron) ? '' : '  <<< ANORMAL';
       return `  ${p.name.padEnd(16)} ${st}, ${p.pm2_env.restart_time} redemarrage(s)${flag}`;
     }).join('\n');

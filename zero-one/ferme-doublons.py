@@ -14,10 +14,35 @@ import json, re, urllib.request
 
 CDP = "http://localhost:9222"
 d = json.load(urllib.request.urlopen(CDP + "/json/list", timeout=5))
+# Un onglet nu du layout collecteur (sans interval=) est un artefact de lancement :
+# il concurrence les roles 3m/15m et donne l'impression d'un doublon 3m.
+explicit_collector = any(
+    "tradingview.com/chart/2AqpEMfD/" in x.get("url", "") and "interval=" in x.get("url", "")
+    for x in d
+)
 vus, fermes = set(), 0
 for t in d:
     u = t.get("url", "")
     if "tradingview.com/chart" not in u:
+        continue
+    # Source officielle TradingView depuis 20/09/2026 : OKX. Les anciens
+    # onglets BYBIT des deux layouts connus sont des reliquats de restauration
+    # Chrome et doivent etre fermes avant que le watchdog recree leur role.
+    if ("/chart/2AqpEMfD/" in u or "/chart/qljTf3vu/" in u) and ("symbol=BYBIT" in u or "symbol=BYBIT%3A" in u):
+        try:
+            urllib.request.urlopen(CDP + "/json/close/" + t["id"], timeout=5)
+            print(f"  ferme ancien onglet BYBIT ({t['id'][:8]})")
+            fermes += 1
+        except Exception as e:
+            print(f"  echec {t['id'][:8]} : {e}")
+        continue
+    if explicit_collector and "tradingview.com/chart/2AqpEMfD/" in u and "interval=" not in u:
+        try:
+            urllib.request.urlopen(CDP + "/json/close/" + t["id"], timeout=5)
+            print(f"  ferme onglet collecteur sans role ({t['id'][:8]})")
+            fermes += 1
+        except Exception as e:
+            print(f"  echec {t['id'][:8]} : {e}")
         continue
     m = re.search(r"chart/(\w+).*interval=(\d+)", u)
     cle = m.groups() if m else ("?", "?")

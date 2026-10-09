@@ -13,36 +13,37 @@
 # Appele toutes les 5 minutes par PM2 (voir ecosystem ou pm2 start --cron).
 
 CDP_PORT=9222
-USER_DATA_DIR="/root/ChromeDebug"
+CHROME_USER="tradingview"
+CHROME_HOME="/var/lib/tradingview"
+USER_DATA_DIR="${CHROME_HOME}/ChromeDebug"
 CHROME_BIN="/usr/bin/google-chrome-stable"
 CHROME_LAUNCH_WAIT=15
 
-TV_URL_3M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=BYBIT%3ABTCUSDT.P%26interval=3"
-TV_URL_15M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=BYBIT%3ABTCUSDT.P%26interval=15"
-TV_URL_TA="https://www.tradingview.com/chart/qljTf3vu/?symbol=BYBIT%3ABTCUSDT.P%26interval=15"
+TV_URL_3M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=OKX%3ABTCUSDT.P%26interval=3"
+TV_URL_15M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=OKX%3ABTCUSDT.P%26interval=15"
+TV_URL_TA="https://www.tradingview.com/chart/qljTf3vu/?symbol=OKX%3ABTCUSDT.P%26interval=15"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
 launch_chrome() {
   log "Lancement de Chrome"
-  # --no-sandbox est necessaire en root ; le port n'ecoute que sur localhost
-  # et rien d'autre ne tourne sur cette machine.
-  export DISPLAY=:99
-  nohup "${CHROME_BIN}" \
+  # Chrome tourne sous un utilisateur dedie et conserve son sandbox natif.
+  # CDP reste strictement limite a localhost.
+  nohup runuser -u "${CHROME_USER}" -- env DISPLAY=:99 HOME="${CHROME_HOME}" "${CHROME_BIN}" \
     --window-position=0,0 \
     --hide-crash-restore-bubble \
     --restore-last-session=false \
     --remote-debugging-port="${CDP_PORT}" \
     --remote-debugging-address=127.0.0.1 \
     --user-data-dir="${USER_DATA_DIR}" \
-    --no-sandbox --disable-gpu \
+    --disable-gpu \
     --no-first-run --no-default-browser-check \
     --disable-features=Translate \
     --disable-background-timer-throttling \
     --disable-backgrounding-occluded-windows \
     --disable-renderer-backgrounding \
     --window-size=1920,1080 \
-    "https://www.tradingview.com/chart/2AqpEMfD/" > /root/chrome.log 2>&1 &
+    "https://www.tradingview.com/chart/2AqpEMfD/?symbol=OKX%3ABTCUSDT.P&interval=3" > "${CHROME_HOME}/chrome.log" 2>&1 &
   log "Chrome lance"
 }
 
@@ -64,7 +65,9 @@ fi
 python3 /root/agents-ia-zero-one/zero-one/ferme-doublons.py 2>/dev/null | grep -v "^3 onglet" || true
 HEALTH=$(curl -sf --max-time 5 "http://localhost:${CDP_PORT}/json/list" 2>/dev/null || echo "")
 
-HAS_3M=$(echo "$HEALTH" | grep -o "interval=3\"" | wc -l)
+# Chaque role doit etre porte par son layout dedie. L'onglet TA peut etre
+# librement change de timeframe sans jamais compter comme collecteur 3m/15m.
+HAS_3M=$(echo "$HEALTH" | grep -o "2AqpEMfD[^\"]*interval=3" | wc -l)
 HAS_15M=$(echo "$HEALTH" | grep -o "2AqpEMfD[^\"]*interval=15" | wc -l)
 HAS_TA=$(echo "$HEALTH" | grep -o "qljTf3vu" | wc -l)
 

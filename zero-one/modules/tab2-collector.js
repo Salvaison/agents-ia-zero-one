@@ -41,7 +41,7 @@ const getArg = (name, def) => { const i = args.indexOf(name); return i >= 0 ? ar
 
 const BASE_DIR      = getArg('--dir',      process.cwd());
 const TV_CHART_BASE = getArg('--chart',    'https://www.tradingview.com/chart/2AqpEMfD/');
-const TV_SYMBOL     = getArg('--symbol',   'BYBIT%3ABTCUSDT.P');
+const TV_SYMBOL     = getArg('--symbol',   'OKX%3ABTCUSDT.P');
 const WS_KEY        = getArg('--ws-key',   'YXeZEi');
 const DBSI_KEY      = getArg('--dbsi-key', 'S8XNwk');
 
@@ -138,6 +138,26 @@ function initCsv(csvPath) {
   if (!existsSync(csvPath)) {
     writeFileSync(csvPath, CSV_HEADER, 'utf8');
     log(`Created ${csvPath}`);
+    return;
+  }
+  // Legacy files can still have a 12-column header while rows already carry
+  // MA200 + native UP/DN in positions 12/13/14. Migrate only the header:
+  // historical rows remain byte-for-byte unchanged.
+  try {
+    const content=readFileSync(csvPath,'utf8');
+    const lines=content.split(/\r?\n/);
+    const header=(lines[0]||'').trim();
+    const wanted=CSV_HEADER.trim();
+    if(header!==wanted){
+      const cols=header.split(',');
+      if(cols.length<15&&cols[0]==='timestamp'){
+        lines[0]=wanted;
+        writeFileSync(csvPath,lines.join('\n'),'utf8');
+        log(`Migrated CSV header to extended native-signal schema: ${csvPath}`);
+      }
+    }
+  } catch(e) {
+    log(`WARN header migration failed ${csvPath}: ${e.message}`);
   }
 }
 
@@ -531,8 +551,17 @@ function pickNext(currentTfCode) {
 // ── Tab finder ────────────────────────────────────────────────────────────────
 async function findTarget() {
   const list   = await (await fetch('http://localhost:9222/json/list')).json();
-  const tvTabs = list.filter(t => t.type === 'page' && /tradingview\.com\/chart/i.test(t.url));
-  if (!tvTabs.length) return null;
+  const collectorChartId = TV_CHART_BASE.match(/\/chart\/([^/]+)\//i)?.[1] ?? null;
+  // Only claim the configured collector layout. The personal TA layout is never
+  // an eligible target, even if Benjamin temporarily puts it on 15m/1h/etc.
+  const tvTabs = list.filter(t =>
+    t.type === 'page' && /tradingview\.com\/chart/i.test(t.url) &&
+    (!collectorChartId || t.url.includes(`/chart/${collectorChartId}/`))
+  );
+  if (!tvTabs.length) {
+    log(`Dedicated collector layout ${collectorChartId ?? '?'} not found — will retry…`);
+    return null;
+  }
 
   const isTabOwned = tabId => {
     const lockPath = `/tmp/mcb-tab-${tabId}.pid`;
