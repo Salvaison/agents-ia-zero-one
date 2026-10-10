@@ -2600,6 +2600,18 @@ function drawWaveBand(canvas, key, idx) {
     ctx.closePath();
     ctx.fillStyle='rgba(135,135,135,.24)';
     ctx.fill();
+
+    // Souligner la plage Money Flow sans recouvrir la ligne zéro bleue :
+    // seule la frontière MF reçoit un fin contour noir.
+    ctx.save();
+    ctx.strokeStyle='rgba(0,0,0,.78)';
+    ctx.lineWidth=.7;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    ctx.beginPath();
+    waveSmoothPath(ctx,mfPts,T,T+h,true,false);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function line(field, color, width, alpha) {

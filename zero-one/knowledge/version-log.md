@@ -705,3 +705,8 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Cas de référence #98 : mémoire LONG 4h + tactique SHORT 30m.
 - Wave live et rapports exposent désormais `MF MÉMOIRE`.
 - `decisionImpact=false` : compréhension/shadow uniquement, aucun veto ni autorité de trading.
+
+## 2026-10-10 — Wave UI MF band contour
+- La plage gris clair du Money Flow est soulignée par une fine frontière noire.
+- Le contour suit uniquement la courbe MF afin de ne pas recouvrir la ligne zéro bleue.
+- Appliqué aux bandes 15m et 3m ; aucun impact trading.
