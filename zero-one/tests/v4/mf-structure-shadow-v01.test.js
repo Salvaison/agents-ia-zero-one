@@ -44,7 +44,7 @@ const comp=mf.evaluate(frame(compVals,7),'short');
 assert.ok(['COMPRESSION','UNRESOLVED'].includes(comp.structuralState));
 assert.strictEqual(comp.decisionImpact,false);
 
-console.log('MF structure shadow v0.1 tests OK');
+console.log('MF structure shadow v0.2 temporal tests OK');
 
 // A current move through the last MF high breaks an old descending staircase;
 // it must not still be counted as SHORT support.
@@ -56,3 +56,53 @@ assert.strictEqual(broken.candidateContext.supports,false);
 assert.strictEqual(broken.candidateContext.opposes,true);
 
 console.log('MF structure break semantics OK');
+
+// Temporal memory: same final MF level, opposite path = opposite interpretation.
+{
+  const risingRows=[
+    {ts:1,mf:-21,close:80000},{ts:2,mf:-18,close:80020},{ts:3,mf:-15,close:80040},
+    {ts:4,mf:-9,close:80080},{ts:5,mf:-5,close:80100}
+  ];
+  const fallingRows=[
+    {ts:1,mf:11,close:80100},{ts:2,mf:7,close:80080},{ts:3,mf:2,close:80050},
+    {ts:4,mf:-2,close:80020},{ts:5,mf:-5,close:80000}
+  ];
+  const upMem=mf.temporalMemory(risingRows,'short');
+  const dnMem=mf.temporalMemory(fallingRows,'long');
+  assert.strictEqual(upMem.memoryDirection,'long');
+  assert.strictEqual(dnMem.memoryDirection,'short');
+  assert.strictEqual(upMem.decisionImpact,false);
+  assert.strictEqual(dnMem.decisionImpact,false);
+}
+
+// Tactical SHORT pullback inside persistent rising MF memory: #98-like semantics.
+{
+  const rows=[
+    {ts:1,mf:-21,close:80000},{ts:2,mf:-18,close:80020},{ts:3,mf:-15,close:80050},
+    {ts:4,mf:-10,close:80100},{ts:5,mf:-8,close:80130},{ts:6,mf:-6,close:80160},
+    {ts:7,mf:-4,close:80200},{ts:8,mf:-3,close:80220},{ts:9,mf:-3.7,close:80210},
+    {ts:10,mf:-5.2,close:80120}
+  ];
+  const x=mf.temporalMemory(rows,'short');
+  assert.strictEqual(x.memoryDirection,'long');
+  assert.strictEqual(x.tacticalDirection,'short');
+  assert.strictEqual(x.state,'RISING_WITH_PULLBACK');
+  assert.strictEqual(x.candidateContext.state,'TACTICAL_SHORT_AGAINST_LONG_MF_MEMORY');
+  assert.strictEqual(x.candidateContext.transitionCandidate,true);
+}
+
+// Tactical LONG recovery inside falling MF memory: early reversal context, not a veto.
+{
+  const rows=[
+    {ts:1,mf:5,close:80200},{ts:2,mf:2,close:80180},{ts:3,mf:-3,close:80150},
+    {ts:4,mf:-8,close:80120},{ts:5,mf:-13,close:80090},{ts:6,mf:-18,close:80060},
+    {ts:7,mf:-21,close:80040},{ts:8,mf:-20,close:80050},{ts:9,mf:-18,close:80120}
+  ];
+  const x=mf.temporalMemory(rows,'long');
+  assert.strictEqual(x.memoryDirection,'short');
+  assert.strictEqual(x.tacticalDirection,'long');
+  assert.strictEqual(x.state,'FALLING_WITH_RECOVERY');
+  assert.strictEqual(x.candidateContext.state,'TACTICAL_LONG_AGAINST_SHORT_MF_MEMORY');
+  assert.strictEqual(x.decisionImpact,false);
+}
+

@@ -696,3 +696,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les échelles verticales gauche des bandes 15m et 3m restent fixes au-dessus du défilement horizontal.
 - Overlay limité aux 36 px de marge déjà réservés à l'axe : aucune perte de zone utile pour les courbes.
 - Les graduations reprennent dynamiquement le même `yLimit` que chaque canvas ; aucun impact trading.
+
+## 2026-10-10 — MF temporal memory v0.1
+- `mf-structure-shadow` devient `mf-structure-shadow-v0.2-temporal`.
+- MF15 n'est plus lu comme une valeur instantanée seulement : mémoire 30m/1h/2h/4h, persistance, efficacité de chemin et conversion prix.
+- Nouveaux états : RISING_WITH_PULLBACK, FALLING_WITH_RECOVERY, RISING/FALLING_AND_TRANSLATING, etc.
+- Relation au candidat : ex. `TACTICAL_SHORT_AGAINST_LONG_MF_MEMORY` pour une attaque short locale dans une mémoire MF haussière.
+- Cas de référence #98 : mémoire LONG 4h + tactique SHORT 30m.
+- Wave live et rapports exposent désormais `MF MÉMOIRE`.
+- `decisionImpact=false` : compréhension/shadow uniquement, aucun veto ni autorité de trading.

@@ -163,6 +163,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
       mfStructureShadowDecisionImpact:false,
       mfStructureShadowTimeframe:'15m',
       mfStructureSemantic:'persistent HH/HL/LH/LL flow structure qualifies MCB maturity/context only; never a veto or direction source',
+      mfTemporalMemory:{decisionImpact:false,horizons:['30m','1h','2h','4h'],semantic:'MF level is interpreted through path memory + tactical pullback/recovery + price conversion; descriptive only'},
       structuralHandoffPreservesOnlyStructure:true,
       structuralHandoffReentryRequiresFreshPmAfterMaxExitOrHandoffTs:true,
       postSetupTranslationMateriality:{minNetUsd:10,minEfficiency:.25},

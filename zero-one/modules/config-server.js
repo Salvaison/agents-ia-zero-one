@@ -712,6 +712,7 @@ function waveUiCompactEval(r) {
   const n = r.mcb && r.mcb.nested3m || {};
   const tr = r.translation || {}, tk = r.ticker || {}, th = r.thesis || {}, a = r.action || {};
   const etr=r.entryTranslation||{}, etk=r.entryTicker||{}, bg=r.background||{}, setup=r.setup||{}, room=r.structuralRoom||{}, mq=r.marketQuality||{}, ns=r.nativeSignal||{};
+  const mfs=r.mfStructureShadow||{}, mft=mfs.temporal||{};
   const p = r.position || null;
   return {
     version: r.version || null,
@@ -724,6 +725,13 @@ function waveUiCompactEval(r) {
     setup:{status:setup.status||null,direction:setup.direction||null,candidateDirection:setup.candidateDirection||null,setupTs:setup.setupTs||null,reason:setup.reason||null,reasons:setup.reasons||null},
     structuralRoom:{state:room.state||null,roomToBoundaryUsd:room.roomToBoundaryUsd??null,nearestAhead:room.nearestAhead||null},
     marketQuality:{state:mq.state||null,lowEdge:!!mq.lowEdge,window30:mq.window30||null,window60:mq.window60||null},
+    mfTemporal:{
+      version:mft.version||null,state:mft.state||null,memoryDirection:mft.memoryDirection||null,memoryHorizon:mft.memoryHorizon||null,
+      tacticalDirection:mft.tacticalDirection||null,candidateContext:mft.candidateContext||null,conversion:mft.conversion||null,
+      horizons:mft.horizons?{
+        m30:mft.horizons.m30||null,h1:mft.horizons.h1||null,h2:mft.horizons.h2||null,h4:mft.horizons.h4||null
+      }:null
+    },
     mcb15: { type:c.type || null, currentLbw:c.currentLbw ?? null, extremeLbw:c.extremeLbw ?? null, recoveryFraction:c.recoveryFraction ?? null, maturity:c.maturity || null, e15Class:c.e15Class || null },
     mcb3: { currentLbw:n.currentLbw ?? null, extremeLbw:n.extremeLbw ?? null, recoveryFraction:n.recoveryFraction ?? null, slopeLbw:n.slopeLbw ?? null, turningDirection:n.turningDirection || null },
     pm: { status:tr.status || null, direction:tr.direction || null,
@@ -2683,7 +2691,7 @@ function renderWaveReplay() {
   waveReplayIndex = Math.max(0, Math.min(waveReplayData.frames.length-1, waveReplayIndex));
   const f = waveReplayData.frames[waveReplayIndex], s=(waveReplayMode==='live'&&waveReplayData.liveState)?waveReplayData.liveState:(f.state||{}), p=s.position||null;
   const st = s.thesis||{}, m15=s.mcb15||{}, m3=s.mcb3||{}, pm=s.pm||{}, tk=s.ticker||{}, ac=s.action||{};
-  const bg=s.background||{}, setup=s.setup||{}, sr=s.structuralRoom||{}, mq=s.marketQuality||{}, epm=s.entryPm||{}, etk=s.entryTicker||{}, ns=s.nativeSignal||{};
+  const bg=s.background||{}, setup=s.setup||{}, sr=s.structuralRoom||{}, mq=s.marketQuality||{}, epm=s.entryPm||{}, etk=s.entryTicker||{}, ns=s.nativeSignal||{}, mft=s.mfTemporal||{};
   const w15=f.wave15||{}, conf=w15.confirmed||{}, w3=f.wave3||{}, au=f.audit||{};
   const flow = au.volumeFenetreBtc!==null&&au.winSec ? Number(au.volumeFenetreBtc)/Number(au.winSec) : null;
   const posMain=p ? String(p.direction).toUpperCase() + ' @ ' + waveNum(p.entryPrice,1) : 'FLAT';
@@ -2708,6 +2716,10 @@ function renderWaveReplay() {
     ns.reinforcedUp&&ns.reinforcedUp.active&&ns.reinforcedUp.event?'LBW '+waveNum(ns.reinforcedUp.event.value,1)+' · bypass 1H LONG actif':(ns.latest?'val '+waveNum(ns.latest.value,1)+' · age '+waveNum(ns.latest.ageMinutes,0)+'m':''));
   mcb+=waveRow('15m LIVE / CONF','LBW '+waveNum(w15.lbw,1)+' / '+waveNum(conf.lbw,1),'BW '+waveNum(w15.bw,1)+' / '+waveNum(conf.bw,1)+' · MF '+waveNum(w15.mf,1)+' / '+waveNum(conf.mf,1));
   mcb+=waveRow('15m ÉTAT',(m15.maturity||'—')+' · rec '+(m15.recoveryFraction!==null&&m15.recoveryFraction!==undefined?waveNum(100*m15.recoveryFraction,1)+'%':'—'),(m15.e15Class||'—')+' · extrême '+waveNum(m15.extremeLbw,1));
+  mcb+=waveRow('MF MÉMOIRE',mft.state||'—',
+    (mft.memoryDirection?'fond '+String(mft.memoryDirection).toUpperCase()+' '+String(mft.memoryHorizon||''):'fond —')+
+    (mft.tacticalDirection?' · 30m '+String(mft.tacticalDirection).toUpperCase():'')+
+    (mft.candidateContext&&mft.candidateContext.state?' · '+mft.candidateContext.state:''));
   mcb+=waveRow('3m','LBW '+waveNum(w3.lbw,1)+' · pente '+waveNum(m3.slopeLbw,1),'turn '+(m3.turningDirection||'—')+' · MF '+waveNum(w3.mf,1));
 
   let context='';
@@ -3529,7 +3541,7 @@ function ctxSummary(c) {
     const m = c.mcb || {}, ml = m.currentLobe || {}, rel = ml.relationshipFromPrevious || {};
     const n3 = m.nested3m || {}, th = c.thesis || {}, gate = th.maturityGate || {}, tr = c.translation || {}, tk = c.ticker || {}, ns = c.nativeSignal || {};
     const cx = c.context || {}, rk = c.risk || {}, ac = c.action || {}, pm = tr.pmLive || {}, hz = tr.horizons || {};
-    const bg=c.background||{}, h1=bg.oneHour||{}, setup=c.setup||{}, room=c.structuralRoom||{}, mq=c.marketQuality||{}, mfs=c.mfStructureShadow||{};
+    const bg=c.background||{}, h1=bg.oneHour||{}, setup=c.setup||{}, room=c.structuralRoom||{}, mq=c.marketQuality||{}, mfs=c.mfStructureShadow||{}, mft=mfs.temporal||{};
     const etr=c.entryTranslation||{}, etk=c.entryTicker||{}, es=etr.sinceSetup||{};
     const tcur = tk.current || {}, per = tk.persistence || {}, rp = rk.position || {};
     const v3s = c.v3Shadow || {}, v3a = v3s.action || {};
@@ -3569,6 +3581,12 @@ function ctxSummary(c) {
         (mfs.currentMf!==undefined&&mfs.currentMf!==null ? ' · MF ' + v3Signed(mfs.currentMf,2) : '') +
         (mfs.candidateContext&&mfs.candidateContext.state ? ' · ' + escTrade(mfs.candidateContext.state) : '') +
         ' · shadow uniquement</div>' +
+      '<div><b>MF MÉMOIRE</b> ' + escTrade(mft.state) +
+        (mft.memoryDirection ? ' · fond ' + escTrade(String(mft.memoryDirection).toUpperCase()) + ' ' + escTrade(mft.memoryHorizon) : '') +
+        (mft.tacticalDirection ? ' · 30m ' + escTrade(String(mft.tacticalDirection).toUpperCase()) : '') +
+        (mft.candidateContext&&mft.candidateContext.state ? ' · <b>' + escTrade(mft.candidateContext.state) + '</b>' : '') +
+        (mft.conversion ? ' · prix/MF ' + escTrade(mft.conversion.priceRelation) + ' · effPrix ' + v3Fmt(100*Number(mft.conversion.priceEfficiency||0),0) + '%' : '') +
+        ' · aucun veto</div>' +
       '<div><b>PM LIVE</b> ' + escTrade(tr.status) + ' · PM ' + v3Signed(pm.priceMoveUsd,1) + '$' +
         (hz.net3mUsd !== undefined ? ' · net3m ' + v3Signed(hz.net3mUsd,1) + '$' : '') +
         (hz.efficiency3m !== undefined && hz.efficiency3m !== null ? ' · effic3m ' + (100*Number(hz.efficiency3m)).toFixed(1) + '%' : '') + '</div>' +
