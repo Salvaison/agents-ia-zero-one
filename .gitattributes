@@ -1,0 +1,6 @@
+boono-tv-assets/**/*.png filter=lfs diff=lfs merge=lfs -text
+boono-tv-assets/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+boono-tv-assets/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+boono-tv-assets/**/*.webp filter=lfs diff=lfs merge=lfs -text
+boono-tv-assets/**/*.zip filter=lfs diff=lfs merge=lfs -text
+boono-tv-assets/**/*.tar.zst filter=lfs diff=lfs merge=lfs -text
