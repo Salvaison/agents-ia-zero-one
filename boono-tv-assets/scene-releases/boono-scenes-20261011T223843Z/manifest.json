@@ -1,0 +1,73 @@
+{
+  "schema": 2,
+  "kind": "boono-tv-interactive-scenes",
+  "release": "boono-scenes-20261011T223843Z",
+  "created_at": "2026-10-11T22:38:48.361578+00:00",
+  "source": "BOONOTV01.png accepted reference board",
+  "reference_composition": "BOONOTV03.png",
+  "canvas": {
+    "width": 1200,
+    "height": 1080
+  },
+  "states": [
+    "working",
+    "thinking",
+    "worried",
+    "concentrated",
+    "confident",
+    "observe",
+    "execute"
+  ],
+  "switching": "deterministic V4 context + manual keys 1-7 / ?pose=",
+  "files": {
+    "working.webp": {
+      "sha256": "df08af8e540f097e447bb5916acf1f5be5466635f122fde559d41490bffab2b0",
+      "bytes": 166306,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "thinking.webp": {
+      "sha256": "10bf78f15e6cb90e5884cafa7df93d22f31fb77bd5a57655a821ee2a27a460fc",
+      "bytes": 158906,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "worried.webp": {
+      "sha256": "658e9d5d3ad4ecce549229abfcafbc7cdc4b8969247b9058b6bf199f1c57c3f8",
+      "bytes": 166606,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "concentrated.webp": {
+      "sha256": "354a71fcc6e6ef1b8c9f4e24a08944cbd75ad58d58de2cf49d6f93657465c78a",
+      "bytes": 158946,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "confident.webp": {
+      "sha256": "980b56de8442eebef6ee20562891644ff46fd36e04fbb61a39dc956f3b8e58ed",
+      "bytes": 167754,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "observe.webp": {
+      "sha256": "44aa84724162f176c4286c9963a467b77cce6252de9784e11c1cf0a16f056ded",
+      "bytes": 156712,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    },
+    "execute.webp": {
+      "sha256": "64004156e4ac40311b5d9302319aed642101a26863bf11ac2ae09fcb322b591e",
+      "bytes": 170856,
+      "width": 1200,
+      "height": 1080,
+      "format": "WEBP"
+    }
+  }
+}
