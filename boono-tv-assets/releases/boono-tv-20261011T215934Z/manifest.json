@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "release": "boono-tv-20261011T215934Z",
+  "created_at": "2026-10-11T21:59:35.356189+00:00",
+  "canvas": {
+    "width": 1200,
+    "height": 1080
+  },
+  "states": [
+    "working",
+    "thinking",
+    "worried",
+    "concentrated",
+    "confident",
+    "observe",
+    "execute"
+  ],
+  "files": {
+    "boono/concentrated.webp": {
+      "sha256": "3111b93b8710ffb436fef4af0438cf8c22f083c1badefd4ccd6c9c9cd2b0b8a8",
+      "bytes": 64612,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/confident.webp": {
+      "sha256": "886e8fdf8f87fb8c7d974dac8e547c02b29f12ad9914dc50c0aba92e659bc529",
+      "bytes": 65948,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/execute.webp": {
+      "sha256": "e36afc94b6f2b67851c67fb38116910689f4605e6db8e07877a7965b88f95b35",
+      "bytes": 67754,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/observe.webp": {
+      "sha256": "1657fd52dfdf9ae252ef3c063750d9527bdab746aaf828a3cb0914ce48656d13",
+      "bytes": 66164,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/thinking.webp": {
+      "sha256": "73964a1a62e180c978f0794e2329f342c8cb9c894cfbc85b35ec3b955d160c6e",
+      "bytes": 66700,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/working.webp": {
+      "sha256": "86db61d045dba1c18a00eae5398eedd403e7768111f1e3505852103f8d694c28",
+      "bytes": 65344,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/worried.webp": {
+      "sha256": "28dc39ff3335bb1db288ce9d808f902d35081db4412849fcc40bf837dc24d655",
+      "bytes": 66236,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "desk_foreground.webp": {
+      "sha256": "b965270f5110a5c6fb2a125294ecb9f3c80bb245579dbf87f2aa2a39da438ec5",
+      "bytes": 223370,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "room_backplate.webp": {
+      "sha256": "a871773a88f13e68380e06ac531b0db5fe59e7a48b513ecc9e32d9278c541957",
+      "bytes": 226154,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGB",
+      "format": "WEBP",
+      "alpha_required": false
+    }
+  },
+  "source": "manual SFTP import"
+}
