@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "release": "bootstrap-20261011-v2",
+  "created_at": "2026-10-11T21:30:00Z",
+  "canvas": {
+    "width": 1200,
+    "height": 1080
+  },
+  "states": [
+    "working",
+    "thinking",
+    "worried",
+    "concentrated",
+    "confident",
+    "observe",
+    "execute"
+  ],
+  "files": {
+    "boono/concentrated.webp": {
+      "sha256": "2686542b667459b36c28d488596a6f8663968d3711a8a018e66a940dbda64e8c",
+      "bytes": 118956,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/confident.webp": {
+      "sha256": "0410e0cbb7aa446e9c4cb7e81fdedc0e9ac359d62a389ec2ebf21649ebe94f31",
+      "bytes": 119424,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/execute.webp": {
+      "sha256": "ce39b6f22e5527120f229610b2adfac539016f8c3f22807a143060fa00fe137b",
+      "bytes": 118200,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/observe.webp": {
+      "sha256": "f63f6b9e19fe51c454dfffd830e94ffaf969c5d62925b710e0b8e387bd391a8b",
+      "bytes": 116940,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/thinking.webp": {
+      "sha256": "c6ab20dded6541f72e4b1fe4a2e89d593cf8ea2c902555f3be5cebdfaf853db8",
+      "bytes": 116244,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/working.webp": {
+      "sha256": "1f034ed201351f8cf89e65003bd028b95a6bacbeed58dac53dadcd827595e70c",
+      "bytes": 105722,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "boono/worried.webp": {
+      "sha256": "dedb288488027fd3542c9b4ad5837996a561719b3c6f1e96334d38c6e8310896",
+      "bytes": 117088,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "desk_foreground.webp": {
+      "sha256": "2a5708415de2b01ca9a370e79062eb63954f09cc7659c634559d590592440ca7",
+      "bytes": 49850,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGBA",
+      "format": "WEBP",
+      "alpha_required": true
+    },
+    "room_backplate.webp": {
+      "sha256": "fb9ac327196b8a11e9bcd9e3cc979b614cf821e0cd95bf08d0f4afd77cd9dae9",
+      "bytes": 122306,
+      "width": 1200,
+      "height": 1080,
+      "mode": "RGB",
+      "format": "WEBP",
+      "alpha_required": false
+    }
+  },
+  "source": "Amsterdam bootstrap from layers-v2; establishes transfer channel only"
+}

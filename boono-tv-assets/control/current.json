@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "release": null,
-  "status": "channel-ready",
-  "updated_at": "2026-10-11T21:20:00Z"
+  "release": "bootstrap-20261011-v2",
+  "status": "active",
+  "updated_at": "2026-10-11T21:30:00Z"
 }
