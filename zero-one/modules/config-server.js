@@ -2152,8 +2152,7 @@ app.get('/', requireAuth, (req, res) => {
 .wave-price-axis{position:absolute;right:0;left:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(270deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 82%,rgba(255,255,255,.84) 93%,rgba(255,255,255,0) 100%);}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
-.wave-price-axis-bar{position:absolute;left:4px;right:auto;top:-1.5px;width:3px;height:3px;border:0;background:#e4e4e4;border-radius:50%;}
-.wave-price-axis-mark.major .wave-price-axis-bar{left:2px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
+.wave-price-axis-bar{position:absolute;left:2px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
 .wave-price-axis-label{position:absolute;left:10px;right:auto;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
@@ -2586,13 +2585,12 @@ function waveDrawPriceYAxis(result,H) {
   if(!axis||!result||!result.bounds)return;
   axis.style.height=H+'px';
   const b=result.bounds,p=result.padding,plotH=result.plotHeight;
-  const step=50,majorStep=200,out=[];
+  const step=200,out=[];
   const first=Math.ceil(b.lo/step)*step;
   for(let v=first;v<=b.hi+1e-9;v+=step){
     const rel=(b.hi-v)/Math.max(1e-9,b.hi-b.lo);
     const y=p.top+plotH*rel;
-    const major=Math.abs(v/majorStep-Math.round(v/majorStep))<1e-9;
-    out.push('<span class="wave-price-axis-mark'+(major?' major':'')+'" style="top:'+y.toFixed(1)+'px"><i class="wave-price-axis-bar"></i>'+(major?'<b class="wave-price-axis-label">'+Math.round(v).toLocaleString('fr-FR')+'</b>':'')+'</span>');
+    out.push('<span class="wave-price-axis-mark major" style="top:'+y.toFixed(1)+'px"><i class="wave-price-axis-bar"></i><b class="wave-price-axis-label">'+Math.round(v).toLocaleString('fr-FR')+'</b></span>');
   }
   axis.innerHTML=out.join('');
 }

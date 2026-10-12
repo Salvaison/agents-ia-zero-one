@@ -766,3 +766,8 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Points/repères et labels sont orientés depuis le bord droit vers l'intérieur de l'axe.
 - Padding du graphique ajusté : 12 px à gauche, 54 px réservés à droite pour l'échelle.
 - Aucun impact trading.
+
+## 2026-10-12 — Axe prix final simplification
+- Suppression complète des points intermédiaires de graduation.
+- Conservation d'une petite barrette grise et du prix complet uniquement tous les 200 USD.
+- Aucun impact trading.
