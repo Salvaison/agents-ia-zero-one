@@ -785,3 +785,7 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - PRIX, Wave15 et Wave3 reviennent à leur géométrie d'origine commune : L=36 px / R=9 px.
 - Les labels prix conservent un léger halo blanc pour rester lisibles sans panneau opaque.
 - Aucun impact trading.
+
+## 2026-10-12 — Uniformisation des repères horaires
+- Les lignes verticales horaires du graphique PRIX utilisent désormais exactement la même référence que les vagues 15m/3m : #f0f0f0, 1 px.
+- Aucun impact trading.
