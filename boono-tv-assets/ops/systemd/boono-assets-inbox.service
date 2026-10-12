@@ -1,0 +1,11 @@
+[Unit]
+Description=Validate and dispatch committed BOONO visual uploads
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/boono-transfer-inbox.py
+User=root
+PrivateTmp=true
+NoNewPrivileges=true

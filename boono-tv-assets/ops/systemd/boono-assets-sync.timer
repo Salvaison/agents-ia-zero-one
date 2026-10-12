@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll BOONO-TV visual asset channel
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+RandomizedDelaySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

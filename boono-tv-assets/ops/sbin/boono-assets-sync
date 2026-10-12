@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+from pathlib import Path
+from PIL import Image
+import datetime, fcntl, hashlib, json, os, shutil, subprocess, sys
+
+ROOT=Path("/srv/boono-tv-assets")
+SOURCE=ROOT/"source"
+RELEASES=ROOT/"releases"
+REMOTE="git@github.com:Salvaison/agents-ia-zero-one.git"
+BRANCH="boono-tv-assets"
+RUNTIME=Path("/root/agents-ia-zero-one/zero-one/boono-tv/assets/runtime")
+STATES=["working","thinking","worried","concentrated","confident","observe","execute"]
+
+def run(argv,cwd=None):
+    subprocess.run(argv,cwd=cwd,check=True,stdout=subprocess.DEVNULL)
+
+def sha256(p):
+    h=hashlib.sha256()
+    with open(p,"rb") as f:
+        for b in iter(lambda:f.read(4*1024*1024),b""): h.update(b)
+    return h.hexdigest()
+
+def atomic_symlink(link:Path,target:Path):
+    tmp=link.with_name(f".{link.name}.{os.getpid()}.new")
+    if tmp.exists() or tmp.is_symlink(): tmp.unlink()
+    tmp.symlink_to(target)
+    os.replace(tmp,link)
+
+def atomic_json(path:Path,obj):
+    tmp=path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(obj,indent=2)+"\n")
+    os.replace(tmp,path)
+
+lock=open("/run/lock/boono-assets-sync.lock","w")
+fcntl.flock(lock,fcntl.LOCK_EX)
+RELEASES.mkdir(parents=True,exist_ok=True)
+
+if not (SOURCE/".git").exists():
+    if SOURCE.exists(): shutil.rmtree(SOURCE)
+    run(["git","clone","--quiet","--single-branch","--branch",BRANCH,REMOTE,str(SOURCE)])
+    run(["git","lfs","install","--local"],cwd=SOURCE)
+else:
+    run(["git","fetch","--quiet","origin",BRANCH],cwd=SOURCE)
+    run(["git","reset","--hard",f"origin/{BRANCH}"],cwd=SOURCE)
+run(["git","lfs","pull","--include=boono-tv-assets/releases/**"],cwd=SOURCE)
+
+control=SOURCE/"boono-tv-assets"/"control"/"current.json"
+if not control.exists():
+    atomic_json(ROOT/"status.json",{"ok":True,"state":"channel-ready","release":None})
+    raise SystemExit(0)
+cfg=json.loads(control.read_text())
+release=cfg.get("release")
+if not release:
+    atomic_json(ROOT/"status.json",{"ok":True,"state":"channel-ready","release":None})
+    raise SystemExit(0)
+
+src=SOURCE/"boono-tv-assets"/"releases"/release
+manifest_path=src/"manifest.json"
+if not src.is_dir() or not manifest_path.is_file():
+    raise SystemExit(f"missing release or manifest: {release}")
+m=json.loads(manifest_path.read_text())
+if m.get("schema") not in (1,2) or m.get("release")!=release:
+    raise SystemExit("asset manifest schema/release mismatch")
+if m.get("schema")==2 and m.get("kind")!="boono-tv-layered-runtime":
+    raise SystemExit("asset manifest kind mismatch")
+if m.get("canvas")!={"width":1200,"height":1080}:
+    raise SystemExit("asset canvas must be 1200x1080")
+expected=["room_backplate.webp","desk_foreground.webp"]+[f"boono/{s}.webp" for s in STATES]
+files=m.get("files") or {}
+if sorted(files)!=sorted(expected):
+    raise SystemExit(f"asset file contract mismatch: {sorted(files)}")
+for rel in expected:
+    p=src/rel
+    if not p.is_file(): raise SystemExit(f"missing {rel}")
+    meta=files[rel]
+    if sha256(p)!=meta.get("sha256"): raise SystemExit(f"sha256 mismatch {rel}")
+    im=Image.open(p); im.load()
+    if im.format!="WEBP" or im.size!=(1200,1080):
+        raise SystemExit(f"invalid image {rel}: {im.format} {im.size}")
+    if rel!="room_backplate.webp":
+        if "A" not in im.mode: raise SystemExit(f"alpha missing {rel}")
+        if im.getchannel("A").getextrema()[0]==255:
+            raise SystemExit(f"no transparent pixels {rel}")
+
+dest=RELEASES/release
+if not dest.exists():
+    tmp=RELEASES/f".{release}.{os.getpid()}.tmp"
+    if tmp.exists(): shutil.rmtree(tmp)
+    shutil.copytree(src,tmp)
+    os.replace(tmp,dest)
+
+current=ROOT/"current"
+previous=ROOT/"previous"
+old=Path(os.path.realpath(current)) if current.exists() or current.is_symlink() else None
+if old and old!=dest and old.exists():
+    atomic_symlink(previous,old)
+atomic_symlink(current,dest)
+if RUNTIME.exists() or RUNTIME.is_symlink():
+    runtime_old=Path(os.path.realpath(RUNTIME))
+    rp=RUNTIME.with_name("runtime-previous")
+    if runtime_old!=dest and runtime_old.exists():
+        atomic_symlink(rp,runtime_old)
+atomic_symlink(RUNTIME,current)
+
+commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=SOURCE,text=True).strip()
+atomic_json(ROOT/"status.json",{
+    "ok":True,"state":"active","release":release,"commit":commit,
+    "previous":old.name if old and old.exists() and old!=dest else None,
+    "activated_at":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+})
+print(f"BOONO layered assets active: {release}")

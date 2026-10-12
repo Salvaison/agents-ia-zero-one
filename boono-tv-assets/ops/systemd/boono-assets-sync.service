@@ -1,0 +1,9 @@
+[Unit]
+Description=Sync BOONO-TV visual assets from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/boono-assets-sync
+User=root

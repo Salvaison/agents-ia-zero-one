@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry committed BOONO visual uploads
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=60s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
