@@ -2149,12 +2149,12 @@ app.get('/', requireAuth, (req, res) => {
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .wave-price-canvas{height:300px;}
-.wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:70px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 84%,rgba(255,255,255,.88) 94%,rgba(255,255,255,0) 100%);}
-.wave-price-axis::after{content:'';position:absolute;right:0;top:10px;bottom:18px;border-right:1px solid #111;}
+.wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 82%,rgba(255,255,255,.84) 93%,rgba(255,255,255,0) 100%);}
+
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
-.wave-price-axis-bar{position:absolute;right:0;top:0;width:5px;border-top:1px solid #111;}
-.wave-price-axis-mark.major .wave-price-axis-bar{width:9px;}
-.wave-price-axis-label{position:absolute;right:12px;top:0;transform:translateY(-50%);font:600 9px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
+.wave-price-axis-bar{position:absolute;right:4px;top:-1.5px;width:3px;height:3px;border:0;background:rgba(0,0,0,.72);border-radius:50%;}
+.wave-price-axis-mark.major .wave-price-axis-bar{right:2px;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid rgba(0,0,0,.55);}
+.wave-price-axis-label{position:absolute;right:10px;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .wave-flow-audit .wave-flow-text{min-width:0;overflow-wrap:anywhere;}
@@ -2616,7 +2616,7 @@ function drawWavePrice(canvas,idx) {
   const result=window.BoonoCharts.drawPrice(canvas,series,{
     theme:'interface',t0,t1,boundsT0,boundsT1,candleMs:wavePriceTf==='3m'?180000:900000,
     cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
-    padding:{left:70,right:12,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
+    padding:{left:54,right:12,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
     pricePadPct:.035,minPriceSpan:500,priceSnap:50,
     priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
@@ -2691,7 +2691,7 @@ function drawWaveBand(canvas, key, idx) {
     const zoneW=Math.max(1,x2-x1);
     ctx.fillStyle='rgba(135,206,235,.12)';
     ctx.fillRect(x1,T,zoneW,h);
-    ctx.strokeStyle='#111';ctx.lineWidth=.8;
+    ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
     ctx.strokeRect(x1+.4,T+.4,Math.max(.2,zoneW-.8),Math.max(.2,h-.8));
     canvas._waveTradeZones.push({x1:x1,x2:x2,y1:T,y2:T+h,trade:z});
   });

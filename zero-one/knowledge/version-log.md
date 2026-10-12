@@ -738,3 +738,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - FLOW/AUDIT déplacé entre PRIX et WAVE15 avec fond bleu ciel.
 - Bouton VIVANT ajouté pour revenir directement à l'État vivant.
 - Aucun impact trading.
+
+## 2026-10-12 — Vagues axis/light-grid refinement
+- Bordures des zones trade bleu ciel ramenées à noir 30%, trait fin.
+- Repères horaires verticaux ramenés à noir 30% et 0,75 px pour éviter l'effet trop lourd.
+- Axe prix réduit de 70 à 54 px.
+- Suppression de la règle verticale de l'axe prix.
+- Graduation 50 USD représentée par de simples points noirs ; labels complets conservés tous les 200 USD.
+- Aucun impact trading.

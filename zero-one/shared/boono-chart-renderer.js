@@ -99,7 +99,7 @@ function drawPrice(canvas,rows,opts){
 
   if(theme==='interface'&&opts.hourGrid!==false){
     const hour=3600000,first=Math.ceil(t0/hour)*hour;
-    ctx.save();ctx.strokeStyle='rgba(0,0,0,.72)';ctx.lineWidth=1;
+    ctx.save();ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.75;
     for(let ts0=first;ts0<=t1;ts0+=hour){
       const xx=mapTime(ts0,t0,t1,pad.left,plotW);
       ctx.beginPath();ctx.moveTo(xx,pad.top);ctx.lineTo(xx,pad.top+plotH);ctx.stroke();
@@ -117,7 +117,7 @@ function drawPrice(canvas,rows,opts){
       ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.12)';
       ctx.fillRect(x1,pad.top,zw,plotH);
       if(theme!=='tv'){
-        ctx.strokeStyle='#111';ctx.lineWidth=.8;
+        ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
         ctx.strokeRect(x1+.4,pad.top+.4,Math.max(.2,zw-.8),Math.max(.2,plotH-.8));
       }
     }
