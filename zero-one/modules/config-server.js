@@ -2615,7 +2615,7 @@ function drawWavePrice(canvas,idx) {
   const result=window.BoonoCharts.drawPrice(canvas,series,{
     theme:'interface',t0,t1,boundsT0,boundsT1,candleMs:wavePriceTf==='3m'?180000:900000,
     cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
-    padding:{left:12,right:54,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
+    padding:{left:36,right:54,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
     pricePadPct:.035,minPriceSpan:500,priceSnap:50,
     priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
@@ -2644,7 +2644,7 @@ function drawWaveBand(canvas, key, idx) {
   canvas.height = Math.max(140, Math.floor(box.height * ratio));
   const ctx = canvas.getContext('2d');
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  const W = box.width, H = box.height, L = 36, R = 9, T = 13, B = 19;
+  const W = box.width, H = box.height, L = 36, R = 54, T = 13, B = 19;
   const w = W - L - R, h = H - T - B;
   const t0 = Number(frames[0].ts), t1 = Number(frames[frames.length - 1].ts);
   let maxAbs = 0;

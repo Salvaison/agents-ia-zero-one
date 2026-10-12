@@ -771,3 +771,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Suppression complète des points intermédiaires de graduation.
 - Conservation d'une petite barrette grise et du prix complet uniquement tous les 200 USD.
 - Aucun impact trading.
+
+## 2026-10-12 — Synchronisation géométrique PRIX / Wave15 / Wave3
+- Correction du décalage horizontal introduit par l'ajout de l'échelle prix à droite.
+- Les trois graphes utilisent désormais la même zone temporelle utile : marge gauche 36 px, marge droite 54 px.
+- L'échelle MCB reste à gauche et l'échelle prix à droite, mais elles vivent dans des gutters réservés hors de la géométrie temps.
+- Un timestamp donné retrouve exactement le même X sur PRIX, Wave15 et Wave3.
+- Aucun impact trading.
