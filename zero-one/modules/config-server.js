@@ -2267,6 +2267,7 @@ app.get('/', requireAuth, (req, res) => {
 // Shared BOONO charts renderer — same browser drawing core for Vagues and BOONO-TV.
 app.get('/boono-charts.js', requireAuth, (req,res)=>{
   const file=path.join(__dirname,'../shared/boono-chart-renderer.js');
+  res.set('Cache-Control','no-store');
   res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
 });
 

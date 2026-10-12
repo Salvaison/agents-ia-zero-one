@@ -99,10 +99,16 @@ function drawPrice(canvas,rows,opts){
 
   if(theme==='interface'&&opts.hourGrid!==false){
     const hour=3600000,first=Math.ceil(t0/hour)*hour;
-    ctx.save();ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.75;
+    const fmtHour=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hour12:false});
+    ctx.save();
     for(let ts0=first;ts0<=t1;ts0+=hour){
       const xx=mapTime(ts0,t0,t1,pad.left,plotW);
+      ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.75;
       ctx.beginPath();ctx.moveTo(xx,pad.top);ctx.lineTo(xx,pad.top+plotH);ctx.stroke();
+      ctx.fillStyle='#777';
+      ctx.font="10px 'SF Mono', Menlo, Consolas, monospace";
+      ctx.textAlign='center';
+      ctx.fillText(fmtHour.format(new Date(ts0)).padStart(2,'0')+'h',xx,H-5);
     }
     ctx.restore();
   }

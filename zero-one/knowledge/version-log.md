@@ -753,3 +753,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Ligne zéro MCB portée à 2 px dans l'interface 15m/3m.
 - BOONO-TV conserve une ligne zéro discrète afin de ne pas alourdir le rideau.
 - Aucun impact trading.
+
+## 2026-10-12 — Échelle temporelle sous PRIX
+- Le chandelier PRIX affiche maintenant les repères horaires sous le graphe (14h, 15h, etc.), exactement alignés avec les lignes verticales horaires et les axes temporels des vagues 15m/3m.
+- Fuseau d'affichage : Europe/Paris.
+- Le renderer partagé est servi en no-store pour que les ajustements graphiques soient visibles immédiatement après rechargement.
+- Aucun impact trading.
