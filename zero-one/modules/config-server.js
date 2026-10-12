@@ -2152,8 +2152,8 @@ app.get('/', requireAuth, (req, res) => {
 .wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 82%,rgba(255,255,255,.84) 93%,rgba(255,255,255,0) 100%);}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
-.wave-price-axis-bar{position:absolute;right:4px;top:-1.5px;width:3px;height:3px;border:0;background:rgba(0,0,0,.72);border-radius:50%;}
-.wave-price-axis-mark.major .wave-price-axis-bar{right:2px;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid rgba(0,0,0,.55);}
+.wave-price-axis-bar{position:absolute;right:4px;top:-1.5px;width:3px;height:3px;border:0;background:#e4e4e4;border-radius:50%;}
+.wave-price-axis-mark.major .wave-price-axis-bar{right:2px;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
 .wave-price-axis-label{position:absolute;right:10px;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
@@ -2177,7 +2177,7 @@ app.get('/', requireAuth, (req, res) => {
 .wave-scroll.bottom::-webkit-scrollbar-track{background:#f1f1f1;}
 .wave-scroll-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px;min-height:21px;font-size:9.5px;color:#666;}
 .wave-scroll-meta button{border:1px solid #bbb;background:#fff;color:#333;border-radius:4px;padding:3px 7px;font-family:inherit;font-size:9.5px;font-weight:700;cursor:pointer;}
-.wave-trade-panel{border:1px solid #b8d7e6;background:rgba(135,206,235,.12);border-radius:6px;padding:6px 9px;margin:-1px 0 8px;min-height:30px;font-size:10px;line-height:1.35;color:#333;display:flex;align-items:center;justify-content:space-between;gap:8px;}\n.wave-trade-panel .info{min-width:0;flex:1;overflow-wrap:anywhere;}\n.wave-trade-panel .head{font-weight:800;letter-spacing:.05em;margin-right:8px;}\n.wave-trade-panel .muted{color:#777;}\n.wave-trade-report-btn{border:1px solid #8abbd3;background:#fff;color:#245a73;border-radius:4px;padding:4px 7px;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.05em;cursor:pointer;flex:none;}\n.wave-trade-report-btn:hover{background:#eef8fc;}\n.wave-report-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(18,18,20,.18);padding:18px 10px;align-items:flex-start;justify-content:center;}
+.wave-trade-panel{border:1px solid #8abbd3;background:rgba(135,206,235,.18);border-radius:6px;padding:6px 9px;margin:-1px 0 8px;min-height:30px;font-size:10px;line-height:1.35;color:#333;display:flex;align-items:center;justify-content:space-between;gap:8px;}\n.wave-trade-panel .info{min-width:0;flex:1;overflow-wrap:anywhere;}\n.wave-trade-panel .head{font-weight:800;letter-spacing:.05em;margin-right:8px;}\n.wave-trade-panel .muted{color:#777;}\n.wave-trade-report-btn{border:1px solid #8abbd3;background:#fff;color:#245a73;border-radius:4px;padding:4px 7px;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.05em;cursor:pointer;flex:none;}\n.wave-trade-report-btn:hover{background:#eef8fc;}\n.wave-report-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(18,18,20,.18);padding:18px 10px;align-items:flex-start;justify-content:center;}
 .wave-report-overlay.open{display:flex;}
 .wave-report-card{width:min(620px,96vw);max-height:calc(100vh - 36px);overflow:auto;background:#fff;border:1px solid #cfcfd4;border-radius:10px;box-shadow:0 10px 32px rgba(0,0,0,.24);}
 .wave-report-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;background:rgba(255,255,255,.97);border-bottom:1px solid #e2e2e5;}
@@ -2674,7 +2674,7 @@ function drawWaveBand(canvas, key, idx) {
     const yy=y(v),threshold=Math.abs(v)===60;
     ctx.save();
     ctx.strokeStyle = v === 0 ? '#2f80ed' : (threshold ? '#b8b8b8' : '#ececec');
-    ctx.lineWidth = v === 0 ? 1.25 : (threshold ? 1.1 : .75);
+    ctx.lineWidth = v === 0 ? 2 : (threshold ? 1.1 : .75);
     if (v !== 0) ctx.setLineDash(threshold?[5,4]:[2,5]);
     ctx.beginPath(); ctx.moveTo(L,yy); ctx.lineTo(L+w,yy); ctx.stroke();
     ctx.restore();
@@ -2689,7 +2689,7 @@ function drawWaveBand(canvas, key, idx) {
     if(ex<=t0||sx>=t1||ex<=sx)return;
     const x1=tx(sx),x2=tx(ex);
     const zoneW=Math.max(1,x2-x1);
-    ctx.fillStyle='rgba(135,206,235,.12)';
+    ctx.fillStyle='rgba(135,206,235,.18)';
     ctx.fillRect(x1,T,zoneW,h);
     ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
     ctx.strokeRect(x1+.4,T+.4,Math.max(.2,zoneW-.8),Math.max(.2,h-.8));

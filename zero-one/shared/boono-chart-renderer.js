@@ -114,7 +114,7 @@ function drawPrice(canvas,rows,opts){
       if(!(b>a))continue;
       const x1=mapTime(a,t0,t1,pad.left,plotW),x2=mapTime(b,t0,t1,pad.left,plotW);
       const zw=Math.max(1,x2-x1);
-      ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.12)';
+      ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.18)';
       ctx.fillRect(x1,pad.top,zw,plotH);
       if(theme!=='tv'){
         ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
@@ -198,7 +198,7 @@ function drawWave(canvas,rows,opts){
   const mfFill=theme==='tv'?'rgba(210,216,220,.13)':'rgba(135,135,135,.24)';
   const mfEdge=theme==='tv'?'rgba(255,255,255,.58)':'rgba(0,0,0,.78)';
   if(opts.zeroLine!==false){
-    ctx.save();ctx.strokeStyle=theme==='tv'?'rgba(255,255,255,.18)':'#2f80ed';ctx.lineWidth=.75;
+    ctx.save();ctx.strokeStyle=theme==='tv'?'rgba(255,255,255,.18)':'#2f80ed';ctx.lineWidth=theme==='tv'?.75:2;
     ctx.beginPath();ctx.moveTo(pad.left,zero);ctx.lineTo(pad.left+plotW,zero);ctx.stroke();ctx.restore();
   }
   function pts(field){return use.filter(r=>finite(r[field])).map(r=>[xx(r.ts),yy(r[field])]);}

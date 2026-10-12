@@ -746,3 +746,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Suppression de la règle verticale de l'axe prix.
 - Graduation 50 USD représentée par de simples points noirs ; labels complets conservés tous les 200 USD.
 - Aucun impact trading.
+
+## 2026-10-12 — Vagues color unification + MCB zero line
+- Tous les fonds bleu ciel des zones Vagues/Trades utilisent désormais la même nuance que FLOW/AUDIT : rgba(135,206,235,.18).
+- Points de graduation 50 USD passés en gris clair, cohérents avec la grille horizontale.
+- Ligne zéro MCB portée à 2 px dans l'interface 15m/3m.
+- BOONO-TV conserve une ligne zéro discrète afin de ne pas alourdir le rideau.
+- Aucun impact trading.
