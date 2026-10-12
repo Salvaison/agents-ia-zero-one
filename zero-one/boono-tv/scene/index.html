@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BOONO TV</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main id="scene">
+<section id="statePanel" class="glass left-panel">
+<header class="state-head"><div><div class="brand">BOONO SYSTEMS</div><div class="sub">ÉTAT VIVANT — <span id="version">—</span></div><div class="tiny">SIMULATION · OKX · BTCUSDT</div></div><div class="clock"><b id="clock">--:--:--</b><span>UTC+2</span></div></header>
+<div class="price-row"><div><span class="label">PRIX LIVE</span><strong id="price">—</strong></div><div id="freshness" class="tiny right">source live</div></div>
+<div id="stateRows" class="state-rows"></div>
+<footer>READ ONLY · DISCIPLINE · EXÉCUTION · RÉSULTATS</footer>
+</section>
+<section id="room">
+<div id="boonoScene" class="boono-scene working" aria-hidden="true"></div>
+<div id="boonoBackplate" class="boono-backplate"></div>
+<div id="boonoCharacter" class="boono-character working"></div>
+<div id="boonoDesk" class="boono-desk"></div>
+<div class="room-wall"></div>
+<div class="lamp lamp-a"></div>
+<div class="poster poster-a">SMALL<br>MOVES<br>BIG<br>RESULTS ☺</div>
+<div class="poster poster-b">PROBABILITY<br>DISCIPLINE<br>PATIENCE<br>RESULTS ☺</div>
+<div id="layerCandles" class="float-layer active"><div class="layer-title">BTCUSDT · 3m</div><canvas id="candlesCanvas"></canvas></div>
+<div id="layerMcb" class="float-layer layer-secondary"><div class="layer-title">MARKETCIPHER · 3m</div><canvas id="mcbCanvas"></canvas></div>
+<div id="layerAudit" class="float-layer layer-audit"><div class="layer-title">AUDIT · DERNIERS ÉVÉNEMENTS</div><div id="auditTable"></div></div>
+<div id="layerWaves" class="float-layer layer-waves"><div class="layer-title">WAVES · 15m / 3m</div><canvas id="waveCanvas"></canvas></div>
+<div id="marketCurtain" class="market-curtain" aria-hidden="true">
+  <div class="curtain-band curtain-price"><span>BTCUSDT · 3m</span><canvas id="curtainPrice"></canvas></div>
+  <div class="curtain-band curtain-wave"><span>WAVE · 15m</span><canvas id="curtainWave15"></canvas></div>
+  <div class="curtain-band curtain-wave"><span>WAVE · 3m</span><canvas id="curtainWave3"></canvas></div>
+</div>
+<div id="boonoStage" class="boono-stage">
+  <div id="bubble" class="bubble">READ CONTEXT. WAIT FOR PROOF.</div>
+  <div id="boono" class="boono working">
+    <div class="antenna"><i></i></div>
+    <div class="head"><span class="eye left"><i></i></span><span class="eye right"><i></i></span><span class="mouth"></span></div>
+    <div class="body"><b>BOONO</b><small>SYSTEMS</small></div>
+    <div class="arm arm-left"><span class="hand"></span></div>
+    <div class="arm arm-right"><span class="hand"></span></div>
+  </div>
+  <div class="console">
+    <div class="touch left"><canvas id="deskChartA"></canvas></div>
+    <div class="mixer"><i></i><i></i><i></i><i></i></div>
+    <div class="touch right"><canvas id="deskChartB"></canvas></div>
+    <div class="keyboard"></div>
+    <div class="console-logo">BOONO SYSTEMS</div>
+  </div>
+</div>
+<div class="status-chip">BOONO-TV · LIVE COMPOSITION</div>
+</section>
+</main>
+<script src="/boono-charts.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -460,6 +460,7 @@ app.get('/api/wave-replay', requireAuth, (req, res) => {
     if(Array.isArray(data.frames)&&data.frames.length){
       const start=Number(data.frames[0].ts),end=Number(data.frames[data.frames.length-1].ts);
       data.signalEvents={wave3:waveUiSignalRows('3m',start,end),wave15:waveUiSignalRows('15m',start,end)};
+      data.priceSeries={'3m':waveUiPriceSeries('3m',start,end),'15m':waveUiPriceSeries('15m',start,end)};
     }
     data.sourceContract=data.sourceContract||{};
     data.sourceContract.ma200='MCB CSV MA200, diagnostic only; test episode = bar range within 0.03% of MA200';
@@ -817,6 +818,30 @@ function waveUiSnapshotSeries(tf,startTs,endTs){
   });
   return out.sort((a,b)=>a.ts-b.ts);
 }
+function waveUiPriceSeries(tf,startTs,endTs){
+  const base=path.join(WAVE_MCB_DIR,'mcb_'+tf+'.csv');
+  const live=path.join(WAVE_MCB_DIR,'mcb_'+tf+'_live.csv');
+  const out=[];
+  function consume(txt,isLive){
+    if(!txt)return;
+    txt.split(/\r?\n/).forEach(function(line){
+      if(!line||line.startsWith('timestamp,'))return;
+      const v=line.split(','),ts=Date.parse(v[0]);
+      if(!Number.isFinite(ts)||ts<Number(startTs)||ts>Number(endTs))return;
+      const open=Number(v[1]),high=Number(v[2]),low=Number(v[3]),close=Number(v[4]);
+      const ma200=(v[12]!==undefined&&v[12]!==''&&Number.isFinite(Number(v[12])))?Number(v[12]):null;
+      if(![open,high,low,close].every(Number.isFinite))return;
+      out.push({ts,timestamp:v[0],open,high,low,close,ma200,_live:!!isLive,timeframe:tf});
+    });
+  }
+  consume(waveUiReadTailText(base,tf==='3m'?4*1024*1024:2*1024*1024),false);
+  try{consume(fs.readFileSync(live,'utf8'),true);}catch(_){}
+  out.sort((a,b)=>a.ts-b.ts||(a._live?1:-1));
+  const m=new Map();
+  out.forEach(r=>m.set(Number(r.ts),r));
+  return Array.from(m.values()).sort((a,b)=>a.ts-b.ts);
+}
+
 let waveSnapshotCache={key:null,data:null};
 function waveUiBuildSnapshot48(){
   // Freeze the older 36h on 15m boundaries. The newest 12h stay rich/live.
@@ -876,7 +901,11 @@ function waveUiBuildSnapshot48(){
     period:{start:new Date(startTs).toISOString(),end:new Date(endTs).toISOString(),label:'SNAPSHOT confirmé · 12–48h'},
     sampling:{wave3Bars:r3.length,wave15Bars:r15.length,frames:frames.length},
     sourceContract:{tradingImpact:false,geometry:'confirmed MCB bars only',state:'none',semantic:'older 36h frozen/compact; newest 12h remain live-rich'},
-    signalEvents,events,frames
+    signalEvents,events,frames,
+    priceSeries:{
+      '3m':waveUiPriceSeries('3m',startTs,endTs),
+      '15m':waveUiPriceSeries('15m',startTs,endTs)
+    }
   };
   waveSnapshotCache={key,data};
   return data;
@@ -936,6 +965,10 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
         wave15:waveUiSignalRows('15m',frames.length?Number(frames[0].ts):cut,frames.length?Number(frames[frames.length-1].ts):now)
       },
       divergenceCatalog:waveUiCausalDivergenceCatalogCached(auditAll),
+      priceSeries:{
+        '3m':waveUiPriceSeries('3m',cut,now),
+        '15m':waveUiPriceSeries('15m',cut,now)
+      },
       liveState,
       events,frames
     });
@@ -2114,6 +2147,13 @@ app.get('/', requireAuth, (req, res) => {
 .wave15-head .wave-band-legend{display:block;text-align:left;margin-top:3px;}
 .wave-band-legend{font-size:9.5px;color:#666;white-space:normal;text-align:right;line-height:1.3;}
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
+.wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.wave-price-canvas{height:205px;}
+.wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:58px;height:205px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 80%,rgba(255,255,255,.85) 93%,rgba(255,255,255,0) 100%);}
+.wave-price-tick{position:absolute;right:7px;transform:translateY(-50%);font:8.5px 'SF Mono',Menlo,Consolas,monospace;color:#666;white-space:nowrap;text-shadow:0 1px 0 #fff;}
+.wave-flow-audit{border:1px solid #dedede;border-radius:7px;background:#fff;padding:7px 10px;margin:0 0 8px;font-size:10px;color:#555;line-height:1.4;}
+.wave-flow-audit b{color:#222;letter-spacing:.06em;}
+.wave-price-legend{font-size:9.5px;color:#666;line-height:1.3;}
 .wave-scroll-shell{position:relative;width:100%;}
 .wave-scroll{width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;}
 .wave-y-axis{position:absolute;left:0;top:0;z-index:6;width:36px;height:185px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 78%,rgba(255,255,255,.88) 92%,rgba(255,255,255,0) 100%);}
@@ -2140,16 +2180,31 @@ app.get('/', requireAuth, (req, res) => {
 .wave-report-body{padding:9px;}
 .wave-report-body .diag-module{margin-bottom:0;}
 .wave-report-loading{font-size:11px;color:#666;padding:12px 4px;}
-@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-y-axis{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
+@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-price-canvas{height:175px}.wave-price-axis{height:175px}.wave-y-axis{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
 </style>
 <div id="waveReplayApp" class="wave-replay-shell">
   <div class="wave-replay-head">
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
-  <div id="waveReplayState" class="wave-state-grid"></div>
+  <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
-    <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span><div class="wave-scale-actions"><button id="waveScale24" class="wave-scale-btn active" type="button">24H</button><button id="waveScale48" class="wave-scale-btn" type="button">48H</button></div></div><span class="wave-band-legend">BW noir · LBW noir fin · MF gris · VWAP jaune · UP vert · DN rouge · DIV vert/rouge · plein = régulière · pointillé = continuation</span></div>
+    <div class="wave-band-head">
+      <div>
+        <span id="wavePriceTitle" class="wave-band-title">PRIX BTCUSDT · 3m</span>
+        <div class="wave-price-legend">bougies noir / gris / blanc · MA200 verte au-dessus, rouge au-dessous</div>
+      </div>
+      <div class="wave-price-actions">
+        <button id="wavePrice3m" class="wave-scale-btn active" type="button">3m</button>
+        <button id="wavePrice15m" class="wave-scale-btn" type="button">15m</button>
+        <button id="waveScale24" class="wave-scale-btn active" type="button">24H</button>
+        <button id="waveScale48" class="wave-scale-btn" type="button">48H</button>
+      </div>
+    </div>
+    <div class="wave-scroll-shell"><div id="wavePriceScroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wavePriceCanvas" class="wave-canvas wave-price-canvas"></canvas></div></div><div id="wavePriceYAxis" class="wave-price-axis" aria-hidden="true"></div></div>
+  </div>
+  <div class="wave-band">
+    <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span></div><span class="wave-band-legend">BW noir · LBW noir fin · MF gris bordé · VWAP jaune · UP vert · DN rouge · DIV vert/rouge</span></div>
     <div id="wave15MaInfo" class="wave-ma-info">MA200 —</div>
     <div class="wave-scroll-shell"><div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div><div id="wave15YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
   </div>
@@ -2160,6 +2215,7 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-scroll-shell"><div id="wave3Scroll" class="wave-scroll bottom"><div class="wave-canvas-track"><canvas id="wave3Canvas" class="wave-canvas"></canvas></div></div><div id="wave3YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
     <div class="wave-scroll-meta"><span id="waveHistoryStatus">6 h visibles · chargement historique…</span></div>
   </div>
+  <div id="waveFlowAudit" class="wave-flow-audit"><b>FLOW / AUDIT</b> · chargement…</div>
   <div id="waveTradeOverlay" class="wave-report-overlay" aria-hidden="true">
     <div class="wave-report-card" role="dialog" aria-modal="true" aria-labelledby="waveTradeOverlayTitle">
       <div class="wave-report-head"><div id="waveTradeOverlayTitle" class="wave-report-title">Rapport trade</div><button id="waveTradeOverlayClose" class="wave-report-close" type="button" aria-label="Fermer">×</button></div>
@@ -2195,10 +2251,17 @@ app.get('/', requireAuth, (req, res) => {
         </div>
       </div>
 
+<script src="/boono-charts.js"></script>
 <script src="/app.js"></script>
     </body>
     </html>
   `);
+});
+
+// Shared BOONO charts renderer — same browser drawing core for Vagues and BOONO-TV.
+app.get('/boono-charts.js', requireAuth, (req,res)=>{
+  const file=path.join(__dirname,'../shared/boono-chart-renderer.js');
+  res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
 });
 
 // ── Script client ─────────────────────────────────────────────────────────────
@@ -2318,6 +2381,7 @@ let waveReplayMode = 'live';
 let waveLiveRefresh = null;
 let waveLiveFollow = true;
 let waveScaleModeHours = 24;
+let wavePriceTf = '3m';
 let waveSnapshotLoaded = false;
 let waveSnapshotLoading = false;
 let waveSelectedTradeId = null;
@@ -2508,6 +2572,44 @@ function waveDrawFixedYAxis(key,yLimit,H,T,B,guides) {
     const cls='wave-y-tick'+(Math.abs(v)===60?' threshold':'')+(v===0?' zero':'');
     return '<span class="'+cls+'" style="top:'+y(v).toFixed(1)+'px">'+escTrade(String(v))+'</span>';
   }).join('');
+}
+
+function waveDrawPriceYAxis(result,H) {
+  const axis=document.getElementById('wavePriceYAxis');
+  if(!axis||!result||!result.bounds)return;
+  axis.style.height=H+'px';
+  const b=result.bounds,p=result.padding,plotH=result.plotHeight;
+  const ticks=5,out=[];
+  for(let i=0;i<ticks;i++){
+    const rel=i/(ticks-1),v=b.hi-(b.hi-b.lo)*rel;
+    const y=p.top+plotH*rel;
+    out.push('<span class="wave-price-tick" style="top:'+y.toFixed(1)+'px">'+Math.round(v).toLocaleString('fr-FR')+'</span>');
+  }
+  axis.innerHTML=out.join('');
+}
+function drawWavePrice(canvas,idx) {
+  if(!canvas||!waveReplayData||!waveReplayData.frames||!waveReplayData.frames.length||!window.BoonoCharts)return;
+  const frames=waveReplayData.frames,t0=Number(frames[0].ts),t1=Number(frames[frames.length-1].ts);
+  const series=waveReplayData.priceSeries&&waveReplayData.priceSeries[wavePriceTf]||[];
+  const endTs=t1,spans=waveTradeSpans(waveReplayData.events||[],endTs);
+  const result=window.BoonoCharts.drawPrice(canvas,series,{
+    theme:'interface',t0,t1,candleMs:wavePriceTf==='3m'?180000:900000,
+    cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
+    padding:{left:58,right:10,top:10,bottom:16},maxBodyWidth:wavePriceTf==='3m'?7:11,
+    maAbove:'#1f9d55',maBelow:'#d33'
+  });
+  canvas._waveTradeZones=result&&result.tradeZones||[];
+  const title=document.getElementById('wavePriceTitle');
+  if(title)title.textContent='PRIX BTCUSDT · '+wavePriceTf;
+  const b3=document.getElementById('wavePrice3m'),b15=document.getElementById('wavePrice15m');
+  if(b3)b3.classList.toggle('active',wavePriceTf==='3m');
+  if(b15)b15.classList.toggle('active',wavePriceTf==='15m');
+  if(result)waveDrawPriceYAxis(result,canvas.getBoundingClientRect().height);
+}
+function waveSetPriceTf(tf){
+  if(tf!=='3m'&&tf!=='15m')return;
+  wavePriceTf=tf;
+  renderWaveReplay();
 }
 
 function drawWaveBand(canvas, key, idx) {
@@ -2760,8 +2862,11 @@ function renderWaveReplay() {
   const ev=nearestWaveEvents(f.ts),eventEl=document.getElementById('waveReplayEvent');
   if(eventEl)eventEl.textContent=ev.length ? ev.map(function(e){return e.label+' · '+String(e.direction||'').toUpperCase()+' @ '+waveNum(e.price,1);}).join(' | ') : '';
   const slider=document.getElementById('waveSlider'); if(slider)slider.value=String(waveReplayIndex);
+  drawWavePrice(document.getElementById('wavePriceCanvas'),waveReplayIndex);
   drawWaveBand(document.getElementById('wave15Canvas'),'wave15',waveReplayIndex);
   drawWaveBand(document.getElementById('wave3Canvas'),'wave3',waveReplayIndex);
+  const flowAudit=document.getElementById('waveFlowAudit');
+  if(flowAudit)flowAudit.innerHTML='<b>FLOW / AUDIT</b> · PM '+waveNum(au.priceMove,1)+' · cadence '+waveNum(au.cadence,1)+' · flow '+waveNum(flow,2)+' BTC/s · MF15 pente '+waveNum(au.mf15Pente,2)+' · MF15 Live '+waveNum(w15.mf,2);
   waveRenderTradePanel();
   waveUpdateHistoryStatus();
 }
@@ -2781,8 +2886,12 @@ function waveDescribePeriod() {
 }
 let waveScrollProgrammatic=false;
 let waveScrollSettleTimer=null;
-function waveScrollPair(){
-  return {top:document.getElementById('wave15Scroll'),bottom:document.getElementById('wave3Scroll')};
+function waveScrollGroup(){
+  return [
+    document.getElementById('wavePriceScroll'),
+    document.getElementById('wave15Scroll'),
+    document.getElementById('wave3Scroll')
+  ].filter(Boolean);
 }
 function waveVisibleWindowHours(){
   return waveScaleModeHours===48?12:6;
@@ -2858,10 +2967,9 @@ function waveUpdateHistoryStatus(){
   else el.textContent='HISTORIQUE · '+waveParis(leftTs)+' → '+waveParis(rightTs);
 }
 function waveSetScroll(left){
-  const pair=waveScrollPair();
+  const group=waveScrollGroup();
   waveScrollProgrammatic=true;
-  if(pair.top)pair.top.scrollLeft=left;
-  if(pair.bottom)pair.bottom.scrollLeft=left;
+  group.forEach(function(sc){sc.scrollLeft=left;});
   requestAnimationFrame(function(){waveScrollProgrammatic=false;waveUpdateHistoryStatus();});
 }
 function waveScrollToTimestamp(ts){
@@ -2880,13 +2988,12 @@ function waveScrollToLive(){
   waveSetScroll(Math.max(0,sc.scrollWidth-sc.clientWidth));
   renderWaveReplay();
 }
-function waveOnScroll(source,target){
+function waveOnScroll(source){
   if(waveScrollProgrammatic)return;
-  if(target){
-    waveScrollProgrammatic=true;
-    target.scrollLeft=source.scrollLeft;
-    requestAnimationFrame(function(){waveScrollProgrammatic=false;});
-  }
+  const group=waveScrollGroup();
+  waveScrollProgrammatic=true;
+  group.forEach(function(sc){if(sc!==source)sc.scrollLeft=source.scrollLeft;});
+  requestAnimationFrame(function(){waveScrollProgrammatic=false;});
   const max=Math.max(0,source.scrollWidth-source.clientWidth);
   if(waveReplayMode==='live')waveLiveFollow=(max-source.scrollLeft<8);
   waveUpdateHistoryStatus();
@@ -2901,15 +3008,13 @@ function waveOnScroll(source,target){
   },120);
 }
 function waveBindScrollSync(){
-  const pair=waveScrollPair();
-  if(pair.top&&!pair.top.dataset.waveSyncBound){
-    pair.top.dataset.waveSyncBound='1';
-    pair.top.addEventListener('scroll',function(){waveOnScroll(pair.top,pair.bottom);},{passive:true});
-  }
-  if(pair.bottom&&!pair.bottom.dataset.waveSyncBound){
-    pair.bottom.dataset.waveSyncBound='1';
-    pair.bottom.addEventListener('scroll',function(){waveOnScroll(pair.bottom,pair.top);},{passive:true});
-  }
+  const group=waveScrollGroup();
+  group.forEach(function(sc){
+    if(sc&&!sc.dataset.waveSyncBound){
+      sc.dataset.waveSyncBound='1';
+      sc.addEventListener('scroll',function(){waveOnScroll(sc);},{passive:true});
+    }
+  });
 }
 
 function waveApplyData(data, mode, targetTs) {
@@ -2954,6 +3059,13 @@ async function loadWaveReplay() {
     document.getElementById('waveReplayState').innerHTML='<div class="placeholder-note">Replay indisponible : '+e.message+'</div>';
   }
 }
+function waveMergePriceSeries(a,b){
+  const m=new Map();
+  (a||[]).concat(b||[]).forEach(function(r){
+    const ts=Number(r&&r.ts);if(Number.isFinite(ts))m.set(ts,r);
+  });
+  return Array.from(m.values()).sort(function(x,y){return Number(x.ts)-Number(y.ts);});
+}
 function waveMergeSnapshotData(live,snapshot){
   if(!snapshot||!snapshot.frames||!snapshot.frames.length)return live;
   const frameMap=new Map();
@@ -2985,6 +3097,10 @@ function waveMergeSnapshotData(live,snapshot){
     frames:frames,
     events:Array.from(eventMap.values()).sort(function(a,b){return Number(a.ts)-Number(b.ts);}),
     signalEvents:{wave3:mergeSignals('wave3'),wave15:mergeSignals('wave15')},
+    priceSeries:{
+      '3m':waveMergePriceSeries(snapshot.priceSeries&&snapshot.priceSeries['3m'],live.priceSeries&&live.priceSeries['3m']),
+      '15m':waveMergePriceSeries(snapshot.priceSeries&&snapshot.priceSeries['15m'],live.priceSeries&&live.priceSeries['15m'])
+    },
     period:{
       start:frames.length?new Date(frames[0].ts).toISOString():snapshot.period&&snapshot.period.start,
       end:frames.length?new Date(frames[frames.length-1].ts).toISOString():live.period&&live.period.end,
@@ -3051,6 +3167,10 @@ function waveMergeLiveData(base,recent){
     frames:frames,
     events:Array.from(eventMap.values()).sort(function(a,b){return Number(a.ts)-Number(b.ts);}),
     signalEvents:{wave3:mergeSignals('wave3'),wave15:mergeSignals('wave15')},
+    priceSeries:{
+      '3m':waveMergePriceSeries(base.priceSeries&&base.priceSeries['3m'],recent.priceSeries&&recent.priceSeries['3m']).filter(function(r){return Number(r.ts)>=cut;}),
+      '15m':waveMergePriceSeries(base.priceSeries&&base.priceSeries['15m'],recent.priceSeries&&recent.priceSeries['15m']).filter(function(r){return Number(r.ts)>=cut;})
+    },
     period:{
       start:frames.length?new Date(frames[0].ts).toISOString():new Date(cut).toISOString(),
       end:frames.length?new Date(frames[frames.length-1].ts).toISOString():new Date(endTs).toISOString(),
@@ -3086,6 +3206,8 @@ document.addEventListener('click',function(e){
   if(!e.target)return;
   const id=e.target.id || (e.target.closest&&e.target.closest('button')&&e.target.closest('button').id);
   if(id==='waveModeReplay'){loadWaveReplay();return;}
+  if(id==='wavePrice3m'){waveSetPriceTf('3m');return;}
+  if(id==='wavePrice15m'){waveSetPriceTf('15m');return;}
   if(id==='waveScale24'){waveSetScaleMode(24);return;}
   if(id==='waveScale48'){waveSetScaleMode(48);if(!waveSnapshotLoaded)loadWaveSnapshot();return;}
   if(id==='waveModeLive'){waveLiveFollow=true;loadWaveLive(true).then(function(){requestAnimationFrame(waveScrollToLive);});return;}

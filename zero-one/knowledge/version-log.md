@@ -719,3 +719,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Ticker reste non-bloquant ; MCB reste seule autorité directionnelle ; MF Memory n'a aucune autorité de sortie.
 - Replay week-end : #99/#100/#102/#104/#105/#107/#109 supprimés ou suspendus, #111 conservé.
 - Protection économique 220→180 volontairement inchangée dans cette version ; 440/180 reste le mécanisme gros gagnant / stress TP.
+
+## 2026-10-12 — Vagues Price 3m/15m + BOONO-TV Market Curtain
+- Vagues : ajout d'un chandelier BTCUSDT synchronisé avec Wave15/Wave3, sélection 3m/15m.
+- 24H conserve ~6h visibles ; 48H ~12h visibles ; scroll commun aux trois bandes.
+- MA200 rouge sous la moyenne / verte au-dessus, à partir des données MCB collectées.
+- Blocs THÈSE/CONTEXTE/EXÉCUTION retirés visuellement de Vagues ; FLOW/AUDIT conservé en bande basse.
+- Renderer browser partagé `shared/boono-chart-renderer.js`.
+- BOONO-TV : nouveau Market Curtain transparent 3m + Wave15 + Wave3, masqué autour du personnage pour créer un effet de rideau derrière BOONO.
+- Aucun impact trading.
