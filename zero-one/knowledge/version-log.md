@@ -778,3 +778,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - L'échelle MCB reste à gauche et l'échelle prix à droite, mais elles vivent dans des gutters réservés hors de la géométrie temps.
 - Un timestamp donné retrouve exactement le même X sur PRIX, Wave15 et Wave3.
 - Aucun impact trading.
+
+## 2026-10-12 — Échelle prix en overlay transparent
+- L'échelle prix reste à droite mais ne réserve plus de largeur dans la zone de tracé.
+- Fond de l'échelle rendu totalement transparent ; bougies et MA200 restent visibles dessous.
+- PRIX, Wave15 et Wave3 reviennent à leur géométrie d'origine commune : L=36 px / R=9 px.
+- Les labels prix conservent un léger halo blanc pour rester lisibles sans panneau opaque.
+- Aucun impact trading.

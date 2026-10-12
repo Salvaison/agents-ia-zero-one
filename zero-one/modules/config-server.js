@@ -2149,11 +2149,11 @@ app.get('/', requireAuth, (req, res) => {
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .wave-price-canvas{height:300px;}
-.wave-price-axis{position:absolute;right:0;left:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(270deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 82%,rgba(255,255,255,.84) 93%,rgba(255,255,255,0) 100%);}
+.wave-price-axis{position:absolute;right:0;left:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:transparent;}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
 .wave-price-axis-bar{position:absolute;left:2px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
-.wave-price-axis-label{position:absolute;left:10px;right:auto;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
+.wave-price-axis-label{position:absolute;left:10px;right:auto;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 0 2px #fff,0 0 4px rgba(255,255,255,.95);}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .wave-flow-audit .wave-flow-text{min-width:0;overflow-wrap:anywhere;}
@@ -2615,7 +2615,7 @@ function drawWavePrice(canvas,idx) {
   const result=window.BoonoCharts.drawPrice(canvas,series,{
     theme:'interface',t0,t1,boundsT0,boundsT1,candleMs:wavePriceTf==='3m'?180000:900000,
     cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
-    padding:{left:36,right:54,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
+    padding:{left:36,right:9,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
     pricePadPct:.035,minPriceSpan:500,priceSnap:50,
     priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
@@ -2644,7 +2644,7 @@ function drawWaveBand(canvas, key, idx) {
   canvas.height = Math.max(140, Math.floor(box.height * ratio));
   const ctx = canvas.getContext('2d');
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  const W = box.width, H = box.height, L = 36, R = 54, T = 13, B = 19;
+  const W = box.width, H = box.height, L = 36, R = 9, T = 13, B = 19;
   const w = W - L - R, h = H - T - B;
   const t0 = Number(frames[0].ts), t1 = Number(frames[frames.length - 1].ts);
   let maxAbs = 0;
