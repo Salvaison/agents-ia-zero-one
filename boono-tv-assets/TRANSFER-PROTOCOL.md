@@ -71,13 +71,31 @@ Côté VPS, inaccessible en écriture au compte SFTP :
 /srv/boono-upload/status/receipts
 ```
 
-## 3. Upload obligatoire : staging puis rename
+## 3. Upload obligatoire : staging → rename → marqueur SHA-256
 
 Ne jamais faire un `put` directement dans `ready`.
 
-Exemple Chromebook :
+Le client recommandé est `boono-send`, qui exécute automatiquement le protocole complet :
 
 ```bash
+boono-send /mnt/shared/MyFiles/Downloads/BOONOTV01.png
+```
+
+Séquence réellement exécutée :
+
+```text
+1. calcul SHA-256 local
+2. put FILE → /incoming/staging/NAME.part
+3. rename staging/NAME.part → ready/NAME
+4. put NAME.sha256 → /incoming/ready/NAME.sha256
+```
+
+Le serveur ne traite **jamais** un fichier `ready/NAME` sans son marqueur `ready/NAME.sha256`.
+
+Procédure manuelle équivalente :
+
+```bash
+sha256sum /mnt/shared/MyFiles/Downloads/BOONOTV01.png > /tmp/BOONOTV01.png.sha256
 sftp -F /home/boono70/.ssh/config boonoassets@boono-amsterdam
 ```
 
@@ -86,22 +104,27 @@ Puis :
 ```text
 put /mnt/shared/MyFiles/Downloads/BOONOTV01.png /incoming/staging/BOONOTV01.png.part
 rename /incoming/staging/BOONOTV01.png.part /incoming/ready/BOONOTV01.png
+put /tmp/BOONOTV01.png.sha256 /incoming/ready/BOONOTV01.png.sha256
 bye
 ```
 
-Le `rename` est l'acte de commit du transfert. Le watcher ne regarde que `ready`.
+Le `rename` termine le transfert des données ; le marqueur SHA-256 constitue le **commit explicite**. Le serveur compare ensuite le SHA client au SHA recalculé sur Amsterdam avant tout traitement.
 
 Pour des centaines d'images, préférer des ZIP de lot plutôt que des centaines de transferts unitaires.
 
 ## 4. Claim serveur
 
-Dès qu'un fichier apparaît dans `ready` :
+Dès que le couple `ready/NAME` + `ready/NAME.sha256` existe :
 
-1. le serveur le déplace atomiquement vers `processing` ;
+1. le serveur déplace atomiquement le fichier vers `processing` ;
 2. propriétaire → `root:root` ;
 3. permissions → lecture root uniquement ;
 4. l'uploader ne peut plus modifier le fichier ;
-5. une transaction unique est créée.
+5. le marqueur SHA est claimé lui aussi ;
+6. le SHA-256 client est vérifié contre le SHA-256 recalculé ;
+7. une transaction unique est créée.
+
+Un fichier sans marqueur reste inerte. Un hash différent provoque un rejet et aucune activation.
 
 Format transaction :
 
@@ -263,14 +286,16 @@ Le reçu contient notamment le nom original, SHA-256, taille, type détecté, r�
 ## 12. Invariants
 
 1. **Pas de ready = pas de traitement.**
-2. **Pas de préflight = pas d'import.**
-3. **Pas de validation complète = pas d'écriture Git.**
-4. **Pas de Git push réussi = pas d'activation.**
-5. **Pas de re-fetch + revalidation = pas de bascule runtime.**
-6. **Une release invalide ne remplace jamais la précédente.**
-7. **Le moteur de trading n'est jamais écrit ni redémarré par cette passerelle.**
-8. **Les sources brutes restent hors Git public.**
-9. **Toute activation est traçable et rollbackable.**
+2. **Pas de marqueur SHA-256 = pas de traitement.**
+3. **SHA client ≠ SHA Amsterdam = rejet.**
+4. **Pas de préflight = pas d'import.**
+5. **Pas de validation complète = pas d'écriture Git.**
+6. **Pas de Git push réussi = pas d'activation.**
+7. **Pas de re-fetch + revalidation = pas de bascule runtime.**
+8. **Une release invalide ne remplace jamais la précédente.**
+9. **Le moteur de trading n'est jamais écrit ni redémarré par cette passerelle.**
+10. **Les sources brutes restent hors Git public.**
+11. **Toute activation est traçable et rollbackable.**
 
 ## 13. Services
 

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SSH_CONFIG="${BOONO_SSH_CONFIG:-/home/boono70/.ssh/config}"
+DEST="${BOONO_SFTP_DEST:-boonoassets@boono-amsterdam}"
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: boono-send FILE" >&2
+  exit 64
+fi
+
+FILE=$(readlink -f "$1")
+[[ -f "$FILE" ]] || { echo "Not found: $FILE" >&2; exit 66; }
+BASE=$(basename "$FILE")
+HASH=$(sha256sum "$FILE" | awk '{print $1}')
+
+TMPDIR=$(mktemp -d /tmp/boono-send.XXXXXX)
+trap 'rm -rf "$TMPDIR"' EXIT
+MARKER="$TMPDIR/$BASE.sha256"
+BATCH="$TMPDIR/sftp.batch"
+
+printf '%s  %s\n' "$HASH" "$BASE" > "$MARKER"
+cat > "$BATCH" <<EOF
+put "$FILE" "/incoming/staging/$BASE.part"
+rename "/incoming/staging/$BASE.part" "/incoming/ready/$BASE"
+put "$MARKER" "/incoming/ready/$BASE.sha256"
+bye
+EOF
+
+echo "BOONO upload: $BASE"
+echo "SHA-256: $HASH"
+sftp -F "$SSH_CONFIG" -b "$BATCH" "$DEST"
+echo "Committed to Amsterdam: /incoming/ready/$BASE"
+echo "The server will process it only if the uploaded bytes match this SHA-256."
