@@ -759,3 +759,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Fuseau d'affichage : Europe/Paris.
 - Le renderer partagé est servi en no-store pour que les ajustements graphiques soient visibles immédiatement après rechargement.
 - Aucun impact trading.
+
+## 2026-10-12 — Échelle prix déplacée à droite
+- L'axe de prix du chandelier Vagues est déplacé à droite du graphe.
+- Le fondu de l'axe est inversé pour rester discret côté marché.
+- Points/repères et labels sont orientés depuis le bord droit vers l'intérieur de l'axe.
+- Padding du graphique ajusté : 12 px à gauche, 54 px réservés à droite pour l'échelle.
+- Aucun impact trading.
