@@ -102,7 +102,7 @@ if RUNTIME.exists() or RUNTIME.is_symlink():
         atomic_symlink(rp,runtime_old)
 atomic_symlink(RUNTIME,current)
 
-commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=SOURCE,text=True).strip()
+commit=subprocess.check_output(["git","log","-1","--format=%H","--","boono-tv-assets/control/current.json"],cwd=SOURCE,text=True).strip()
 atomic_json(ROOT/"status.json",{
     "ok":True,"state":"active","release":release,"commit":commit,
     "previous":old.name if old and old.exists() and old!=dest else None,
