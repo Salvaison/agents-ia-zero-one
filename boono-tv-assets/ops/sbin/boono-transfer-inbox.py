@@ -54,10 +54,11 @@ def publish_receipt(receipt):
     atomic_json(RECEIPTS/f"{rid}.json",receipt)
     atomic_json(STATUS/"last.json",receipt)
 
-def run_capture(argv):
+def run_capture(argv, limit=12000):
     p=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     out=p.stdout or ""
-    if len(out)>12000: out=out[-12000:]
+    if limit is not None and len(out)>limit:
+        out=out[-limit:]
     return p.returncode,out
 
 def freeze(path):
@@ -106,7 +107,7 @@ def process_pair(src,marker):
         reject(proc,pm,receipt,f"invalid commit marker: {e}")
         return
 
-    code,out=run_capture([VALIDATOR,str(proc)])
+    code,out=run_capture([VALIDATOR,str(proc)], limit=None)
     if code!=0:
         reject(proc,pm,receipt,f"preflight failed: {out.strip()}")
         return

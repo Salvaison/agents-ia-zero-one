@@ -141,6 +141,7 @@ YYYYMMDDTHHMMSSZ-<8 hex>
 - maximum 2 GiB par upload ;
 - images statiques seulement ;
 - PNG / WebP / JPEG ;
+- SVG statique autorisé uniquement avec un sous-ensemble sûr : aucun script, `foreignObject`, handler `on...`, URL externe ou contenu actif ;
 - dimensions max 8192 × 8192 ;
 - limite pixels anti-décompression ;
 - lecture complète Pillow ;
