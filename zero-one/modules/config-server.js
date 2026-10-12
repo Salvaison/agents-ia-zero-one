@@ -722,7 +722,7 @@ function waveUiCompactEval(r) {
     thesis: { state:th.state || null, direction:th.direction || null, candidateDirection:th.candidateDirection || null, mode:th.mode || null, originMode:th.originMode || null, phase:th.phase || null, actionable:!!th.actionable, maturityGate:th.maturityGate || null, reason:th.reason || null },
     background:{primaryRelation:bg.primaryRelation||null,oneHour:bg.oneHour||null,macroShadow:bg.macroShadow||null},
     nativeSignal:{latest:ns.latest||null,reinforcedUp:ns.reinforcedUp||null},
-    setup:{status:setup.status||null,direction:setup.direction||null,candidateDirection:setup.candidateDirection||null,setupTs:setup.setupTs||null,reason:setup.reason||null,reasons:setup.reasons||null},
+    setup:{status:setup.status||null,direction:setup.direction||null,candidateDirection:setup.candidateDirection||null,setupTs:setup.setupTs||null,reason:setup.reason||null,reasons:setup.reasons||null,mfMemory:setup.mfMemory||null,mfTransferRequired:!!setup.mfTransferRequired},
     structuralRoom:{state:room.state||null,roomToBoundaryUsd:room.roomToBoundaryUsd??null,nearestAhead:room.nearestAhead||null},
     marketQuality:{state:mq.state||null,lowEdge:!!mq.lowEdge,window30:mq.window30||null,window60:mq.window60||null},
     mfTemporal:{
@@ -3592,13 +3592,13 @@ function ctxSummary(c) {
         (mfs.extensionState ? ' · ' + escTrade(mfs.extensionState) : '') +
         (mfs.currentMf!==undefined&&mfs.currentMf!==null ? ' · MF ' + v3Signed(mfs.currentMf,2) : '') +
         (mfs.candidateContext&&mfs.candidateContext.state ? ' · ' + escTrade(mfs.candidateContext.state) : '') +
-        ' · shadow uniquement</div>' +
+        ' · structure descriptive</div>' +
       '<div><b>MF MÉMOIRE</b> ' + escTrade(mft.state) +
         (mft.memoryDirection ? ' · fond ' + escTrade(String(mft.memoryDirection).toUpperCase()) + ' ' + escTrade(mft.memoryHorizon) : '') +
         (mft.tacticalDirection ? ' · 30m ' + escTrade(String(mft.tacticalDirection).toUpperCase()) : '') +
         (mft.candidateContext&&mft.candidateContext.state ? ' · <b>' + escTrade(mft.candidateContext.state) + '</b>' : '') +
         (mft.conversion ? ' · prix/MF ' + escTrade(mft.conversion.priceRelation) + ' · effPrix ' + v3Fmt(100*Number(mft.conversion.priceEfficiency||0),0) + '%' : '') +
-        ' · aucun veto</div>' +
+        ' · autorité admission 2h/4h seulement</div>' +
       '<div><b>PM LIVE</b> ' + escTrade(tr.status) + ' · PM ' + v3Signed(pm.priceMoveUsd,1) + '$' +
         (hz.net3mUsd !== undefined ? ' · net3m ' + v3Signed(hz.net3mUsd,1) + '$' : '') +
         (hz.efficiency3m !== undefined && hz.efficiency3m !== null ? ' · effic3m ' + (100*Number(hz.efficiency3m)).toFixed(1) + '%' : '') + '</div>' +

@@ -28,7 +28,7 @@ assert.strictEqual(up.structuralState,'ADVANCING_UP');
 assert.strictEqual(up.extensionState,'UP_EXTENSION');
 assert.strictEqual(up.candidateContext.state,'MF_OPPOSES_CANDIDATE');
 assert.strictEqual(up.candidateContext.maturity,'IMMATURE_AGAINST_MF_STRUCTURE');
-assert.strictEqual(up.decisionImpact,false);
+assert.strictEqual(up.decisionImpact,'TEMPORAL_ADMISSION_ONLY');
 
 // Lower highs + lower lows -> advancing down and supports SHORT.
 const dnVals=[20,15,16,17,14,10,11,12,9,5,6,7,4,0,1,2,-1];
@@ -42,9 +42,9 @@ assert.strictEqual(dn.candidateContext.state,'MF_SUPPORTS_CANDIDATE');
 const compVals=[0,10,8,6,7,9,7,5,6,8,7,6,7,7.5,7,6.5,7];
 const comp=mf.evaluate(frame(compVals,7),'short');
 assert.ok(['COMPRESSION','UNRESOLVED'].includes(comp.structuralState));
-assert.strictEqual(comp.decisionImpact,false);
+assert.strictEqual(comp.decisionImpact,'TEMPORAL_ADMISSION_ONLY');
 
-console.log('MF structure shadow v0.2 temporal tests OK');
+console.log('MF structure v0.3 temporal admission tests OK');
 
 // A current move through the last MF high breaks an old descending staircase;
 // it must not still be counted as SHORT support.
@@ -71,8 +71,8 @@ console.log('MF structure break semantics OK');
   const dnMem=mf.temporalMemory(fallingRows,'long');
   assert.strictEqual(upMem.memoryDirection,'long');
   assert.strictEqual(dnMem.memoryDirection,'short');
-  assert.strictEqual(upMem.decisionImpact,false);
-  assert.strictEqual(dnMem.decisionImpact,false);
+  assert.strictEqual(upMem.decisionImpact,'ADMISSION_ONLY');
+  assert.strictEqual(dnMem.decisionImpact,'ADMISSION_ONLY');
 }
 
 // Tactical SHORT pullback inside persistent rising MF memory: #98-like semantics.
@@ -103,6 +103,6 @@ console.log('MF structure break semantics OK');
   assert.strictEqual(x.tacticalDirection,'long');
   assert.strictEqual(x.state,'FALLING_WITH_RECOVERY');
   assert.strictEqual(x.candidateContext.state,'TACTICAL_LONG_AGAINST_SHORT_MF_MEMORY');
-  assert.strictEqual(x.decisionImpact,false);
+  assert.strictEqual(x.decisionImpact,'ADMISSION_ONLY');
 }
 

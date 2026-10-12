@@ -710,3 +710,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - La plage gris clair du Money Flow est soulignée par une fine frontière noire.
 - Le contour suit uniquement la courbe MF afin de ne pas recouvrir la ligne zéro bleue.
 - Appliqué aux bandes 15m et 3m ; aucun impact trading.
+
+## 2026-10-12 — V4.9.3 MF Memory Admission
+- MF Temporal Memory devient partiellement active pour l'admission uniquement.
+- Seules les mémoires 2h/4h peuvent suspendre un candidat opposé.
+- Séquence de transfert requise contre mémoire : 30m candidat → 1h candidat → structure 3m + lobe 3m alignés → PM rolling `STRONG_TRANSLATION`.
+- États actifs : `WAIT_MF_MEMORY`, `WAIT_MF_TRANSFER_1H`, `WAIT_MF_TRANSFER_3M`, `MF_TRANSFER_READY_FOR_STRONG_PM`, entrée `MF_TRANSFER_CONFIRMED`.
+- Ticker reste non-bloquant ; MCB reste seule autorité directionnelle ; MF Memory n'a aucune autorité de sortie.
+- Replay week-end : #99/#100/#102/#104/#105/#107/#109 supprimés ou suspendus, #111 conservé.
+- Protection économique 220→180 volontairement inchangée dans cette version ; 440/180 reste le mécanisme gros gagnant / stress TP.

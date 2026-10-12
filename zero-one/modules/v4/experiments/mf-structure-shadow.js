@@ -3,7 +3,7 @@
 const {finite}=require('../core/utils');
 const mcbState=require('../layers/mcb-state');
 
-const VERSION='mf-structure-shadow-v0.2-temporal';
+const VERSION='mf-structure-shadow-v0.3-temporal-admission';
 const TF='15m';
 const CONFIRM_BARS=2;
 const TEMPORAL_WINDOWS={m30:2,h1:4,h2:8,h4:16};
@@ -120,8 +120,8 @@ function temporalMemory(rows,candidateDirection=null){
 
   const reference=memory||h2||h1||h30||null;
   return {
-    version:'mf-temporal-memory-v0.1',
-    decisionImpact:false,
+    version:'mf-temporal-memory-v0.2-admission',
+    decisionImpact:'ADMISSION_ONLY',
     state,
     memoryDirection,
     memoryHorizon,
@@ -150,7 +150,7 @@ function temporalMemory(rows,candidateDirection=null){
       tactical:'30m direction describes the current MF attack/respiration; 1h/2h/4h describe progressively slower memory.',
       pullback:'TACTICAL_*_AGAINST_*_MF_MEMORY means a local attack inside an opposing persistent MF trajectory, not an automatic reversal.',
       conversion:'priceEfficiency and usdPerMfPoint describe how much price terrain the MF trajectory converts; they are measurements, not entry thresholds.',
-      authority:'shadow descriptive context only; no veto, direction, entry or exit authority'
+      authority:'persistent 2h/4h memory may suspend counter-memory admission; no direction or exit authority'
     }
   };
 }
@@ -259,7 +259,7 @@ function evaluate(frame,candidateDirection=null){
   const temporal=temporalMemory(temporalRows(src),candidateDirection);
   return {
     version:VERSION,
-    decisionImpact:false,
+    decisionImpact:'TEMPORAL_ADMISSION_ONLY',
     timeframe:TF,
     available:!!(rows.length&&highRelation&&lowRelation),
     currentMf:finite(current)?Number(current):null,
@@ -287,7 +287,7 @@ function evaluate(frame,candidateDirection=null){
       primary:'MF is treated as persistent flow structure, not a pivot timer and not a directional order.',
       staircase:'HH+HL = advancing up; LH+LL = advancing down; LH+HL = compression; HH+LL = expansion.',
       causality:'MF pivots are confirmed only after '+CONFIRM_BARS+' closed 15m bars.',
-      timing:'LBW may turn before MF. Opposing MF structure qualifies maturity/context only; it never vetoes a trade.',
+      timing:'LBW may turn before MF. Raw MF staircase remains context; temporal 2h/4h memory now has admission-only authority against counter-memory setups.',
       temporality:'MF level is never interpreted alone: 30m tactical path is compared with 1h/2h/4h persistent memory and price conversion.',
       liquidity:'MarketCipher Money Flow is an indicator/proxy for persistent flow pressure; it is not direct order-book liquidity.'
     }

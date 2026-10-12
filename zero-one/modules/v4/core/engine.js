@@ -18,7 +18,7 @@ const structuralHandoffShadow=require('../experiments/structural-handoff-shadow'
 const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 
-const VERSION='v4.9.2-tp-shadow-20261009';
+const VERSION='v4.9.3-mf-memory-admission-20261012';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -95,7 +95,8 @@ function evaluate(frame,position=null,previousEvaluation=null){
     previousEvaluation&&previousEvaluation.setup||null,
     position,
     frame.entryControl||null,
-    capGuard
+    capGuard,
+    mfStructure
   );
 
   const entryThesis=setup&&setup.status==='SETUP'
@@ -112,7 +113,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
 
   const r=risk.evaluate(frame,position,mcb,thesis,translation,ticker,ctx);
   const a=action.evaluate(frame,position,mcb,thesis,translation,ticker,r,{
-    setup,thesis:entryThesis,translation:entryTranslation,ticker:entryTicker,nativeSignal:native,
+    setup,thesis:entryThesis,translation:entryTranslation,rollingTranslation:translation,ticker:entryTicker,nativeSignal:native,
     marketQuality:quality,structuralRoom:room,background,capitulationGuard:capGuard,
     mfStructureShadow:mfStructure
   });
@@ -160,10 +161,10 @@ function evaluate(frame,position=null,previousEvaluation=null){
       postExitPreservesMcbContext:true,
       postExitResetsMicrostructureProof:true,
       structuralHandoffShadowDecisionImpact:false,
-      mfStructureShadowDecisionImpact:false,
+      mfStructureShadowDecisionImpact:'TEMPORAL_ADMISSION_ONLY',
       mfStructureShadowTimeframe:'15m',
       mfStructureSemantic:'persistent HH/HL/LH/LL flow structure qualifies MCB maturity/context only; never a veto or direction source',
-      mfTemporalMemory:{decisionImpact:false,horizons:['30m','1h','2h','4h'],semantic:'MF level is interpreted through path memory + tactical pullback/recovery + price conversion; descriptive only'},
+      mfTemporalMemory:{decisionImpact:'ADMISSION_ONLY',activeMemoryHorizons:['2h','4h'],transferSequence:['30m','1h','3m','STRONG_PM'],tickerGate:false,exitAuthority:false,semantic:'persistent 2h/4h MF memory can suspend counter-memory admission; 30m+1h+full 3m alignment plus STRONG rolling PM may confirm transfer; MCB remains direction authority'},
       structuralHandoffPreservesOnlyStructure:true,
       structuralHandoffReentryRequiresFreshPmAfterMaxExitOrHandoffTs:true,
       postSetupTranslationMateriality:{minNetUsd:10,minEfficiency:.25},

@@ -166,4 +166,82 @@ function setupInputs(direction='long'){
   assert.equal(below.decisionImpact,false);
 }
 
+
+// 8) Active MF Memory admission: slow 2h/4h memory can suspend a counter-memory setup.
+{
+  const x=setupInputs('short');
+  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,lobeDirection:'short',structuralDirection:'short',structuralState:'DESCENT_ACTIVE'};
+  const mf={
+    temporal:{
+      memoryDirection:'long',memoryHorizon:'h4',tacticalDirection:'long',
+      horizons:{h1:{direction:'long'}}
+    }
+  };
+  const s=setupLayer.evaluate(x.frame,x.thesis,x.mcb,{primaryRelation:'WITH_BACKGROUND'},x.room,x.quality,x.native,null,null,null,null,mf);
+  assert.equal(s.status,'OBSERVE');
+  assert.ok(s.reasons.includes('WAIT_MF_MEMORY'));
+  assert.equal(s.mfMemory.decisionImpact,'ADMISSION_ONLY');
+}
+
+// 9) 30m counter-memory attack is not enough: 1h transfer must also occur.
+{
+  const x=setupInputs('short');
+  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,lobeDirection:'short',structuralDirection:'short',structuralState:'DESCENT_ACTIVE'};
+  const mf={
+    temporal:{
+      memoryDirection:'long',memoryHorizon:'h4',tacticalDirection:'short',
+      horizons:{h1:{direction:'long'}}
+    }
+  };
+  const s=setupLayer.evaluate(x.frame,x.thesis,x.mcb,{primaryRelation:'WITH_BACKGROUND'},x.room,x.quality,x.native,null,null,null,null,mf);
+  assert.equal(s.status,'OBSERVE');
+  assert.ok(s.reasons.includes('WAIT_MF_TRANSFER_1H'));
+}
+
+// 10) 30m+1h+3m transfer may arm a setup, but rolling PM must be STRONG before execution.
+{
+  const x=setupInputs('long');
+  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:1,lobeDirection:'long',structuralDirection:'long',structuralState:'ASCENT_ACTIVE'};
+  const mf={
+    temporal:{
+      memoryDirection:'short',memoryHorizon:'h2',tacticalDirection:'long',
+      horizons:{h1:{direction:'long'}}
+    }
+  };
+  const s=setupLayer.evaluate(x.frame,x.thesis,x.mcb,{primaryRelation:'AGAINST_BACKGROUND'},x.room,x.quality,x.native,null,null,null,null,mf);
+  assert.equal(s.status,'SETUP');
+  assert.equal(s.mfTransferRequired,true);
+  assert.equal(s.mfMemory.state,'MF_TRANSFER_READY_FOR_STRONG_PM');
+
+  const entryBase={
+    setup:s,
+    thesis:{state:'SETUP',direction:'long',candidateDirection:'long'},
+    translation:{
+      status:'TRANSLATING',materiality:{passed:true},
+      horizons:{net3mUsd:40,net5mUsd:55,efficiency3m:.9},
+      sinceSetup:{available:true,netUsd:30,grossUsd:32,efficiency:.94}
+    },
+    ticker:{status:'NOT_CONFIRMED',confirmed:false},
+    marketQuality:{state:'MIXED'}
+  };
+  const wait=action.evaluate(x.frame,null,null,null,null,null,null,{...entryBase,rollingTranslation:{status:'TRANSLATING'}});
+  assert.equal(wait.type,'WATCH');
+  assert.equal(wait.stage,'MF_TRANSFER_WAIT_STRONG_PM');
+
+  const go=action.evaluate(x.frame,null,null,null,null,null,null,{...entryBase,rollingTranslation:{status:'STRONG_TRANSLATION'}});
+  assert.equal(go.type,'ENTER_LONG');
+  assert.equal(go.stage,'MF_TRANSFER_CONFIRMED');
+}
+
+// 11) Aligned slow MF memory does not add a new gate.
+{
+  const x=setupInputs('short');
+  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,lobeDirection:'short',structuralDirection:'short',structuralState:'DESCENT_ACTIVE'};
+  const mf={temporal:{memoryDirection:'short',memoryHorizon:'h4',tacticalDirection:'short',horizons:{h1:{direction:'short'}}}};
+  const s=setupLayer.evaluate(x.frame,x.thesis,x.mcb,{primaryRelation:'WITH_BACKGROUND'},x.room,x.quality,x.native,null,null,null,null,mf);
+  assert.equal(s.status,'SETUP');
+  assert.equal(s.mfTransferRequired,false);
+  assert.equal(s.mfMemory.state,'MF_MEMORY_ALIGNED');
+}
+
 console.log('V4.7 context/campaign/execution tests OK');

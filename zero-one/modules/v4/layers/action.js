@@ -225,6 +225,10 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
     const nativeBypass=!!(setup.reinforcedUpBypass&&setup.direction==='long');
     const nativeFreshReady=!!(nativeBypass&&fresh&&fresh.available&&Number(fresh.netUsd)>=50&&Number(fresh.efficiency)>=.12);
     const continuity=entryContinuityProof(setup,entry.translation,entry.marketQuality||null);
+    const rollingTranslation=entry&&entry.rollingTranslation||null;
+    const mfTransferRequired=!!setup.mfTransferRequired;
+    const mfTransferStrongPmReady=!mfTransferRequired||
+      !!(rollingTranslation&&rollingTranslation.status==='STRONG_TRANSLATION');
     const pmReady=!!(
       entry.translation&&['TRANSLATING','STRONG_TRANSLATION'].includes(entry.translation.status)&&
       entry.translation.materiality&&entry.translation.materiality.passed&&
@@ -235,14 +239,23 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
         reason:'UP_REINFORCED <= -60 + local MCB sync + fresh bullish translation; 1H/ticker confirmation bypassed for this asymmetric native MCB event',
         evidence:{netSinceSetupUsd:Number(fresh.netUsd),grossSinceSetupUsd:Number(fresh.grossUsd),efficiencySinceSetup:Number(fresh.efficiency)}};
     }
+    if(mfTransferRequired&&!mfTransferStrongPmReady){
+      return {type:'WATCH',direction:setup.direction,stage:'MF_TRANSFER_WAIT_STRONG_PM',setupId:setup.setupId,
+        reason:'30m+1h+3m MF transfer is structurally ready against persistent 2h/4h memory, but rolling PM has not reached STRONG_TRANSLATION; do not promote the local attack to a campaign yet',
+        evidence:{mfMemory:setup.mfMemory||null,rollingPmStatus:rollingTranslation&&rollingTranslation.status||null,continuityProof:continuity}};
+    }
     if(pmReady){
       return {type:setup.direction==='long'?'ENTER_LONG':'ENTER_SHORT',direction:setup.direction,
-        stage:'SETUP_PM_READY',setupId:setup.setupId,
-        reason:'fresh post-setup PM translation + efficiency materiality authorize execution; ticker qualifies conviction but is not an admission gate',
+        stage:mfTransferRequired?'MF_TRANSFER_CONFIRMED':'SETUP_PM_READY',setupId:setup.setupId,
+        reason:mfTransferRequired
+          ?'persistent MF memory is opposed, but 30m+1h+3m transfer plus STRONG rolling PM confirm a real change of camp; ticker remains a conviction qualifier only'
+          :'fresh post-setup PM translation + efficiency materiality authorize execution; ticker qualifies conviction but is not an admission gate',
         evidence:{
           netSinceSetupUsd:fresh&&Number(fresh.netUsd),grossSinceSetupUsd:fresh&&Number(fresh.grossUsd),
           efficiencySinceSetup:fresh&&Number(fresh.efficiency),tickerStatus:entry.ticker&&entry.ticker.status||null,
-          tickerConfirmed:!!(entry.ticker&&entry.ticker.confirmed),continuityProof:continuity
+          tickerConfirmed:!!(entry.ticker&&entry.ticker.confirmed),continuityProof:continuity,
+          mfTransferRequired,mfTransferStrongPmReady,rollingPmStatus:rollingTranslation&&rollingTranslation.status||null,
+          mfMemory:setup.mfMemory||null
         }};
     }
     if(es.state==='CONFIRMED'&&continuity.ready){

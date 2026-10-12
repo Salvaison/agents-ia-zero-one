@@ -29,7 +29,55 @@ function expiredTimingShadow(previousSetup,marketTs,reason){
     semantic:'shadow lifecycle only; expiry is observed, except explicit UP_REINFORCED_3M closes a SHORT entry window immediately'
   };
 }
-function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,nativeSignal,previousSetup,position,entryControl,capitulationGuard=null){
+function mfMemoryAdmission(candidate,mfStructure,mcb,nativeSignal){
+  const temporal=mfStructure&&mfStructure.temporal||null;
+  const memory=temporal&&temporal.memoryDirection||null;
+  const horizon=temporal&&temporal.memoryHorizon||null;
+  const tactical=temporal&&temporal.tacticalDirection||null;
+  const activeSlowMemory=!!(memory&&['h2','h4'].includes(horizon));
+  const reinforcedUpBypass=!!(
+    candidate==='long'&&nativeSignal&&nativeSignal.reinforcedUp&&nativeSignal.reinforcedUp.active
+  );
+
+  const n3=mcb&&mcb.nested3m||{};
+  const lobe3=n3.lobeDirection||
+    (Number(n3.lobeSign)>0?'long':Number(n3.lobeSign)<0?'short':null);
+  const structural3=n3.structuralDirection||null;
+  const h1=temporal&&temporal.horizons&&temporal.horizons.h1||null;
+  const h1Direction=h1&&h1.direction||null;
+
+  const base={
+    activeSlowMemory,memoryDirection:memory,memoryHorizon:horizon,
+    tacticalDirection:tactical,h1Direction,
+    threeMinuteLobeDirection:lobe3,threeMinuteStructuralDirection:structural3,
+    reinforcedUpBypass,
+    decisionImpact:activeSlowMemory?'ADMISSION_ONLY':'NONE'
+  };
+
+  if(!candidate||!activeSlowMemory||candidate===memory){
+    return {...base,allowed:true,requiresTransfer:false,state:!activeSlowMemory?'MF_MEMORY_NOT_ACTIVE':'MF_MEMORY_ALIGNED'};
+  }
+  if(reinforcedUpBypass){
+    return {...base,allowed:true,requiresTransfer:false,state:'MF_MEMORY_NATIVE_REINFORCED_BYPASS'};
+  }
+  if(tactical!==candidate){
+    return {...base,allowed:false,requiresTransfer:true,state:'WAIT_MF_MEMORY',
+      reason:'candidate opposes persistent 2h/4h MF memory and 30m MF has not transferred to the candidate'};
+  }
+  if(h1Direction!==candidate){
+    return {...base,allowed:false,requiresTransfer:true,state:'WAIT_MF_TRANSFER_1H',
+      reason:'30m MF attacks with candidate but 1h MF has not transferred yet'};
+  }
+  if(structural3!==candidate||lobe3!==candidate){
+    return {...base,allowed:false,requiresTransfer:true,state:'WAIT_MF_TRANSFER_3M',
+      reason:'30m+1h MF transfer is forming but 3m structure and lobe are not both aligned'};
+  }
+
+  return {...base,allowed:true,requiresTransfer:true,state:'MF_TRANSFER_READY_FOR_STRONG_PM',
+    reason:'opposing slow MF memory may be challenged only after 30m+1h transfer and full 3m alignment; strong rolling PM still required before entry'};
+}
+
+function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,nativeSignal,previousSetup,position,entryControl,capitulationGuard=null,mfStructure=null){
   const candidate=baseThesis&&(baseThesis.candidateDirection||baseThesis.direction)||null;
   const c=mcb&&mcb.currentLobe||{};
   const n3=mcb&&mcb.nested3m||{};
@@ -83,6 +131,8 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
     reinforced3mEventTs>=n3CycleTs
   );
 
+  const mfMemory=mfMemoryAdmission(candidate,mfStructure,mcb,nativeSignal);
+
   const reasons=[];
   if(capitulationGuard&&capitulationGuard.blocked)reasons.push(capitulationGuard.state);
   if(!syncReady)reasons.push('WAIT_3M_15M_SYNC');
@@ -90,6 +140,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   if(!roomReady)reasons.push('BOUNDARY_CONTEST');
   if(!activityReady)reasons.push('DORMANT_MARKET');
   if(reinforced3mShortClose)reasons.push('UP_REINFORCED_3M_CLOSES_SHORT_ENTRY_WINDOW');
+  if(!mfMemory.allowed)reasons.push(mfMemory.state);
 
   const nativeToken=reinforcedUpBypass&&nativeSignal&&nativeSignal.reinforcedUp&&nativeSignal.reinforcedUp.event
     ?Number(nativeSignal.reinforcedUp.event.ts)||0:0;
@@ -140,6 +191,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
       pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
       reinforced3mShortClose,noNewShort:reinforced3mShortClose,
+      mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
       timingShadow,
       setupId:previousActiveSame?previousSetup.setupId||null:null,
       setupTs:previousActiveSame?previousSetup.setupTs||null:null,
@@ -165,6 +217,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
     backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
     pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
     reinforced3mShortClose:false,noNewShort:false,timingShadow,
+    mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
     admissionAllowed:true,
     requirements:{
       local3m15mSync:true,
@@ -178,11 +231,15 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       majorPairOrStrongSignal:majorPair||reinforcedUpBypass,
       boundaryResolved:true,
       marketNotDormant:true,
-      thesisNotConsumed:true
+      thesisNotConsumed:true,
+      mfMemoryAdmission:mfMemory.state,
+      mfTransferStrongPmRequired:!!mfMemory.requiresTransfer
     },
-    reason:against
-      ?'MCB local setup armed against the current 1h wave leg; 1h is a risk/quality qualifier only and fresh execution proof must still be built from zero'
-      :'MCB local setup armed; post-setup microstructure evidence must now be built from zero'
+    reason:mfMemory.requiresTransfer
+      ?'MF_TRANSFER_FORMING: candidate challenges persistent 2h/4h MF memory; 30m+1h+3m transfer is structurally ready, waiting for strong rolling PM before execution'
+      :(against
+        ?'MCB local setup armed against the current 1h wave leg; 1h is a risk/quality qualifier only and fresh execution proof must still be built from zero'
+        :'MCB local setup armed; post-setup microstructure evidence must now be built from zero')
   };
 }
-module.exports={evaluate,maxFinite,activeTimingShadow,expiredTimingShadow};
+module.exports={evaluate,maxFinite,activeTimingShadow,expiredTimingShadow,mfMemoryAdmission};
