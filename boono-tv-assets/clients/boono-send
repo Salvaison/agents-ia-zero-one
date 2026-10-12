@@ -23,7 +23,8 @@ printf '%s  %s\n' "$HASH" "$BASE" > "$MARKER"
 cat > "$BATCH" <<EOF
 put "$FILE" "/incoming/staging/$BASE.part"
 rename "/incoming/staging/$BASE.part" "/incoming/ready/$BASE"
-put "$MARKER" "/incoming/ready/$BASE.sha256"
+put "$MARKER" "/incoming/staging/$BASE.sha256.part"
+rename "/incoming/staging/$BASE.sha256.part" "/incoming/ready/$BASE.sha256"
 bye
 EOF
 

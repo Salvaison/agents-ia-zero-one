@@ -20,6 +20,7 @@ VALIDATOR="/usr/local/sbin/boono-transfer-validate.py"
 SCENE_IMPORT="/usr/local/sbin/boono-scenes-from-board.py"
 LAYER_IMPORT="/usr/local/sbin/boono-assets-import"
 HEX64=re.compile(r"^[0-9a-fA-F]{64}$")
+MIN_COMMIT_AGE=2
 
 for d in [READY,PROCESSING,ARCHIVE,FAILED,STATUS,RECEIPTS,LOG.parent]:
     d.mkdir(parents=True,exist_ok=True)
@@ -161,6 +162,8 @@ def main():
     # Only checksum markers commit uploads. Uncommitted files in ready are inert.
     markers=sorted(READY.glob("*.sha256"),key=lambda p:p.name)
     for marker in markers:
+        if time.time()-marker.stat().st_mtime < MIN_COMMIT_AGE:
+            continue
         data_name=marker.name[:-7]
         if not data_name:
             continue

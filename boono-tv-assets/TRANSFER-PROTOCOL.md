@@ -87,7 +87,8 @@ Séquence réellement exécutée :
 1. calcul SHA-256 local
 2. put FILE → /incoming/staging/NAME.part
 3. rename staging/NAME.part → ready/NAME
-4. put NAME.sha256 → /incoming/ready/NAME.sha256
+4. put NAME.sha256 → /incoming/staging/NAME.sha256.part
+5. rename → /incoming/ready/NAME.sha256
 ```
 
 Le serveur ne traite **jamais** un fichier `ready/NAME` sans son marqueur `ready/NAME.sha256`.
@@ -104,7 +105,8 @@ Puis :
 ```text
 put /mnt/shared/MyFiles/Downloads/BOONOTV01.png /incoming/staging/BOONOTV01.png.part
 rename /incoming/staging/BOONOTV01.png.part /incoming/ready/BOONOTV01.png
-put /tmp/BOONOTV01.png.sha256 /incoming/ready/BOONOTV01.png.sha256
+put /tmp/BOONOTV01.png.sha256 /incoming/staging/BOONOTV01.png.sha256.part
+rename /incoming/staging/BOONOTV01.png.sha256.part /incoming/ready/BOONOTV01.png.sha256
 bye
 ```
 
