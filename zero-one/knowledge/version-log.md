@@ -728,3 +728,13 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Renderer browser partagé `shared/boono-chart-renderer.js`.
 - BOONO-TV : nouveau Market Curtain transparent 3m + Wave15 + Wave3, masqué autour du personnage pour créer un effet de rideau derrière BOONO.
 - Aucun impact trading.
+
+## 2026-10-12 — Vagues price grid + FLOW/VIVANT
+- Graph prix agrandi à 300 px et recadré dynamiquement sur la fenêtre visible.
+- Grille horizontale : 200 USD = 2 px gris très clair ; 100 USD intermédiaire = 1 px.
+- Repères verticaux noirs 1 px toutes les heures.
+- Axe prix fixe : valeur complète tous les 200 USD, petites barrettes noires tous les 50 USD.
+- Zones trade bleu ciel bordées finement en noir sur prix et vagues.
+- FLOW/AUDIT déplacé entre PRIX et WAVE15 avec fond bleu ciel.
+- Bouton VIVANT ajouté pour revenir directement à l'État vivant.
+- Aucun impact trading.

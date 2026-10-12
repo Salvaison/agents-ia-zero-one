@@ -2148,11 +2148,17 @@ app.get('/', requireAuth, (req, res) => {
 .wave-band-legend{font-size:9.5px;color:#666;white-space:normal;text-align:right;line-height:1.3;}
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.wave-price-canvas{height:205px;}
-.wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:58px;height:205px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 80%,rgba(255,255,255,.85) 93%,rgba(255,255,255,0) 100%);}
-.wave-price-tick{position:absolute;right:7px;transform:translateY(-50%);font:8.5px 'SF Mono',Menlo,Consolas,monospace;color:#666;white-space:nowrap;text-shadow:0 1px 0 #fff;}
-.wave-flow-audit{border:1px solid #dedede;border-radius:7px;background:#fff;padding:7px 10px;margin:0 0 8px;font-size:10px;color:#555;line-height:1.4;}
-.wave-flow-audit b{color:#222;letter-spacing:.06em;}
+.wave-price-canvas{height:300px;}
+.wave-price-axis{position:absolute;left:0;top:0;z-index:7;width:70px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.995) 84%,rgba(255,255,255,.88) 94%,rgba(255,255,255,0) 100%);}
+.wave-price-axis::after{content:'';position:absolute;right:0;top:10px;bottom:18px;border-right:1px solid #111;}
+.wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
+.wave-price-axis-bar{position:absolute;right:0;top:0;width:5px;border-top:1px solid #111;}
+.wave-price-axis-mark.major .wave-price-axis-bar{width:9px;}
+.wave-price-axis-label{position:absolute;right:12px;top:0;transform:translateY(-50%);font:600 9px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 1px 0 #fff;}
+
+.wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.wave-flow-audit .wave-flow-text{min-width:0;overflow-wrap:anywhere;}
+.wave-flow-audit b{color:#222;letter-spacing:.06em;}.wave-flow-vivant{flex:none;border:1px solid #111;background:#fff;color:#111;border-radius:4px;padding:4px 8px;font:800 9px 'SF Mono',Menlo,Consolas,monospace;letter-spacing:.08em;cursor:pointer}.wave-flow-vivant:hover{background:#111;color:#fff}
 .wave-price-legend{font-size:9.5px;color:#666;line-height:1.3;}
 .wave-scroll-shell{position:relative;width:100%;}
 .wave-scroll{width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;}
@@ -2180,7 +2186,7 @@ app.get('/', requireAuth, (req, res) => {
 .wave-report-body{padding:9px;}
 .wave-report-body .diag-module{margin-bottom:0;}
 .wave-report-loading{font-size:11px;color:#666;padding:12px 4px;}
-@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-price-canvas{height:175px}.wave-price-axis{height:175px}.wave-y-axis{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
+@media(max-width:700px){.wave-band-head{display:block}.wave-band-legend{text-align:left;margin-top:3px}.wave-canvas{height:155px}.wave-price-canvas{height:230px}.wave-price-axis{height:230px}.wave-y-axis{height:155px}.wave-report-overlay{padding:8px 5px}.wave-report-card{max-height:calc(100vh - 16px);}}
 </style>
 <div id="waveReplayApp" class="wave-replay-shell">
   <div class="wave-replay-head">
@@ -2203,6 +2209,7 @@ app.get('/', requireAuth, (req, res) => {
     </div>
     <div class="wave-scroll-shell"><div id="wavePriceScroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wavePriceCanvas" class="wave-canvas wave-price-canvas"></canvas></div></div><div id="wavePriceYAxis" class="wave-price-axis" aria-hidden="true"></div></div>
   </div>
+  <div id="waveFlowAudit" class="wave-flow-audit"><span class="wave-flow-text"><b>FLOW / AUDIT</b> · chargement…</span><button id="waveFlowAliveBtn" class="wave-flow-vivant" type="button">VIVANT</button></div>
   <div class="wave-band">
     <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span></div><span class="wave-band-legend">BW noir · LBW noir fin · MF gris bordé · VWAP jaune · UP vert · DN rouge · DIV vert/rouge</span></div>
     <div id="wave15MaInfo" class="wave-ma-info">MA200 —</div>
@@ -2215,7 +2222,6 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-scroll-shell"><div id="wave3Scroll" class="wave-scroll bottom"><div class="wave-canvas-track"><canvas id="wave3Canvas" class="wave-canvas"></canvas></div></div><div id="wave3YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
     <div class="wave-scroll-meta"><span id="waveHistoryStatus">6 h visibles · chargement historique…</span></div>
   </div>
-  <div id="waveFlowAudit" class="wave-flow-audit"><b>FLOW / AUDIT</b> · chargement…</div>
   <div id="waveTradeOverlay" class="wave-report-overlay" aria-hidden="true">
     <div class="wave-report-card" role="dialog" aria-modal="true" aria-labelledby="waveTradeOverlayTitle">
       <div class="wave-report-head"><div id="waveTradeOverlayTitle" class="wave-report-title">Rapport trade</div><button id="waveTradeOverlayClose" class="wave-report-close" type="button" aria-label="Fermer">×</button></div>
@@ -2579,11 +2585,13 @@ function waveDrawPriceYAxis(result,H) {
   if(!axis||!result||!result.bounds)return;
   axis.style.height=H+'px';
   const b=result.bounds,p=result.padding,plotH=result.plotHeight;
-  const ticks=5,out=[];
-  for(let i=0;i<ticks;i++){
-    const rel=i/(ticks-1),v=b.hi-(b.hi-b.lo)*rel;
+  const step=50,majorStep=200,out=[];
+  const first=Math.ceil(b.lo/step)*step;
+  for(let v=first;v<=b.hi+1e-9;v+=step){
+    const rel=(b.hi-v)/Math.max(1e-9,b.hi-b.lo);
     const y=p.top+plotH*rel;
-    out.push('<span class="wave-price-tick" style="top:'+y.toFixed(1)+'px">'+Math.round(v).toLocaleString('fr-FR')+'</span>');
+    const major=Math.abs(v/majorStep-Math.round(v/majorStep))<1e-9;
+    out.push('<span class="wave-price-axis-mark'+(major?' major':'')+'" style="top:'+y.toFixed(1)+'px"><i class="wave-price-axis-bar"></i>'+(major?'<b class="wave-price-axis-label">'+Math.round(v).toLocaleString('fr-FR')+'</b>':'')+'</span>');
   }
   axis.innerHTML=out.join('');
 }
@@ -2592,10 +2600,25 @@ function drawWavePrice(canvas,idx) {
   const frames=waveReplayData.frames,t0=Number(frames[0].ts),t1=Number(frames[frames.length-1].ts);
   const series=waveReplayData.priceSeries&&waveReplayData.priceSeries[wavePriceTf]||[];
   const endTs=t1,spans=waveTradeSpans(waveReplayData.events||[],endTs);
+  const sc=document.getElementById('wavePriceScroll');
+  let boundsT0=t0,boundsT1=t1;
+  if(sc&&sc.scrollWidth>sc.clientWidth+2){
+    const leftRel=Math.max(0,Math.min(1,sc.scrollLeft/Math.max(1,sc.scrollWidth)));
+    const rightRel=Math.max(0,Math.min(1,(sc.scrollLeft+sc.clientWidth)/Math.max(1,sc.scrollWidth)));
+    boundsT0=t0+leftRel*(t1-t0);
+    boundsT1=t0+rightRel*(t1-t0);
+    if(waveLiveFollow&&sc.scrollLeft<2){
+      boundsT1=t1;boundsT0=Math.max(t0,t1-waveVisibleWindowHours()*3600000);
+    }
+  }else if(waveLiveFollow){
+    boundsT1=t1;boundsT0=Math.max(t0,t1-waveVisibleWindowHours()*3600000);
+  }
   const result=window.BoonoCharts.drawPrice(canvas,series,{
-    theme:'interface',t0,t1,candleMs:wavePriceTf==='3m'?180000:900000,
+    theme:'interface',t0,t1,boundsT0,boundsT1,candleMs:wavePriceTf==='3m'?180000:900000,
     cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
-    padding:{left:58,right:10,top:10,bottom:16},maxBodyWidth:wavePriceTf==='3m'?7:11,
+    padding:{left:70,right:12,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
+    pricePadPct:.035,minPriceSpan:500,priceSnap:50,
+    priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
   });
   canvas._waveTradeZones=result&&result.tradeZones||[];
@@ -2665,10 +2688,11 @@ function drawWaveBand(canvas, key, idx) {
     const sx=Math.max(t0,Number(z.entryTs)),ex=Math.min(t1,Number(z.drawEndTs));
     if(ex<=t0||sx>=t1||ex<=sx)return;
     const x1=tx(sx),x2=tx(ex);
+    const zoneW=Math.max(1,x2-x1);
     ctx.fillStyle='rgba(135,206,235,.12)';
-    ctx.fillRect(x1,T,Math.max(1,x2-x1),h);
-    ctx.strokeStyle='#b8d7e6';ctx.lineWidth=.7;
-    ctx.beginPath();ctx.moveTo(x1,T);ctx.lineTo(x1,T+h);ctx.moveTo(x2,T);ctx.lineTo(x2,T+h);ctx.stroke();
+    ctx.fillRect(x1,T,zoneW,h);
+    ctx.strokeStyle='#111';ctx.lineWidth=.8;
+    ctx.strokeRect(x1+.4,T+.4,Math.max(.2,zoneW-.8),Math.max(.2,h-.8));
     canvas._waveTradeZones.push({x1:x1,x2:x2,y1:T,y2:T+h,trade:z});
   });
 
@@ -2866,7 +2890,7 @@ function renderWaveReplay() {
   drawWaveBand(document.getElementById('wave15Canvas'),'wave15',waveReplayIndex);
   drawWaveBand(document.getElementById('wave3Canvas'),'wave3',waveReplayIndex);
   const flowAudit=document.getElementById('waveFlowAudit');
-  if(flowAudit)flowAudit.innerHTML='<b>FLOW / AUDIT</b> · PM '+waveNum(au.priceMove,1)+' · cadence '+waveNum(au.cadence,1)+' · flow '+waveNum(flow,2)+' BTC/s · MF15 pente '+waveNum(au.mf15Pente,2)+' · MF15 Live '+waveNum(w15.mf,2);
+  if(flowAudit)flowAudit.innerHTML='<span class="wave-flow-text"><b>FLOW / AUDIT</b> · PM '+waveNum(au.priceMove,1)+' · cadence '+waveNum(au.cadence,1)+' · flow '+waveNum(flow,2)+' BTC/s · MF15 pente '+waveNum(au.mf15Pente,2)+' · MF15 Live '+waveNum(w15.mf,2)+'</span><button id="waveFlowAliveBtn" class="wave-flow-vivant" type="button">VIVANT</button>';
   waveRenderTradePanel();
   waveUpdateHistoryStatus();
 }
@@ -2970,7 +2994,11 @@ function waveSetScroll(left){
   const group=waveScrollGroup();
   waveScrollProgrammatic=true;
   group.forEach(function(sc){sc.scrollLeft=left;});
-  requestAnimationFrame(function(){waveScrollProgrammatic=false;waveUpdateHistoryStatus();});
+  requestAnimationFrame(function(){
+    waveScrollProgrammatic=false;
+    waveUpdateHistoryStatus();
+    if(waveReplayData)drawWavePrice(document.getElementById('wavePriceCanvas'),waveReplayIndex);
+  });
 }
 function waveScrollToTimestamp(ts){
   const sc=document.getElementById('wave3Scroll');
@@ -3206,6 +3234,11 @@ document.addEventListener('click',function(e){
   if(!e.target)return;
   const id=e.target.id || (e.target.closest&&e.target.closest('button')&&e.target.closest('button').id);
   if(id==='waveModeReplay'){loadWaveReplay();return;}
+  if(id==='waveFlowAliveBtn'){
+    const alive=document.querySelector('.tab[data-tab2="statev2"]');
+    if(alive)alive.click();
+    return;
+  }
   if(id==='wavePrice3m'){waveSetPriceTf('3m');return;}
   if(id==='wavePrice15m'){waveSetPriceTf('15m');return;}
   if(id==='waveScale24'){waveSetScaleMode(24);return;}

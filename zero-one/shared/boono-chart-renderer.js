@@ -53,7 +53,22 @@ function drawPrice(canvas,rows,opts){
   const use=domainRows(rows,t0,t1);
   if(!use.length)return null;
   const plotW=Math.max(1,W-pad.left-pad.right),plotH=Math.max(1,H-pad.top-pad.bottom);
-  const bounds=priceBounds(use,opts.pricePadPct);
+  const boundsUse=domainRows(rows,
+    finite(opts.boundsT0)?Number(opts.boundsT0):t0,
+    finite(opts.boundsT1)?Number(opts.boundsT1):t1
+  );
+  const bounds=priceBounds(boundsUse.length?boundsUse:use,opts.pricePadPct);
+  const minSpan=Math.max(0,Number(opts.minPriceSpan)||0);
+  if(minSpan>0&&(bounds.hi-bounds.lo)<minSpan){
+    const mid=(bounds.hi+bounds.lo)/2;
+    bounds.lo=mid-minSpan/2;bounds.hi=mid+minSpan/2;
+  }
+  const snap=Math.max(0,Number(opts.priceSnap)||0);
+  if(snap>0){
+    bounds.lo=Math.floor(bounds.lo/snap)*snap;
+    bounds.hi=Math.ceil(bounds.hi/snap)*snap;
+    if(bounds.hi<=bounds.lo)bounds.hi=bounds.lo+snap;
+  }
   const theme=opts.theme==='tv'?'tv':'interface';
   const grid=theme==='tv'?'rgba(255,255,255,.09)':'rgba(0,0,0,.07)';
   const wick=theme==='tv'?'rgba(245,248,250,.82)':'rgba(25,25,25,.78)';
@@ -63,9 +78,32 @@ function drawPrice(canvas,rows,opts){
   const maAbove=opts.maAbove||'#22a35a',maBelow=opts.maBelow||'#d43a3a';
 
   if(opts.background){ctx.fillStyle=opts.background;ctx.fillRect(0,0,W,H);}
-  if(opts.grid!==false){
+  if(theme==='interface'&&opts.priceGrid!==false){
+    const minorStep=Math.max(1,Number(opts.priceGridMinor)||100);
+    const majorStep=Math.max(minorStep,Number(opts.priceGridMajor)||200);
+    const first=Math.ceil(bounds.lo/minorStep)*minorStep;
+    ctx.save();
+    for(let v=first;v<=bounds.hi+1e-9;v+=minorStep){
+      const major=Math.abs((v/majorStep)-Math.round(v/majorStep))<1e-9;
+      const yy=mapPrice(v,bounds,pad.top,plotH);
+      ctx.strokeStyle=major?'#e4e4e4':'#eeeeee';
+      ctx.lineWidth=major?2:1;
+      ctx.beginPath();ctx.moveTo(pad.left,yy);ctx.lineTo(pad.left+plotW,yy);ctx.stroke();
+    }
+    ctx.restore();
+  }else if(opts.grid!==false){
     ctx.save();ctx.strokeStyle=grid;ctx.lineWidth=.7;
     for(let i=1;i<5;i++){const yy=pad.top+plotH*i/5;ctx.beginPath();ctx.moveTo(pad.left,yy);ctx.lineTo(pad.left+plotW,yy);ctx.stroke();}
+    ctx.restore();
+  }
+
+  if(theme==='interface'&&opts.hourGrid!==false){
+    const hour=3600000,first=Math.ceil(t0/hour)*hour;
+    ctx.save();ctx.strokeStyle='rgba(0,0,0,.72)';ctx.lineWidth=1;
+    for(let ts0=first;ts0<=t1;ts0+=hour){
+      const xx=mapTime(ts0,t0,t1,pad.left,plotW);
+      ctx.beginPath();ctx.moveTo(xx,pad.top);ctx.lineTo(xx,pad.top+plotH);ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -75,15 +113,20 @@ function drawPrice(canvas,rows,opts){
       const a=Math.max(t0,Number(z.entryTs)),b=Math.min(t1,Number(z.drawEndTs));
       if(!(b>a))continue;
       const x1=mapTime(a,t0,t1,pad.left,plotW),x2=mapTime(b,t0,t1,pad.left,plotW);
-      ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.10)';
-      ctx.fillRect(x1,pad.top,Math.max(1,x2-x1),plotH);
+      const zw=Math.max(1,x2-x1);
+      ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.12)';
+      ctx.fillRect(x1,pad.top,zw,plotH);
+      if(theme!=='tv'){
+        ctx.strokeStyle='#111';ctx.lineWidth=.8;
+        ctx.strokeRect(x1+.4,pad.top+.4,Math.max(.2,zw-.8),Math.max(.2,plotH-.8));
+      }
     }
     ctx.restore();
   }
 
   const step=Number(opts.candleMs)||medianStep(use,180000);
   const pxStep=step/Math.max(1,t1-t0)*plotW;
-  const bw=Math.max(theme==='tv'?1:.8,Math.min(Number(opts.maxBodyWidth)||9,pxStep*.58));
+  const bw=Math.max(theme==='tv'?1:1.15,Math.min(Number(opts.maxBodyWidth)||10,pxStep*(theme==='tv'?.60:.68)));
   for(const r of use){
     if(![r.open,r.high,r.low,r.close].every(finite))continue;
     const xx=mapTime(r.ts,t0,t1,pad.left,plotW);
