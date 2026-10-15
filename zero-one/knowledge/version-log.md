@@ -876,3 +876,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Echantillon initial 24h : 47 bougies LIVE15, 19 confirmations même sens, 28 repaint, ~40.4% brut, ~13.0 min d'avance moyenne.
 - Forte séparation initiale : présence >=80% => ~90% de confirmation (20 cas) ; présence <25% => 0% (22 cas).
 - EXIT_LIVE_SIGNAL_STACK_PROTECTION actif reste inchangé et continue d'exiger LIVE15 + structure3m + PM adverse + MA200.
+
+## 2026-10-15 — SHADOWS · résultats cliquables vers occurrences
+- Les tuiles de statistiques SHADOWS sont maintenant cliquables.
+- Un clic ouvre une section OCCURRENCES triée du cas le plus récent au plus ancien, avec heure Paris, catégorie, prix, direction/état et métriques explicatives.
+- Couverture : Price Behavior, Continuation Re-entry, Structural Handoff, LIVE15 fiabilité/action et TP Optimization.
+- Les tuiles de moyenne/taux ouvrent le sous-ensemble ayant servi au calcul (ex. LIVE15 stable >=80%, fugace <25%, confirmations, repaint, ENTRY/EXIT).
+- La page descend automatiquement vers la liste et la sélection reste ouverte après le rafraîchissement 30 s.
+- Aucun impact trading ni nouvelle collecte.
