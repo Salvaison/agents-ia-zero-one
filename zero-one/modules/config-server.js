@@ -2597,12 +2597,15 @@ app.get('/', requireAuth, (req, res) => {
 .shadow-stat-btn:hover{border-color:#8abbd3;background:#f7fbfd;}
 .shadow-stat-btn:focus-visible{outline:2px solid rgba(47,128,237,.28);outline-offset:1px;}
 .shadow-stat-btn.selected{border-color:#8abbd3;background:rgba(135,206,235,.12);}
-.shadow-occurrences{display:none;margin-top:10px;border:1px solid #8abbd3;border-radius:8px;background:#fff;overflow:hidden;scroll-margin-top:12px;}
-.shadow-occurrences.open{display:block;}
-.shadow-occ-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;background:rgba(135,206,235,.10);border-bottom:1px solid #dbeaf1;}
+.shadow-occurrences{display:none;position:static;margin:8px 0 10px;border:1px solid #8abbd3;border-radius:8px;background:#fff;overflow:hidden;scroll-margin-top:12px;height:270px;max-height:270px;}
+.shadow-occurrences.open{display:flex;flex-direction:column;}
+.shadow-occ-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;background:rgba(135,206,235,.10);border-bottom:1px solid #dbeaf1;flex:none;}
 .shadow-occ-title{font-size:10px;font-weight:850;letter-spacing:.06em;}
+.shadow-occ-head-right{display:flex;align-items:center;gap:7px;min-width:0;}
 .shadow-occ-meta{font-size:8.5px;color:#71808a;white-space:nowrap;}
-.shadow-occ-list{max-height:420px;overflow:auto;}
+.shadow-occ-close{width:22px;height:22px;min-width:22px;padding:0;border:1px solid #b8c7cf;border-radius:4px;background:#fff;color:#4f626c;font:700 14px/20px inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.shadow-occ-close:hover{border-color:#8abbd3;background:#eef8fc;}
+.shadow-occ-list{min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;}
 .shadow-occ-row{display:grid;grid-template-columns:74px 72px minmax(0,1fr);gap:8px;padding:7px 9px;border-top:1px solid #edf0f1;align-items:start;}
 .shadow-occ-row:first-child{border-top:0;}
 .shadow-occ-time{font-size:8.5px;color:#777;line-height:1.35;}
@@ -2626,6 +2629,7 @@ app.get('/', requireAuth, (req, res) => {
   .shadow-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .shadow-event{grid-template-columns:48px 62px minmax(0,1fr);}
   .shadow-occ-row{grid-template-columns:60px 58px minmax(0,1fr);}
+  .shadow-occurrences{height:235px;max-height:235px;}
 }
 </style>
 <div id="shadowsApp" class="shadow-shell">
@@ -4631,12 +4635,22 @@ function shadowDateTime(v){
   if(!Number.isFinite(d.getTime()))return '—';
   return d.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
-function renderShadowOccurrences(data,key,label,scroll){
+function closeShadowOccurrences(){
+  shadowSelectedOccurrenceKey=null;
+  shadowSelectedOccurrenceLabel=null;
+  document.querySelectorAll('.shadow-stat-btn.selected').forEach(function(b){b.classList.remove('selected');});
+  const box=document.getElementById('shadowOccurrences');
+  if(box)box.classList.remove('open');
+}
+function renderShadowOccurrences(data,key,label,scroll,anchorButton){
   const box=document.getElementById('shadowOccurrences');
   const title=document.getElementById('shadowOccurrencesTitle');
   const meta=document.getElementById('shadowOccurrencesMeta');
   const list=document.getElementById('shadowOccurrencesList');
   if(!box||!title||!meta||!list)return;
+  const selectedButton=anchorButton||Array.from(document.querySelectorAll('.shadow-stat-btn')).find(function(b){return b.dataset.shadowOcc===key;})||null;
+  const grid=selectedButton&&selectedButton.closest&&selectedButton.closest('.shadow-stat-grid');
+  if(grid&&grid.parentNode)grid.insertAdjacentElement('afterend',box);
   document.querySelectorAll('.shadow-stat-btn').forEach(function(b){b.classList.toggle('selected',b.dataset.shadowOcc===key);});
   const arr=((data&&data.occurrences&&data.occurrences[key])||[]).slice().sort(function(a,b){
     const ta=typeof a.ts==='number'?a.ts:Date.parse(a.ts||0);
@@ -4655,7 +4669,8 @@ function renderShadowOccurrences(data,key,label,scroll){
       '</div></div>';
   }).join(''):'<div class="shadow-occ-empty">Aucune occurrence dans la fenêtre disponible.</div>';
   box.classList.add('open');
-  if(scroll)box.scrollIntoView({behavior:'smooth',block:'start'});
+  list.scrollTop=0;
+  if(scroll)box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function renderShadows(data){
   shadowLastData=data;
@@ -4809,7 +4824,8 @@ function renderShadows(data){
     '</div>';
 
   const occurrencePanel='<div id="shadowOccurrences" class="shadow-occurrences">'+
-    '<div class="shadow-occ-head"><div id="shadowOccurrencesTitle" class="shadow-occ-title">OCCURRENCES</div><div id="shadowOccurrencesMeta" class="shadow-occ-meta"></div></div>'+
+    '<div class="shadow-occ-head"><div id="shadowOccurrencesTitle" class="shadow-occ-title">OCCURRENCES</div>'+
+      '<div class="shadow-occ-head-right"><div id="shadowOccurrencesMeta" class="shadow-occ-meta"></div><button type="button" id="shadowOccurrencesClose" class="shadow-occ-close" aria-label="Fermer">×</button></div></div>'+
     '<div id="shadowOccurrencesList" class="shadow-occ-list"></div></div>';
 
   const j=(data.journal||[]);
@@ -4829,17 +4845,26 @@ function renderShadows(data){
     '<div class="shadow-grid">'+priceCard+continuationCard+live15Card+handoffCard+tpCard+mfCard+'</div>'+
     statHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
   if(shadowSelectedOccurrenceKey){
-    renderShadowOccurrences(data,shadowSelectedOccurrenceKey,shadowSelectedOccurrenceLabel,false);
+    renderShadowOccurrences(data,shadowSelectedOccurrenceKey,shadowSelectedOccurrenceLabel,false,null);
   }
 }
 document.addEventListener('click',function(ev){
+  if(ev.target&&ev.target.closest&&ev.target.closest('#shadowOccurrencesClose')){
+    closeShadowOccurrences();
+    return;
+  }
   const b=ev.target&&ev.target.closest&&ev.target.closest('.shadow-stat-btn');
   if(!b)return;
   const key=b.dataset.shadowOcc;
   const label=decodeURIComponent(b.dataset.shadowLabel||key||'');
+  const box=document.getElementById('shadowOccurrences');
+  if(shadowSelectedOccurrenceKey===key&&box&&box.classList.contains('open')){
+    closeShadowOccurrences();
+    return;
+  }
   shadowSelectedOccurrenceKey=key;
   shadowSelectedOccurrenceLabel=label;
-  if(shadowLastData)renderShadowOccurrences(shadowLastData,key,label,true);
+  if(shadowLastData)renderShadowOccurrences(shadowLastData,key,label,true,b);
 });
 async function loadShadows(){
   const root=document.getElementById('shadowLive');

@@ -884,3 +884,13 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les tuiles de moyenne/taux ouvrent le sous-ensemble ayant servi au calcul (ex. LIVE15 stable >=80%, fugace <25%, confirmations, repaint, ENTRY/EXIT).
 - La page descend automatiquement vers la liste et la sélection reste ouverte après le rafraîchissement 30 s.
 - Aucun impact trading ni nouvelle collecte.
+
+## 2026-10-15 — SHADOWS · volet occurrences repliable
+- Le panneau OCCURRENCES devient un volet temporaire en flux normal, jamais en superposition.
+- Hauteur fixe : 270 px desktop / 235 px mobile, avec scroll interne vertical.
+- Le volet est déplacé automatiquement juste sous le groupe de tuiles cliqué.
+- Clic sur la même tuile : ferme le volet et retire la sélection.
+- Clic sur une autre tuile : conserve le volet ouvert mais remplace immédiatement son contenu.
+- Ajout d'un bouton × explicite dans l'en-tête du volet.
+- Le rafraîchissement 30 s conserve la tuile sélectionnée et remet le volet au bon endroit sans scroll forcé.
+- Aucun impact trading.
