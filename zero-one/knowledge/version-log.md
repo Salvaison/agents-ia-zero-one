@@ -796,3 +796,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Protection live : signal 15m LIVE opposé + structure 3m opposée + PM adverse productif + perte/rejet MA200 3m déclenche EXIT_LIVE_SIGNAL_STACK_PROTECTION sans attendre la clôture 15m.
 - DN3 seul et signal LIVE 15m seul restent sans autorité de sortie.
 - Replay #125 : entrée refusée comme late active ; plancher économique et stack live validés sur la chronologie observée.
+
+## 2026-10-15 — V4.10.1 Opportunity Freshness
+- UP_REINFORCED ne change plus l'identité causale d'un setup dans la même campagne 15m / cycle 3m.
+- Le mode STRUCTURAL/NATIVE et le timestamp du signal renforcé ne réinitialisent plus setupTs ni la preuve post-setup.
+- Pour un LONG renforcé, le timing SETUP_LATE remonte au plus ancien entre début du lobe 3m et 3m UP de synchronisation.
+- Nouveau gate actif : si rolling 3m ET rolling 5m sont simultanément opposés, le bypass UP_REINFORCED est supprimé et BOONO reste WATCH.
+- Replay #127 : nouvelle logique => SETUP_LATE (16.72 min, recovery 0) et, indépendamment, NATIVE_REINFORCED_WAIT_ROLLING_RECOVERY (net3 -108.1 / net5 -250.2).

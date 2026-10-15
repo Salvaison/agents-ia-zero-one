@@ -64,7 +64,7 @@ const base=1_810_000_000_000;
   const bg={primaryRelation:'WITH_BACKGROUND'};
   const open={state:'OPEN_PATH',admissionBlocked:false};
   const active={state:'ACTIVE',admissionBlocked:false};
-  const key=['long','REVERSAL_FORMING',t-600000,t-180000,0,0].join('|');
+  const key=['long',t-600000,t-180000,0].join('|');
 
   // Exact same MCB setup was consumed by the previous trade => stale thesis.
   const stale=setupLayer.evaluate(frame,bt,mcb,bg,open,active,null,null,null,

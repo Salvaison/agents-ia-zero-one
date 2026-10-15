@@ -88,13 +88,14 @@ function setupInputs(direction='long'){
   );
   assert.equal(good.ready,true);
 
-  // Strong native MCB remains an explicit exception (#72 family).
+  // Strong native MCB is no longer allowed to erase simultaneous adverse 3m+5m conversion.
   const reinforced=action.entryContinuityProof(
     {direction:'long',reinforcedUpBypass:true},
     {horizons:{net3mUsd:-82.8,net5mUsd:-210.8,efficiency3m:.47}},
     {state:'CHOP_SHADOW'}
   );
-  assert.equal(reinforced.ready,true);
+  assert.equal(reinforced.ready,false);
+  assert.equal(reinforced.rollingBothOpposed,true);
 }
 
 // 5) #78 pattern: almost no MFE + persistent adverse PM + productive adverse micro => execution failure.

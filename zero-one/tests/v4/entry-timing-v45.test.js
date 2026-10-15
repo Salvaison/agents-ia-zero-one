@@ -147,4 +147,39 @@ function commonSetupInputs(direction='short'){
   assert.equal(s3.timingShadow.state,'SETUP_EXPIRED');
 }
 
+
+
+// Reinforced confirmation must strengthen the same causal setup, not manufacture a fresh one.
+// Its 3m sync event also becomes the earlier timing origin for SETUP_LATE.
+{
+  const x=commonSetupInputs('long');
+  const n3Start=base;
+  x.mcb.currentLobe={...x.mcb.currentLobe,startTs:base-60*60000,extremeTs:base-30*60000};
+  x.mcb.nested3m={available:true,startTs:n3Start,extremeTs:n3Start,lobeSign:1,turningDirection:null,
+    structuralDirection:'long',structuralState:'ASCENT_ACTIVE',structuralConfirmedAt:n3Start,
+    currentLbw:8,extremeLbw:8,recoveryFraction:0};
+  const none={reinforcedUp:{active:false},reinforced3mUp:{active:false,event:null},last3mUp:null,last3mDn:null};
+  const thesisA={...x.baseThesis,mode:'STRUCTURAL_TRAJECTORY'};
+  const s1=setupLayer.evaluate({market:{timestamp:n3Start+2*60000,price:1000}},thesisA,x.mcb,x.background,x.room,x.quality,none,null,null,null);
+  assert.equal(s1.status,'SETUP');
+  assert.equal(s1.timingShadow.state,'SETUP_OPEN');
+
+  const syncTs=n3Start-6*60000;
+  const reinforced={
+    reinforcedUp:{active:true,event:{type:'UP',ts:syncTs,value:-74}},
+    reinforcedLongSync:{active:true,signal3m:{type:'UP',ts:syncTs,value:-42}},
+    reinforced3mUp:{active:false,event:null},last3mUp:null,last3mDn:null
+  };
+  const thesisB={...x.baseThesis,mode:'NATIVE_UP_REINFORCED'};
+  x.mcb.nested3m={...x.mcb.nested3m,currentLbw:42,extremeLbw:42,recoveryFraction:0};
+  const s2=setupLayer.evaluate({market:{timestamp:n3Start+10*60000,price:1080}},thesisB,x.mcb,x.background,x.room,x.quality,reinforced,s1,null,null,null);
+  assert.equal(s2.status,'OBSERVE');
+  assert.equal(s2.setupId,s1.setupId);
+  assert.equal(s2.setupTs,s1.setupTs);
+  assert.equal(s2.timingShadow.state,'SETUP_LATE');
+  assert.equal(s2.timingShadow.timingOriginTs,syncTs);
+  assert.equal(s2.timingShadow.timingOriginSource,'REINFORCED_15M_SYNC_3M_UP');
+  assert.ok(s2.reasons.includes('SETUP_LATE_CLOSES_ENTRY_WINDOW'));
+}
+
 console.log('V4.5 entry timing / ticker role tests OK');

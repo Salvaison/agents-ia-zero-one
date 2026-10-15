@@ -52,8 +52,14 @@ function entryContinuityProof(setup,translation,marketQuality){
   const lowEfficiencyRegime=['CHOP_SHADOW','LOW_EDGE_SHADOW'].includes(q);
 
   if(nativeBypass){
-    return {ready:true,nativeBypass:true,quality:q,net3Aligned,net5Aligned,efficiency3m:Number.isFinite(eff3)?eff3:null,
-      reason:'reinforced native MCB event bypasses rolling continuity requirement'};
+    const net3Opposed=directionAligned(h.net3mUsd,opposite(direction));
+    const net5Opposed=directionAligned(h.net5mUsd,opposite(direction));
+    const rollingBothOpposed=!!(net3Opposed&&net5Opposed);
+    return {ready:!rollingBothOpposed,nativeBypass:true,quality:q,net3Aligned,net5Aligned,
+      net3Opposed,net5Opposed,rollingBothOpposed,efficiency3m:Number.isFinite(eff3)?eff3:null,
+      reason:rollingBothOpposed
+        ?'reinforced native event cannot bypass simultaneous opposing 3m + 5m rolling conversion'
+        :'reinforced native MCB event may bypass ordinary rolling continuity only while 3m+5m are not simultaneously opposed'};
   }
   if(!net3Aligned){
     return {ready:false,nativeBypass:false,quality:q,net3Aligned:false,net5Aligned,efficiency3m:Number.isFinite(eff3)?eff3:null,
@@ -303,9 +309,13 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
     const es=stage(entry.thesis,entry.translation,entry.ticker);
     const fresh=entry.translation&&entry.translation.sinceSetup||null;
     const nativeBypass=!!(setup.reinforcedUpBypass&&setup.direction==='long');
-    const nativeFreshReady=!!(nativeBypass&&fresh&&fresh.available&&Number(fresh.netUsd)>=50&&Number(fresh.efficiency)>=.12);
-    const continuity=entryContinuityProof(setup,entry.translation,entry.marketQuality||null);
     const rollingTranslation=entry&&entry.rollingTranslation||null;
+    const rollingH=rollingTranslation&&rollingTranslation.horizons||{};
+    const nativeRolling3Opposed=nativeBypass&&directionAligned(rollingH.net3mUsd,'short');
+    const nativeRolling5Opposed=nativeBypass&&directionAligned(rollingH.net5mUsd,'short');
+    const nativeRollingBothOpposed=!!(nativeRolling3Opposed&&nativeRolling5Opposed);
+    const nativeFreshReady=!!(nativeBypass&&!nativeRollingBothOpposed&&fresh&&fresh.available&&Number(fresh.netUsd)>=50&&Number(fresh.efficiency)>=.12);
+    const continuity=entryContinuityProof(setup,entry.translation,entry.marketQuality||null);
     const mfTransferRequired=!!setup.mfTransferRequired;
     const mfTransferStrongPmReady=!mfTransferRequired||
       !!(rollingTranslation&&rollingTranslation.status==='STRONG_TRANSLATION');
@@ -314,10 +324,20 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
       entry.translation.materiality&&entry.translation.materiality.passed&&
       continuity.ready
     );
+    if(nativeRollingBothOpposed){
+      return {type:'WATCH',direction:'long',stage:'NATIVE_REINFORCED_WAIT_ROLLING_RECOVERY',setupId:setup.setupId,
+        reason:'UP_REINFORCED remains valid MCB evidence, but simultaneous opposing 3m + 5m rolling conversion forbids a fresh LONG entry; wait for actual conversion recovery',
+        evidence:{net3mUsd:Number(rollingH.net3mUsd),net5mUsd:Number(rollingH.net5mUsd),
+          netSinceSetupUsd:fresh&&fresh.available?Number(fresh.netUsd):null,
+          efficiencySinceSetup:fresh&&fresh.available?Number(fresh.efficiency):null,
+          reinforcedBypassSuppressed:true}};
+    }
     if(nativeFreshReady){
       return {type:'ENTER_LONG',direction:'long',stage:'NATIVE_REINFORCED_BYPASS',setupId:setup.setupId,
-        reason:'UP_REINFORCED <= -60 + local MCB sync + fresh bullish translation; 1H/ticker confirmation bypassed for this asymmetric native MCB event',
-        evidence:{netSinceSetupUsd:Number(fresh.netUsd),grossSinceSetupUsd:Number(fresh.grossUsd),efficiencySinceSetup:Number(fresh.efficiency)}};
+        reason:'UP_REINFORCED <= -60 + local MCB sync + fresh bullish translation; 1H/ticker/MF-memory transfer gate bypassed only while 3m+5m rolling are not simultaneously opposed',
+        evidence:{netSinceSetupUsd:Number(fresh.netUsd),grossSinceSetupUsd:Number(fresh.grossUsd),efficiencySinceSetup:Number(fresh.efficiency),
+          rolling3mUsd:Number.isFinite(Number(rollingH.net3mUsd))?Number(rollingH.net3mUsd):null,
+          rolling5mUsd:Number.isFinite(Number(rollingH.net5mUsd))?Number(rollingH.net5mUsd):null}};
     }
     if(mfTransferRequired&&!mfTransferStrongPmReady){
       return {type:'WATCH',direction:setup.direction,stage:'MF_TRANSFER_WAIT_STRONG_PM',setupId:setup.setupId,

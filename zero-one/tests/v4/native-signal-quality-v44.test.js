@@ -176,4 +176,30 @@ function mcbFor(dir='long'){
   fs.unlinkSync(tmp);
 }
 
+
+
+// Reinforced UP cannot erase simultaneous adverse rolling 3m + 5m conversion.
+// This reproduces the #127 failure mode: a small fresh rebound inside already-adverse rolling flow.
+{
+  const a=action.evaluate({market:{price:1050}},null,{}, {state:'TRANSITION_NEUTRAL',direction:null},
+    {status:'NO_THESIS'}, {status:'NO_THESIS',confirmed:false}, {hardStopBreached:false}, {
+      setup:{status:'SETUP',direction:'long',setupId:'reinforced-late-rebound',reinforcedUpBypass:true},
+      thesis:{state:'SETUP',direction:'long'},
+      translation:{
+        status:'TRANSLATING',materiality:{passed:true},
+        sinceSetup:{available:true,netUsd:80,grossUsd:80,efficiency:1},
+        horizons:{net3mUsd:-108,net5mUsd:-250,efficiency3m:.37}
+      },
+      rollingTranslation:{status:'BURST_ALIGNED',horizons:{net3mUsd:-108,net5mUsd:-250,efficiency3m:.37}},
+      ticker:{status:'STRONG_CONFIRMATION',confirmed:true},
+      nativeSignal:{reinforcedUp:{active:true,event:{ts:base,value:-74}}},
+      marketQuality:{state:'MIXED'}
+    });
+  assert.equal(a.type,'WATCH');
+  assert.equal(a.stage,'NATIVE_REINFORCED_WAIT_ROLLING_RECOVERY');
+  assert.equal(a.evidence.reinforcedBypassSuppressed,true);
+  assert.equal(a.evidence.net3mUsd,-108);
+  assert.equal(a.evidence.net5mUsd,-250);
+}
+
 console.log('V4.4 native signal / quality tests OK');

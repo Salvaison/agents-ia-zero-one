@@ -5,11 +5,14 @@ function maxFinite(values){
   const a=values.map(Number).filter(Number.isFinite);
   return a.length?Math.max(...a):null;
 }
-function activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3=null,candidate=null){
+function activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3=null,candidate=null,timingOriginTs=null,timingOriginSource=null){
   const prior=prevSame&&previousSetup&&previousSetup.timingShadow||null;
   const into=n3&&(Number(n3.lobeSign)>0?'long':Number(n3.lobeSign)<0?'short':null);
-  const ageMinutes=n3&&Number.isFinite(Number(n3.startTs))
-    ?Math.max(0,(Number(marketTs)-Number(n3.startTs))/60000):null;
+  const nativeOrigin=Number(timingOriginTs);
+  const n3Origin=n3&&Number(n3.startTs);
+  const originTs=Number.isFinite(nativeOrigin)?nativeOrigin:(Number.isFinite(n3Origin)?n3Origin:null);
+  const ageMinutes=Number.isFinite(originTs)
+    ?Math.max(0,(Number(marketTs)-originTs)/60000):null;
   let recovery=n3&&Number(n3.recoveryFraction);
   if(!Number.isFinite(recovery)){
     const cur=n3&&Math.abs(Number(n3.currentLbw)),ext=n3&&Math.abs(Number(n3.extremeLbw));
@@ -29,6 +32,8 @@ function activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3
     lateAt:activeLate?(prior&&prior.lateAt||marketTs):null,
     expiredAt:null,
     lobeAgeMinutes:Number.isFinite(ageMinutes)?ageMinutes:null,
+    timingOriginTs:Number.isFinite(originTs)?originTs:null,
+    timingOriginSource:timingOriginSource||(Number.isFinite(nativeOrigin)?'NATIVE_3M_SYNC':'CURRENT_3M_LOBE_START'),
     lobeRecoveryFraction:Number.isFinite(recovery)?recovery:null,
     lobeDirection:into,
     candidateDirection:candidate||null,
@@ -162,16 +167,15 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   if(reinforced3mShortClose)reasons.push('UP_REINFORCED_3M_CLOSES_SHORT_ENTRY_WINDOW');
   if(!mfMemory.allowed)reasons.push(mfMemory.state);
 
-  const nativeToken=reinforcedUpBypass&&nativeSignal&&nativeSignal.reinforcedUp&&nativeSignal.reinforcedUp.event
-    ?Number(nativeSignal.reinforcedUp.event.ts)||0:0;
   const fourHourArmToken=capitulationGuard&&capitulationGuard.arm&&capitulationGuard.arm.token||null;
   const capitulationReversal=!!(capitulationGuard&&capitulationGuard.deepReached&&capitulationGuard.arm&&capitulationGuard.arm.active);
+  // Setup identity is causal, not descriptive: changing from STRUCTURAL to
+  // NATIVE_UP_REINFORCED inside the same 15m campaign / 3m cycle must not
+  // manufacture a fresh execution window or reset post-setup evidence.
   const baseToken=[
     candidate,
-    baseThesis&&baseThesis.mode||'',
     Number(c.startTs)||0,
     Number(n3.startTs)||0,
-    nativeToken,
     fourHourArmToken||0
   ].join('|');
   const campaignKey=[candidate,Number(c.startTs)||0].join('|');
@@ -196,7 +200,8 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   const thesisConsumed=!!(lastConsumedSetupKey&&lastConsumedSetupKey===baseToken);
   if(thesisConsumed)reasons.push('THESIS_CONSUMED_WAIT_MCB_CHANGE');
 
-  const previousActiveSame=!!(previousSetup&&previousSetup.status==='SETUP'&&previousSetup.setupKey===baseToken);
+  const previousSameSetup=!!(previousSetup&&previousSetup.setupKey===baseToken);
+  const previousActiveSame=!!(previousSameSetup&&previousSetup.status==='SETUP');
   if(reasons.length){
     const timingShadow=previousActiveSame
       ?expiredTimingShadow(previousSetup,marketTs,reinforced3mShortClose?'UP_REINFORCED_3M ended the current SHORT timing window':coherence.reason||reasons[0])
@@ -213,22 +218,31 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       reinforced3mShortClose,noNewShort:reinforced3mShortClose,
       mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
       timingShadow,
-      setupId:previousActiveSame?previousSetup.setupId||null:null,
-      setupTs:previousActiveSame?previousSetup.setupTs||null:null,
+      setupId:previousSameSetup?previousSetup.setupId||null:null,
+      setupTs:previousSameSetup?previousSetup.setupTs||null:null,
+      createdAt:previousSameSetup?previousSetup.createdAt||previousSetup.setupTs||null:null,
       setupKey:baseToken,admissionAllowed:false,reasons,
       reason:reasons.join(' + ')
     };
   }
 
-  const prevSame=previousActiveSame;
-  const setupTs=prevSame?Number(previousSetup.setupTs):marketTs;
-  const setupId=prevSame?previousSetup.setupId:[baseToken,setupTs].join('@');
-  const timingShadow=activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3,candidate);
+  const prevSame=previousSameSetup;
+  const setupTs=prevSame&&Number.isFinite(Number(previousSetup.setupTs))?Number(previousSetup.setupTs):marketTs;
+  const setupId=prevSame&&previousSetup.setupId?previousSetup.setupId:[baseToken,setupTs].join('@');
+  const reinforcedSync3=nativeSignal&&nativeSignal.reinforcedLongSync&&nativeSignal.reinforcedLongSync.active
+    ?nativeSignal.reinforcedLongSync.signal3m:null;
+  const reinforcedSync3Ts=reinforcedUpBypass&&reinforcedSync3?Number(reinforcedSync3.ts):null;
+  const current3Start=Number(n3.startTs);
+  const timingOriginTs=Number.isFinite(reinforcedSync3Ts)
+    ?(Number.isFinite(current3Start)?Math.min(reinforcedSync3Ts,current3Start):reinforcedSync3Ts)
+    :(Number.isFinite(current3Start)?current3Start:null);
+  const timingOriginSource=Number.isFinite(reinforcedSync3Ts)?'REINFORCED_15M_SYNC_3M_UP':'CURRENT_3M_LOBE_START';
+  const timingShadow=activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3,candidate,timingOriginTs,timingOriginSource);
   if(timingShadow.blocksNewEntry){
     return {
       status:'OBSERVE',candidateDirection:candidate,direction:null,
       setupId,setupKey:baseToken,setupTs,
-      createdAt:prevSame?previousSetup.createdAt||setupTs:marketTs,
+      createdAt:prevSame?previousSetup.createdAt||previousSetup.setupTs||setupTs:marketTs,
       relationToBackground:relation,localSync:coherence,
       structuralRoom:structuralRoom&&structuralRoom.state||null,
       marketQuality:marketQuality&&marketQuality.state||null,
@@ -247,7 +261,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   return {
     status:'SETUP',candidateDirection:candidate,direction:candidate,
     setupId,setupKey:baseToken,setupTs,
-    createdAt:prevSame?previousSetup.createdAt||setupTs:marketTs,
+    createdAt:prevSame?previousSetup.createdAt||previousSetup.setupTs||setupTs:marketTs,
     relationToBackground:relation,localSync:coherence,
     structuralRoom:structuralRoom&&structuralRoom.state||null,
     marketQuality:marketQuality&&marketQuality.state||null,

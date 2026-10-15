@@ -18,7 +18,7 @@ const structuralHandoffShadow=require('../experiments/structural-handoff-shadow'
 const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 
-const VERSION='v4.10.0-protection-stack-20261015';
+const VERSION='v4.10.1-opportunity-freshness-20261015';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -152,6 +152,9 @@ function evaluate(frame,position=null,previousEvaluation=null){
       structuralTrajectoryDecisionImpact:{'3m':'TIMING','15m':'THESIS_CANDIDATE','1h':'QUALIFIER','4h':'CAPITULATION_PERMISSION','1d':'SHADOW','1w':'SHADOW'},
       reinforcedUpThresholdLbw:-60,
       reinforcedUpBackgroundBypassLong:true,
+      reinforcedUpPreservesCausalSetupIdentity:true,
+      reinforcedUpTimingOrigin:'EARLIEST_OF_CURRENT_3M_LOBE_AND_REINFORCED_SYNC_3M_UP',
+      reinforcedUpRollingOppositionGate:{decisionImpact:true,forbidsEntryWhen:['ROLLING_3M_OPPOSES','ROLLING_5M_OPPOSES'],semantic:'native reinforcement cannot manufacture freshness or erase simultaneous 3m+5m adverse conversion'},
       reinforcedUpCanCreateLongCandidateInDeepTrough:true,
       reinforcedDnSynthetic:false,
       macro4hDailyDecisionImpact:'4H_CAPITULATION_PERMISSION_ONLY; DAILY_SHADOW',
