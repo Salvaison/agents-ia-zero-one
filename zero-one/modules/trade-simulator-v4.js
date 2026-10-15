@@ -286,7 +286,8 @@ function compactV4(x){
     marketQuality:x.marketQuality||null,setup:x.setup||null,
     translation:x.translation,ticker:x.ticker,mfStructureShadow:x.mfStructureShadow||null,
     continuationReentryShadow:x.continuationReentryShadow||null,
-    priceBehaviorShadow:x.priceBehaviorShadow||null,structuralHandoff:x.structuralHandoff||null,
+    priceBehaviorShadow:x.priceBehaviorShadow||null,
+    live15AcceptanceShadow:x.live15AcceptanceShadow||null,structuralHandoff:x.structuralHandoff||null,
     entryTranslation:x.entryTranslation||null,entryTicker:x.entryTicker||null,
     risk:x.risk,action:x.action,contract:x.contract,v3Shadow:x.v3Shadow||null};
 }

@@ -866,3 +866,13 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Journal récent des transitions shadow / actives significatives.
 - Rafraîchissement 30 s uniquement quand SHADOWS est ouvert.
 - Endpoint léger /api/shadows ; aucune nouvelle collecte et aucun impact trading.
+
+## 2026-10-15 — V4.10.4 LIVE15 Acceptance Shadow
+- Nouveau shadow strictement decisionImpact:false sur l'acceptation anticipée des signaux natifs 15m LIVE.
+- ENTRY : le LIVE15 est traité comme validé uniquement en shadow lorsque 3m, PM 3m+5m, efficacité, MF Memory, timing, boundary et activité sont compatibles.
+- EXIT : test volontaire du LIVE15 seul comme autorité hypothétique de sortie afin de quantifier terrain adverse évité vs récupération manquée.
+- Suivi par bougie : première apparition, lead avant close, persistance, disparition, réapparition, flip, confirmation / REPAINT_NONE / REPAINT_OPPOSITE.
+- SHADOWS affiche carte live + fiabilité 24h + conséquences ENTRY/EXIT depuis activation.
+- Echantillon initial 24h : 47 bougies LIVE15, 19 confirmations même sens, 28 repaint, ~40.4% brut, ~13.0 min d'avance moyenne.
+- Forte séparation initiale : présence >=80% => ~90% de confirmation (20 cas) ; présence <25% => 0% (22 cas).
+- EXIT_LIVE_SIGNAL_STACK_PROTECTION actif reste inchangé et continue d'exiger LIVE15 + structure3m + PM adverse + MA200.

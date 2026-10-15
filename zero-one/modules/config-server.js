@@ -446,11 +446,100 @@ app.get('/api/shadows', requireAuth, (req, res) => {
     const lastTs=evals.length?Date.parse(evals[evals.length-1].ts||''):NaN;
     const windowMinutes=Number.isFinite(firstTs)&&Number.isFinite(lastTs)?Math.max(0,(lastTs-firstTs)/60000):null;
 
+    // LIVE15 reliability uses the lighter AUDIT stream over up to 24h, then
+    // compares each provisional 15m bar with the confirmed MCB CSV outcome.
+    let audit15=[];
+    try{
+      if(fs.existsSync(AUDIT_HISTORY_PATH)){
+        const a=JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH,'utf8'));
+        audit15=Array.isArray(a)?a:[];
+      }
+    }catch(_){}
+    const auditLastTs=audit15.length?Number(audit15[audit15.length-1].ts):NaN;
+    const live15Since=Number.isFinite(auditLastTs)?auditLastTs-24*3600000:Date.now()-24*3600000;
+    audit15=audit15.filter(r=>Number.isFinite(Number(r.ts))&&Number(r.ts)>=live15Since);
+
+    const confirmed15Rows=new Set();
+    try{
+      waveUiReadTailText(path.join(WAVE_MCB_DIR,'mcb_15m.csv'),2*1024*1024).split(/\r?\n/).forEach(line=>{
+        if(!line||line.startsWith('timestamp,'))return;
+        const ts=Date.parse(line.split(',')[0]);if(Number.isFinite(ts))confirmed15Rows.add(ts);
+      });
+    }catch(_){}
+    const confirmed15Events=new Map();
+    try{
+      waveUiSignalRows('15m',live15Since-3600000,Number.isFinite(auditLastTs)?auditLastTs:Date.now())
+        .filter(e=>!e.provisional)
+        .forEach(e=>confirmed15Events.set(Number(e.ts),{type:e.type,value:e.value}));
+    }catch(_){}
+
+    const live15Bars=new Map(),TF15=15*60000;
+    audit15.forEach(r=>{
+      const ts=Number(r.ts),barTs=Math.floor(ts/TF15)*TF15;
+      const up=r.live15SignalUp!==null&&r.live15SignalUp!==undefined&&Number.isFinite(Number(r.live15SignalUp));
+      const dn=r.live15SignalDn!==null&&r.live15SignalDn!==undefined&&Number.isFinite(Number(r.live15SignalDn));
+      const type=up?'UP':dn?'DN':null,value=up?Number(r.live15SignalUp):dn?Number(r.live15SignalDn):null;
+      let b=live15Bars.get(barTs);
+      if(!b)b={barTs,closeTs:barTs+TF15,firstSeenAt:null,firstType:null,firstValue:null,firstPrice:null,
+        lastType:null,lastValue:null,afterFirstSamples:0,presentSamples:0,absentSamples:0,
+        flips:0,disappearances:0,reappearances:0,prevPresent:false,prevType:null};
+      if(type&&!b.firstSeenAt){
+        b.firstSeenAt=ts;b.firstType=type;b.firstValue=value;b.firstPrice=Number(r.lastPrice);
+      }
+      if(b.firstSeenAt){
+        b.afterFirstSamples++;
+        if(type){
+          b.presentSamples++;
+          if(b.prevType&&b.prevType!==type)b.flips++;
+          if(!b.prevPresent&&b.presentSamples>1)b.reappearances++;
+          b.prevPresent=true;b.prevType=type;b.lastType=type;b.lastValue=value;
+        }else{
+          b.absentSamples++;
+          if(b.prevPresent)b.disappearances++;
+          b.prevPresent=false;
+        }
+      }
+      live15Bars.set(barTs,b);
+    });
+    const live15Resolved=[...live15Bars.values()].filter(b=>
+      b.firstSeenAt&&confirmed15Rows.has(Number(b.barTs))&&
+      (!Number.isFinite(auditLastTs)||Number(b.closeTs)<=auditLastTs-2*60000)
+    ).map(b=>{
+      const c=confirmed15Events.get(Number(b.barTs))||null;
+      const confirmedType=c&&c.type||null;
+      const same=confirmedType===b.firstType;
+      const presence=b.afterFirstSamples?b.presentSamples/b.afterFirstSamples:null;
+      return {...b,confirmedType,confirmedValue:c&&c.value,
+        outcome:same?'CONFIRMED_SAME':confirmedType?'REPAINT_OPPOSITE':'REPAINT_NONE',
+        leadMinutes:(b.closeTs-b.firstSeenAt)/60000,presenceFraction:presence};
+    });
+    const live15Same=live15Resolved.filter(x=>x.outcome==='CONFIRMED_SAME');
+    const live15Repaint=live15Resolved.filter(x=>x.outcome!=='CONFIRMED_SAME');
+    const live15Stable=live15Resolved.filter(x=>Number(x.presenceFraction)>=.8);
+    const live15Fleeting=live15Resolved.filter(x=>Number(x.presenceFraction)<.25);
+    const live15Avg=a=>a.length?a.reduce((s,x)=>s+Number(x||0),0)/a.length:null;
+    const live15RawStats={
+      hours:24,bars:live15Resolved.length,confirmedSame:live15Same.length,
+      repaintNone:live15Resolved.filter(x=>x.outcome==='REPAINT_NONE').length,
+      repaintOpposite:live15Resolved.filter(x=>x.outcome==='REPAINT_OPPOSITE').length,
+      confirmationRate:live15Resolved.length?live15Same.length/live15Resolved.length:null,
+      avgLeadMinutes:live15Avg(live15Resolved.map(x=>x.leadMinutes)),
+      disappearanceBars:live15Resolved.filter(x=>x.disappearances>0).length,
+      typeFlipBars:live15Resolved.filter(x=>x.flips>0).length,
+      stableBars:live15Stable.length,
+      stableConfirmationRate:live15Stable.length?live15Stable.filter(x=>x.outcome==='CONFIRMED_SAME').length/live15Stable.length:null,
+      fleetingBars:live15Fleeting.length,
+      fleetingConfirmationRate:live15Fleeting.length?live15Fleeting.filter(x=>x.outcome==='CONFIRMED_SAME').length/live15Fleeting.length:null,
+      recent:live15Resolved.slice(-12)
+    };
+
     const priceEpisodes=new Map();
     const continuationCandidates=new Map();
     const handoffEpisodes=new Map();
+    const live15ActionResolved=new Map();
     const journal=[];
     let prevPriceKey=null,prevContState=null,prevHandoffKey=null,prevMfKey=null;
+    let prevLive15ResolvedBar=null,prevLive15CurrentKey=null;
 
     function pushJournal(x,kind,title,detail,level){
       journal.push({
@@ -538,6 +627,32 @@ app.get('/api/shadows', requireAuth, (req, res) => {
         prevHandoffKey=hk;
       }
 
+      const l15=x.live15AcceptanceShadow||null;
+      if(l15){
+        const lr=l15.lastResolved||null;
+        if(lr&&Number.isFinite(Number(lr.barTs))){
+          live15ActionResolved.set(Number(lr.barTs),lr);
+          if(Number(lr.barTs)!==prevLive15ResolvedBar){
+            pushJournal(x,'LIVE15',lr.outcome,
+              String(lr.firstType||'—')+' · lead '+Number(lr.firstSignalLeadMinutes||0).toFixed(1)+' min'+
+              (lr.entryHypothesis?' · ENTRY '+(lr.entryHypothesis.confirmedSame?'confirmée':'repaint'):'')+
+              (lr.exitHypothesis?' · EXIT '+(lr.exitHypothesis.confirmedSame?'confirmée':'repaint'):''),
+              'SHADOW');
+            prevLive15ResolvedBar=Number(lr.barTs);
+          }
+        }
+        const cs=l15.currentSignal||null;
+        const liveKey=cs?[cs.barTs,cs.type,l15.entryShadow&&l15.entryShadow.actionReady?1:0,l15.exitShadow&&l15.exitShadow.opposingLiveSignal?1:0].join('|'):'NONE';
+        if(cs&&liveKey!==prevLive15CurrentKey&&(l15.entryShadow&&l15.entryShadow.actionReady||l15.exitShadow&&l15.exitShadow.opposingLiveSignal)){
+          pushJournal(x,'LIVE15',cs.type+' LIVE · '+Number(cs.minutesToClose||0).toFixed(1)+' min avant close',
+            (l15.entryShadow&&l15.entryShadow.actionReady?'ENTRY_STACK_READY':'')+
+            (l15.entryShadow&&l15.entryShadow.actionReady&&l15.exitShadow&&l15.exitShadow.opposingLiveSignal?' · ':'')+
+            (l15.exitShadow&&l15.exitShadow.opposingLiveSignal?'EXIT_OPPOSING_POSITION':''),
+            'SHADOW');
+        }
+        prevLive15CurrentKey=liveKey;
+      }
+
       const mf=x.mfStructureShadow&&x.mfStructureShadow.temporal||null;
       if(mf){
         const mk=[mf.state,mf.memoryDirection,mf.memoryHorizon,mf.candidateContext&&mf.candidateContext.state].join('|');
@@ -575,6 +690,32 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       invalidated:he.filter(x=>x.invalidated).length
     };
 
+    const live15ResolvedActions=[...live15ActionResolved.values()];
+    const live15EntryActions=live15ResolvedActions.map(x=>x.entryHypothesis).filter(Boolean);
+    const live15ExitActions=live15ResolvedActions.map(x=>x.exitHypothesis).filter(Boolean);
+    const live15ActionStats={
+      entry:{
+        candidates:live15EntryActions.length,
+        confirmedSame:live15EntryActions.filter(x=>x.confirmedSame).length,
+        repaints:live15EntryActions.filter(x=>!x.confirmedSame).length,
+        avgLeadMinutes:live15Avg(live15EntryActions.map(x=>x.leadMinutesToClose)),
+        avgMfeUsd:live15Avg(live15EntryActions.map(x=>x.maxFavorableUsd)),
+        avgMaeUsd:live15Avg(live15EntryActions.map(x=>x.maxAdverseUsd)),
+        riskReferenceBreached:live15EntryActions.filter(x=>x.riskReferenceBreached).length
+      },
+      exit:{
+        candidates:live15ExitActions.length,
+        confirmedSame:live15ExitActions.filter(x=>x.confirmedSame).length,
+        repaints:live15ExitActions.filter(x=>!x.confirmedSame).length,
+        avgLeadMinutes:live15Avg(live15ExitActions.map(x=>x.leadMinutesToClose)),
+        avgMissedRecoveryUsd:live15Avg(live15ExitActions.map(x=>x.maxMissedRecoveryUsd)),
+        avgAvoidedAdverseUsd:live15Avg(live15ExitActions.map(x=>x.maxAvoidedAdverseUsd)),
+        prematureRecoveryReference:live15ExitActions.filter(x=>x.prematureRecoveryReference).length,
+        avoidedAdverseReference:live15ExitActions.filter(x=>x.avoidedAdverseReference).length
+      }
+    };
+    const live15Stats={raw:live15RawStats,actions:live15ActionStats};
+
     const tpTrades=[];
     history.forEach((t,i)=>{
       const tp=t&&t.tpOptimizationShadow;
@@ -601,6 +742,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       priceBehavior:latest&&latest.priceBehaviorShadow||null,
       continuationReentry:latest&&latest.continuationReentryShadow||null,
       structuralHandoff:latest&&latest.structuralHandoff||null,
+      live15Acceptance:latest&&latest.live15AcceptanceShadow||null,
       mfTemporal:latest&&latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
       tpOptimization:tpStats.latest
     };
@@ -611,7 +753,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       generatedAt:new Date().toISOString(),
       sampleWindow:{evaluations:evals.length,minutes:windowMinutes,firstTs:evals[0]&&evals[0].ts||null,lastTs:evals[evals.length-1]&&evals[evals.length-1].ts||null},
       current,
-      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,tpOptimization:tpStats},
+      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,live15Acceptance:live15Stats,tpOptimization:tpStats},
       journal:journal.slice(-24).reverse()
     });
   } catch (e) {
@@ -4386,6 +4528,27 @@ function renderShadows(data){
     ],false
   );
 
+  const l15=cur.live15Acceptance||{},lSig=l15.currentSignal||{},lEntry=l15.entryShadow||{},lExit=l15.exitShadow||{},lBar=l15.currentBar||{},lLast=l15.lastResolved||{};
+  const lStats=stats.live15Acceptance||{},lRaw=lStats.raw||{},lAct=lStats.actions||{},lEntryStats=lAct.entry||{},lExitStats=lAct.exit||{};
+  const live15Main=lSig.type
+    ?(lSig.type+' LIVE · '+String(lSig.direction||'').toUpperCase())
+    :(l15.state||'—');
+  const live15Secondary=lSig.type
+    ?(shadowFmt(lSig.minutesToClose,1)+' min avant clôture 15m')
+    :(lLast.outcome?('dernier verdict · '+lLast.outcome):'aucun signal live actuellement');
+  const live15Card=shadowCard(
+    'LIVE15 ACCEPTANCE','SHADOW PUR','',
+    live15Main,
+    live15Secondary,
+    [
+      ['ENTRY',lSig.type?(lEntry.actionReady?'STACK READY · accepter LIVE15':((lEntry.evidence&&lEntry.evidence.waits||[]).join(' + ')||'signal seul')):'—'],
+      ['EXIT',lExit.opposingLiveSignal?'OPPOSÉ POSITION · hypothèse sortie immédiate':'aucune hypothèse sortie'],
+      ['persistance',lBar.firstSeenAt?(String(lBar.presentSamples||0)+' présents / '+String(lBar.samples||0)+' samples · disparitions '+String(lBar.disappearanceTransitions||0)):'—'],
+      ['dernier verdict',lLast.outcome?(lLast.outcome+' · lead '+shadowFmt(lLast.firstSignalLeadMinutes,1)+' min'):'—'],
+      ['24h brut',lRaw.bars?(String(lRaw.confirmedSame||0)+'/'+String(lRaw.bars)+' confirmés · '+String((lRaw.repaintNone||0)+(lRaw.repaintOpposite||0))+' repaint'):'échantillon en construction']
+    ],false
+  );
+
   const sh=cur.structuralHandoff||{},se=sh.evidence||{};
   const handoffCard=shadowCard(
     'STRUCTURAL HANDOFF','SHADOW PUR','',
@@ -4443,6 +4606,30 @@ function renderShadows(data){
       shadowStat(hs.reentryEligible||0,'handoff reentryEligible')+
     '</div>';
 
+  const live15Reliability='<div class="shadow-section-title">LIVE15 · LATENCE / REPAINT · JUSQU’À 24 H</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(lRaw.bars||0,'bougies avec signal LIVE')+
+      shadowStat((lRaw.bars?shadowFmt(100*Number(lRaw.confirmationRate||0),0)+' %':'—'),'confirmés même sens')+
+      shadowStat((lRaw.repaintNone||0)+(lRaw.repaintOpposite||0),'repaints')+
+      shadowStat(lRaw.avgLeadMinutes!==null&&lRaw.avgLeadMinutes!==undefined?shadowFmt(lRaw.avgLeadMinutes,1)+' min':'—','avance moyenne avant close')+
+      shadowStat(lRaw.stableBars?shadowFmt(100*Number(lRaw.stableConfirmationRate||0),0)+' %':'—','confirmation si présence ≥80%')+
+      shadowStat(lRaw.fleetingBars?shadowFmt(100*Number(lRaw.fleetingConfirmationRate||0),0)+' %':'—','confirmation si présence <25%')+
+      shadowStat(lRaw.disappearanceBars||0,'bougies avec disparition')+
+      shadowStat(lRaw.typeFlipBars||0,'bougies avec flip UP↔DN')+
+    '</div>';
+
+  const live15ActionStats='<div class="shadow-section-title">LIVE15 · ACTION HYPOTHÉTIQUE · DEPUIS ACTIVATION SHADOW</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(lEntryStats.candidates||0,'ENTRY candidats stack-ready')+
+      shadowStat(lEntryStats.confirmedSame||0,'ENTRY finalement confirmés')+
+      shadowStat(lEntryStats.repaints||0,'ENTRY repaint')+
+      shadowStat(lEntryStats.avgLeadMinutes!==null&&lEntryStats.avgLeadMinutes!==undefined?shadowFmt(lEntryStats.avgLeadMinutes,1)+' min':'—','ENTRY avance moyenne')+
+      shadowStat(lExitStats.candidates||0,'EXIT candidats signal seul')+
+      shadowStat(lExitStats.repaints||0,'EXIT repaint')+
+      shadowStat(lExitStats.prematureRecoveryReference||0,'EXIT récupération ≥180 $ manquée')+
+      shadowStat(lExitStats.avoidedAdverseReference||0,'EXIT adverse ≥180 $ évité')+
+    '</div>';
+
   const tpSummary='<div class="shadow-section-title">TP SHADOW · HISTORIQUE DISPONIBLE</div>'+
     '<div class="shadow-stat-grid">'+
       shadowStat(ts.trades||0,'trades analysés')+
@@ -4465,8 +4652,8 @@ function renderShadows(data){
 
   root.innerHTML=
     '<div class="shadow-section-title">ÉTAT LIVE</div>'+
-    '<div class="shadow-grid">'+priceCard+continuationCard+handoffCard+tpCard+mfCard+'</div>'+
-    statHtml+tpSummary+journalHtml;
+    '<div class="shadow-grid">'+priceCard+continuationCard+live15Card+handoffCard+tpCard+mfCard+'</div>'+
+    statHtml+live15Reliability+live15ActionStats+tpSummary+journalHtml;
 }
 async function loadShadows(){
   const root=document.getElementById('shadowLive');

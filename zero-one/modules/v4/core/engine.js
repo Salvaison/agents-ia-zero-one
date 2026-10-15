@@ -19,8 +19,9 @@ const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 const continuationReentryShadow=require('../experiments/continuation-reentry-shadow');
 const priceBehaviorShadow=require('../experiments/price-behavior-shadow');
+const live15AcceptanceShadow=require('../experiments/live15-acceptance-shadow');
 
-const VERSION='v4.10.3-price-behavior-shadow-20261015';
+const VERSION='v4.10.4-live15-acceptance-shadow-20261015';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -79,6 +80,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
   const priceBehavior=priceBehaviorShadow.evaluate(
     frame,native,translation,ticker,
     previousEvaluation&&previousEvaluation.priceBehaviorShadow||null
+  );
+
+  const live15Acceptance=live15AcceptanceShadow.evaluate(
+    frame,position,mcb,native,translation,mfStructure,room,quality,
+    previousEvaluation&&previousEvaluation.live15AcceptanceShadow||null
   );
 
   // Structural handoff experiment: persistent 1h structural context + 15m thesis + 3m timing.
@@ -152,6 +158,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     mfStructureShadow:mfStructure,
     continuationReentryShadow:continuationReentry,
     priceBehaviorShadow:priceBehavior,
+    live15AcceptanceShadow:live15Acceptance,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -187,6 +194,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
       priceBehaviorShadow:{decisionImpact:false,version:priceBehaviorShadow.VERSION,alwaysOn:true,
         signalMemory:['3m','15m'],tickerDecisionImpact:false,pmDecisionImpact:false,
         semantic:'continuous study of price effort/yield and conversion in relation to remembered native signal sequence; observation only'},
+      live15AcceptanceShadow:{decisionImpact:false,version:live15AcceptanceShadow.VERSION,
+        entryPolicy:'LIVE15_MAY_BE_TREATED_AS_VALIDATED_ONLY_WHEN_OTHER_ENTRY_EVIDENCE_IS_READY',
+        exitPolicy:'LIVE15_ALONE_IS_MEASURED_AS_HYPOTHETICAL_EXIT_AUTHORITY_ONLY',
+        tracks:['FIRST_SEEN_LATENCY','PERSISTENCE','DISAPPEARANCE','TYPE_FLIP','CONFIRMATION_OUTCOME','ENTRY_MFE_MAE_BEFORE_CLOSE','EXIT_MISSED_RECOVERY_VS_AVOIDED_ADVERSE'],
+        semantic:'shadow-only study of the latency gain and repaint danger of acting on provisional 15m native signals; entry and exit consequences are measured separately'},
       mfStructureShadowDecisionImpact:'TEMPORAL_ADMISSION_ONLY',
       mfStructureShadowTimeframe:'15m',
       mfStructureSemantic:'persistent HH/HL/LH/LL flow structure qualifies MCB maturity/context only; never a veto or direction source',
