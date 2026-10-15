@@ -2152,11 +2152,12 @@ app.get('/', requireAuth, (req, res) => {
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .wave-price-live-head{font:800 10px 'SF Mono',Menlo,Consolas,monospace;color:#2f80ed;white-space:nowrap;margin-right:4px;letter-spacing:.02em;}
 .wave-price-canvas{height:300px;}
-.wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 78%,rgba(255,255,255,.88) 92%,rgba(255,255,255,0) 100%);}
+.wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:36px;height:300px;pointer-events:none;background:#fff;}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
-.wave-price-axis-bar{position:absolute;left:36px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
-.wave-price-axis-label{position:absolute;left:auto;right:20px;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-align:right;text-shadow:0 0 2px #fff,0 0 4px rgba(255,255,255,.95);}
+.wave-price-axis::after{content:'';position:absolute;right:0;top:12px;bottom:18px;border-right:1px solid rgba(150,150,150,.38);}
+.wave-price-axis-bar{position:absolute;right:0;left:auto;top:0;width:5px;height:0;background:none;border-radius:0;border-top:1px solid #d9d9d9;}
+.wave-price-axis-label{position:absolute;left:1px;right:5px;top:0;transform:translateY(-50%);font:600 8px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-align:right;background:#fff;}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .wave-flow-audit .wave-flow-text{min-width:0;overflow-wrap:anywhere;}

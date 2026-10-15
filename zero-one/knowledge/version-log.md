@@ -834,3 +834,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - L'axe de prix à gauche reprend désormais exactement le même dégradé blanc que les axes Wave15/Wave3 : blanc opaque sous les valeurs puis fondu progressif vers le graphe.
 - Largeur de graduation conservée pour les prix complets ; proportions du dégradé identiques aux vagues.
 - Aucun impact trading ni BOONO-TV.
+
+## 2026-10-15 — Correction axe prix type Vagues
+- Correction de l'interprétation précédente : suppression du dégradé sur l'axe PRIX.
+- L'axe PRIX utilise maintenant une bande blanche fixe de 36 px, identique à l'emprise gauche des vagues.
+- Les graduations prix sont placées dans cette bande ; une ligne verticale grise pleine marque la limite, puis le graphe commence à x=36.
+- Le padding temporel PRIX reste left=36 comme Wave15/Wave3 : alignement temporel conservé.
+- Aucun impact trading ni BOONO-TV.
