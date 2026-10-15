@@ -848,3 +848,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Suppression des bordures horizontales des plages de trades sur PRIX, Wave15 et Wave3.
 - Seules restent deux fines lignes verticales entrée/sortie en #8abbd3, identiques à la couleur de bordure des modules Rapport/Flow.
 - Aucun impact trading.
+
+## 2026-10-15 — Vagues · légendes dans popup info
+- Les légendes textuelles visibles sous PRIX, Wave15 et Wave3 ont été retirées de l'interface normale.
+- Les lignes textuelles MA200 sous Wave15/Wave3 ont été supprimées comme redondantes avec le module PRIX.
+- Ajout d'un petit bouton info `i` dans chaque titre de graphe.
+- Le popup PRIX expose bougies, MA200, ligne LIVE et plages trades.
+- Les popups Wave15/Wave3 exposent leurs codes visuels, signaux, ligne zéro et synchronisation.
+- Popup fermé par X, clic extérieur ou Échap.
+- Aucun impact trading ni BOONO-TV.
