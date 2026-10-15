@@ -857,3 +857,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les popups Wave15/Wave3 exposent leurs codes visuels, signaux, ligne zéro et synchronisation.
 - Popup fermé par X, clic extérieur ou Échap.
 - Aucun impact trading ni BOONO-TV.
+
+## 2026-10-15 — Onglet SHADOWS V1
+- Ajout d'un onglet SHADOWS juste avant BOONO dans TRADES.
+- Observatoire live séparant clairement SHADOW PUR et ACTIF / ADMISSION_ONLY.
+- Cartes V1 : Price Behavior, Continuation Re-entry, Structural Handoff, TP Optimization, MF Memory actif.
+- Premières statistiques cumulatives sur une fenêtre glissante de 360 évaluations DAY, avec durée réelle affichée.
+- Journal récent des transitions shadow / actives significatives.
+- Rafraîchissement 30 s uniquement quand SHADOWS est ouvert.
+- Endpoint léger /api/shadows ; aucune nouvelle collecte et aucun impact trading.

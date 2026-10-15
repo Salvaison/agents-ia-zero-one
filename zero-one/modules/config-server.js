@@ -419,6 +419,206 @@ app.get('/api/trades', requireAuth, (req, res) => {
   });
 });
 
+
+// Observatoire SHADOWS — synthese live + fenetre recente, aucun impact trading.
+app.get('/api/shadows', requireAuth, (req, res) => {
+  try {
+    const EVAL_LIMIT=360;
+    let evals=[];
+    try { evals=readRecentNdjson(TRADES_V2_EVAL_PATH,EVAL_LIMIT); } catch (_) {}
+    evals=(Array.isArray(evals)?evals:[]).filter(x=>x&&x.module==='day');
+
+    let state={};
+    try {
+      if(fs.existsSync(TRADES_V2_STATE_PATH))state=JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH,'utf8'));
+    } catch (_) {}
+
+    let history=[];
+    try {
+      if(fs.existsSync(TRADES_V2_HISTORY_PATH)){
+        const h=JSON.parse(fs.readFileSync(TRADES_V2_HISTORY_PATH,'utf8'));
+        history=Array.isArray(h)?h:[];
+      }
+    } catch (_) {}
+
+    const latest=evals.length?evals[evals.length-1]:(state.lastEvaluation||{});
+    const firstTs=evals.length?Date.parse(evals[0].ts||''):NaN;
+    const lastTs=evals.length?Date.parse(evals[evals.length-1].ts||''):NaN;
+    const windowMinutes=Number.isFinite(firstTs)&&Number.isFinite(lastTs)?Math.max(0,(lastTs-firstTs)/60000):null;
+
+    const priceEpisodes=new Map();
+    const continuationCandidates=new Map();
+    const handoffEpisodes=new Map();
+    const journal=[];
+    let prevPriceKey=null,prevContState=null,prevHandoffKey=null,prevMfKey=null;
+
+    function pushJournal(x,kind,title,detail,level){
+      journal.push({
+        ts:x.ts||null,marketTimestamp:x.marketTimestamp||null,price:x.price,
+        kind,level:level||'SHADOW',title,detail
+      });
+    }
+    for(const x of evals){
+      const pb=x.priceBehaviorShadow||null;
+      if(pb){
+        const ep=pb.episode||{};
+        const epKey=Number.isFinite(Number(ep.startedAt))?[ep.startedAt,pb.direction,pb.travel&&pb.travel.state].join('|'):null;
+        if(pb.interesting&&epKey){
+          const prev=priceEpisodes.get(epKey)||{};
+          priceEpisodes.set(epKey,{
+            startedAt:Number(ep.startedAt),direction:pb.direction||null,
+            travelState:pb.travel&&pb.travel.state||null,
+            relation:pb.relationToSignalMemory||null,
+            waveEstablished:!!pb.waveEstablished,waveAligned:!!pb.waveAligned,easyTravel:!!pb.easyTravel,
+            maxFavorableUsd:Math.max(Number(prev.maxFavorableUsd)||0,Number(ep.maxFavorableUsd)||0),
+            maxAdverseUsd:Math.max(Number(prev.maxAdverseUsd)||0,Number(ep.maxAdverseUsd)||0),
+            lastTs:x.ts||null
+          });
+        }
+        const priceKey=[pb.interesting?1:0,pb.travel&&pb.travel.state,pb.direction,pb.relationToSignalMemory,pb.signalMemory&&pb.signalMemory.direction,pb.signalMemory&&pb.signalMemory.sequence].join('|');
+        if(priceKey!==prevPriceKey&&(pb.interesting||String(pb.state||'').includes('INTERESTING'))){
+          pushJournal(
+            x,'PRICE',
+            (pb.travel&&pb.travel.state||pb.state||'PRICE')+(pb.direction?' · '+String(pb.direction).toUpperCase():''),
+            'yield/P75 '+Number(pb.travel&&pb.travel.yieldVsP75||0).toFixed(2)+
+              ' · effort/P75 '+Number(pb.travel&&pb.travel.effortVsP75||0).toFixed(2)+
+              ' · '+String(pb.relationToSignalMemory||'NO_RELATION')+
+              (pb.signalMemory&&pb.signalMemory.sequence?' · '+pb.signalMemory.sequence:''),
+            'SHADOW'
+          );
+        }
+        prevPriceKey=priceKey;
+      }
+
+      const cr=x.continuationReentryShadow||null;
+      if(cr){
+        if(cr.candidateKey){
+          const old=continuationCandidates.get(cr.candidateKey)||{};
+          continuationCandidates.set(cr.candidateKey,{
+            candidateKey:cr.candidateKey,direction:cr.protectiveExit&&cr.protectiveExit.direction||null,
+            triggeredAt:cr.triggeredAt||old.triggeredAt||null,triggerPrice:cr.triggerPrice??old.triggerPrice??null,
+            state:cr.state||null,invalidated:!!cr.invalidated,
+            reachedEconomicMove:!!(cr.reachedEconomicMove||old.reachedEconomicMove),
+            churnRisk:!!(cr.churnRisk||old.churnRisk),
+            maxMfeUsd:Math.max(Number(old.maxMfeUsd)||0,Number(cr.shadowMfeUsd)||0),
+            maxMaeUsd:Math.max(Number(old.maxMaeUsd)||0,Number(cr.shadowMaeUsd)||0),
+            lastTs:x.ts||null
+          });
+        }
+        if(cr.state!==prevContState&&['CONTINUATION_REENTRY_CANDIDATE','TRACKING_SHADOW_REENTRY','TRACKING_INVALIDATED','REENTRY_INVALIDATED'].includes(cr.state)){
+          pushJournal(
+            x,'REENTRY',cr.state,
+            (cr.protectiveExit&&cr.protectiveExit.direction?String(cr.protectiveExit.direction).toUpperCase()+' · ':'')+
+              'MFE '+Number(cr.shadowMfeUsd||0).toFixed(1)+'$ · MAE '+Number(cr.shadowMaeUsd||0).toFixed(1)+'$'+
+              (cr.churnRisk?' · CHURN RISK':'')+(cr.invalidationReason?' · '+cr.invalidationReason:''),
+            'SHADOW'
+          );
+        }
+        prevContState=cr.state||null;
+      }
+
+      const sh=x.structuralHandoff||null;
+      if(sh){
+        if(sh.detectedAt){
+          const k=[sh.detectedAt,sh.direction].join('|');
+          const old=handoffEpisodes.get(k)||{};
+          handoffEpisodes.set(k,{
+            detectedAt:sh.detectedAt,direction:sh.direction||null,
+            active:!!sh.active,reentryEligible:!!(sh.reentryEligible||old.reentryEligible),
+            invalidated:!!sh.invalidated,state:sh.state||null,lastTs:x.ts||null
+          });
+        }
+        const hk=[sh.state,sh.direction,sh.reentryEligible?1:0,sh.invalidated?1:0].join('|');
+        if(hk!==prevHandoffKey&&(sh.active||sh.reentryEligible||sh.invalidated)){
+          pushJournal(x,'HANDOFF',sh.state||'STRUCTURAL_HANDOFF',
+            (sh.direction?String(sh.direction).toUpperCase()+' · ':'')+
+            (sh.reentryEligible?'reentryEligible':'observation structure')+
+            (sh.invalidationReason?' · '+sh.invalidationReason:''),'SHADOW');
+        }
+        prevHandoffKey=hk;
+      }
+
+      const mf=x.mfStructureShadow&&x.mfStructureShadow.temporal||null;
+      if(mf){
+        const mk=[mf.state,mf.memoryDirection,mf.memoryHorizon,mf.candidateContext&&mf.candidateContext.state].join('|');
+        if(mk!==prevMfKey&&mf.candidateContext&&mf.candidateContext.state){
+          pushJournal(x,'MF MEMORY',mf.candidateContext.state,
+            'mémoire '+String(mf.memoryDirection||'—').toUpperCase()+' '+String(mf.memoryHorizon||'')+
+            ' · tactique '+String(mf.tacticalDirection||'—').toUpperCase(),'ACTIVE');
+        }
+        prevMfKey=mk;
+      }
+    }
+
+    const pe=[...priceEpisodes.values()];
+    const cc=[...continuationCandidates.values()];
+    const he=[...handoffEpisodes.values()];
+
+    const priceStats={
+      episodes:pe.length,
+      easyEpisodes:pe.filter(x=>x.easyTravel).length,
+      alignedWithWave:pe.filter(x=>x.waveEstablished&&x.waveAligned).length,
+      reached220:pe.filter(x=>Number(x.maxFavorableUsd)>=220).length,
+      adverse180:pe.filter(x=>Number(x.maxAdverseUsd)>=180).length
+    };
+    const continuationStats={
+      candidates:cc.length,
+      reached220:cc.filter(x=>x.reachedEconomicMove||Number(x.maxMfeUsd)>=220).length,
+      churnRisk:cc.filter(x=>x.churnRisk).length,
+      invalidated:cc.filter(x=>x.invalidated).length,
+      avgMfeUsd:cc.length?cc.reduce((a,x)=>a+Number(x.maxMfeUsd||0),0)/cc.length:null,
+      avgMaeUsd:cc.length?cc.reduce((a,x)=>a+Number(x.maxMaeUsd||0),0)/cc.length:null
+    };
+    const handoffStats={
+      episodes:he.length,
+      reentryEligible:he.filter(x=>x.reentryEligible).length,
+      invalidated:he.filter(x=>x.invalidated).length
+    };
+
+    const tpTrades=[];
+    history.forEach((t,i)=>{
+      const tp=t&&t.tpOptimizationShadow;
+      if(tp&&tp.ranking){
+        tpTrades.push({
+          tradeNo:i+1,exitTimestamp:t.exitTimestamp||null,direction:t.direction||null,
+          bestTpVariantId:tp.ranking.bestTpVariantId||null,
+          bestTpNetPnlUsd:Number(tp.ranking.bestTpNetPnlUsd),
+          holdNetPnlUsd:Number(tp.ranking.holdNetPnlUsd),
+          deltaVsHoldUsd:Number(tp.ranking.bestTpNetPnlUsd)-Number(tp.ranking.holdNetPnlUsd),
+          variantCount:tp.variantCount||null
+        });
+      }
+    });
+    const tpStats={
+      trades:tpTrades.length,
+      improvedVsHold:tpTrades.filter(x=>Number(x.deltaVsHoldUsd)>0.005).length,
+      equalToHold:tpTrades.filter(x=>Math.abs(Number(x.deltaVsHoldUsd))<=0.005).length,
+      cumulativeBestTpDeltaUsd:tpTrades.reduce((a,x)=>a+(Number.isFinite(x.deltaVsHoldUsd)?x.deltaVsHoldUsd:0),0),
+      latest:tpTrades.length?tpTrades[tpTrades.length-1]:null
+    };
+
+    const current={
+      priceBehavior:latest&&latest.priceBehaviorShadow||null,
+      continuationReentry:latest&&latest.continuationReentryShadow||null,
+      structuralHandoff:latest&&latest.structuralHandoff||null,
+      mfTemporal:latest&&latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
+      tpOptimization:tpStats.latest
+    };
+
+    res.set('Cache-Control','no-store');
+    res.json({
+      version:latest&&latest.version||state.version||null,
+      generatedAt:new Date().toISOString(),
+      sampleWindow:{evaluations:evals.length,minutes:windowMinutes,firstTs:evals[0]&&evals[0].ts||null,lastTs:evals[evals.length-1]&&evals[evals.length-1].ts||null},
+      current,
+      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,tpOptimization:tpStats},
+      journal:journal.slice(-24).reverse()
+    });
+  } catch (e) {
+    res.status(500).json({error:'shadows indisponibles',detail:e.message});
+  }
+});
+
 // Rapport V4 complet a la demande depuis la Wave.
 // Un seul trade est lu/envoye au clic afin de garder /api/trades leger.
 app.get('/api/trade-report/:tradeNo', requireAuth, (req, res) => {
@@ -2102,6 +2302,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab active" data-tab2="statev2">Etat V4</span>
 <span class="tab" data-tab2="waves">Vagues</span>
 <span class="tab" data-tab2="historyv2">Historique</span>
+<span class="tab" data-tab2="shadows">SHADOWS</span>
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
@@ -2112,6 +2313,54 @@ app.get('/', requireAuth, (req, res) => {
 </div>
 <div class="tab-panel" id="tab2-reportsv2">
 <div class="placeholder-note">Les comptes rendus V4 apparaissent apres chaque trade cloture. Archive V3 conservee plus bas.</div>
+</div>
+<div class="tab-panel" id="tab2-shadows">
+<style>
+.shadow-shell{font-family:"SF Mono","Menlo","Consolas",monospace;color:#222;}
+.shadow-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px;}
+.shadow-title{font-size:14px;font-weight:800;letter-spacing:.06em;}
+.shadow-sub{font-size:9.5px;color:#777;line-height:1.4;}
+.shadow-window{font-size:9px;color:#666;text-align:right;}
+.shadow-section-title{font-size:10px;font-weight:800;letter-spacing:.10em;color:#555;margin:12px 0 6px;}
+.shadow-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.shadow-card{border:1px solid #d7dde0;border-radius:8px;background:#fff;padding:9px 10px;min-width:0;}
+.shadow-card.active-impact{border-color:#82b99a;background:rgba(31,157,85,.035);}
+.shadow-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.shadow-card-title{font-size:11px;font-weight:850;letter-spacing:.05em;}
+.shadow-badge{flex:none;border:1px solid #aebbc2;border-radius:999px;padding:2px 6px;font-size:8px;font-weight:850;letter-spacing:.06em;color:#58707c;background:#f8fafb;white-space:nowrap;}
+.shadow-badge.active{border-color:#78b491;color:#1f7c48;background:rgba(31,157,85,.07);}
+.shadow-badge.warn{border-color:#d8a65a;color:#9a6419;background:#fff8ec;}
+.shadow-main{font-size:13px;font-weight:850;line-height:1.25;overflow-wrap:anywhere;}
+.shadow-secondary{font-size:9.5px;color:#666;line-height:1.45;margin-top:3px;overflow-wrap:anywhere;}
+.shadow-kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;margin-top:7px;font-size:9.5px;line-height:1.35;}
+.shadow-kv .k{color:#888;white-space:nowrap;}
+.shadow-kv .v{color:#333;font-weight:700;overflow-wrap:anywhere;}
+.shadow-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+.shadow-stat{border:1px solid #dde1e3;border-radius:7px;background:#fff;padding:7px 8px;min-width:0;}
+.shadow-stat .n{font-size:15px;font-weight:850;line-height:1.1;}
+.shadow-stat .l{font-size:8.5px;color:#777;margin-top:3px;line-height:1.25;}
+.shadow-journal{border:1px solid #dde1e3;border-radius:8px;background:#fff;overflow:hidden;}
+.shadow-event{display:grid;grid-template-columns:56px 72px minmax(0,1fr);gap:7px;padding:7px 8px;border-top:1px solid #edf0f1;align-items:start;}
+.shadow-event:first-child{border-top:0;}
+.shadow-event-time{font-size:8.5px;color:#777;}
+.shadow-event-kind{font-size:8px;font-weight:850;letter-spacing:.05em;color:#607782;}
+.shadow-event-kind.active{color:#1f7c48;}
+.shadow-event-main{font-size:9.5px;line-height:1.35;min-width:0;}
+.shadow-event-main b{font-size:9.5px;}
+.shadow-empty{padding:12px;color:#777;font-size:10px;}
+@media(max-width:700px){
+  .shadow-grid{grid-template-columns:1fr;}
+  .shadow-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .shadow-event{grid-template-columns:48px 62px minmax(0,1fr);}
+}
+</style>
+<div id="shadowsApp" class="shadow-shell">
+  <div class="shadow-head">
+    <div><div class="shadow-title">BOONO — SHADOWS</div><div class="shadow-sub">Observatoire expérimental · aucune autorité implicite</div></div>
+    <div id="shadowWindow" class="shadow-window">Chargement…</div>
+  </div>
+  <div id="shadowLive"><div class="shadow-empty">Chargement des shadows…</div></div>
+</div>
 </div>
 <div class="tab-panel" id="tab2-boono">
 <div class="placeholder-note">Moteur Boono -- chargement.</div>
@@ -2365,8 +2614,14 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
       diagAutoRefresh = setInterval(loadDiagnostic, 60000);
     }
     if (el.dataset.main === 'trades') {
-      loadTrades();
-      tradesAutoRefresh = setInterval(loadTrades, 30000);
+      const shadowsTab=document.querySelector('.tab[data-tab2="shadows"]');
+      if(shadowsTab&&shadowsTab.classList.contains('active')){
+        loadShadows();
+        tradesAutoRefresh=setInterval(loadShadows,30000);
+      }else{
+        loadTrades();
+        tradesAutoRefresh=setInterval(loadTrades,30000);
+      }
     }
     if (el.dataset.main === 'audit') {
       window.open('/audit-view', '_blank');
@@ -2378,7 +2633,7 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
 document.querySelectorAll('.tab[data-tab2]').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.tab[data-tab2]').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#tab2-statev2, #tab2-historyv2, #tab2-reportsv2, #tab2-boono, #tab2-waves').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#tab2-statev2, #tab2-historyv2, #tab2-reportsv2, #tab2-shadows, #tab2-boono, #tab2-waves').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
     document.getElementById('tab2-' + el.dataset.tab2).classList.add('active');
     // Reading mode: reports must remain perfectly stable while Benjamin studies them.
@@ -2387,6 +2642,11 @@ document.querySelectorAll('.tab[data-tab2]').forEach(el => {
       if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
       if (el.dataset.tab2 === 'waves') { waveLiveFollow=true; loadWaveLive(false); }
       else stopWaveLiveRefresh();
+    } else if (el.dataset.tab2 === 'shadows') {
+      stopWaveLiveRefresh();
+      if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
+      loadShadows();
+      tradesAutoRefresh = setInterval(loadShadows, 30000);
     } else {
       stopWaveLiveRefresh();
       const tradesMain = document.querySelector('.main-nav-item[data-main="trades"]');
@@ -4053,6 +4313,171 @@ function renderV2Report(t, index) {
     '<div style="margin-top:8px;"><b>Pourquoi BOONO est sorti</b> — ' + escTrade(t.exitReason) + '</div>' + ctxSummary(t.exitContext) +
     '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line);"><b>Conclusion du trade</b> — ' + escTrade(conclusion) + '</div>' +
     '</div></details>';
+}
+
+
+function shadowFmt(v,d){
+  const n=Number(v);return Number.isFinite(n)?n.toFixed(d===undefined?1:d):'—';
+}
+function shadowMoney(v,d){
+  const n=Number(v);return Number.isFinite(n)?(n>=0?'+':'')+n.toFixed(d===undefined?1:d)+' $':'—';
+}
+function shadowTime(v){
+  if(v===null||v===undefined)return '—';
+  const d=new Date(typeof v==='number'?v:String(v));
+  if(!Number.isFinite(d.getTime()))return '—';
+  return d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
+}
+function shadowBadge(label,kind){
+  return '<span class="shadow-badge '+(kind||'')+'">'+escTrade(label)+'</span>';
+}
+function shadowKv(rows){
+  return '<div class="shadow-kv">'+rows.map(function(r){
+    return '<span class="k">'+escTrade(r[0])+'</span><span class="v">'+escTrade(r[1])+'</span>';
+  }).join('')+'</div>';
+}
+function shadowCard(title,badge,badgeKind,main,secondary,rows,active){
+  return '<div class="shadow-card'+(active?' active-impact':'')+'">'+
+    '<div class="shadow-card-head"><span class="shadow-card-title">'+escTrade(title)+'</span>'+shadowBadge(badge,badgeKind)+'</div>'+
+    '<div class="shadow-main">'+escTrade(main||'—')+'</div>'+
+    (secondary?'<div class="shadow-secondary">'+escTrade(secondary)+'</div>':'')+
+    shadowKv(rows||[])+'</div>';
+}
+function shadowStat(n,label){
+  return '<div class="shadow-stat"><div class="n">'+escTrade(String(n))+'</div><div class="l">'+escTrade(label)+'</div></div>';
+}
+function renderShadows(data){
+  const root=document.getElementById('shadowLive'),win=document.getElementById('shadowWindow');
+  if(!root)return;
+  const w=data.sampleWindow||{},cur=data.current||{},stats=data.stats||{};
+  if(win){
+    const mins=Number(w.minutes);
+    win.textContent=(Number.isFinite(mins)?'fenêtre '+(mins>=60?(mins/60).toFixed(1)+' h':mins.toFixed(0)+' min'):'fenêtre —')+
+      ' · '+Number(w.evaluations||0)+' évaluations · '+(data.version||'—');
+  }
+
+  const pb=cur.priceBehavior||{};
+  const tr=pb.travel||{},ppm=pb.pm||{},sm=pb.signalMemory||{},pep=pb.episode||{};
+  const priceCard=shadowCard(
+    'PRICE BEHAVIOR','SHADOW PUR','',
+    (tr.state||pb.state||'—')+(pb.direction?' · '+String(pb.direction).toUpperCase():''),
+    (pb.relationToSignalMemory||'NO_RELATION')+(sm.sequence?' · '+sm.sequence:''),
+    [
+      ['vague',sm.established?(String(sm.direction||'—').toUpperCase()+' · établie'):'non établie'],
+      ['yield / effort',shadowFmt(tr.yieldVsP75,2)+'× P75 / '+shadowFmt(tr.effortVsP75,2)+'× P75'],
+      ['PM 3m / 5m',shadowMoney(ppm.net3mUsd,1)+' / '+shadowMoney(ppm.net5mUsd,1)],
+      ['eff3m',shadowFmt(Number(ppm.efficiency3m)*100,0)+' %'],
+      ['épisode',shadowFmt(pep.durationMinutes,1)+' min · MFE '+shadowMoney(pep.maxFavorableUsd,1)+' · MAE '+shadowMoney(pep.maxAdverseUsd,1)]
+    ],false
+  );
+
+  const cr=cur.continuationReentry||{},ce=cr.evidence||{},cp=cr.protectiveExit||{};
+  const crWarn=!!cr.churnRisk;
+  const continuationCard=shadowCard(
+    'CONTINUATION RE-ENTRY',crWarn?'SHADOW · CHURN RISK':'SHADOW PUR',crWarn?'warn':'',
+    (cr.state||'—')+(cp.direction?' · '+String(cp.direction).toUpperCase():''),
+    cp.kind?('après '+cp.kind):'aucune sortie protectrice armée',
+    [
+      ['trigger',cr.triggerPrice!==undefined&&cr.triggerPrice!==null?shadowFmt(cr.triggerPrice,1)+' @ '+shadowTime(cr.triggeredAt):'—'],
+      ['MFE / MAE',shadowMoney(cr.shadowMfeUsd,1)+' / '+shadowMoney(cr.shadowMaeUsd,1)],
+      ['220 atteint',cr.reachedEconomicMove?'OUI':'NON'],
+      ['PM 3m / 5m',shadowMoney(ce.net3mUsd,1)+' / '+shadowMoney(ce.net5mUsd,1)],
+      ['état',cr.invalidationReason||((cr.waits||[]).join(' + ')||'suivi / attente')]
+    ],false
+  );
+
+  const sh=cur.structuralHandoff||{},se=sh.evidence||{};
+  const handoffCard=shadowCard(
+    'STRUCTURAL HANDOFF','SHADOW PUR','',
+    (sh.state||'—')+(sh.direction?' · '+String(sh.direction).toUpperCase():''),
+    sh.reentryEligible?'preuve post-sortie éligible':'mémoire structurelle / observation',
+    [
+      ['triple sync',sh.tripleSyncNow?'OUI':'NON'],
+      ['1h / 15m / 3m',
+        String(se.oneHour&&se.oneHour.direction||'—').toUpperCase()+' / '+
+        String(se.fifteenMinute&&se.fifteenMinute.direction||'—').toUpperCase()+' / '+
+        String(se.threeMinute&&se.threeMinute.direction||'—').toUpperCase()],
+      ['reentryEligible',sh.reentryEligible?'OUI':'NON'],
+      ['invalidation',sh.invalidationReason||'—']
+    ],false
+  );
+
+  const tp=cur.tpOptimization||{};
+  const tpMain=tp.tradeNo?('#'+tp.tradeNo+' · '+String(tp.bestTpVariantId||'—')):'aucun TP shadow finalisé';
+  const tpCard=shadowCard(
+    'TP OPTIMIZATION','SHADOW PUR','',
+    tpMain,
+    tp.tradeNo?('dernier trade analysé · '+shadowTime(tp.exitTimestamp)):'',
+    [
+      ['best TP',tp.tradeNo?shadowMoney(tp.bestTpNetPnlUsd,2):'—'],
+      ['HOLD',tp.tradeNo?shadowMoney(tp.holdNetPnlUsd,2):'—'],
+      ['Δ vs HOLD',tp.tradeNo?shadowMoney(tp.deltaVsHoldUsd,2):'—'],
+      ['variantes',tp.variantCount!==undefined&&tp.variantCount!==null?String(tp.variantCount):'—']
+    ],false
+  );
+
+  const mf=cur.mfTemporal||{},mc=mf.candidateContext||{},conv=mf.conversion||{};
+  const mfCard=shadowCard(
+    'MF MEMORY','ACTIF · ADMISSION_ONLY','active',
+    (mf.state||'—')+(mf.memoryDirection?' · '+String(mf.memoryDirection).toUpperCase()+' '+String(mf.memoryHorizon||''):''),
+    mc.state||'influence live sur admission seulement',
+    [
+      ['tactique 30m',String(mf.tacticalDirection||'—').toUpperCase()],
+      ['candidat',String(mf.candidateDirection||'—').toUpperCase()],
+      ['price relation',conv.priceRelation||'—'],
+      ['price efficiency',shadowFmt(Number(conv.priceEfficiency)*100,0)+' %'],
+      ['USD / MF pt',shadowFmt(conv.usdPerMfPoint,1)]
+    ],true
+  );
+
+  const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},ts=stats.tpOptimization||{};
+  const statHtml='<div class="shadow-section-title">PREMIÈRES STATISTIQUES · FENÊTRE RÉCENTE</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(ps.episodes||0,'épisodes prix intéressants')+
+      shadowStat(ps.alignedWithWave||0,'prix intéressant + vague')+
+      shadowStat(ps.reached220||0,'épisodes prix MFE ≥ 220 $')+
+      shadowStat(ps.adverse180||0,'épisodes prix MAE ≥ 180 $')+
+      shadowStat(cs.candidates||0,'candidats re-entry')+
+      shadowStat(cs.reached220||0,'re-entry MFE ≥ 220 $')+
+      shadowStat(cs.churnRisk||0,'re-entry churnRisk')+
+      shadowStat(hs.reentryEligible||0,'handoff reentryEligible')+
+    '</div>';
+
+  const tpSummary='<div class="shadow-section-title">TP SHADOW · HISTORIQUE DISPONIBLE</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(ts.trades||0,'trades analysés')+
+      shadowStat(ts.improvedVsHold||0,'meilleur TP > HOLD')+
+      shadowStat(ts.equalToHold||0,'meilleur TP = HOLD')+
+      shadowStat(shadowMoney(ts.cumulativeBestTpDeltaUsd,2),'Δ cumulé best TP vs HOLD')+
+    '</div>';
+
+  const j=(data.journal||[]);
+  const journalHtml='<div class="shadow-section-title">JOURNAL SHADOW / ACTIF</div>'+
+    '<div class="shadow-journal">'+(j.length?j.map(function(e){
+      return '<div class="shadow-event">'+
+        '<div class="shadow-event-time">'+shadowTime(e.ts)+'</div>'+
+        '<div class="shadow-event-kind '+(e.level==='ACTIVE'?'active':'')+'">'+escTrade(e.kind||'—')+'</div>'+
+        '<div class="shadow-event-main"><b>'+escTrade(e.title||'—')+'</b>'+
+          (e.price!==undefined&&e.price!==null?' · '+shadowFmt(e.price,1):'')+
+          (e.detail?'<br><span style="color:#777;">'+escTrade(e.detail)+'</span>':'')+
+        '</div></div>';
+    }).join(''):'<div class="shadow-empty">Aucun événement significatif dans la fenêtre récente.</div>')+'</div>';
+
+  root.innerHTML=
+    '<div class="shadow-section-title">ÉTAT LIVE</div>'+
+    '<div class="shadow-grid">'+priceCard+continuationCard+handoffCard+tpCard+mfCard+'</div>'+
+    statHtml+tpSummary+journalHtml;
+}
+async function loadShadows(){
+  const root=document.getElementById('shadowLive');
+  if(!root)return;
+  try{
+    const res=await fetch('/api/shadows',{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    renderShadows(await res.json());
+  }catch(e){
+    root.innerHTML='<div class="shadow-empty">Shadows indisponibles : '+escTrade(e.message)+'</div>';
+  }
 }
 
 async function loadBoono() {
