@@ -2147,13 +2147,16 @@ app.get('/', requireAuth, (req, res) => {
 .wave15-head .wave-band-legend{display:block;text-align:left;margin-top:3px;}
 .wave-band-legend{font-size:9.5px;color:#666;white-space:normal;text-align:right;line-height:1.3;}
 .wave-ma-info{font-size:9.5px;color:#555;margin:0 0 4px;line-height:1.3;overflow-wrap:break-word;}
+.wave-price-head-main{min-width:0;flex:1 1 300px;}
+.wave-price-titleline{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.wave-price-live-head{font:800 10px 'SF Mono',Menlo,Consolas,monospace;color:#2f80ed;white-space:nowrap;margin-right:4px;letter-spacing:.02em;}
 .wave-price-canvas{height:300px;}
-.wave-price-axis{position:absolute;right:0;left:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:transparent;}
+.wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:transparent;}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
-.wave-price-axis-bar{position:absolute;left:2px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
-.wave-price-axis-label{position:absolute;left:10px;right:auto;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-shadow:0 0 2px #fff,0 0 4px rgba(255,255,255,.95);}
+.wave-price-axis-bar{position:absolute;left:36px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
+.wave-price-axis-label{position:absolute;left:auto;right:20px;top:0;transform:translateY(-50%);font:600 8.5px 'SF Mono',Menlo,Consolas,monospace;color:#555;white-space:nowrap;text-align:right;text-shadow:0 0 2px #fff,0 0 4px rgba(255,255,255,.95);}
 
 .wave-flow-audit{border:1px solid #8abbd3;border-radius:7px;background:rgba(135,206,235,.18);padding:7px 9px;margin:0 0 8px;font-size:10px;color:#333;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .wave-flow-audit .wave-flow-text{min-width:0;overflow-wrap:anywhere;}
@@ -2195,8 +2198,8 @@ app.get('/', requireAuth, (req, res) => {
   <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
-      <div>
-        <span id="wavePriceTitle" class="wave-band-title">PRIX BTCUSDT · 3m</span>
+      <div class="wave-price-head-main">
+        <div class="wave-price-titleline"><span id="wavePriceTitle" class="wave-band-title">PRIX BTCUSDT · 3m</span><span id="wavePriceLiveHead" class="wave-price-live-head">LIVE —</span></div>
         <div class="wave-price-legend">bougies noir / gris / blanc · MA200 verte au-dessus, rouge au-dessous</div>
       </div>
       <div class="wave-price-actions">
@@ -2621,8 +2624,51 @@ function drawWavePrice(canvas,idx) {
     maAbove:'#1f9d55',maBelow:'#d33'
   });
   canvas._waveTradeZones=result&&result.tradeZones||[];
+
+  const latestSeriesRow=series.length?series[series.length-1]:null;
+  const liveStatePrice=waveReplayData&&waveReplayData.liveState&&waveReplayData.liveState.price;
+  const livePrice=Number.isFinite(Number(liveStatePrice))
+    ?Number(liveStatePrice)
+    :(latestSeriesRow&&Number.isFinite(Number(latestSeriesRow.close))?Number(latestSeriesRow.close):null);
+
+  if(result&&Number.isFinite(livePrice)){
+    const box=canvas.getBoundingClientRect();
+    const ratio=box.width>0?canvas.width/box.width:1;
+    const ctx=canvas.getContext('2d');
+    const b=result.bounds,p=result.padding;
+    const y=p.top+(b.hi-livePrice)/Math.max(1e-9,b.hi-b.lo)*result.plotHeight;
+    if(y>=p.top-1&&y<=p.top+result.plotHeight+1){
+      ctx.save();
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.strokeStyle='#2f80ed';
+      ctx.lineWidth=.8;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath();
+      ctx.moveTo(p.left,y);
+      ctx.lineTo(p.left+result.plotWidth,y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const label='LIVE '+waveNum(livePrice,1);
+      const visibleCenter=sc&&sc.clientWidth
+        ?Math.max(p.left+45,Math.min(p.left+result.plotWidth-45,sc.scrollLeft+sc.clientWidth/2))
+        :p.left+result.plotWidth/2;
+      ctx.font="800 10px 'SF Mono', Menlo, Consolas, monospace";
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.lineJoin='round';
+      ctx.strokeStyle='rgba(255,255,255,.96)';
+      ctx.lineWidth=4;
+      ctx.strokeText(label,visibleCenter,y);
+      ctx.fillStyle='#2f80ed';
+      ctx.fillText(label,visibleCenter,y);
+      ctx.restore();
+    }
+  }
+
   const title=document.getElementById('wavePriceTitle');
   if(title)title.textContent='PRIX BTCUSDT · '+wavePriceTf;
+  const liveHead=document.getElementById('wavePriceLiveHead');
+  if(liveHead)liveHead.textContent=Number.isFinite(livePrice)?'LIVE '+waveNum(livePrice,1):'LIVE —';
   const b3=document.getElementById('wavePrice3m'),b15=document.getElementById('wavePrice15m');
   if(b3)b3.classList.toggle('active',wavePriceTf==='3m');
   if(b15)b15.classList.toggle('active',wavePriceTf==='15m');

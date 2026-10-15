@@ -822,3 +822,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Relation prix / mémoire de vague : WITH_SIGNAL_MEMORY, AGAINST_SIGNAL_MEMORY, NO_RELATION.
 - Episodes persistants suivis en durée, déplacement courant, MFE/MAE descriptifs.
 - Reconstruction 17:05:30 après #127 : vague LONG SIGNAL3_TO_SIGNAL15 + EXTREME_PRODUCTIVE_TRAVEL + STRONG_TRANSLATION, net3 +485.2, net5 +401.7, efficiency3m 88.2%.
+
+## 2026-10-15 — Vagues · ligne Prix Live
+- Ajout d'une ligne horizontale bleue fine et pointillée suivant le dernier prix sur le graphe PRIX.
+- Le libellé LIVE + prix est centré sur la portion visible du graphe et reste centré après scroll horizontal.
+- Prix Live également affiché en haut à droite de la ligne de titre `PRIX BTCUSDT · TF`.
+- Graduation prix déplacée à gauche en overlay transparent, sans réduire la surface utile ni casser l'alignement temporel avec Wave15/Wave3.
+- Aucun impact trading ni BOONO-TV.
