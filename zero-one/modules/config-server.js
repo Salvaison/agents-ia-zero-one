@@ -2212,13 +2212,13 @@ app.get('/', requireAuth, (req, res) => {
     </div>
     <div class="wave-scroll-shell"><div id="wavePriceScroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wavePriceCanvas" class="wave-canvas wave-price-canvas"></canvas></div></div><div id="wavePriceYAxis" class="wave-price-axis" aria-hidden="true"></div></div>
   </div>
-  <div id="waveFlowAudit" class="wave-flow-audit"><span class="wave-flow-text"><b>FLOW / AUDIT</b> · chargement…</span><button id="waveFlowAliveBtn" class="wave-flow-vivant" type="button">VIVANT</button></div>
+  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue pour afficher le résumé du trade.</span></div>
   <div class="wave-band">
     <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span></div><span class="wave-band-legend">BW noir · LBW noir fin · MF gris bordé · VWAP jaune · UP vert · DN rouge · DIV vert/rouge</span></div>
     <div id="wave15MaInfo" class="wave-ma-info">MA200 —</div>
     <div class="wave-scroll-shell"><div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div><div id="wave15YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
   </div>
-  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue pour afficher le résumé du trade.</span></div>
+  <div id="waveFlowAudit" class="wave-flow-audit"><span class="wave-flow-text"><b>FLOW / AUDIT</b> · chargement…</span><button id="waveFlowAliveBtn" class="wave-flow-vivant" type="button">VIVANT</button></div>
   <div class="wave-band">
     <div class="wave-band-head"><span class="wave-band-title">VAGUE 3m — LIVE intra-bougie</span><span class="wave-band-legend">même échelle visuelle · curseur synchronisé</span></div>
     <div id="wave3MaInfo" class="wave-ma-info">MA200 —</div>
@@ -2737,8 +2737,11 @@ function drawWaveBand(canvas, key, idx) {
     const zoneW=Math.max(1,x2-x1);
     ctx.fillStyle='rgba(135,206,235,.18)';
     ctx.fillRect(x1,T,zoneW,h);
-    ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
-    ctx.strokeRect(x1+.4,T+.4,Math.max(.2,zoneW-.8),Math.max(.2,h-.8));
+    ctx.strokeStyle='#8abbd3';ctx.lineWidth=.7;
+    ctx.beginPath();
+    ctx.moveTo(x1+.4,T);ctx.lineTo(x1+.4,T+h);
+    ctx.moveTo(x2-.4,T);ctx.lineTo(x2-.4,T+h);
+    ctx.stroke();
     canvas._waveTradeZones.push({x1:x1,x2:x2,y1:T,y2:T+h,trade:z});
   });
 

@@ -841,3 +841,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les graduations prix sont placées dans cette bande ; une ligne verticale grise pleine marque la limite, puis le graphe commence à x=36.
 - Le padding temporel PRIX reste left=36 comme Wave15/Wave3 : alignement temporel conservé.
 - Aucun impact trading ni BOONO-TV.
+
+## 2026-10-15 — Vagues · ordre Rapport/Flow et bordures trades
+- RAPPORT et FLOW/AUDIT ont échangé leur position : RAPPORT est maintenant sous PRIX, FLOW/AUDIT sous Wave15.
+- Les plages de trades conservent le fond bleu ciel rgba(135,206,235,.18).
+- Suppression des bordures horizontales des plages de trades sur PRIX, Wave15 et Wave3.
+- Seules restent deux fines lignes verticales entrée/sortie en #8abbd3, identiques à la couleur de bordure des modules Rapport/Flow.
+- Aucun impact trading.

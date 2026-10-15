@@ -123,8 +123,11 @@ function drawPrice(canvas,rows,opts){
       ctx.fillStyle=theme==='tv'?'rgba(120,205,235,.055)':'rgba(135,206,235,.18)';
       ctx.fillRect(x1,pad.top,zw,plotH);
       if(theme!=='tv'){
-        ctx.strokeStyle='rgba(0,0,0,.30)';ctx.lineWidth=.7;
-        ctx.strokeRect(x1+.4,pad.top+.4,Math.max(.2,zw-.8),Math.max(.2,plotH-.8));
+        ctx.strokeStyle='#8abbd3';ctx.lineWidth=.7;
+        ctx.beginPath();
+        ctx.moveTo(x1+.4,pad.top);ctx.lineTo(x1+.4,pad.top+plotH);
+        ctx.moveTo(x2-.4,pad.top);ctx.lineTo(x2-.4,pad.top+plotH);
+        ctx.stroke();
       }
     }
     ctx.restore();
