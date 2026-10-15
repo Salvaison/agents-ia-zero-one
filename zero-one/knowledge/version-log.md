@@ -803,3 +803,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Pour un LONG renforcé, le timing SETUP_LATE remonte au plus ancien entre début du lobe 3m et 3m UP de synchronisation.
 - Nouveau gate actif : si rolling 3m ET rolling 5m sont simultanément opposés, le bypass UP_REINFORCED est supprimé et BOONO reste WATCH.
 - Replay #127 : nouvelle logique => SETUP_LATE (16.72 min, recovery 0) et, indépendamment, NATIVE_REINFORCED_WAIT_ROLLING_RECOVERY (net3 -108.1 / net5 -250.2).
+
+## 2026-10-15 — V4.10.2 Continuation Re-entry Shadow
+- Nouveau shadow strictement decisionImpact:false pour étudier les réentrées dans la même campagne après une sortie protectrice.
+- Armement uniquement après EXIT_ECONOMIC_PROFIT_FLOOR / EXIT_MFE_PROTECTION / EXIT_PROFIT_PROTECTION.
+- Candidature : même thèse 15m + nouvel événement 3m post-sortie + lobe 3m aligné + PM 3m/5m aligné + efficiency3m >=25% + pas de mémoire MF lente opposée.
+- structuralDirection 3m n'est volontairement pas un gate du shadow afin de tester les continuations ratées par WAIT_3M_15M_SYNC.
+- Ticker est qualificateur d'effort/rendement, jamais source de direction ni gate.
+- Anti-churn : une candidature max par sortie ; MFE/MAE shadow suivis ; churnRisk si MAE >=180 avant MFE 220.
+- #127 : le ticker a bien observé plusieurs phases de rendement élevé avec effort inférieur ou proche du P75 pendant le rallye vers 82K+.

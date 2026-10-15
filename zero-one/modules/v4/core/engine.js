@@ -17,8 +17,9 @@ const action=require('../layers/action');
 const structuralHandoffShadow=require('../experiments/structural-handoff-shadow');
 const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
+const continuationReentryShadow=require('../experiments/continuation-reentry-shadow');
 
-const VERSION='v4.10.1-opportunity-freshness-20261015';
+const VERSION='v4.10.2-continuation-reentry-shadow-20261015';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -67,6 +68,12 @@ function evaluate(frame,position=null,previousEvaluation=null){
   const ticker=tickerConfirmation.evaluate(frame,thesis);
 
   const mfStructure=mfStructureShadow.evaluate(frame,candidateDirection);
+
+  // Same-direction continuation after a protective exit: SHADOW ONLY.
+  const continuationReentry=continuationReentryShadow.evaluate(
+    frame,position,baseThesis,mcb,native,translation,ticker,mfStructure,room,
+    previousEvaluation&&previousEvaluation.continuationReentryShadow||null
+  );
 
   // Structural handoff experiment: persistent 1h structural context + 15m thesis + 3m timing.
   // It is SHADOW ONLY. It may remember structure across an exit, but execution proof is always reset.
@@ -137,6 +144,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     translation,
     ticker,
     mfStructureShadow:mfStructure,
+    continuationReentryShadow:continuationReentry,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -164,6 +172,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
       postExitPreservesMcbContext:true,
       postExitResetsMicrostructureProof:true,
       structuralHandoffShadowDecisionImpact:false,
+      continuationReentryShadow:{decisionImpact:false,version:continuationReentryShadow.VERSION,
+        protectiveExitKinds:Array.from(continuationReentryShadow.PROTECTIVE_EXITS),
+        oneCandidatePerExit:true,requiresFresh3mEventAfterExit:true,requiresAligned3mAnd5mPm:true,
+        minEfficiency3m:continuationReentryShadow.MIN_PM_EFFICIENCY,tickerDecisionImpact:false,
+        semantic:'shadow-only anti-churn study of same-direction continuation after protective exits; ticker measures effort/yield but never creates direction'},
       mfStructureShadowDecisionImpact:'TEMPORAL_ADMISSION_ONLY',
       mfStructureShadowTimeframe:'15m',
       mfStructureSemantic:'persistent HH/HL/LH/LL flow structure qualifies MCB maturity/context only; never a veto or direction source',
