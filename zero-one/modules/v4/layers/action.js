@@ -6,6 +6,10 @@ const TP1_FRACTION=.25;
 const MFE_MINIMUM_USD=ECONOMIC_MOVE_MIN_USD*2;
 const MFE_GIVEBACK_REFERENCE_USD=180;
 const RUNNER_GIVEBACK_USD=MFE_GIVEBACK_REFERENCE_USD*2;
+const ECONOMIC_PROFIT_ARM_USD=ECONOMIC_MOVE_MIN_USD;
+const ECONOMIC_PROFIT_FLOOR_USD=MFE_GIVEBACK_REFERENCE_USD;
+const PM_PRODUCTIVE_MIN_NET_USD=10;
+const PM_PRODUCTIVE_MIN_EFFICIENCY=.25;
 
 function mfStructureSupportsPosition(position,mf){
   if(!position||!mf||!mf.available)return {ready:false,reason:'MF_STRUCTURE_UNAVAILABLE'};
@@ -84,6 +88,82 @@ function adverseMicroProof(position,ticker){
   const ready=!!(ticker.oppositeConfirmed||(rawOpp&&productive&&meaningfulEffort));
   return {ready,opp,status:ticker.status,direction:ticker.direction,yieldVsP75:Number.isFinite(y75)?y75:null,effortVsP75:Number.isFinite(effort)?effort:null};
 }
+function economicProfitFloorExit(position,risk){
+  const rp=risk&&risk.position||null;
+  if(!position||!rp)return null;
+  const mfe=Number(rp.mfeUsd)||0,current=Number(rp.currentSignedUsd);
+  if(!(Number.isFinite(current)&&mfe>=ECONOMIC_PROFIT_ARM_USD&&current<=ECONOMIC_PROFIT_FLOOR_USD))return null;
+  return {
+    type:'EXIT_ECONOMIC_PROFIT_FLOOR',direction:position.direction,stage:'ECONOMIC_GAIN_FLOOR',
+    reason:'MFE reached the 220 USD economic arm and favorable terrain returned to/below 180 USD; preserve an economically viable winner without waiting for thesis invalidation',
+    evidence:{mfeUsd:mfe,currentSignedUsd:current,armUsd:ECONOMIC_PROFIT_ARM_USD,floorUsd:ECONOMIC_PROFIT_FLOOR_USD}
+  };
+}
+function productiveAdversePmProof(position,translation){
+  if(!position||!translation)return {ready:false};
+  const opp=opposite(position.direction),h=translation.horizons||{};
+  const net3=Number(h.net3mUsd),eff3=Number(h.efficiency3m);
+  const netOpp=directionAligned(net3,opp);
+  const material=Number.isFinite(net3)&&Math.abs(net3)>=PM_PRODUCTIVE_MIN_NET_USD&&Number.isFinite(eff3)&&eff3>=PM_PRODUCTIVE_MIN_EFFICIENCY;
+  return {ready:!!(netOpp&&material),opp,net3mUsd:Number.isFinite(net3)?net3:null,efficiency3m:Number.isFinite(eff3)?eff3:null,
+    minNetUsd:PM_PRODUCTIVE_MIN_NET_USD,minEfficiency:PM_PRODUCTIVE_MIN_EFFICIENCY};
+}
+function ma200AdverseProof(frame,position){
+  if(!frame||!position)return {ready:false};
+  const src=frame.sources&&frame.sources.mcb&&frame.sources.mcb.tfs&&frame.sources.mcb.tfs['3m']||null;
+  if(!src)return {ready:false,reason:'3m MA200 unavailable'};
+  const m=new Map();
+  (src.history||[]).concat(src.live?[src.live]:[]).forEach(function(r){
+    if(!r||!Number.isFinite(Number(r.ts))||!Number.isFinite(Number(r.ma200))||!Number.isFinite(Number(r.close)))return;
+    m.set(Number(r.ts),r);
+  });
+  const rows=Array.from(m.values()).sort((a,b)=>Number(a.ts)-Number(b.ts));
+  const entryTs=Date.parse(position.entryTimestamp||'');
+  const post=rows.filter(r=>!Number.isFinite(entryTs)||Number(r.ts)>=entryTs);
+  if(!post.length)return {ready:false,reason:'no post-entry 3m MA200 rows'};
+  const latest=post[post.length-1],marketPrice=Number(frame.market&&frame.market.price);
+  const ma=Number(latest.ma200);
+  const currentAdverse=Number.isFinite(marketPrice)&&(
+    (position.direction==='long'&&marketPrice<ma)||(position.direction==='short'&&marketPrice>ma)
+  );
+  let rejected=false,lost=false,eventTs=null,prev=null;
+  for(const r of post){
+    const rma=Number(r.ma200),close=Number(r.close),high=Number(r.high),low=Number(r.low);
+    const rejectNow=position.direction==='long'
+      ?(Number.isFinite(high)&&high>=rma&&close<rma)
+      :(Number.isFinite(low)&&low<=rma&&close>rma);
+    let lossNow=false;
+    if(prev){
+      const pd=Number(prev.close)-Number(prev.ma200),d=close-rma;
+      lossNow=position.direction==='long'?(pd>=0&&d<0):(pd<=0&&d>0);
+    }
+    if(rejectNow||lossNow){rejected=rejected||rejectNow;lost=lost||lossNow;eventTs=Number(r.ts);}
+    prev=r;
+  }
+  return {
+    ready:!!(currentAdverse&&(rejected||lost)),timeframe:'3m',currentAdverse,rejected,lost,eventTs,
+    currentPrice:Number.isFinite(marketPrice)?marketPrice:null,ma200:ma,
+    distanceUsd:Number.isFinite(marketPrice)?marketPrice-ma:null
+  };
+}
+function liveSignalStackExit(frame,position,mcb,translation,nativeSignal){
+  if(!position||!nativeSignal)return null;
+  const opp=opposite(position.direction),entryTs=Date.parse(position.entryTimestamp||'');
+  const live=nativeSignal.live15||{};
+  const e=position.direction==='long'?live.dn:live.up;
+  if(!live.fresh||!e||e.confirmed!==false||!Number.isFinite(Number(e.ts))||Number(e.ts)<entryTs)return null;
+  const n=mcb&&mcb.nested3m||{};
+  const mcb3Opposing=n.structuralDirection===opp;
+  const pm=productiveAdversePmProof(position,translation);
+  const ma=ma200AdverseProof(frame,position);
+  if(!(mcb3Opposing&&pm.ready&&ma.ready))return null;
+  return {
+    type:'EXIT_LIVE_SIGNAL_STACK_PROTECTION',direction:position.direction,stage:'MCB_LIVE_BYPASS_PROTECTION',
+    reason:'opposing LIVE 15m native signal + opposing 3m structural trajectory + productive adverse PM + 3m MA200 loss/rejection bypass confirmed-15m wait',
+    evidence:{signal:e.type,value:e.value,signalTs:e.ts,provisional:true,mcb3Opposing,pm,ma200:ma,bypassConfirmed15mWait:true}
+  };
+}
+
 function structuralPivotBreachExit(position,mcb,background,risk){
   if(!position||position.direction!=='long')return null;
   const h4=background&&background.fourHour||{};
@@ -274,8 +354,12 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
       reason:risk.hardStopReason||'V4 hard absolute risk cap 500 USD breached',
       evidence:{hardStopSource:risk.hardStopSource||null,maeUsd:risk.position&&risk.position.maeUsd,currentLossUsd:risk.position&&risk.position.lossUsd}};
   }
+  const economicFloor=economicProfitFloorExit(position,risk);
+  if(economicFloor)return economicFloor;
   const structuralBreach=structuralPivotBreachExit(position,mcb,entry&&entry.background||null,risk);
   if(structuralBreach)return structuralBreach;
+  const liveStack=liveSignalStackExit(frame,position,mcb,translation,entry&&entry.nativeSignal||null);
+  if(liveStack)return liveStack;
   const executionFailure=executionFailureExit(position,translation,ticker,risk);
   if(executionFailure)return executionFailure;
   const gainProtection=mfeProtectionExit(position,translation,ticker,risk,mcb,thesis,entry&&entry.mfStructureShadow||null);
@@ -313,4 +397,4 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,risk,entry=null){
   return {type:'HOLD',direction:position.direction,stage:s.state,
     reason:mcbOpposite?'opposite MCB thesis not yet confirmed by both PM live and ticker':'current position not falsified by V4 hierarchy'};
 }
-module.exports={evaluate,stage,nativeSignalExit,entryContinuityProof,adversePmProof,adverseMicroProof,structuralPivotBreachExit,executionFailureExit,mfeProtectionExit,mfStructureSupportsPosition,directionAligned,TP1_FRACTION,MFE_MINIMUM_USD,MFE_GIVEBACK_REFERENCE_USD,RUNNER_GIVEBACK_USD};
+module.exports={evaluate,stage,nativeSignalExit,liveSignalStackExit,economicProfitFloorExit,productiveAdversePmProof,ma200AdverseProof,entryContinuityProof,adversePmProof,adverseMicroProof,structuralPivotBreachExit,executionFailureExit,mfeProtectionExit,mfStructureSupportsPosition,directionAligned,TP1_FRACTION,MFE_MINIMUM_USD,MFE_GIVEBACK_REFERENCE_USD,RUNNER_GIVEBACK_USD,ECONOMIC_PROFIT_ARM_USD,ECONOMIC_PROFIT_FLOOR_USD,PM_PRODUCTIVE_MIN_NET_USD,PM_PRODUCTIVE_MIN_EFFICIENCY};

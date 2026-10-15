@@ -22,6 +22,14 @@ function eventsFromTf(src){
   return out.sort((a,b)=>a.ts-b.ts);
 }
 function ageMinutes(ts,now){return finite(ts)&&finite(now)?Math.max(0,(Number(now)-Number(ts))/60000):null;}
+function liveEventsFromTf(src,now){
+  const r=mcbState.liveRow(src);
+  const fresh=!!(r&&(!finite(src&&src.liveUpdateAgeMs)||Number(src.liveUpdateAgeMs)<=120000));
+  const base=r?{ts:Number(r.ts),timestamp:r.timestamp||new Date(Number(r.ts)).toISOString(),confirmed:false,provisional:true}:null;
+  const up=r&&finite(r.wt1_cross_up)?{...base,type:'UP',value:Number(r.wt1_cross_up)}:null;
+  const dn=r&&finite(r.wt1_cross_dn)?{...base,type:'DN',value:Number(r.wt1_cross_dn)}:null;
+  return {fresh,rowTs:r?Number(r.ts):null,up:decorate(up,now),dn:decorate(dn,now)};
+}
 function decorate(e,now){return e?{...e,ageMinutes:ageMinutes(e.ts,now)}:null;}
 function decorateWithAvailability(e,now,periodMs){
   if(!e)return null;
@@ -44,6 +52,7 @@ function evaluate(frame){
   const e4h=eventsFromTf(tfs['4h']);
 
   const latest=e15[e15.length-1]||null;
+  const live15=liveEventsFromTf(tfs['15m'],now);
   const latest1h=e1h[e1h.length-1]||null;
   const last1hUp=e1h.slice().reverse().find(e=>e.type==='UP')||null;
   const last1hDn=e1h.slice().reverse().find(e=>e.type==='DN')||null;
@@ -106,6 +115,7 @@ function evaluate(frame){
   const latestAge=latest?ageMinutes(latest.ts,now):null;
   return {
     latest:decorate(latest,now),
+    live15,
     lastUp:decorate(lastUp,now),
     lastDn:decorate(lastDn,now),
     last3mUp:decorate(last3Up,now),
@@ -168,4 +178,4 @@ function opposesPosition(signal,positionDirection){
   if(!e||!positionDirection)return false;
   return (positionDirection==='long'&&e.type==='DN')||(positionDirection==='short'&&e.type==='UP');
 }
-module.exports={evaluate,eventsFromTf,opposesPosition,decorateWithAvailability,REINFORCED_UP_THRESHOLD,REINFORCED_3M_UP_THRESHOLD,REINFORCED_4H_UP_THRESHOLD,FOUR_HOUR_MS,REINFORCED_UP_MAX_AGE_MIN,NATIVE_SIGNAL_MAX_AGE_MIN};
+module.exports={evaluate,eventsFromTf,liveEventsFromTf,opposesPosition,decorateWithAvailability,REINFORCED_UP_THRESHOLD,REINFORCED_3M_UP_THRESHOLD,REINFORCED_4H_UP_THRESHOLD,FOUR_HOUR_MS,REINFORCED_UP_MAX_AGE_MIN,NATIVE_SIGNAL_MAX_AGE_MIN};

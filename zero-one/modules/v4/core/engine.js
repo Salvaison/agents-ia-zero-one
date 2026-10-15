@@ -18,7 +18,7 @@ const structuralHandoffShadow=require('../experiments/structural-handoff-shadow'
 const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 
-const VERSION='v4.9.3-mf-memory-admission-20261012';
+const VERSION='v4.10.0-protection-stack-20261015';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -172,7 +172,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
       entryPmTranslationCanAuthorize:true,
       reinforced3mUpShortEntryImpact:'CLOSES_CURRENT_3M_SHORT_WINDOW',
       reinforced3mUpOpenShortImpact:'RESPIRATION_ALERT_ONLY',
-      setupTimingShadow:{states:['SETUP_OPEN','SETUP_LATE','SETUP_EXPIRED'],decisionImpact:false},
+      setupTiming:{states:['SETUP_OPEN','SETUP_LATE','SETUP_EXPIRED'],decisionImpact:'SETUP_LATE_CLOSES_NEW_ENTRY_WINDOW',lateDefinition:{candidateSide3mLobeMinAgeMinutes:12,maxRecoveryFraction:.12},semantic:'late is cycle-based, not price-distance based; once late, the same setup cannot reopen'},
       sameSetupCannotBeReusedUntilMcbSetupKeyChanges:true,
       failed15mCampaignRetryRequiresNewAligned15mNativeEvent:true,
       threeMinuteCycleAloneCannotResetFailed15mCampaign:true,
@@ -190,6 +190,8 @@ function evaluate(frame,position=null,previousEvaluation=null){
       executionFailure:{decisionImpact:true,standardMaxMfeFractionOfEconomicMinimum:.25,reclaimMaxMfeFractionOfEconomicMinimum:1,requiresAdversePmAndMicrostructure:true},
       structuralPivotBreach:{decisionImpact:true,scope:'LONG_DURING_DEEP_4H_CAPITULATION',requiresPriceAndLbwBreach:true},
       hardRiskUsesObservedMae:true,
+      economicProfitFloor:{decisionImpact:true,armMfeUsd:220,floorSignedUsd:180,requiresAdverseConfirmation:false,semantic:'once MFE reaches 220 USD, return to/below +180 USD exits to preserve economic viability'},
+      live15ProtectionBypass:{decisionImpact:true,requires:['OPPOSING_LIVE_15M_NATIVE','OPPOSING_3M_STRUCTURE','PRODUCTIVE_ADVERSE_PM','3M_MA200_LOSS_OR_REJECTION'],confirmed15mRequired:false,tickerRequired:false,semantic:'full stack bypasses waiting for 15m close; live 15m signal alone has no exit authority'},
       mfeProtection:{decisionImpact:true,minimumMfeUsd:440,givebackReferenceUsd:180,requiresAdversePmAndMicrostructure:true},
       stressTpRunner:{decisionImpact:true,tp1Fraction:.25,tp1GivebackUsd:180,runnerGivebackUsd:360,requiresAlignedMcbAndMf:true,semantic:'productive adverse stress on a large winner takes 25% only when MCB+MF still carry the campaign; runner keeps one extra respiration unit'},
       tradingFeeModel:{decisionImpact:'ACCOUNTING_AND_ECONOMIC_PNL',entryAndExitFees:true,partialExitFees:true,liveCloseFeeEstimate:true,fundingMode:'NOT_MODELED',ratesFromConfig:true},

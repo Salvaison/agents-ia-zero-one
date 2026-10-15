@@ -789,3 +789,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 ## 2026-10-12 — Uniformisation des repères horaires
 - Les lignes verticales horaires du graphique PRIX utilisent désormais exactement la même référence que les vagues 15m/3m : #f0f0f0, 1 px.
 - Aucun impact trading.
+
+## 2026-10-15 — V4.10.0 Protection Stack
+- SETUP_LATE devient actif avec définition resserrée : lobe 3m candidat >=12 min et recovery <=12% ferme la fenêtre d’entrée.
+- Protection économique 220→180 activée : MFE >=220 arme, retour à currentSignedUsd <=180 déclenche EXIT_ECONOMIC_PROFIT_FLOOR.
+- Protection live : signal 15m LIVE opposé + structure 3m opposée + PM adverse productif + perte/rejet MA200 3m déclenche EXIT_LIVE_SIGNAL_STACK_PROTECTION sans attendre la clôture 15m.
+- DN3 seul et signal LIVE 15m seul restent sans autorité de sortie.
+- Replay #125 : entrée refusée comme late active ; plancher économique et stack live validés sur la chronologie observée.

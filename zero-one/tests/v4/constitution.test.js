@@ -63,7 +63,7 @@ const exitRisk=action.evaluate({market:{price:500}},pos,ms,th,
 assert.equal(exitRisk.type,'EXIT_RISK');
 
 const shortTh={state:'SHORT_FORMING',direction:'short'};
-const rOk={hardStopBreached:false,position:{currentSignedUsd:120,mfeUsd:420}};
+const rOk={hardStopBreached:false,position:{currentSignedUsd:120,mfeUsd:200}};
 const exitGain=action.evaluate(frame,pos,ms,shortTh,
   {status:'TRANSLATING',aligned:true,thesisDirection:'short'},
   {status:'CONFIRMED',confirmed:true,thesisDirection:'short'},rOk);

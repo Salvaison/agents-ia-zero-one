@@ -5,17 +5,37 @@ function maxFinite(values){
   const a=values.map(Number).filter(Number.isFinite);
   return a.length?Math.max(...a):null;
 }
-function activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs){
+function activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3=null,candidate=null){
   const prior=prevSame&&previousSetup&&previousSetup.timingShadow||null;
-  const established=coherence&&['STRUCTURAL_ALIGNED','LOBE_ALIGNED'].includes(coherence.state);
-  const state=established?'SETUP_LATE':'SETUP_OPEN';
+  const into=n3&&(Number(n3.lobeSign)>0?'long':Number(n3.lobeSign)<0?'short':null);
+  const ageMinutes=n3&&Number.isFinite(Number(n3.startTs))
+    ?Math.max(0,(Number(marketTs)-Number(n3.startTs))/60000):null;
+  let recovery=n3&&Number(n3.recoveryFraction);
+  if(!Number.isFinite(recovery)){
+    const cur=n3&&Math.abs(Number(n3.currentLbw)),ext=n3&&Math.abs(Number(n3.extremeLbw));
+    recovery=Number.isFinite(cur)&&Number.isFinite(ext)&&ext>0?Math.max(0,Math.min(1,(ext-cur)/ext)):null;
+  }
+  const sameInto=!!(candidate&&into===candidate);
+  const establishedFourBars=Number.isFinite(ageMinutes)&&ageMinutes>=12;
+  const extending=Number.isFinite(recovery)&&recovery<=.12;
+  const priorLate=!!(prior&&prior.state==='SETUP_LATE'&&prior.blocksNewEntry);
+  const activeLate=priorLate||!!(sameInto&&establishedFourBars&&extending);
+  const state=activeLate?'SETUP_LATE':'SETUP_OPEN';
   return {
-    state,decisionImpact:false,
+    state,
+    decisionImpact:activeLate?'CLOSES_NEW_ENTRY_WINDOW':false,
+    blocksNewEntry:activeLate,
     openedAt:prior&&prior.openedAt||setupTs,
-    lateAt:state==='SETUP_LATE'?(prior&&prior.lateAt||marketTs):null,
+    lateAt:activeLate?(prior&&prior.lateAt||marketTs):null,
     expiredAt:null,
-    basis:established?'3m aligned lobe already established; classify as late in shadow only':'3m aligned turn is still the open execution window',
-    semantic:'shadow lifecycle only: observe OPEN -> LATE -> EXPIRED before deciding whether LATE should become non-tradable'
+    lobeAgeMinutes:Number.isFinite(ageMinutes)?ageMinutes:null,
+    lobeRecoveryFraction:Number.isFinite(recovery)?recovery:null,
+    lobeDirection:into,
+    candidateDirection:candidate||null,
+    basis:activeLate
+      ?'3m candidate lobe has already consumed >=4 bars while still EXTENDING near its extreme'
+      :'3m execution cycle remains inside the admissible opening window',
+    semantic:'active lifecycle: SETUP_LATE closes new entry when the candidate-side 3m lobe is >=12m old and recovery <=12%; no fixed USD move is used'
   };
 }
 function expiredTimingShadow(previousSetup,marketTs,reason){
@@ -26,7 +46,7 @@ function expiredTimingShadow(previousSetup,marketTs,reason){
     lateAt:prior&&prior.lateAt||null,
     expiredAt:marketTs,
     basis:reason||'3m cycle no longer supports the armed setup',
-    semantic:'shadow lifecycle only; expiry is observed, except explicit UP_REINFORCED_3M closes a SHORT entry window immediately'
+    semantic:'lifecycle expiry is descriptive here; explicit active gates (including SETUP_LATE and UP_REINFORCED_3M for SHORT) close entry windows separately'
   };
 }
 function mfMemoryAdmission(candidate,mfStructure,mcb,nativeSignal){
@@ -203,7 +223,27 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   const prevSame=previousActiveSame;
   const setupTs=prevSame?Number(previousSetup.setupTs):marketTs;
   const setupId=prevSame?previousSetup.setupId:[baseToken,setupTs].join('@');
-  const timingShadow=activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs);
+  const timingShadow=activeTimingShadow(coherence,previousSetup,prevSame,marketTs,setupTs,n3,candidate);
+  if(timingShadow.blocksNewEntry){
+    return {
+      status:'OBSERVE',candidateDirection:candidate,direction:null,
+      setupId,setupKey:baseToken,setupTs,
+      createdAt:prevSame?previousSetup.createdAt||setupTs:marketTs,
+      relationToBackground:relation,localSync:coherence,
+      structuralRoom:structuralRoom&&structuralRoom.state||null,
+      marketQuality:marketQuality&&marketQuality.state||null,
+      thesisConsumed:false,structuralEventTs,lastExitTs,lastConsumedSetupKey,
+      campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,nativeAfterExit,campaignRetryBlocked:false,
+      capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
+      backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
+      pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
+      reinforced3mShortClose:false,noNewShort:false,timingShadow,
+      mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
+      admissionAllowed:false,
+      reasons:['SETUP_LATE_CLOSES_ENTRY_WINDOW'],
+      reason:'SETUP_LATE_CLOSES_ENTRY_WINDOW: candidate-side 3m lobe has already consumed >=4 bars while still extending near its extreme'
+    };
+  }
   return {
     status:'SETUP',candidateDirection:candidate,direction:candidate,
     setupId,setupKey:baseToken,setupTs,

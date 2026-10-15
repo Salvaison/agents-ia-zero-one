@@ -244,4 +244,47 @@ function setupInputs(direction='long'){
   assert.equal(s.mfMemory.state,'MF_MEMORY_ALIGNED');
 }
 
+
+
+// 12) Economic floor is independent from the 440 large-winner stress machinery.
+{
+  const pos={direction:'long'};
+  assert.equal(action.economicProfitFloorExit(pos,{position:{mfeUsd:219,currentSignedUsd:170}}),null);
+  assert.equal(action.economicProfitFloorExit(pos,{position:{mfeUsd:220,currentSignedUsd:181}}),null);
+  const x=action.economicProfitFloorExit(pos,{position:{mfeUsd:267.2,currentSignedUsd:180}});
+  assert(x);
+  assert.equal(x.type,'EXIT_ECONOMIC_PROFIT_FLOOR');
+  assert.equal(x.evidence.armUsd,220);
+  assert.equal(x.evidence.floorUsd,180);
+}
+
+// 13) LIVE 15m bypass requires the full stack: live native + 3m structure + productive PM + 3m MA200 loss/reject.
+{
+  const entryTs=base;
+  const pos={direction:'long',entryTimestamp:new Date(entryTs).toISOString()};
+  const frame={
+    market:{timestamp:entryTs+20*60000,price:970},
+    sources:{mcb:{tfs:{'3m':{
+      history:[
+        {ts:entryTs+3*60000,open:990,high:1005,low:988,close:1002,ma200:1000},
+        {ts:entryTs+6*60000,open:1002,high:1004,low:980,close:985,ma200:1000}
+      ],
+      live:{ts:entryTs+9*60000,open:985,high:990,low:968,close:970,ma200:999}
+    }}}}
+  };
+  const mcb={nested3m:{structuralDirection:'short',structuralState:'DESCENT_ACTIVE',lobeSign:-1}};
+  const tr={horizons:{net3mUsd:-35,efficiency3m:.7}};
+  const native={live15:{fresh:true,dn:{type:'DN',value:-12,ts:entryTs+15*60000,confirmed:false,provisional:true},up:null}};
+  const ex=action.liveSignalStackExit(frame,pos,mcb,tr,native);
+  assert(ex);
+  assert.equal(ex.type,'EXIT_LIVE_SIGNAL_STACK_PROTECTION');
+  assert.equal(ex.evidence.bypassConfirmed15mWait,true);
+  assert.equal(ex.evidence.ma200.ready,true);
+
+  assert.equal(action.liveSignalStackExit(frame,pos,{nested3m:{structuralDirection:'long'}},tr,native),null);
+  assert.equal(action.liveSignalStackExit(frame,pos,mcb,{horizons:{net3mUsd:20,efficiency3m:.7}},native),null);
+  assert.equal(action.liveSignalStackExit({...frame,market:{timestamp:entryTs+20*60000,price:1010}},pos,mcb,tr,native),null);
+  assert.equal(action.liveSignalStackExit(frame,pos,mcb,tr,{live15:{fresh:true,dn:null}}),null);
+}
+
 console.log('V4.7 context/campaign/execution tests OK');

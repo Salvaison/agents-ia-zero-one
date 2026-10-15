@@ -116,27 +116,35 @@ function commonSetupInputs(direction='short'){
   assert.equal(ex.evidence.signal,'UP_REINFORCED_15M');
 }
 
-// Shadow timing lifecycle: TURN_ALIGNED -> OPEN, established aligned lobe -> LATE, opposing turn -> EXPIRED.
+// Active timing lifecycle: fresh 3m timing stays OPEN; an old still-extending candidate lobe becomes non-tradable.
 {
   const x=commonSetupInputs('short');
-  x.mcb.nested3m={available:true,startTs:base-300000,extremeTs:base-240000,lobeSign:1,turningDirection:'short'};
+  x.mcb.nested3m={available:true,startTs:base-300000,extremeTs:base-240000,lobeSign:1,turningDirection:'short',
+    currentLbw:20,extremeLbw:20,recoveryFraction:0};
   const n={reinforcedUp:{active:false},reinforced3mUp:{active:false,event:null},last3mUp:null,last3mDn:null};
   const s1=setupLayer.evaluate({market:{timestamp:base,price:1000}},x.baseThesis,x.mcb,x.background,x.room,x.quality,n,null,null,null);
   assert.equal(s1.status,'SETUP');
   assert.equal(s1.timingShadow.state,'SETUP_OPEN');
   assert.equal(s1.timingShadow.decisionImpact,false);
 
-  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,turningDirection:null};
+  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,turningDirection:null,currentLbw:-45,extremeLbw:-45,recoveryFraction:0};
   const s2=setupLayer.evaluate({market:{timestamp:base+30000,price:995}},x.baseThesis,x.mcb,x.background,x.room,x.quality,n,s1,null,null);
   assert.equal(s2.status,'SETUP');
-  assert.equal(s2.timingShadow.state,'SETUP_LATE');
-  assert.equal(s2.timingShadow.decisionImpact,false);
+  assert.equal(s2.timingShadow.state,'SETUP_OPEN');
+  assert.equal(s2.timingShadow.blocksNewEntry,false);
 
-  x.mcb.nested3m={...x.mcb.nested3m,lobeSign:-1,turningDirection:'long'};
-  const s3=setupLayer.evaluate({market:{timestamp:base+60000,price:997}},x.baseThesis,x.mcb,x.background,x.room,x.quality,n,s2,null,null);
+  const lateTs=base+8*60000;
+  const sLate=setupLayer.evaluate({market:{timestamp:lateTs,price:993}},x.baseThesis,x.mcb,x.background,x.room,x.quality,n,s2,null,null);
+  assert.equal(sLate.status,'OBSERVE');
+  assert.equal(sLate.timingShadow.state,'SETUP_LATE');
+  assert.equal(sLate.timingShadow.decisionImpact,'CLOSES_NEW_ENTRY_WINDOW');
+  assert.equal(sLate.timingShadow.blocksNewEntry,true);
+  assert.ok(sLate.reasons.includes('SETUP_LATE_CLOSES_ENTRY_WINDOW'));
+
+  x.mcb.nested3m={...x.mcb.nested3m,turningDirection:'long'};
+  const s3=setupLayer.evaluate({market:{timestamp:base+60000,price:997}},x.baseThesis,x.mcb,x.background,x.room,x.quality,n,s1,null,null);
   assert.equal(s3.status,'OBSERVE');
   assert.equal(s3.timingShadow.state,'SETUP_EXPIRED');
-  assert.equal(s3.timingShadow.decisionImpact,false);
 }
 
 console.log('V4.5 entry timing / ticker role tests OK');
