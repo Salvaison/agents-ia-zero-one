@@ -202,4 +202,46 @@ function mcbFor(dir='long'){
   assert.equal(a.evidence.net5mUsd,-250);
 }
 
+
+
+// Persistent 3m -> 15m lineage survives a later opposite 3m respiration.
+// The 3m opposition is tactical metadata; only a later opposite 15m changes strategic signal memory.
+{
+  const e3=[
+    {type:'UP',ts:base,value:-40,confirmed:true},
+    {type:'DN',ts:base+2*60000,value:35,confirmed:true}
+  ];
+  const e15=[
+    {type:'UP',ts:base+60000,value:-65,confirmed:true}
+  ];
+  const x=nativeSignal.signalSequenceMemory(e3,e15,base+3*60000);
+  assert.equal(x.established,true);
+  assert.equal(x.direction,'long');
+  assert.equal(x.sequence,'SIGNAL3_TO_SIGNAL15');
+  assert.equal(x.precursor3m.type,'UP');
+  assert.equal(x.strategic15m.type,'UP');
+  assert.equal(x.latest3m.type,'DN');
+  assert.equal(x.tacticalOpposition,true);
+  assert.equal(x.decisionImpact,false);
+
+  const flipped=nativeSignal.signalSequenceMemory(
+    e3,
+    [...e15,{type:'DN',ts:base+4*60000,value:20,confirmed:true}],
+    base+5*60000
+  );
+  assert.equal(flipped.direction,'short');
+  assert.notEqual(flipped.strategic15m.type,'UP');
+}
+
+// 15m -> 3m remains observable as a distinct sequence when no precursor 3m exists in the current 15m cycle.
+{
+  const x=nativeSignal.signalSequenceMemory(
+    [{type:'UP',ts:base+2*60000,value:10,confirmed:true}],
+    [{type:'UP',ts:base,value:-60,confirmed:true}],
+    base+3*60000
+  );
+  assert.equal(x.established,true);
+  assert.equal(x.sequence,'SIGNAL15_TO_SIGNAL3');
+}
+
 console.log('V4.4 native signal / quality tests OK');

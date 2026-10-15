@@ -18,8 +18,9 @@ const structuralHandoffShadow=require('../experiments/structural-handoff-shadow'
 const mfStructureShadow=require('../experiments/mf-structure-shadow');
 const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 const continuationReentryShadow=require('../experiments/continuation-reentry-shadow');
+const priceBehaviorShadow=require('../experiments/price-behavior-shadow');
 
-const VERSION='v4.10.2-continuation-reentry-shadow-20261015';
+const VERSION='v4.10.3-price-behavior-shadow-20261015';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -73,6 +74,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
   const continuationReentry=continuationReentryShadow.evaluate(
     frame,position,baseThesis,mcb,native,translation,ticker,mfStructure,room,
     previousEvaluation&&previousEvaluation.continuationReentryShadow||null
+  );
+
+  const priceBehavior=priceBehaviorShadow.evaluate(
+    frame,native,translation,ticker,
+    previousEvaluation&&previousEvaluation.priceBehaviorShadow||null
   );
 
   // Structural handoff experiment: persistent 1h structural context + 15m thesis + 3m timing.
@@ -145,6 +151,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     ticker,
     mfStructureShadow:mfStructure,
     continuationReentryShadow:continuationReentry,
+    priceBehaviorShadow:priceBehavior,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -177,6 +184,9 @@ function evaluate(frame,position=null,previousEvaluation=null){
         oneCandidatePerExit:true,requiresFresh3mEventAfterExit:true,requiresAligned3mAnd5mPm:true,
         minEfficiency3m:continuationReentryShadow.MIN_PM_EFFICIENCY,tickerDecisionImpact:false,
         semantic:'shadow-only anti-churn study of same-direction continuation after protective exits; ticker measures effort/yield but never creates direction'},
+      priceBehaviorShadow:{decisionImpact:false,version:priceBehaviorShadow.VERSION,alwaysOn:true,
+        signalMemory:['3m','15m'],tickerDecisionImpact:false,pmDecisionImpact:false,
+        semantic:'continuous study of price effort/yield and conversion in relation to remembered native signal sequence; observation only'},
       mfStructureShadowDecisionImpact:'TEMPORAL_ADMISSION_ONLY',
       mfStructureShadowTimeframe:'15m',
       mfStructureSemantic:'persistent HH/HL/LH/LL flow structure qualifies MCB maturity/context only; never a veto or direction source',

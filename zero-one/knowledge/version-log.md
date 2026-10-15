@@ -812,3 +812,13 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Ticker est qualificateur d'effort/rendement, jamais source de direction ni gate.
 - Anti-churn : une candidature max par sortie ; MFE/MAE shadow suivis ; churnRisk si MAE >=180 avant MFE 220.
 - #127 : le ticker a bien observé plusieurs phases de rendement élevé avec effort inférieur ou proche du P75 pendant le rallye vers 82K+.
+
+## 2026-10-15 — V4.10.3 Price Behavior Shadow
+- Nouveau shadow always-on, decisionImpact:false, pour étudier le prix indépendamment du droit d'admission.
+- Mémoire persistante native 3m/15m : SIGNAL3_TO_SIGNAL15, SIGNAL15_TO_SIGNAL3, SIGNAL15_ONLY.
+- Un 3m opposé postérieur devient opposition tactique et ne détruit plus la mémoire stratégique 15m de la vague.
+- Classification effort/rendement : EXTREME_EASY_TRAVEL, EASY_TRAVEL, EXTREME_PRODUCTIVE_TRAVEL, PRODUCTIVE_TRAVEL, HIGH_EFFORT_LOW_YIELD, LOW_YIELD.
+- Mesure continue du yield vs P75/P95, effort vs P75, cadence, flow, easeRatio, PM 1m/3m/5m et efficiencies.
+- Relation prix / mémoire de vague : WITH_SIGNAL_MEMORY, AGAINST_SIGNAL_MEMORY, NO_RELATION.
+- Episodes persistants suivis en durée, déplacement courant, MFE/MAE descriptifs.
+- Reconstruction 17:05:30 après #127 : vague LONG SIGNAL3_TO_SIGNAL15 + EXTREME_PRODUCTIVE_TRAVEL + STRONG_TRANSLATION, net3 +485.2, net5 +401.7, efficiency3m 88.2%.

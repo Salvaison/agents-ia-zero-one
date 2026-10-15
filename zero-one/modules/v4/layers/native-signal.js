@@ -22,6 +22,40 @@ function eventsFromTf(src){
   return out.sort((a,b)=>a.ts-b.ts);
 }
 function ageMinutes(ts,now){return finite(ts)&&finite(now)?Math.max(0,(Number(now)-Number(ts))/60000):null;}
+function signalSequenceMemory(e3,e15,now){
+  const latest15=e15&&e15.length?e15[e15.length-1]:null;
+  const latest3=e3&&e3.length?e3[e3.length-1]:null;
+  if(!latest15){
+    return {
+      available:false,established:false,direction:null,sequence:'NO_15M_ANCHOR',
+      strategic15m:null,precursor3m:null,follower3m:null,latest3m:decorate(latest3,now),
+      tacticalOpposition:false,decisionImpact:false,
+      semantic:'signal memory is descriptive; a strategic wave sequence needs a 15m native anchor'
+    };
+  }
+  const type=latest15.type;
+  const direction=type==='UP'?'long':'short';
+  const oppositeType=type==='UP'?'DN':'UP';
+  const prevOpp15=e15.slice(0,-1).reverse().find(e=>e.type===oppositeType)||null;
+  const lower=prevOpp15?Number(prevOpp15.ts):-Infinity;
+  const precursor3=e3.slice().reverse().find(e=>e.type===type&&Number(e.ts)>lower&&Number(e.ts)<=Number(latest15.ts))||null;
+  const follower3=e3.find(e=>e.type===type&&Number(e.ts)>Number(latest15.ts))||null;
+  const sequence=precursor3?'SIGNAL3_TO_SIGNAL15':(follower3?'SIGNAL15_TO_SIGNAL3':'SIGNAL15_ONLY');
+  const established=!!(precursor3||follower3);
+  const tacticalOpposition=!!(latest3&&Number(latest3.ts)>Number(latest15.ts)&&latest3.type===oppositeType);
+  return {
+    available:true,established,direction,sequence,
+    strategic15m:decorate(latest15,now),
+    previousOpposite15m:decorate(prevOpp15,now),
+    precursor3m:decorate(precursor3,now),
+    follower3m:decorate(follower3,now),
+    latest3m:decorate(latest3,now),
+    tacticalOpposition,
+    tacticalState:tacticalOpposition?'3M_OPPOSES_ESTABLISHED_15M_WAVE':'3M_NOT_OPPOSING_ESTABLISHED_WAVE',
+    decisionImpact:false,
+    semantic:'persistent signal memory: a same-direction 3m event inside the current 15m strategic cycle establishes 3m/15m lineage; later opposite 3m events are tactical and do not erase the 15m wave memory'
+  };
+}
 function liveEventsFromTf(src,now){
   const r=mcbState.liveRow(src);
   const fresh=!!(r&&(!finite(src&&src.liveUpdateAgeMs)||Number(src.liveUpdateAgeMs)<=120000));
@@ -52,6 +86,7 @@ function evaluate(frame){
   const e4h=eventsFromTf(tfs['4h']);
 
   const latest=e15[e15.length-1]||null;
+  const signalMemory=signalSequenceMemory(e3,e15,now);
   const live15=liveEventsFromTf(tfs['15m'],now);
   const latest1h=e1h[e1h.length-1]||null;
   const last1hUp=e1h.slice().reverse().find(e=>e.type==='UP')||null;
@@ -115,6 +150,7 @@ function evaluate(frame){
   const latestAge=latest?ageMinutes(latest.ts,now):null;
   return {
     latest:decorate(latest,now),
+    signalSequenceMemory:signalMemory,
     live15,
     lastUp:decorate(lastUp,now),
     lastDn:decorate(lastDn,now),
@@ -178,4 +214,4 @@ function opposesPosition(signal,positionDirection){
   if(!e||!positionDirection)return false;
   return (positionDirection==='long'&&e.type==='DN')||(positionDirection==='short'&&e.type==='UP');
 }
-module.exports={evaluate,eventsFromTf,liveEventsFromTf,opposesPosition,decorateWithAvailability,REINFORCED_UP_THRESHOLD,REINFORCED_3M_UP_THRESHOLD,REINFORCED_4H_UP_THRESHOLD,FOUR_HOUR_MS,REINFORCED_UP_MAX_AGE_MIN,NATIVE_SIGNAL_MAX_AGE_MIN};
+module.exports={evaluate,eventsFromTf,liveEventsFromTf,signalSequenceMemory,opposesPosition,decorateWithAvailability,REINFORCED_UP_THRESHOLD,REINFORCED_3M_UP_THRESHOLD,REINFORCED_4H_UP_THRESHOLD,FOUR_HOUR_MS,REINFORCED_UP_MAX_AGE_MIN,NATIVE_SIGNAL_MAX_AGE_MIN};
