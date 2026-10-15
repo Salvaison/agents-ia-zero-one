@@ -829,3 +829,8 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Prix Live également affiché en haut à droite de la ligne de titre `PRIX BTCUSDT · TF`.
 - Graduation prix déplacée à gauche en overlay transparent, sans réduire la surface utile ni casser l'alignement temporel avec Wave15/Wave3.
 - Aucun impact trading ni BOONO-TV.
+
+## 2026-10-15 — Vagues · fond graduation prix
+- L'axe de prix à gauche reprend désormais exactement le même dégradé blanc que les axes Wave15/Wave3 : blanc opaque sous les valeurs puis fondu progressif vers le graphe.
+- Largeur de graduation conservée pour les prix complets ; proportions du dégradé identiques aux vagues.
+- Aucun impact trading ni BOONO-TV.

@@ -2152,7 +2152,7 @@ app.get('/', requireAuth, (req, res) => {
 .wave-price-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .wave-price-live-head{font:800 10px 'SF Mono',Menlo,Consolas,monospace;color:#2f80ed;white-space:nowrap;margin-right:4px;letter-spacing:.02em;}
 .wave-price-canvas{height:300px;}
-.wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:transparent;}
+.wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:54px;height:300px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.98) 78%,rgba(255,255,255,.88) 92%,rgba(255,255,255,0) 100%);}
 
 .wave-price-axis-mark{position:absolute;left:0;right:0;height:0;transform:translateY(-.5px);}
 .wave-price-axis-bar{position:absolute;left:36px;right:auto;top:0;width:7px;height:0;background:none;border-radius:0;border-top:1px solid #e4e4e4;}
