@@ -908,3 +908,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - SHADOWS exclut les frames DATA_DEGRADED, affiche DATA QUALITY + ADMISSION COUNTERFACTUAL et leurs occurrences.
 - Cache SHADOWS 90 s pour les calculs lourds ; cartes live relues depuis l'état courant.
 - Aucun veto stratégique desserré dans V4.10.5.
+
+## 2026-10-16 — BOONO-TV · capture TA passive
+- La capture MarketCipher BOONO-TV reste isolée sur le layout TA `qljTf3vu`.
+- Suppression de tout `setResolution()` : le daemon ne change plus ni timeframe ni symbole de l'onglet utilisateur.
+- Il capture passivement la vue courante, quelle qu'elle soit, et enregistre la provenance : layout, URL, titre, résolution réelle, symbole réel.
+- `captureIsolation=TA_ONLY_PASSIVE`, `provenance=USER_TA_VIEW_UNMODIFIED`.
+- Les layouts collecteurs `2AqpEMfD` restent explicitement interdits à la capture.

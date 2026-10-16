@@ -45,28 +45,7 @@ async function findTarget(){
   // Page.captureScreenshot to 2AqpEMfD (3m/15m data collectors).
   return tabs.find(t=>t.type==='page'&&/tradingview\.com/.test(t.url||'')&&(t.url||'').includes('/chart/'+CAPTURE_CHART_ID+'/'))||null;
 }
-async function waitForResolution(Runtime,tf){
-  const wanted=String(tf);
-  const getRes=async()=>{
-    const r=await Runtime.evaluate({expression:`(function(){try{return String(window.TradingViewApi._activeChartWidgetWV.value().resolution())}catch(e){return ''}})()`,returnByValue:true});
-    return String(r.result&&r.result.value||'');
-  };
-  let current=await getRes();
-  if(current!==wanted){
-    await Runtime.evaluate({
-      expression:`(function(){try{var w=window.TradingViewApi._activeChartWidgetWV.value();w.setResolution(${JSON.stringify(wanted)});return true}catch(e){return false}})()`,
-      returnByValue:true
-    });
-    const until=Date.now()+5000;
-    do{await sleep(150);current=await getRes();}while(current!==wanted&&Date.now()<until);
-    if(current!==wanted)throw new Error('TA timeframe did not switch to '+wanted+'m (actual '+current+')');
-    // Let TradingView repaint the indicator panes after the interval change.
-    await sleep(700);
-  }
-  return current;
-}
-async function cdpShot(target,tf){
-  return new Promise((resolve,reject)=>{
+async function cdpShot(target){  return new Promise((resolve,reject)=>{
     const ws=new WebSocket(target.webSocketDebuggerUrl);
     let seq=1,settled=false;const waits=new Map();
     const finish=(err,val)=>{if(settled)return;settled=true;try{ws.close()}catch(_){};err?reject(err):resolve(val)};
@@ -80,24 +59,20 @@ async function cdpShot(target,tf){
       try{
         await cmd('Page.enable');
         await cmd('Runtime.enable');
-        // Use only Benjamin's TA layout and switch its interval through the
-        // TradingView API; collector tabs remain completely untouched.
-        const wanted=String(tf);
-        let current='';
-        const getRes=async()=>{
-          const r=await cmd('Runtime.evaluate',{expression:`(function(){try{return String(window.TradingViewApi._activeChartWidgetWV.value().resolution())}catch(e){return ''}})()`,returnByValue:true});
-          return String(r&&r.result&&r.result.value||'');
-        };
-        current=await getRes();
-        if(current!==wanted){
-          await cmd('Runtime.evaluate',{expression:`(function(){try{var w=window.TradingViewApi._activeChartWidgetWV.value();w.setResolution(${JSON.stringify(wanted)});return true}catch(e){return false}})()`,returnByValue:true});
-          const until=Date.now()+5000;
-          do{await sleep(150);current=await getRes();}while(current!==wanted&&Date.now()<until);
-          if(current!==wanted)throw new Error('TA timeframe did not switch to '+wanted+'m (actual '+current+')');
-          await sleep(700);
-        }
+        // Passive capture only: never navigate, reload, resize or change the
+        // user's TA timeframe/symbol. BOONO-TV shows whatever is currently on
+        // qljTf3vu and records its provenance.
+        const meta=await cmd('Runtime.evaluate',{
+          expression:`(function(){try{
+            var w=window.TradingViewApi._activeChartWidgetWV.value();
+            var sym='';try{sym=String(w.symbol())}catch(_){}
+            return {resolution:String(w.resolution()),symbol:sym};
+          }catch(e){return {resolution:'',symbol:'',error:String(e)}}})()`,
+          returnByValue:true
+        });
+        const actual=meta&&meta.result&&meta.result.value||{};
         const shot=await cmd('Page.captureScreenshot',{format:'jpeg',quality:82,fromSurface:true,captureBeyondViewport:false,clip:CLIP});
-        finish(null,{jpg:Buffer.from(shot.data,'base64'),actualTf:current});
+        finish(null,{jpg:Buffer.from(shot.data,'base64'),actualTf:actual.resolution||null,actualSymbol:actual.symbol||null});
       }catch(e){finish(e)}
     });
     setTimeout(()=>finish(new Error('CDP screenshot timeout')),5000);
@@ -115,15 +90,18 @@ async function tick(){
     const target=await findTarget();
     if(!target)throw new Error('TradingView TA layout '+CAPTURE_CHART_ID+' not found');
     if((target.url||'').includes('/chart/'+COLLECTOR_CHART_ID+'/'))throw new Error('refusing collector target');
-    const capture=await cdpShot(target,tf);
+    const capture=await cdpShot(target);
     const jpg=capture.jpg;
-    atomicWrite(path.join(OUT,'marketcipher-'+tf+'m.jpg'),jpg);
+    const actualTf=String(capture.actualTf||'').replace(/[^0-9A-Za-z]/g,'');
+    if(actualTf)atomicWrite(path.join(OUT,'marketcipher-'+actualTf+'.jpg'),jpg);
     atomicWrite(path.join(OUT,'marketcipher-live.jpg'),jpg);
     stateWrite({
       ok:true,capturedAt:new Date().toISOString(),tf,rollover:ro.active,
       nextMs:ro.active?ROLLOVER_MS:NORMAL_MS,
       title:target.title,url:target.url,clip:CLIP,bytes:jpg.length,
-      sourceLayout:CAPTURE_CHART_ID,captureIsolation:'TA_ONLY',actualTf:capture.actualTf
+      sourceLayout:CAPTURE_CHART_ID,captureIsolation:'TA_ONLY_PASSIVE',
+      actualTf:capture.actualTf,actualSymbol:capture.actualSymbol,
+      provenance:'USER_TA_VIEW_UNMODIFIED'
     });
   }catch(e){
     stateWrite({ok:false,capturedAt:new Date().toISOString(),tf,rollover:ro.active,error:e.message,nextMs:ro.active?ROLLOVER_MS:NORMAL_MS});
