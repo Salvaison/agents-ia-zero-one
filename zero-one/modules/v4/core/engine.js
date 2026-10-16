@@ -1,6 +1,7 @@
 'use strict';
 
 const mcbState=require('../layers/mcb-state');
+const dataQuality=require('../layers/data-quality');
 const mcbThesis=require('../layers/mcb-thesis');
 const opportunityMaturity=require('../layers/opportunity-maturity');
 const nativeSignal=require('../layers/native-signal');
@@ -20,12 +21,14 @@ const tpMultiFractionShadow=require('../experiments/tp-multifraction-shadow');
 const continuationReentryShadow=require('../experiments/continuation-reentry-shadow');
 const priceBehaviorShadow=require('../experiments/price-behavior-shadow');
 const live15AcceptanceShadow=require('../experiments/live15-acceptance-shadow');
+const admissionCounterfactualShadow=require('../experiments/admission-counterfactual-shadow');
 
-const VERSION='v4.10.4-live15-acceptance-shadow-20261015';
+const VERSION='v4.10.5-data-integrity-20261016';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
-  const mcb=mcbState.evaluate(frame,previousMcb);
+  const dq=dataQuality.evaluate(frame);
+  const mcb=mcbState.evaluate(frame,previousMcb,dq);
 
   // MCB remains the only source of directional meaning.
   const baseThesis=mcbThesis.evaluate(mcb);
@@ -118,6 +121,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
     mfStructure
   );
 
+  const admissionCounterfactual=admissionCounterfactualShadow.evaluate(
+    frame,position,setup,entryBaseThesis,mcb,priceBehavior,native,mfStructure,room,quality,
+    previousEvaluation&&previousEvaluation.admissionCounterfactualShadow||null
+  );
+
   const entryThesis=setup&&setup.status==='SETUP'
     ?{state:'SETUP',direction:setup.direction,candidateDirection:setup.direction,mode:baseThesis&&baseThesis.mode||null,authority:'MCB_ONLY'}
     :{state:'OBSERVE',direction:null,candidateDirection:null,authority:'MCB_ONLY'};
@@ -143,6 +151,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     marketTimestamp:frame.market.timestamp,
     price:frame.market.price,
     mcb,
+    dataQuality:dq,
     nativeSignal:native,
     background,
     baseThesis,
@@ -159,6 +168,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     continuationReentryShadow:continuationReentry,
     priceBehaviorShadow:priceBehavior,
     live15AcceptanceShadow:live15Acceptance,
+    admissionCounterfactualShadow:admissionCounterfactual,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -166,6 +176,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     action:a,
     contract:{
       directionAuthority:'MCB_ONLY',
+      dataQuality:{decisionImpact:'SUSPEND_NEW_ENTRIES_WHEN_STALE',version:dataQuality.VERSION,hardRiskRemainsActive:true,semantic:'stale MCB cannot retain structural entry authority'},
       backgroundPrimary:'1H_WAVE_LEG_QUALIFIER_ONLY',
       oneHourAdmissionImpact:false,
       oneHourSemantic:'1h E-to-E describes the current 1h wave leg; it qualifies risk/quality but never vetoes a valid 15m/3m setup by itself',
@@ -194,6 +205,10 @@ function evaluate(frame,position=null,previousEvaluation=null){
       priceBehaviorShadow:{decisionImpact:false,version:priceBehaviorShadow.VERSION,alwaysOn:true,
         signalMemory:['3m','15m'],tickerDecisionImpact:false,pmDecisionImpact:false,
         semantic:'continuous study of price effort/yield and conversion in relation to remembered native signal sequence; observation only'},
+      admissionCounterfactualShadow:{decisionImpact:false,version:admissionCounterfactualShadow.VERSION,
+        qualification:['PRICE_BEHAVIOR_INTERESTING','WAVE_MEMORY_ALIGNED','MCB_CANDIDATE_SAME_DIRECTION','PM3_PM5_ALIGNED','EFF3_GTE_25PCT','DATA_OK'],
+        tracks:['BLOCKERS','MFE_MAE','PLUS220_BEFORE_MINUS180','BOUNDARY_CROSS','LIVE3_CONTINUATION','CONFIRMED3_CONTINUATION','STRUCTURAL3_ALIGNMENT'],
+        semantic:'shadow-only blocked-opportunity laboratory; never weakens or bypasses active admission gates'},
       live15AcceptanceShadow:{decisionImpact:false,version:live15AcceptanceShadow.VERSION,
         entryPolicy:'LIVE15_MAY_BE_TREATED_AS_VALIDATED_ONLY_WHEN_OTHER_ENTRY_EVIDENCE_IS_READY',
         exitPolicy:'LIVE15_ALONE_IS_MEASURED_AS_HYPOTHETICAL_EXIT_AUTHORITY_ONLY',

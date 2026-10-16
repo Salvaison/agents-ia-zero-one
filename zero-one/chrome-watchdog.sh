@@ -18,6 +18,16 @@ CHROME_HOME="/var/lib/tradingview"
 USER_DATA_DIR="${CHROME_HOME}/ChromeDebug"
 CHROME_BIN="/usr/bin/google-chrome-stable"
 CHROME_LAUNCH_WAIT=15
+HEARTBEAT_3M="/run/boono-mcb-3m.heartbeat"
+HEARTBEAT_TAB2="/run/boono-mcb-tab2.heartbeat"
+HEARTBEAT_MAX_AGE=120
+
+heartbeat_age() {
+  local f="$1" now m
+  [ -f "$f" ] || { echo 999999; return; }
+  now=$(date +%s); m=$(stat -c %Y "$f" 2>/dev/null || echo 0); echo $((now-m))
+}
+heartbeat_fresh() { [ "$(heartbeat_age "$1")" -le "$HEARTBEAT_MAX_AGE" ]; }
 
 TV_URL_3M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=OKX%3ABTCUSDT.P%26interval=3"
 TV_URL_15M="https://www.tradingview.com/chart/2AqpEMfD/?symbol=OKX%3ABTCUSDT.P%26interval=15"
@@ -72,8 +82,41 @@ HAS_15M=$(echo "$HEALTH" | grep -o "2AqpEMfD[^\"]*interval=15" | wc -l)
 HAS_TA=$(echo "$HEALTH" | grep -o "qljTf3vu" | wc -l)
 
 if [ "$HAS_3M" -ge 1 ] && [ "$HAS_15M" -ge 1 ] && [ "$HAS_TA" -ge 1 ]; then
-  log "OK — 3 onglets actifs (3m, 15m, TA)"
-  exit 0
+  # During chrome-recycle this helper is used only to rebuild tabs; the
+  # recycle script itself restarts collectors and validates heartbeats.
+  if [ -n "$RECYCLE" ]; then
+    log "OK — 3 onglets actifs (3m, 15m, TA) · validation collecteurs déléguée au recycle"
+    exit 0
+  fi
+  AGE3=$(heartbeat_age "$HEARTBEAT_3M"); AGET=$(heartbeat_age "$HEARTBEAT_TAB2")
+  if heartbeat_fresh "$HEARTBEAT_3M" && heartbeat_fresh "$HEARTBEAT_TAB2"; then
+    log "OK — onglets + collecteurs vivants (heartbeat 3m=${AGE3}s tab2=${AGET}s)"
+    exit 0
+  fi
+  log "DATA STALE — onglets présents mais heartbeat 3m=${AGE3}s tab2=${AGET}s"
+  if ! heartbeat_fresh "$HEARTBEAT_3M"; then pm2 restart collecteur-3m >/dev/null 2>&1 || true; fi
+  if ! heartbeat_fresh "$HEARTBEAT_TAB2"; then pm2 restart collecteur-tab2 >/dev/null 2>&1 || true; fi
+  sleep 20
+  AGE3=$(heartbeat_age "$HEARTBEAT_3M"); AGET=$(heartbeat_age "$HEARTBEAT_TAB2")
+  if heartbeat_fresh "$HEARTBEAT_3M" && heartbeat_fresh "$HEARTBEAT_TAB2"; then
+    log "RECOVERED — collector restart restored heartbeats (3m=${AGE3}s tab2=${AGET}s)"
+    exit 0
+  fi
+  log "DATA STILL STALE — recycling Chrome because collector restart did not restore flow"
+  pkill -9 -f "remote-debugging-port=${CDP_PORT}" 2>/dev/null || true
+  sleep 2
+  launch_chrome
+  sleep "${CHROME_LAUNCH_WAIT}"
+  pm2 restart collecteur-3m >/dev/null 2>&1 || true
+  pm2 restart collecteur-tab2 >/dev/null 2>&1 || true
+  sleep 25
+  AGE3=$(heartbeat_age "$HEARTBEAT_3M"); AGET=$(heartbeat_age "$HEARTBEAT_TAB2")
+  if heartbeat_fresh "$HEARTBEAT_3M" && heartbeat_fresh "$HEARTBEAT_TAB2"; then
+    log "RECOVERED — Chrome + collectors restored real data flow (3m=${AGE3}s tab2=${AGET}s)"
+    exit 0
+  fi
+  log "FATAL DATA STALE — heartbeats remain stale after Chrome recovery (3m=${AGE3}s tab2=${AGET}s)"
+  exit 1
 fi
 
 log "Onglets : 3m=${HAS_3M} 15m=${HAS_15M} TA=${HAS_TA} — ouverture des manquants"

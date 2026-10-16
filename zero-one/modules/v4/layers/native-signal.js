@@ -87,6 +87,7 @@ function evaluate(frame){
 
   const latest=e15[e15.length-1]||null;
   const signalMemory=signalSequenceMemory(e3,e15,now);
+  const live3=liveEventsFromTf(tfs['3m'],now);
   const live15=liveEventsFromTf(tfs['15m'],now);
   const latest1h=e1h[e1h.length-1]||null;
   const last1hUp=e1h.slice().reverse().find(e=>e.type==='UP')||null;
@@ -151,6 +152,7 @@ function evaluate(frame){
   return {
     latest:decorate(latest,now),
     signalSequenceMemory:signalMemory,
+    live3,
     live15,
     lastUp:decorate(lastUp,now),
     lastDn:decorate(lastDn,now),

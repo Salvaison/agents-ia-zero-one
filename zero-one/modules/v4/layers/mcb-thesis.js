@@ -41,6 +41,9 @@ function transition(candidate,mode,c,mcb,q,reason){
   };
 }
 function evaluate(mcb){
+  if(mcb&&mcb.dataQuality&&mcb.dataQuality.fifteenMinute&&mcb.dataQuality.fifteenMinute.ready===false){
+    return {state:'UNCLEAR',direction:null,candidateDirection:null,reason:'DATA_DEGRADED_15M: fresh 15m MCB authority unavailable',authority:'MCB_ONLY',actionable:false,dataQuality:mcb.dataQuality};
+  }
   const c=mcb&&mcb.currentLobe||null;
   if(!c)return {state:'UNCLEAR',direction:null,candidateDirection:null,reason:'MCB 15m current lobe unavailable',authority:'MCB_ONLY',actionable:false};
 

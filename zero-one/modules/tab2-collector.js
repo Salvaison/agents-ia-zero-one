@@ -59,6 +59,9 @@ const SWITCH_LEAD_SEC    = 90;      // switch to a TF if it closes within 90s
 const POLL_INTERVAL_MS   = 5_000;   // scheduler tick
 const WS_TIMEOUT_MS      = 90_000;  // reload if no WS frames for 90s
 const CDP_CMD_TIMEOUT    = 12_000;
+const HEARTBEAT_PATH     = '/run/boono-mcb-tab2.heartbeat';
+let lastHeartbeatWriteAt = 0;
+function writeHeartbeat(tf){const now=Date.now();if(now-lastHeartbeatWriteAt<5000)return;lastHeartbeatWriteAt=now;try{writeFileSync(HEARTBEAT_PATH,JSON.stringify({ts:now,pid:process.pid,tf:tf||null})+'\n','utf8');}catch{}}
 
 // ── TF schedule (priority order: index 0 = highest) ──────────────────────────
 const TF_SCHEDULE = [
@@ -648,6 +651,7 @@ async function runSession() {
       }
       wsMap.set(requestId, url);
       lastWsActivityAt = Date.now();
+      writeHeartbeat(currentTfCode);
       log(`WS open  [${requestId.slice(-6)}]`);
     }
   });
@@ -661,6 +665,7 @@ async function runSession() {
   Network.webSocketFrameReceived(({ requestId, response }) => {
     if (!wsMap.has(requestId) || !activeDetector) return;
     lastWsActivityAt = Date.now();
+    writeHeartbeat(currentTfCode);
 
     for (const msg of parseTvFrames(response?.payloadData ?? '')) {
       const type = msg?.m;

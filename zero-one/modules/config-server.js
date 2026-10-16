@@ -58,6 +58,21 @@ const TRADES_V3_ARCHIVE_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-v
 const BOONO_STATE_PATH = path.join(__dirname, '../data/moteur-boono-state.json');
 const BOONO_HISTORY_PATH = path.join(__dirname, '../data/moteur-boono-history.json');
 const AUDIT_HISTORY_PATH = path.join(__dirname, '../data/audit-history.json');
+const SHADOWS_CACHE_TTL_MS = 90000;
+let shadowsResponseCache={at:0,payload:null};
+function shadowsCurrentFromEval(latest,tpLatest=null){
+  latest=latest||{};
+  return {
+    priceBehavior:latest.priceBehaviorShadow||null,
+    continuationReentry:latest.continuationReentryShadow||null,
+    structuralHandoff:latest.structuralHandoff||null,
+    live15Acceptance:latest.live15AcceptanceShadow||null,
+    admissionCounterfactual:latest.admissionCounterfactualShadow||null,
+    dataQuality:latest.dataQuality||latest.mcb&&latest.mcb.dataQuality||null,
+    mfTemporal:latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
+    tpOptimization:tpLatest
+  };
+}
 const WAVE_REPLAY_PATH = path.join(__dirname, '../data/replays/wave-replay-2026-10-02-six-losses.json');
 const WAVE_MCB_DIR = '/root/agents-ia-zero-one/data/mcb-live';
 
@@ -424,14 +439,38 @@ app.get('/api/trades', requireAuth, (req, res) => {
 app.get('/api/shadows', requireAuth, (req, res) => {
   try {
     const EVAL_LIMIT=360;
-    let evals=[];
-    try { evals=readRecentNdjson(TRADES_V2_EVAL_PATH,EVAL_LIMIT); } catch (_) {}
-    evals=(Array.isArray(evals)?evals:[]).filter(x=>x&&x.module==='day');
-
     let state={};
     try {
       if(fs.existsSync(TRADES_V2_STATE_PATH))state=JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH,'utf8'));
     } catch (_) {}
+
+    const cacheAge=Date.now()-Number(shadowsResponseCache.at||0);
+    if(shadowsResponseCache.payload&&cacheAge<SHADOWS_CACHE_TTL_MS){
+      const cached=shadowsResponseCache.payload;
+      const latestLive=state.lastEvaluation||{};
+      const payload={...cached,
+        version:latestLive.version||state.version||cached.version||null,
+        generatedAt:new Date().toISOString(),
+        current:shadowsCurrentFromEval(latestLive,cached.current&&cached.current.tpOptimization||null),
+        cache:{hit:true,ageMs:cacheAge,ttlMs:SHADOWS_CACHE_TTL_MS}
+      };
+      res.set('Cache-Control','no-store');
+      return res.json(payload);
+    }
+
+    let evalsAll=[];
+    try { evalsAll=readRecentNdjson(TRADES_V2_EVAL_PATH,EVAL_LIMIT); } catch (_) {}
+    evalsAll=(Array.isArray(evalsAll)?evalsAll:[]).filter(x=>x&&x.module==='day');
+    function shadowEvalDataDegraded(x){
+      const dq=x&&x.dataQuality||x&&x.mcb&&x.mcb.dataQuality||null;
+      if(dq&&dq.degraded)return true;
+      const mt=Number(x&&x.marketTimestamp);
+      const cur=x&&x.mcb&&x.mcb.nested3m&&x.mcb.nested3m.currentTimestamp;
+      const ct=cur?Date.parse(cur):NaN;
+      return Number.isFinite(mt)&&Number.isFinite(ct)&&mt-ct>10*60000;
+    }
+    const excludedDataDegraded=evalsAll.filter(shadowEvalDataDegraded);
+    const evals=evalsAll.filter(x=>!shadowEvalDataDegraded(x));
 
     let history=[];
     try {
@@ -441,7 +480,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       }
     } catch (_) {}
 
-    const latest=evals.length?evals[evals.length-1]:(state.lastEvaluation||{});
+    const latest=evalsAll.length?evalsAll[evalsAll.length-1]:(state.lastEvaluation||{});
     const firstTs=evals.length?Date.parse(evals[0].ts||''):NaN;
     const lastTs=evals.length?Date.parse(evals[evals.length-1].ts||''):NaN;
     const windowMinutes=Number.isFinite(firstTs)&&Number.isFinite(lastTs)?Math.max(0,(lastTs-firstTs)/60000):null;
@@ -810,6 +849,28 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       x.direction,'TP'
     ));
 
+    const admissionShadow=latest&&latest.admissionCounterfactualShadow||null;
+    const admissionEpisodes=[
+      ...((admissionShadow&&Array.isArray(admissionShadow.completed))?admissionShadow.completed:[]),
+      ...(admissionShadow&&admissionShadow.activeEpisode?[admissionShadow.activeEpisode]:[])
+    ];
+    const admissionOcc=admissionEpisodes.map(ep=>occ(
+      ep.triggerTs,ep.triggerPrice,
+      'ADMISSION '+String(ep.direction||'—').toUpperCase()+' · '+String((ep.initialBlockers||[]).join(' + ')||'—'),
+      'MFE '+Number(ep.maxFavorableUsd||0).toFixed(1)+'$ · MAE '+Number(ep.maxAdverseUsd||0).toFixed(1)+'$'+
+        (ep.success220BeforeMinus180===true?' · +220 avant -180':'')+
+        (ep.success220BeforeMinus180===false?' · -180 avant +220':'')+
+        (ep.liveToConfirmed3Minutes!==null&&ep.liveToConfirmed3Minutes!==undefined?' · E3 live→confirmé '+Number(ep.liveToConfirmed3Minutes).toFixed(1)+'m':'')+
+        (ep.liveToStructural3Minutes!==null&&ep.liveToStructural3Minutes!==undefined?' · live→structure '+Number(ep.liveToStructural3Minutes).toFixed(1)+'m':'')+
+        (ep.boundaryCrossedAt?' · boundary franchie':'')+
+        (ep.resolution?' · '+ep.resolution:''),
+      ep.direction,'ADMISSION'
+    ));
+    const admissionByGate={};
+    ['LOW_EDGE','WAIT_SYNC','SETUP_LATE','MF_MEMORY','MF_1H','MF_3M','BOUNDARY','UP3_CLOSE_SHORT','CAMPAIGN_RETRY','THESIS_CONSUMED'].forEach(g=>{
+      admissionByGate[g]=admissionOcc.filter((_,i)=>(admissionEpisodes[i]&&admissionEpisodes[i].initialBlockers||[]).includes(g));
+    });
+
     const occurrences={
       price_all:priceOcc,
       price_wave:priceOcc.filter((_,i)=>pe[i]&&pe[i].waveEstablished&&pe[i].waveAligned),
@@ -839,6 +900,14 @@ app.get('/api/shadows', requireAuth, (req, res) => {
         const src=live15ResolvedActions.flatMap(r=>r.exitHypothesis?[r.exitHypothesis]:[])[i];
         return src&&src.avoidedAdverseReference;
       }),
+      admission_all:admissionOcc,
+      admission_success220:admissionOcc.filter((_,i)=>admissionEpisodes[i]&&admissionEpisodes[i].success220BeforeMinus180===true),
+      admission_live3:admissionOcc.filter((_,i)=>admissionEpisodes[i]&&admissionEpisodes[i].live3ContinuationAt),
+      admission_LOW_EDGE:admissionByGate.LOW_EDGE||[],
+      admission_WAIT_SYNC:admissionByGate.WAIT_SYNC||[],
+      admission_SETUP_LATE:admissionByGate.SETUP_LATE||[],
+      admission_MF_MEMORY:[...(admissionByGate.MF_MEMORY||[]),...(admissionByGate.MF_1H||[]),...(admissionByGate.MF_3M||[])],
+      admission_BOUNDARY:admissionByGate.BOUNDARY||[],
       tp_all:tpOcc,
       tp_improved:tpOcc.filter((_,i)=>tpTrades[i]&&Number(tpTrades[i].deltaVsHoldUsd)>0.005),
       tp_equal:tpOcc.filter((_,i)=>tpTrades[i]&&Math.abs(Number(tpTrades[i].deltaVsHoldUsd))<=0.005)
@@ -851,25 +920,27 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       }).slice(0,120);
     });
 
-    const current={
-      priceBehavior:latest&&latest.priceBehaviorShadow||null,
-      continuationReentry:latest&&latest.continuationReentryShadow||null,
-      structuralHandoff:latest&&latest.structuralHandoff||null,
-      live15Acceptance:latest&&latest.live15AcceptanceShadow||null,
-      mfTemporal:latest&&latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
-      tpOptimization:tpStats.latest
+    const current=shadowsCurrentFromEval(latest,tpStats.latest);
+    const admissionStats={
+      summary:admissionShadow&&admissionShadow.summary||{},
+      episodes:admissionEpisodes.length,
+      success220BeforeMinus180:admissionEpisodes.filter(x=>x&&x.success220BeforeMinus180===true).length,
+      live3Continuation:admissionEpisodes.filter(x=>x&&x.live3ContinuationAt).length,
+      active:admissionShadow&&admissionShadow.activeEpisode||null
     };
-
-    res.set('Cache-Control','no-store');
-    res.json({
+    const payload={
       version:latest&&latest.version||state.version||null,
       generatedAt:new Date().toISOString(),
-      sampleWindow:{evaluations:evals.length,minutes:windowMinutes,firstTs:evals[0]&&evals[0].ts||null,lastTs:evals[evals.length-1]&&evals[evals.length-1].ts||null},
+      sampleWindow:{evaluations:evals.length,excludedDataDegraded:excludedDataDegraded.length,minutes:windowMinutes,firstTs:evals[0]&&evals[0].ts||null,lastTs:evals[evals.length-1]&&evals[evals.length-1].ts||null},
       current,
-      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,live15Acceptance:live15Stats,tpOptimization:tpStats},
+      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,live15Acceptance:live15Stats,admissionCounterfactual:admissionStats,tpOptimization:tpStats},
       occurrences,
-      journal:journal.slice(-24).reverse()
-    });
+      journal:journal.slice(-24).reverse(),
+      cache:{hit:false,ageMs:0,ttlMs:SHADOWS_CACHE_TTL_MS}
+    };
+    shadowsResponseCache={at:Date.now(),payload};
+    res.set('Cache-Control','no-store');
+    res.json(payload);
   } catch (e) {
     res.status(500).json({error:'shadows indisponibles',detail:e.message});
   }
@@ -4680,7 +4751,9 @@ function renderShadows(data){
   if(win){
     const mins=Number(w.minutes);
     win.textContent=(Number.isFinite(mins)?'fenêtre '+(mins>=60?(mins/60).toFixed(1)+' h':mins.toFixed(0)+' min'):'fenêtre —')+
-      ' · '+Number(w.evaluations||0)+' évaluations · '+(data.version||'—');
+      ' · '+Number(w.evaluations||0)+' évaluations'+
+      (Number(w.excludedDataDegraded||0)?' · '+Number(w.excludedDataDegraded)+' exclues DATA_DEGRADED':'')+
+      ' · '+(data.version||'—');
   }
 
   const pb=cur.priceBehavior||{};
@@ -4734,6 +4807,32 @@ function renderShadows(data){
     ],false
   );
 
+  const dq=cur.dataQuality||{},dq3=dq.threeMinute||{},dq15=dq.fifteenMinute||{};
+  const dataQualityCard=shadowCard(
+    'DATA QUALITY',dq.degraded?'DATA_DEGRADED':'DATA OK',dq.degraded?'warn':'active',
+    dq.state||'—',
+    dq.degraded?'nouvelle admission suspendue jusqu’au retour du MCB':'MCB frais · autorité normale',
+    [
+      ['3m',String(dq3.status||'—')+' · live '+shadowFmt(Number(dq3.liveUpdateAgeMs)/1000,0)+'s · conf '+shadowFmt(Number(dq3.confirmedUpdateAgeMs)/1000,0)+'s'],
+      ['15m',String(dq15.status||'—')+' · live '+shadowFmt(Number(dq15.liveUpdateAgeMs)/1000,0)+'s · conf '+shadowFmt(Number(dq15.confirmedUpdateAgeMs)/1000,0)+'s'],
+      ['impact',dq.degraded?'NO NEW ENTRY · hard risk reste actif':'aucun']
+    ],!!(!dq.degraded)
+  );
+
+  const ac=cur.admissionCounterfactual||{},ae=ac.activeEpisode||{};
+  const admissionCard=shadowCard(
+    'ADMISSION COUNTERFACTUAL','SHADOW PUR','',
+    (ac.state||'—')+(ae.direction?' · '+String(ae.direction).toUpperCase():''),
+    ae.initialBlockers&&ae.initialBlockers.length?ae.initialBlockers.join(' + '):'aucune fenêtre cohérente bloquée actuellement',
+    [
+      ['MFE / MAE',ae.triggerTs?shadowMoney(ae.maxFavorableUsd,1)+' / '+shadowMoney(ae.maxAdverseUsd,1):'—'],
+      ['+220 avant -180',ae.success220BeforeMinus180===true?'OUI':ae.success220BeforeMinus180===false?'NON':'—'],
+      ['E3 live → confirmé',ae.liveToConfirmed3Minutes!==null&&ae.liveToConfirmed3Minutes!==undefined?shadowFmt(ae.liveToConfirmed3Minutes,1)+' min':'—'],
+      ['E3 live → structure',ae.liveToStructural3Minutes!==null&&ae.liveToStructural3Minutes!==undefined?shadowFmt(ae.liveToStructural3Minutes,1)+' min':'—'],
+      ['boundary',ae.boundary?(String(ae.boundary.kind||'—')+' '+shadowFmt(ae.boundary.distanceAbsUsd,0)+'$'+(ae.boundaryCrossedAt?' · FRANCHIE':'')):'—']
+    ],false
+  );
+
   const sh=cur.structuralHandoff||{},se=sh.evidence||{};
   const handoffCard=shadowCard(
     'STRUCTURAL HANDOFF','SHADOW PUR','',
@@ -4778,7 +4877,7 @@ function renderShadows(data){
     ],true
   );
 
-  const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},ts=stats.tpOptimization||{};
+  const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},acs=stats.admissionCounterfactual||{},asum=acs.summary||{},ts=stats.tpOptimization||{};
   const statHtml='<div class="shadow-section-title">PREMIÈRES STATISTIQUES · FENÊTRE RÉCENTE</div>'+
     '<div class="shadow-stat-grid">'+
       shadowStat(ps.episodes||0,'épisodes prix intéressants','price_all')+
@@ -4789,6 +4888,19 @@ function renderShadows(data){
       shadowStat(cs.reached220||0,'re-entry MFE ≥ 220 $','reentry_mfe220')+
       shadowStat(cs.churnRisk||0,'re-entry churnRisk','reentry_churn')+
       shadowStat(hs.reentryEligible||0,'handoff reentryEligible','handoff_reentry')+
+    '</div>';
+
+  function gatePair(g){const x=asum[g]||{};return String(x.episodes||0)+' / '+String(x.success220BeforeMinus180||0);}
+  const admissionStatsHtml='<div class="shadow-section-title">ADMISSION COUNTERFACTUAL · ÉPISODES / +220 AVANT −180</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(acs.episodes||0,'fenêtres cohérentes bloquées','admission_all')+
+      shadowStat(acs.success220BeforeMinus180||0,'succès +220 avant −180','admission_success220')+
+      shadowStat(acs.live3Continuation||0,'avec E3 live continuation','admission_live3')+
+      shadowStat(gatePair('LOW_EDGE'),'LOW_EDGE · épisodes / succès','admission_LOW_EDGE')+
+      shadowStat(gatePair('WAIT_SYNC'),'WAIT_SYNC · épisodes / succès','admission_WAIT_SYNC')+
+      shadowStat(gatePair('SETUP_LATE'),'SETUP_LATE · épisodes / succès','admission_SETUP_LATE')+
+      shadowStat(String((asum.MF_MEMORY&&asum.MF_MEMORY.episodes||0)+(asum.MF_1H&&asum.MF_1H.episodes||0)+(asum.MF_3M&&asum.MF_3M.episodes||0))+' / '+String((asum.MF_MEMORY&&asum.MF_MEMORY.success220BeforeMinus180||0)+(asum.MF_1H&&asum.MF_1H.success220BeforeMinus180||0)+(asum.MF_3M&&asum.MF_3M.success220BeforeMinus180||0)),'MF MEMORY · épisodes / succès','admission_MF_MEMORY')+
+      shadowStat(gatePair('BOUNDARY'),'BOUNDARY · épisodes / succès','admission_BOUNDARY')+
     '</div>';
 
   const live15Reliability='<div class="shadow-section-title">LIVE15 · LATENCE / REPAINT · JUSQU’À 24 H</div>'+
@@ -4842,8 +4954,8 @@ function renderShadows(data){
 
   root.innerHTML=
     '<div class="shadow-section-title">ÉTAT LIVE</div>'+
-    '<div class="shadow-grid">'+priceCard+continuationCard+live15Card+handoffCard+tpCard+mfCard+'</div>'+
-    statHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
+    '<div class="shadow-grid">'+dataQualityCard+priceCard+continuationCard+live15Card+admissionCard+handoffCard+tpCard+mfCard+'</div>'+
+    statHtml+admissionStatsHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
   if(shadowSelectedOccurrenceKey){
     renderShadowOccurrences(data,shadowSelectedOccurrenceKey,shadowSelectedOccurrenceLabel,false,null);
   }

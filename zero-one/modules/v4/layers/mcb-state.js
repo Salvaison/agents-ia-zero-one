@@ -203,7 +203,8 @@ function currentLobeState(current,prevCompleted,completedDecorated,marketPrice){
     note:'80 mesure la qualite de la relation entre deux E15 opposes; il ne donne ni ne retire une direction'
   };
 }
-function nestedState(src){
+function nestedState(src,quality=null){
+  if(quality&&quality.ready===false)return {available:false,dataQuality:quality,structuralDirection:null,structuralState:null,reason:'DATA_DEGRADED_3M'};
   const series=combined(src); const parts=splitLobes(series); const c=parts.current;
   if(!c)return {available:false};
   const cur=series[series.length-1],prev=series[series.length-2];
@@ -224,7 +225,7 @@ function nestedState(src){
     structuralTrajectory:structural,
     note:'3m lobeSign = position de la vague; structuralDirection E3→E3 = trajet causal persistant; turningDirection reste tactique'};
 }
-function evaluate(frame,previousMcb=null){
+function evaluate(frame,previousMcb=null,dataQuality=null){
   const tfs=frame.sources&&frame.sources.mcb&&frame.sources.mcb.tfs||{};
   const s15=confirmedSeries(tfs['15m']);
   const parts=splitLobes(s15);
@@ -260,7 +261,8 @@ function evaluate(frame,previousMcb=null){
     lastMajorQualitativePair:lastMajor,
     latestCompletedRelation:latestRel,
     structural15m:structural15,
-    nested3m:nestedState(tfs['3m']),
+    nested3m:nestedState(tfs['3m'],dataQuality&&dataQuality.threeMinute||null),
+    dataQuality:dataQuality||null,
     qualitativeReferences:{
       majorPairSpanLbw:MAJOR_PAIR_SPAN_LBW,
       economicMoveMinimumUsd:ECONOMIC_MOVE_MIN_USD, economicMovePreferredUsd:ECONOMIC_MOVE_PREFERRED_USD, gainRetentionReferenceUsd:GAIN_RETENTION_REFERENCE_USD,

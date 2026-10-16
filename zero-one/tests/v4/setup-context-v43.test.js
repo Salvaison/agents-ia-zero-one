@@ -79,6 +79,25 @@ const base=1_810_000_000_000;
   assert.equal(fresh.setupTs,t);
 }
 
+// A same causal OBSERVE state with setupTs=null must open a fresh causal setup now, never at epoch 0.
+{
+  const t=base+11_000_000;
+  const frame={market:{timestamp:t,price:1000}};
+  const mcb={currentLobe:{startTs:t-600000,extremeTs:t-300000,maturity:'MATURE_REVERSING'},
+    nested3m:{available:true,startTs:t-180000,extremeTs:t-120000,lobeSign:1,turningDirection:null}};
+  const bt={candidateDirection:'long',mode:'REVERSAL_FORMING'};
+  const bg={primaryRelation:'WITH_BACKGROUND'};
+  const open={state:'OPEN_PATH',admissionBlocked:false};
+  const active={state:'ACTIVE',admissionBlocked:false};
+  const key=['long',t-600000,t-180000,0].join('|');
+  const previous={status:'OBSERVE',setupKey:key,setupId:null,setupTs:null,createdAt:null};
+  const fresh=setupLayer.evaluate(frame,bt,mcb,bg,open,active,null,previous,null,null);
+  assert.equal(fresh.status,'SETUP');
+  assert.equal(fresh.setupTs,t);
+  assert.notEqual(fresh.setupTs,0);
+  assert.ok(String(fresh.setupId).endsWith('@'+t));
+}
+
 // PM proof after setup ignores pre-setup movement.
 {
   const rows=[];let price=1000;

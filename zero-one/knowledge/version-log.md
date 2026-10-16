@@ -894,3 +894,17 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Ajout d'un bouton × explicite dans l'en-tête du volet.
 - Le rafraîchissement 30 s conserve la tuile sélectionnée et remet le volet au bon endroit sans scroll forcé.
 - Aucun impact trading.
+
+## 2026-10-16 — V4.10.5 Data Integrity + Admission Counterfactual
+- Correction causale setupTs=null -> 0 ; nouvelle setupTs uniquement avec timestamp précédent réellement valide.
+- Nouveau mcb-data-quality-v0.1 : 3m/15m stale suspendent les nouvelles admissions sans désactiver le hard risk.
+- nested3m perd son autorité structurelle quand le 3m est stale ; thèse 15m indisponible si le 15m est stale.
+- real-time-collector et tab2-collector écrivent désormais des heartbeats WebSocket réels dans /run.
+- chrome-watchdog valide onglets + heartbeats ; redémarre collecteur puis Chrome si nécessaire.
+- chrome-recycle relance les collecteurs immédiatement et attend la preuve heartbeat.
+- Capture BOONO-TV déplacée du target collecteur 3m vers le layout TA qljTf3vu exclusivement ; captureIsolation=TA_ONLY.
+- native-signal expose live3 en observation uniquement.
+- Nouveau Admission Counterfactual Shadow : gates, MFE/MAE, +220/-180, boundary cross, E3 live/confirmé/structure et latences.
+- SHADOWS exclut les frames DATA_DEGRADED, affiche DATA QUALITY + ADMISSION COUNTERFACTUAL et leurs occurrences.
+- Cache SHADOWS 90 s pour les calculs lourds ; cartes live relues depuis l'état courant.
+- Aucun veto stratégique desserré dans V4.10.5.

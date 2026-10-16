@@ -69,6 +69,9 @@ const RECONNECT_DELAY_MS = 5_000;
 const SETTLE_DELAY_MS    = 35_000;  // wait after close detection for EMA settle
 const LIVE_INTERVAL_MS   = 15_000; // intra-bar snapshot interval (11/08/2026)
 const LIVE_CSV_PATH      = CSV_PATH.replace(/\.csv$/, '_live.csv');
+const HEARTBEAT_PATH      = '/run/boono-mcb-3m.heartbeat';
+let lastHeartbeatWriteAt = 0;
+function writeHeartbeat(){const now=Date.now();if(now-lastHeartbeatWriteAt<5000)return;lastHeartbeatWriteAt=now;try{writeFileSync(HEARTBEAT_PATH,JSON.stringify({ts:now,pid:process.pid,tf:EXPECTED_TF||null})+'\n','utf8');}catch{}}
 const SENTINEL_THRESHOLD = 1e90;
 
 // Stale threshold = 2 full bar durations, minimum 5 min.
@@ -691,6 +694,7 @@ async function runSession(detector) {
   Network.webSocketFrameReceived(({ requestId, response }) => {
     if (!wsMap.has(requestId)) return;
     lastWsActivityAt = Date.now();
+    writeHeartbeat();
     for (const msg of parseTvFrames(response?.payloadData ?? '')) {
       const type = msg?.m;
       if (type !== 'du' && type !== 'timescale_update') continue;

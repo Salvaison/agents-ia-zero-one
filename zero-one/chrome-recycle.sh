@@ -9,14 +9,24 @@ pkill -TERM -u tradingview -f "remote-debugging-port=9222" 2>/dev/null || true
 sleep 5
 pkill -KILL -u tradingview -f "remote-debugging-port=9222" 2>/dev/null || true
 RECYCLE=1 bash chrome-watchdog.sh
-sleep 25
-RECYCLE=1 bash chrome-watchdog.sh
-sleep 12
-RECYCLE=1 bash chrome-watchdog.sh
-sleep 5
-pm2 restart collecteur-3m
-sleep 20
-pm2 restart collecteur-tab2
+# Once Chrome/tabs are back, reconnect both collectors immediately. The old
+# sequence waited nearly a minute and only checked tab presence, which allowed
+# a silent MCB freeze to survive the recycle.
+pm2 restart collecteur-3m >/dev/null 2>&1 || true
+pm2 restart collecteur-tab2 >/dev/null 2>&1 || true
+HB3=/run/boono-mcb-3m.heartbeat
+HBT=/run/boono-mcb-tab2.heartbeat
+fresh() { local f="$1" now m; [ -f "$f" ] || return 1; now=$(date +%s); m=$(stat -c %Y "$f" 2>/dev/null || echo 0); [ $((now-m)) -le 30 ]; }
+ok=0
+for _ in $(seq 1 18); do
+  if fresh "$HB3" && fresh "$HBT"; then ok=1; break; fi
+  sleep 5
+done
+if [ "$ok" -eq 1 ]; then
+  echo "[$(date '+%F %T')] collecteurs confirmes par heartbeat"
+else
+  echo "[$(date '+%F %T')] ERREUR: heartbeats absents apres recycle — le watchdog normal prendra la releve"
+fi
 echo "[$(date '+%F %T')] termine"
 free -h
 rm -f /tmp/chrome-recycle.lock
