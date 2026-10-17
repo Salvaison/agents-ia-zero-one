@@ -22,8 +22,9 @@ const continuationReentryShadow=require('../experiments/continuation-reentry-sha
 const priceBehaviorShadow=require('../experiments/price-behavior-shadow');
 const live15AcceptanceShadow=require('../experiments/live15-acceptance-shadow');
 const admissionCounterfactualShadow=require('../experiments/admission-counterfactual-shadow');
+const elasticSyncShadow=require('../experiments/elastic-sync-shadow');
 
-const VERSION='v4.10.5-data-integrity-20261016';
+const VERSION='v4.10.7-local-retry-requalification-20261017';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;
@@ -118,12 +119,19 @@ function evaluate(frame,position=null,previousEvaluation=null){
     position,
     frame.entryControl||null,
     capGuard,
-    mfStructure
+    mfStructure,
+    translation,
+    priceBehavior
   );
 
   const admissionCounterfactual=admissionCounterfactualShadow.evaluate(
     frame,position,setup,entryBaseThesis,mcb,priceBehavior,native,mfStructure,room,quality,
     previousEvaluation&&previousEvaluation.admissionCounterfactualShadow||null
+  );
+
+  const elasticSync=elasticSyncShadow.evaluate(
+    frame,setup,entryBaseThesis,thesis,mcb,native,translation,priceBehavior,
+    previousEvaluation&&previousEvaluation.elasticSyncShadow||null
   );
 
   const entryThesis=setup&&setup.status==='SETUP'
@@ -169,6 +177,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     priceBehaviorShadow:priceBehavior,
     live15AcceptanceShadow:live15Acceptance,
     admissionCounterfactualShadow:admissionCounterfactual,
+    elasticSyncShadow:elasticSync,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -205,6 +214,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
       priceBehaviorShadow:{decisionImpact:false,version:priceBehaviorShadow.VERSION,alwaysOn:true,
         signalMemory:['3m','15m'],tickerDecisionImpact:false,pmDecisionImpact:false,
         semantic:'continuous study of price effort/yield and conversion in relation to remembered native signal sequence; observation only'},
+      elasticSyncShadow:{decisionImpact:false,version:elasticSyncShadow.VERSION,ordered:false,learnObservedOrder:true,tracks:['ACTUAL_EVENT_ORDER','PAIRWISE_LAGS','PRICE_CONSUMED','E3_RELAXATIONS','PLUS220_BEFORE_MINUS180']},
       admissionCounterfactualShadow:{decisionImpact:false,version:admissionCounterfactualShadow.VERSION,
         qualification:['PRICE_BEHAVIOR_INTERESTING','WAVE_MEMORY_ALIGNED','MCB_CANDIDATE_SAME_DIRECTION','PM3_PM5_ALIGNED','EFF3_GTE_25PCT','DATA_OK'],
         tracks:['BLOCKERS','MFE_MAE','PLUS220_BEFORE_MINUS180','BOUNDARY_CROSS','LIVE3_CONTINUATION','CONFIRMED3_CONTINUATION','STRUCTURAL3_ALIGNMENT'],
@@ -227,7 +237,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
       reinforced3mUpOpenShortImpact:'RESPIRATION_ALERT_ONLY',
       setupTiming:{states:['SETUP_OPEN','SETUP_LATE','SETUP_EXPIRED'],decisionImpact:'SETUP_LATE_CLOSES_NEW_ENTRY_WINDOW',lateDefinition:{candidateSide3mLobeMinAgeMinutes:12,maxRecoveryFraction:.12},semantic:'late is cycle-based, not price-distance based; once late, the same setup cannot reopen'},
       sameSetupCannotBeReusedUntilMcbSetupKeyChanges:true,
-      failed15mCampaignRetryRequiresNewAligned15mNativeEvent:true,
+      failedCampaignRetry:{decisionImpact:true,policy:'NEW_15M_EVENT_OR_POST_EXIT_LOCAL_REQUALIFICATION',oldReinforcedEventCannotResetByItself:true,localRequalificationRequires:['NEW_POST_EXIT_3M_STRUCTURE','3M_LOBE_ALIGNED','PM3_ALIGNED','PM5_ALIGNED','REGIME_EFFICIENCY','PRODUCTIVE_PRICE_BEHAVIOR']},
       threeMinuteCycleAloneCannotResetFailed15mCampaign:true,
       structuralBoundaryCanSuspendSetup:true,
       structuralBoundaryNeverChoosesDirection:true,

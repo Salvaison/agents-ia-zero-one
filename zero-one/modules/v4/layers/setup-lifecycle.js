@@ -102,7 +102,7 @@ function mfMemoryAdmission(candidate,mfStructure,mcb,nativeSignal){
     reason:'opposing slow MF memory may be challenged only after 30m+1h transfer and full 3m alignment; strong rolling PM still required before entry'};
 }
 
-function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,nativeSignal,previousSetup,position,entryControl,capitulationGuard=null,mfStructure=null){
+function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,nativeSignal,previousSetup,position,entryControl,capitulationGuard=null,mfStructure=null,rollingTranslation=null,priceBehavior=null){
   const candidate=baseThesis&&(baseThesis.candidateDirection||baseThesis.direction)||null;
   const c=mcb&&mcb.currentLobe||{};
   const n3=mcb&&mcb.nested3m||{};
@@ -203,9 +203,38 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   const nativeAfterExit=!!(
     nativeAligned&&Number.isFinite(lastExitTs)&&Number(latestNative.ts)>lastExitTs
   );
-  const campaignReset=reinforcedUpBypass||nativeAfterExit;
+
+  // V4.10.7: a failed 15m campaign may be retried without waiting for a new
+  // 15m native event only when genuinely NEW local evidence formed after the
+  // failed exit. An old reinforced event can still qualify the broader setup,
+  // but it can no longer reset a losing campaign by itself.
+  const lobe3=n3.lobeDirection||(Number(n3.lobeSign)>0?'long':Number(n3.lobeSign)<0?'short':null);
+  const structural3=n3.structuralDirection||null;
+  const structural3At=Number(n3.structuralConfirmedAt);
+  const freshStructural3AfterExit=!!(
+    Number.isFinite(lastExitTs)&&Number.isFinite(structural3At)&&structural3At>lastExitTs&&
+    structural3===candidate&&lobe3===candidate
+  );
+  const rh=rollingTranslation&&rollingTranslation.horizons||{};
+  const net3=Number(rh.net3mUsd),net5=Number(rh.net5mUsd),eff3=Number(rh.efficiency3m);
+  const pm3Aligned=Number.isFinite(net3)&&Math.abs(net3)>=10&&((candidate==='long'&&net3>0)||(candidate==='short'&&net3<0));
+  const pm5Aligned=Number.isFinite(net5)&&Math.abs(net5)>=10&&((candidate==='long'&&net5>0)||(candidate==='short'&&net5<0));
+  const lowEfficiencyRegime=!!(marketQuality&&['CHOP_SHADOW','LOW_EDGE_SHADOW'].includes(marketQuality.state));
+  const minRetryEfficiency3m=lowEfficiencyRegime?.375:.25;
+  const pmContinuityReady=pm3Aligned&&pm5Aligned&&Number.isFinite(eff3)&&eff3>=minRetryEfficiency3m;
+  const priceBehaviorReady=!!(priceBehavior&&priceBehavior.interesting&&priceBehavior.direction===candidate);
+  const localRetryRequalification={
+    ready:!!(lastCampaignLoss&&freshStructural3AfterExit&&pmContinuityReady&&priceBehaviorReady),
+    freshStructural3AfterExit,lobe3,structural3,structural3At,
+    pm3Aligned,pm5Aligned,net3mUsd:Number.isFinite(net3)?net3:null,net5mUsd:Number.isFinite(net5)?net5:null,
+    efficiency3m:Number.isFinite(eff3)?eff3:null,minEfficiency3m:minRetryEfficiency3m,
+    priceBehaviorReady,priceBehaviorState:priceBehavior&&priceBehavior.state||null,
+    semantic:'same-campaign retry may reopen on fresh post-exit 3m structure+lobe plus aligned PM3/PM5 and productive price behavior'
+  };
+  const campaignReset=!!(nativeAfterExit||localRetryRequalification.ready);
+  const campaignResetReason=nativeAfterExit?'NEW_15M_EVENT_AFTER_EXIT':localRetryRequalification.ready?'LOCAL_POST_EXIT_REQUALIFICATION':null;
   const campaignRetryBlocked=lastCampaignLoss&&!campaignReset;
-  if(campaignRetryBlocked)reasons.push('CAMPAIGN_RETRY_NEEDS_NEW_15M_EVENT_AFTER_FAILED_TRADE');
+  if(campaignRetryBlocked)reasons.push('CAMPAIGN_RETRY_NEEDS_NEW_15M_OR_LOCAL_REQUALIFICATION');
 
   const thesisConsumed=!!(lastConsumedSetupKey&&lastConsumedSetupKey===baseToken);
   if(thesisConsumed)reasons.push('THESIS_CONSUMED_WAIT_MCB_CHANGE');
@@ -222,7 +251,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       structuralRoom:structuralRoom&&structuralRoom.state||null,
       marketQuality:marketQuality&&marketQuality.state||null,
       thesisConsumed,structuralEventTs,lastExitTs,lastConsumedSetupKey,
-      campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,nativeAfterExit,campaignRetryBlocked,
+      campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked,
       capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
       pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
       reinforced3mShortClose,noNewShort:reinforced3mShortClose,
@@ -258,7 +287,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       structuralRoom:structuralRoom&&structuralRoom.state||null,
       marketQuality:marketQuality&&marketQuality.state||null,
       thesisConsumed:false,structuralEventTs,lastExitTs,lastConsumedSetupKey,
-      campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,nativeAfterExit,campaignRetryBlocked:false,
+      campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked:false,
       capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
       backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
       pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
@@ -277,7 +306,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
     structuralRoom:structuralRoom&&structuralRoom.state||null,
     marketQuality:marketQuality&&marketQuality.state||null,
     thesisConsumed:false,structuralEventTs,lastExitTs,lastConsumedSetupKey,
-    campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,nativeAfterExit,campaignRetryBlocked:false,
+    campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked:false,
     capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
     backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
     pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,

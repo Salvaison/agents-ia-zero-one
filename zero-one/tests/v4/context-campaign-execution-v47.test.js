@@ -44,7 +44,7 @@ function setupInputs(direction='long'){
   let s=setupLayer.evaluate(x.frame,x.thesis,x.mcb,{primaryRelation:'WITH_BACKGROUND'},x.room,x.quality,x.native,null,null,lastExit);
   assert.equal(s.status,'OBSERVE');
   assert.equal(s.campaignRetryBlocked,true);
-  assert.ok(s.reasons.includes('CAMPAIGN_RETRY_NEEDS_NEW_15M_EVENT_AFTER_FAILED_TRADE'));
+  assert.ok(s.reasons.includes('CAMPAIGN_RETRY_NEEDS_NEW_15M_OR_LOCAL_REQUALIFICATION'));
 
   // Changing only the 3m cycle still does not reset campaign memory.
   x.mcb.nested3m={...x.mcb.nested3m,startTs:base-60000,extremeTs:base-30000};

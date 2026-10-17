@@ -915,3 +915,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Il capture passivement la vue courante, quelle qu'elle soit, et enregistre la provenance : layout, URL, titre, résolution réelle, symbole réel.
 - `captureIsolation=TA_ONLY_PASSIVE`, `provenance=USER_TA_VIEW_UNMODIFIED`.
 - Les layouts collecteurs `2AqpEMfD` restent explicitement interdits à la capture.
+
+## 2026-10-17 — V4.10.7 Local Retry + Elastic Sync
+- ACTIVE: old reinforced UP no longer resets a losing campaign by itself.
+- ACTIVE: retry may re-arm on a new aligned 15m event after exit OR on fresh post-exit local requalification (new E3 structure + aligned 3m lobe + PM3/PM5 + regime efficiency + productive price behavior).
+- Replay: #131 remains blocked; #132 qualifies locally around 21:12 Paris.
+- SHADOW: elastic-sync-shadow-v0.2 records actual event order and lags without imposing a canonical sequence.

@@ -68,6 +68,7 @@ function shadowsCurrentFromEval(latest,tpLatest=null){
     structuralHandoff:latest.structuralHandoff||null,
     live15Acceptance:latest.live15AcceptanceShadow||null,
     admissionCounterfactual:latest.admissionCounterfactualShadow||null,
+    elasticSync:latest.elasticSyncShadow||null,
     dataQuality:latest.dataQuality||latest.mcb&&latest.mcb.dataQuality||null,
     mfTemporal:latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
     tpOptimization:tpLatest
@@ -921,6 +922,19 @@ app.get('/api/shadows', requireAuth, (req, res) => {
     });
 
     const current=shadowsCurrentFromEval(latest,tpStats.latest);
+    const elastic=latest&&latest.elasticSyncShadow||null;
+    const elasticEpisodes=[...((elastic&&Array.isArray(elastic.completed))?elastic.completed:[]),...(elastic&&elastic.activeEpisode?[elastic.activeEpisode]:[])];
+    const elasticOcc=elasticEpisodes.map(ep=>occ(
+      ep.startedAt,ep.startedPrice,
+      'ELASTIC '+String(ep.direction||'—').toUpperCase(),
+      String(ep.orderString||'—')+' · MFE '+Number(ep.maxFavorableUsd||0).toFixed(1)+'$ · MAE '+Number(ep.maxAdverseUsd||0).toFixed(1)+'$ · relax '+Number(ep.relaxationCount||0)+
+        (ep.success220BeforeMinus180===true?' · +220 avant -180':'')+(ep.resolution?' · '+ep.resolution:''),
+      ep.direction,'ELASTIC'
+    ));
+    occurrences.elastic_all=elasticOcc;
+    occurrences.elastic_success=elasticOcc.filter((_,i)=>elasticEpisodes[i]&&elasticEpisodes[i].success220BeforeMinus180===true);
+    occurrences.elastic_relax=elasticOcc.filter((_,i)=>elasticEpisodes[i]&&Number(elasticEpisodes[i].relaxationCount)>0);
+
     const admissionStats={
       summary:admissionShadow&&admissionShadow.summary||{},
       episodes:admissionEpisodes.length,
@@ -933,7 +947,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
       generatedAt:new Date().toISOString(),
       sampleWindow:{evaluations:evals.length,excludedDataDegraded:excludedDataDegraded.length,minutes:windowMinutes,firstTs:evals[0]&&evals[0].ts||null,lastTs:evals[evals.length-1]&&evals[evals.length-1].ts||null},
       current,
-      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,live15Acceptance:live15Stats,admissionCounterfactual:admissionStats,tpOptimization:tpStats},
+      stats:{priceBehavior:priceStats,continuationReentry:continuationStats,structuralHandoff:handoffStats,live15Acceptance:live15Stats,admissionCounterfactual:admissionStats,elasticSync:elastic&&elastic.summary||{episodes:0,success220BeforeMinus180:0,withRelaxation:0,orders:[]},tpOptimization:tpStats},
       occurrences,
       journal:journal.slice(-24).reverse(),
       cache:{hit:false,ageMs:0,ttlMs:SHADOWS_CACHE_TTL_MS}
@@ -4833,6 +4847,20 @@ function renderShadows(data){
     ],false
   );
 
+  const el=cur.elasticSync||{},ee=el.activeEpisode||{};
+  const elasticCard=shadowCard(
+    'ELASTIC SYNC','SHADOW PUR','',
+    (el.state||'—')+(ee.direction?' · '+String(ee.direction).toUpperCase():''),
+    ee.orderString?('ordre observé · '+ee.orderString):'aucun ordre canonique imposé',
+    [
+      ['événements',ee.orderSignature&&ee.orderSignature.length?String(ee.orderSignature.length):'—'],
+      ['MFE / MAE',ee.startedAt?shadowMoney(ee.maxFavorableUsd,1)+' / '+shadowMoney(ee.maxAdverseUsd,1):'—'],
+      ['relaxations E3',ee.startedAt?String(ee.relaxationCount||0):'—'],
+      ['+220 avant -180',ee.success220BeforeMinus180===true?'OUI':ee.success220BeforeMinus180===false?'NON':'—'],
+      ['ordre',ee.orderString||'en attente']
+    ],false
+  );
+
   const sh=cur.structuralHandoff||{},se=sh.evidence||{};
   const handoffCard=shadowCard(
     'STRUCTURAL HANDOFF','SHADOW PUR','',
@@ -4877,7 +4905,7 @@ function renderShadows(data){
     ],true
   );
 
-  const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},acs=stats.admissionCounterfactual||{},asum=acs.summary||{},ts=stats.tpOptimization||{};
+  const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},acs=stats.admissionCounterfactual||{},asum=acs.summary||{},els=stats.elasticSync||{},ts=stats.tpOptimization||{};
   const statHtml='<div class="shadow-section-title">PREMIÈRES STATISTIQUES · FENÊTRE RÉCENTE</div>'+
     '<div class="shadow-stat-grid">'+
       shadowStat(ps.episodes||0,'épisodes prix intéressants','price_all')+
@@ -4901,6 +4929,13 @@ function renderShadows(data){
       shadowStat(gatePair('SETUP_LATE'),'SETUP_LATE · épisodes / succès','admission_SETUP_LATE')+
       shadowStat(String((asum.MF_MEMORY&&asum.MF_MEMORY.episodes||0)+(asum.MF_1H&&asum.MF_1H.episodes||0)+(asum.MF_3M&&asum.MF_3M.episodes||0))+' / '+String((asum.MF_MEMORY&&asum.MF_MEMORY.success220BeforeMinus180||0)+(asum.MF_1H&&asum.MF_1H.success220BeforeMinus180||0)+(asum.MF_3M&&asum.MF_3M.success220BeforeMinus180||0)),'MF MEMORY · épisodes / succès','admission_MF_MEMORY')+
       shadowStat(gatePair('BOUNDARY'),'BOUNDARY · épisodes / succès','admission_BOUNDARY')+
+    '</div>';
+
+  const elasticStatsHtml='<div class="shadow-section-title">ELASTIC SYNC · ORDRE RÉEL / DÉPHASAGES</div>'+
+    '<div class="shadow-stat-grid">'+
+      shadowStat(els.episodes||0,'épisodes observés','elastic_all')+
+      shadowStat(els.success220BeforeMinus180||0,'+220 avant −180','elastic_success')+
+      shadowStat(els.withRelaxation||0,'avec respiration E3 opposée','elastic_relax')+
     '</div>';
 
   const live15Reliability='<div class="shadow-section-title">LIVE15 · LATENCE / REPAINT · JUSQU’À 24 H</div>'+
@@ -4954,8 +4989,8 @@ function renderShadows(data){
 
   root.innerHTML=
     '<div class="shadow-section-title">ÉTAT LIVE</div>'+
-    '<div class="shadow-grid">'+dataQualityCard+priceCard+continuationCard+live15Card+admissionCard+handoffCard+tpCard+mfCard+'</div>'+
-    statHtml+admissionStatsHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
+    '<div class="shadow-grid">'+dataQualityCard+priceCard+continuationCard+live15Card+admissionCard+elasticCard+handoffCard+tpCard+mfCard+'</div>'+
+    statHtml+admissionStatsHtml+elasticStatsHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
   if(shadowSelectedOccurrenceKey){
     renderShadowOccurrences(data,shadowSelectedOccurrenceKey,shadowSelectedOccurrenceLabel,false,null);
   }
