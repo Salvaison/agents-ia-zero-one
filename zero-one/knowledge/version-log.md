@@ -929,3 +929,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Ajout des preuves opposées PM, Price, LBW15 slope/zero, E15 live/confirmé, MF15 slope, lobe/structure et côtés MA3/MA15.
 - Agrégation des interactions causales récurrentes entre preuves : fréquence, délai, terrain consommé et conversion 5m après la preuve suivante.
 - 46 épisodes Elastic v0.2 conservés pour historique ordre/déphasage ; conversion prospective démarre proprement en v0.3.
+
+## 2026-10-19 — Passation détaillée vers nouvelle discussion
+- Création de `BOONO_passation_2026-10-19.md` : état opérationnel vérifié, économie fee-aware, constitution active, shadows, Elastic Sync, Local Retry, interface, trades de référence, méthode et priorités.
+- Création de `BOONO_prompt_prochaine_discussion_2026-10-19.md` : prompt prêt à coller, centré sur la vérification serveur et le Deep Review causal du trade #143.
+- Snapshot documenté : V4.10.7 flat, DATA_OK, 143 trades, HEAD 94a76e5 au moment de la passation.
+- Occurrence clé conservée : DN LIVE15 stack-ready à 15:30:35 Paris @ 82443.4, confirmé, MFE shadow +293.1 $, MAE -8.4 $, avant l’entrée réelle #143.
+- Aucun changement trading ni BOONO-TV.
