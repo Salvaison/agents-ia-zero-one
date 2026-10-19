@@ -4906,6 +4906,12 @@ function renderShadows(data){
   );
 
   const ps=stats.priceBehavior||{},cs=stats.continuationReentry||{},hs=stats.structuralHandoff||{},acs=stats.admissionCounterfactual||{},asum=acs.summary||{},els=stats.elasticSync||{},ts=stats.tpOptimization||{};
+  const elasticProofs=Array.isArray(els.proofConversion)?els.proofConversion:[];
+  const elasticInteractions=Array.isArray(els.interactions)?els.interactions:[];
+  const elasticThesis5=elasticProofs.filter(function(x){return x&&x.polarity==='THESIS'&&Number(x.matured5)>0;}).sort(function(a,b){return Number(b.avgProofSigned5m||0)-Number(a.avgProofSigned5m||0);})[0]||null;
+  const elasticCounter5=elasticProofs.filter(function(x){return x&&x.polarity==='COUNTERFACT'&&Number(x.matured5)>0;}).sort(function(a,b){return Number(b.avgProofSigned5m||0)-Number(a.avgProofSigned5m||0);})[0]||null;
+  const recurringElasticInteractions=elasticInteractions.filter(function(x){return Number(x&&x.count)>=2;});
+  const topElasticInteraction=recurringElasticInteractions.slice().sort(function(a,b){return Number(b.count||0)-Number(a.count||0);})[0]||null;
   const statHtml='<div class="shadow-section-title">PREMIÈRES STATISTIQUES · FENÊTRE RÉCENTE</div>'+
     '<div class="shadow-stat-grid">'+
       shadowStat(ps.episodes||0,'épisodes prix intéressants','price_all')+
@@ -4931,11 +4937,19 @@ function renderShadows(data){
       shadowStat(gatePair('BOUNDARY'),'BOUNDARY · épisodes / succès','admission_BOUNDARY')+
     '</div>';
 
-  const elasticStatsHtml='<div class="shadow-section-title">ELASTIC SYNC · ORDRE RÉEL / DÉPHASAGES</div>'+
+  function elasticProofText(x){
+    if(!x)return 'en attente';
+    return String(x.event||'—')+' · '+shadowFmt(x.avgProofSigned5m,1)+'$ · '+shadowFmt(100*Number(x.positive5Rate||0),0)+'% +';
+  }
+  const elasticStatsHtml='<div class="shadow-section-title">ELASTIC SYNC · ORDRE / CONVERSION DES PREUVES</div>'+
     '<div class="shadow-stat-grid">'+
       shadowStat(els.episodes||0,'épisodes observés','elastic_all')+
       shadowStat(els.success220BeforeMinus180||0,'+220 avant −180','elastic_success')+
       shadowStat(els.withRelaxation||0,'avec respiration E3 opposée','elastic_relax')+
+      shadowStat(elasticProofText(elasticThesis5),'meilleure preuve thèse · conversion 5m')+
+      shadowStat(elasticProofText(elasticCounter5),'contre-preuve la plus payée · 5m')+
+      shadowStat(recurringElasticInteractions.length,'interactions causales récurrentes')+
+      shadowStat(topElasticInteraction?(String(topElasticInteraction.from||'—')+' → '+String(topElasticInteraction.to||'—')+' · x'+String(topElasticInteraction.count||0)):'en attente','interaction la plus fréquente')+
     '</div>';
 
   const live15Reliability='<div class="shadow-section-title">LIVE15 · LATENCE / REPAINT · JUSQU’À 24 H</div>'+

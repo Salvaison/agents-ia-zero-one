@@ -31,4 +31,34 @@ let prev=null;
   assert(prev.activeEpisode.relaxationCount>=1);
   assert(prev.activeEpisode.events.E3_OPPOSITE_LIVE);
 }
+
+// Evidence conversion: a thesis proof is evaluated after 1/3/5m.
+{
+  const t=base+10*60000;
+  let s=null;
+  const nat={live3:{fresh:true,up:{type:'UP',value:-40,ts:t}},last3mUp:null,live15:{fresh:false},lastUp:null};
+  s=sh.evaluate(frame(t,1000,[{ts:t-60000,live15LbwRaw:-20,mf15Pente:1},{ts:t,live15LbwRaw:-15,mf15Pente:2}]),setup,thesis,thesis,mcb('long'),nat,tr(30,40),pb('long'),s);
+  s=sh.evaluate(frame(t+60000,1040,[{ts:t,live15LbwRaw:-15,mf15Pente:2},{ts:t+60000,live15LbwRaw:-10,mf15Pente:2}]),setup,thesis,thesis,mcb('long'),{live3:{fresh:false},last3mUp:null,live15:{fresh:false}},tr(35,45),pb('long'),s);
+  const c=s.activeEpisode.eventConversion.E3_LIVE;
+  assert(c);
+  assert(c.horizons['1']);
+  assert.equal(c.horizons['1'].proofSignedUsd,40);
+  assert.equal(c.horizons['1'].episodeSignedUsd,40);
+}
+
+// Counterfact conversion: an opposite proof is scored in its OWN direction.
+{
+  const t=base+20*60000;
+  let s=null;
+  s=sh.evaluate(frame(t,1000,[{ts:t-60000,live15LbwRaw:20,mf15Pente:1},{ts:t,live15LbwRaw:18,mf15Pente:1}]),setup,thesis,thesis,mcb('long'),{live3:{fresh:true,dn:{type:'DN',value:35,ts:t}},last3mUp:null,last3mDn:null,live15:{fresh:false}},tr(-30,-35),pb('short'),s);
+  // candidateDirection still comes from setup/thesis = long; DN is a counterfact.
+  s=sh.evaluate(frame(t+60000,970,[{ts:t,live15LbwRaw:18,mf15Pente:1},{ts:t+60000,live15LbwRaw:15,mf15Pente:-1}]),setup,thesis,thesis,mcb('long'),{live3:{fresh:false},last3mUp:null,last3mDn:null,live15:{fresh:false}},tr(-35,-40),pb('short'),s);
+  const c=s.activeEpisode.eventConversion.E3_OPPOSITE_LIVE;
+  assert(c);
+  assert.equal(c.proofDirection,'short');
+  assert.equal(c.horizons['1'].proofSignedUsd,30);
+  assert.equal(c.horizons['1'].episodeSignedUsd,-30);
+}
+
+
 console.log('elastic sync shadow tests OK');

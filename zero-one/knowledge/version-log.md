@@ -921,3 +921,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - ACTIVE: retry may re-arm on a new aligned 15m event after exit OR on fresh post-exit local requalification (new E3 structure + aligned 3m lobe + PM3/PM5 + regime efficiency + productive price behavior).
 - Replay: #131 remains blocked; #132 qualifies locally around 21:12 Paris.
 - SHADOW: elastic-sync-shadow-v0.2 records actual event order and lags without imposing a canonical sequence.
+
+## 2026-10-19 — Elastic Sync v0.3 Evidence Conversion
+- SHADOW PUR : aucune modification de l'autorité active.
+- Chaque première preuve/counterfact est désormais évalué à +1/+3/+5/+15/+30 min : déplacement signé, MFE/MAE, rétention, contexte PM/LBW/MF/MA3/MA15 et +220 avant -180.
+- Les counterfacts sont mesurés dans leur propre direction : une preuve adverse peut être objectivement récompensée ou absorbée.
+- Ajout des preuves opposées PM, Price, LBW15 slope/zero, E15 live/confirmé, MF15 slope, lobe/structure et côtés MA3/MA15.
+- Agrégation des interactions causales récurrentes entre preuves : fréquence, délai, terrain consommé et conversion 5m après la preuve suivante.
+- 46 épisodes Elastic v0.2 conservés pour historique ordre/déphasage ; conversion prospective démarre proprement en v0.3.
