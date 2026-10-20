@@ -97,3 +97,41 @@ test('degraded MCB data suspends shadow handoff',()=>{
   assert.equal(b.primaryThesis,'short');
   assert.equal(b.dataQuality,'DATA_DEGRADED');
 });
+
+test('causal milestones preserve E3/E15 live sources and real LBW3 zero crossing, not LBW15',()=>{
+  const first=fixture(10000000,83000,'short',-50,-90);
+  first.frame.sources.mcb.tfs['3m'].live.lt_blue_wave=9;
+  first.frame.sources.auditRows.at(-1).live15LbwRaw=78;
+  first.native.live3={fresh:true,dn:{type:'DN',ts:9970000,value:40},up:null};
+  first.native.live15={fresh:true,dn:{type:'DN',ts:9940000,value:78},up:null};
+  const a=run(first);
+  const next=fixture(10030000,82700,'short',-150,-220);
+  next.frame.sources.mcb.tfs['3m'].live.lt_blue_wave=-8;
+  next.frame.sources.auditRows.at(-1).live15LbwRaw=74;
+  next.native.live3={fresh:true,dn:{type:'DN',ts:9970000,value:40},up:null};
+  next.native.live15={fresh:true,dn:{type:'DN',ts:9940000,value:76},up:null};
+  const b=run(next,a);
+  const ms=b.chains.short.milestones;
+  assert.ok(ms.some(e=>e.event==='E3_LIVE'&&e.sourceTs===9970000));
+  assert.ok(ms.some(e=>e.event==='E15_LIVE'&&e.sourceTs===9940000));
+  assert.ok(ms.some(e=>e.event==='LBW3_ZERO_CROSS'&&e.type==='ZERO_CROSS'));
+  assert.ok(!ms.some(e=>e.event==='LBW15_ZERO_CROSS'));
+  assert.ok(ms.every(e=>e.observedAt>=e.sourceTs));
+  const c=run({...next,frame:{...next.frame,market:{timestamp:10060000,price:82710}}},b);
+  assert.equal(c.chains.short.milestones.filter(e=>e.event==='LBW3_ZERO_CROSS').length,1);
+});
+test('E15 confirmed is a new milestone when confirmation becomes available, not at source bar time',()=>{
+  const before=fixture(10000000,82750,'short',-80,-90);
+  before.native.lastDn={type:'DN',ts:9000000,value:32};
+  before.native.live15={fresh:true,dn:{type:'DN',ts:9940000,value:75},up:null};
+  const a=run(before);
+  const confirmed=fixture(10030000,82710,'short',-80,-90);
+  confirmed.native.lastDn={type:'DN',ts:9940000,value:75};
+  confirmed.native.live15={fresh:true,dn:null,up:null};
+  const b=run(confirmed,a);
+  const e=b.chains.short.milestones.find(e=>e.event==='E15_CONFIRMED'&&e.sourceTs===9940000);
+  assert.ok(e);
+  assert.equal(e.sourceTs,9940000);
+  assert.equal(e.observedAt,10030000);
+  assert.ok(e.observedAt>e.sourceTs);
+});

@@ -121,6 +121,59 @@ function conditionsFor(direction,snap,v,previous,frame,mcb){
   };
   return conditions;
 }
+const MAX_MILESTONES=30;
+function causalMilestones(previous,current,frame,mcb,native,direction){
+  const now=Number(frame.market.timestamp),price=Number(frame.market.price);
+  const old=previous&&previous.proofs||{},proofs=current.proofs||{};
+  const priorTimeline=previous&&Array.isArray(previous.milestones)?previous.milestones:[];
+  const milestones=priorTimeline.slice(),added=[];
+  const append=(name,type,sourceTs,group,value)=>{
+    const key=name+'|'+type+'|'+(sourceTs??now);
+    if(milestones.some(e=>e.key===key))return;
+    const item={key,observedAt:now,sourceTs:sourceTs??null,price,direction,
+      event:name,type,group,value:value??null};
+    milestones.push(item);added.push(item);
+  };
+  const nativeRefs={E3_LIVE:'e3Live',E15_LIVE:'e15Live',
+    E3_CONFIRMED:'e3Confirmed',E15_CONFIRMED:'e15Confirmed'};
+  const snap=v03.eventSnapshot(frame,direction,mcb,native,
+    {horizons:{net3mUsd:current.measures.pm3,net5mUsd:current.measures.pm5,
+      efficiency3m:current.measures.eff3,efficiency5m:current.measures.eff5}},
+    mcb.priceBehavior||{});
+  for(const [name,refKey] of Object.entries(nativeRefs)){
+    const proof=proofs[name],before=old[name];
+    if(!proof||proof.state!=='ACTIVE')continue;
+    const sourceTs=stamp(snap.refs&&snap.refs[refKey]);
+    if(sourceTs===null)continue;
+    const newSource=!before||before.sourceTs!==sourceTs;
+    if(!newSource)continue;
+    const timeframe=name.startsWith('E3')?3:15;
+    const maxLag=(timeframe===3?6:19)*60000;
+    if(now-sourceTs>maxLag||sourceTs>now+30000)continue;
+    append(name,name.endsWith('LIVE')?'LIVE':'CONFIRMED',sourceTs,
+      timeframe===3?'MCB3':'MCB15',snap.refs[refKey]?.value);
+  }
+  for(const [name,group] of [['PM3_EFFECTIVE','CONVERSION'],['PM5_EFFECTIVE','CONVERSION'],
+    ['LBW15_SLOPE_ALIGNED','MCB15'],['MF15_SLOPE_ALIGNED','FLOW']]){
+    const cur=proofs[name],was=old[name];
+    if(!cur||cur.state!=='ACTIVE'||was&&was.state==='ACTIVE')continue;
+    append(name,was?'REASSERTED':'OBSERVED',now,group,null);
+  }
+  const p=previous&&previous.measures||{},v=current.measures||{};
+  const c=(label,older,newer)=>{
+    if(!finite(older)||!finite(newer)||Number(older)===0||Number(newer)===0)return;
+    const crossed=direction==='short'?(Number(older)>0&&Number(newer)<0):
+      (Number(older)<0&&Number(newer)>0);
+    if(crossed)append(label,'ZERO_CROSS',now,label.startsWith('LBW3')?'MCB3':'MCB15',
+      Number(newer));
+  };
+  if(mcb&&mcb.dataQuality&&mcb.dataQuality.degraded!==true){
+    c('LBW3_ZERO_CROSS',p.lbw3,v.lbw3);
+    c('LBW15_ZERO_CROSS',p.lbw15,v.lbw15);
+  }
+  return {milestones:milestones.slice(-MAX_MILESTONES),
+    recentMilestones:milestones.slice(-6),newMilestones:added};
+}
 function evolve(previous,direction,frame,mcb,translation,ticker,mf,story){
   const now=Number(frame.market.timestamp),price=Number(frame.market.price);
   const snap=v03.eventSnapshot(frame,direction,mcb,mcb.nativeSignal||{},translation,mcb.priceBehavior||{});
@@ -189,7 +242,9 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
   for(const direction of DIRECTIONS){
     const old=prev&&prev.chains&&prev.chains[direction]||null;
     const proxy={...mcb,nativeSignal:native,priceBehavior};
-    directions[direction]=evolve(old,direction,frame,proxy,translation,ticker,mf,old&&old.story||[]);
+    const next=evolve(old,direction,frame,proxy,translation,ticker,mf,old&&old.story||[]);
+    const milestones=causalMilestones(old,next,frame,proxy,native,direction);
+    directions[direction]={...next,...milestones};
   }
   const primary=!degraded&&mcbProposal?mcbProposal:(prev&&prev.primaryThesis||null);
   const proposalFresh=!!(!degraded&&mcbProposal);

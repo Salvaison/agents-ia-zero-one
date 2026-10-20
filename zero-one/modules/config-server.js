@@ -5204,6 +5204,7 @@ function renderElasticDualV04(current) {
     const tags=a=>a.length?a.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · '+((p.activeSince&&c.lastUpdatedAt)?((c.lastUpdatedAt-p.activeSince)/60000).toFixed(1):'0')+'m'+
       (p.reaffirmations?' · repris '+p.reaffirmations+'x':'')+'</div>'}).join(''):'<div class="elastic-dual-event">—</div>';
     const recent=(c.story||[]).slice().reverse();
+    const milestones=(c.milestones||[]).slice().reverse().map(function(e){return {ts:e.observedAt,type:e.type,name:e.event+(e.sourceTs&&e.sourceTs!==e.observedAt?' · barre '+tradeTime(e.sourceTs):'')};});
     return '<section class="elastic-dual-card '+direction+'" aria-label="Chaîne '+direction.toUpperCase()+'">'+
       '<div class="elastic-dual-title">'+direction.toUpperCase()+' <span class="elastic-dual-role">'+escTrade(human(c.role||'SHADOW'))+' MCB</span></div>'+
       '<div class="elastic-dual-status">'+escTrade(human(c.phase))+' · prix '+escTrade(human(c.priceRelation))+
@@ -5221,7 +5222,9 @@ function renderElasticDualV04(current) {
        '<div class="elastic-dual-events"><div class="heading">OBSERVATIONS ACTUELLES</div>'+tags(pro)+
        '<div class="heading" style="margin-top:6px;">CONTRE-PREUVES</div>'+tags(contra)+
        (superseded.length?'<div class="heading" style="margin-top:6px;">SIGNAL HISTORIQUE DÉPASSÉ</div>'+superseded.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · remplacé par signal opposé</div>';}).join(''):'')+'</div>'+
+       '<div class="elastic-dual-events"><div class="heading">JALONS CAUSAUX</div>'+rows(milestones,5)+'</div>'+
        '<div class="elastic-dual-events"><div class="heading">RÉCIT RÉCENT</div>'+rows(recent,4)+'</div>'+
+       '<details class="elastic-dual-full" data-elastic-chain="'+direction+'-jalons"><summary>Historique des jalons ('+milestones.length+')</summary>'+rows(milestones.slice(5),16)+'</details>'+
        '<details class="elastic-dual-full" data-elastic-chain="'+direction+'"><summary>Historique des événements ('+Number((c.story||[]).length)+')</summary>'+rows(recent.slice(4),16)+'</details>'+
        '</section>';
   }

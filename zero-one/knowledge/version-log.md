@@ -959,3 +959,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Interface État V4 : MCB proposé, trajet 15m, prix 15/30m, anciens signaux dépassés dans les deux fenêtres LONG/SHORT.
 - Replay du 20/10 : SHORT proposé dès ~17:15:40 Paris (au lieu du transfert tardif ~17:33) ; ancien E15 UP retiré de la liste active, trajet MCB15 SHORT seulement vers ~17:30 ; aucun changement V4.10.8 actif.
 - Tests et détails : `knowledge/elastic-v0.4.1-mcb-proposal-price-persistence-2026-10-20.md`.
+
+## 2026-10-20 — Elastic v0.4.2 : jalons causaux
+- SHADOW PUR : journal borné `milestones` pour les deux chaînes LONG/SHORT, indiquant moment de connaissance, bougie source et prix sur E3/E15 Live/confirmé, PM3/PM5 et pentes.
+- Franchissements zéro LBW3/LBW15 enregistrés UNIQUEMENT lors du changement de signe entre observations successives, distinct du simple côté de zéro.
+- Interface État V4 : « JALONS CAUSAUX » et historique repliable dans chacune des deux fenêtres Elastic.
+- Vérification AUDIT 20/10 : E15 DN Live ~17h01, E3 DN Live ~17h02, LBW3 croise 0 ~17h12, E15 DN confirmé ~17h15 ; LBW15 reste positif (~+55 à 17h15).
+- Aucun changement de règles actives V4.10.8 ; voir `knowledge/elastic-v0.4.2-causal-milestones-2026-10-20.md`.
