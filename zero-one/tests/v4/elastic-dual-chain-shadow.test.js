@@ -31,17 +31,53 @@ test('v0.4 maintains both chains without authority over V4',()=>{
   assert.equal(s.handoff.decisionImpact,false);
   assert.ok(s.chains.short.proofs.MF15_SLOPE_ALIGNED);
 });
-test('a new MCB structural direction cannot hand over without price',()=>{
+test('MCB proposal updates immediately, independently of PM and structural confirmation',()=>{
   const a=run(fixture());
-  const f=fixture(10030000,81990,'long',-35,-45);
+  const f=fixture(10030000,81990,'short',-35,-45);
+  f.thesis={state:'TRANSITION_NEUTRAL',mode:'REVERSAL_FORMING',candidateDirection:'long'};
   const b=run(f,a);
   assert.equal(b.mcbAuthority,'long');
-  assert.equal(b.primaryThesis,'short');
-  assert.equal(b.handoff.state,'CANDIDAT_MCB_EN_ATTENTE_DU_PRIX');
+  assert.equal(b.primaryThesis,'long');
+  assert.equal(b.structuralDirection,'short');
+  assert.equal(b.handoff.structuralAgreement,false);
+  assert.equal(b.handoffs.length,1);
+  assert.equal(b.handoffs[0].cause,'NEW_MCB_DIRECTION_PROPOSAL');
+  assert.equal(b.decisionImpact,false);
   const c=run(fixture(10060000,82050,'long',45,55),b);
   assert.equal(c.primaryThesis,'long');
-  assert.equal(c.handoff.state,'TRANSFERT_SHADOW_OBSERVE');
-  assert.equal(c.handoffs.length,1);
+  assert.equal(c.structuralDirection,'long');
+  assert.equal(c.handoffs.length,1); // no repeated handoff on later price confirmation
+});
+test('price persistence survives a 3m/5m respiration and does not create direction',()=>{
+  const f=fixture(10000000,82000,'long',40,60);
+  const step=30000,now=f.frame.market.timestamp;
+  // Net -600 on 30m, but the last five minutes recover +80.
+  f.frame.sources.auditRows=Array.from({length:65},(_,i)=>({
+    ts:now-(64-i)*step,lastPrice:83000-i*10+(i>=55?(i-55)*18:0),
+    live15LbwRaw:10,liveLbw:-15,liveMoneyFlow:2,mf15Pente:-1,priceMove:-5
+  }));
+  f.thesis={candidateDirection:'long',mode:'REVERSAL_FORMING'};
+  const x=run(f);
+  assert.equal(x.primaryThesis,'long');
+  assert.equal(x.priceDominance.direction,'short');
+  assert.equal(x.chains.long.phase,'CONTESTEE');
+  assert.equal(x.chains.short.priceRelation,'SOUTIENT');
+  assert.equal(x.priceDominance.shortTermOpposes,true);
+});
+test('a newer opposite E15 confirmed retires the older confirmed signal',()=>{
+  const before=fixture(10000000,82000,'long',30,40);
+  before.native.lastUp={type:'UP',ts:9700000,value:-12};
+  before.native.lastDn={type:'DN',ts:9500000,value:50};
+  const a=run(before);
+  assert.equal(a.chains.long.proofs.E15_CONFIRMED.state,'ACTIVE');
+  const after=fixture(10030000,81900,'short',-30,-40);
+  after.native.lastUp=before.native.lastUp;
+  after.native.lastDn={type:'DN',ts:10020000,value:55};
+  const b=run(after,a);
+  assert.equal(b.chains.long.proofs.E15_CONFIRMED.state,'SUPERSEDED');
+  assert.equal(b.chains.long.proofs.E15_CONFIRMED.supersededByTs,10020000);
+  assert.ok(b.chains.long.story.some(e=>e.type==='SUPERSEDED'&&e.name==='E15_CONFIRMED'));
+  assert.equal(b.chains.short.proofs.E15_CONFIRMED.state,'ACTIVE');
 });
 test('evidence fades and reasserts in same story',()=>{
   const a=run(fixture(10000000,82000,'short',-30,-50,true));

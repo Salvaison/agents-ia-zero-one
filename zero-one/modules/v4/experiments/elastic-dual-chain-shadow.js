@@ -10,6 +10,50 @@ const finite=x=>x!==null&&x!==undefined&&Number.isFinite(Number(x));
 const signed=(x,d)=>finite(x)&&(d==='long'?Number(x)>0:Number(x)<0);
 const stamp=e=>e&&finite(e.ts)?Number(e.ts):null;
 const num=x=>finite(x)?Number(x):null;
+const NATIVE_REFS={
+  E3_LIVE:['e3Live','last3mUp','last3mDn'],E3_CONFIRMED:['e3Confirmed','last3mUp','last3mDn'],
+  E15_LIVE:['e15Live','lastUp','lastDn'],E15_CONFIRMED:['e15Confirmed','lastUp','lastDn'],
+  E3_OPPOSITE_LIVE:['opp3Live','last3mUp','last3mDn'],
+  E3_OPPOSITE_CONFIRMED:['opp3Confirmed','last3mUp','last3mDn'],
+  E15_OPPOSITE_LIVE:['opp15Live','lastUp','lastDn'],
+  E15_OPPOSITE_CONFIRMED:['opp15Confirmed','lastUp','lastDn']
+};
+function isSupersededNative(name,snap,native){
+  const meta=NATIVE_REFS[name];
+  if(!meta)return null;
+  const own=snap&&snap.refs&&snap.refs[meta[0]],sourceTs=stamp(own);
+  if(sourceTs===null)return null;
+  const oppositeName=own&&own.type==='UP'?meta[2]:meta[1];
+  const opposing=stamp(native&&native[oppositeName]);
+  return opposing!==null&&opposing>sourceTs?{sourceTs,opposingTs:opposing}:null;
+}
+function priceWindow(frame,minutes){
+  const now=Number(frame.market.timestamp),rows=(frame.sources&&frame.sources.auditRows||[])
+    .filter(x=>finite(x&&x.ts)&&finite(x&&x.lastPrice)&&Number(x.ts)<=now&&Number(x.ts)>=now-minutes*60000)
+    .slice().sort((a,b)=>Number(a.ts)-Number(b.ts));
+  if(rows.length<2)return {available:false,minutes,rows:rows.length};
+  const elapsed=(Number(rows[rows.length-1].ts)-Number(rows[0].ts))/60000;
+  if(elapsed<minutes*.75)return {available:false,minutes,rows:rows.length,elapsedMinutes:elapsed};
+  const prices=rows.map(x=>Number(x.lastPrice)),start=prices[0],last=prices[prices.length-1];
+  let gross=0;for(let i=1;i<prices.length;i++)gross+=Math.abs(prices[i]-prices[i-1]);
+  const net=last-start;
+  return {available:true,minutes,elapsedMinutes:elapsed,
+    startPrice:start,lastPrice:last,netUsd:net,grossUsd:gross,netToPath:gross?Math.abs(net)/gross:0,
+    maxPrice:Math.max(...prices),minPrice:Math.min(...prices),direction:net>0?'long':net<0?'short':null};
+}
+function priceDominance(frame){
+  const windows={};
+  for(const min of [3,5,15,30])windows['m'+min]=priceWindow(frame,min);
+  const h15=windows.m15,h30=windows.m30,h5=windows.m5;
+  const aligned=!!(h15.available&&h30.available&&h15.direction&&h15.direction===h30.direction);
+  const direction=aligned?h15.direction:null;
+  return {direction,context30mDirection:h30.available?h30.direction:null,
+    classification:aligned?'ALIGNEMENT_15M_30M':h15.available&&h30.available
+      ?'HORIZONS_CONTRADICTOIRES':'DONNEES_EN_MATURATION',
+    shortTermOpposes:!!(h30.available&&h30.direction&&h5.available&&h5.direction&&h5.direction!==h30.direction),
+    windows,decisionImpact:false,
+    semantic:'descriptive price territory, not a score, MCB proposal or trade permission'};
+}
 function lastAudit(frame){const a=frame&&frame.sources&&frame.sources.auditRows||[];return a[a.length-1]||{};}
 function liveTf(frame,tf){return frame&&frame.sources&&frame.sources.mcb&&frame.sources.mcb.tfs&&frame.sources.mcb.tfs[tf]&&frame.sources.mcb.tfs[tf].live||{};}
 function recordEvent(story,ts,price,direction,type,name,group,sourceTs){
@@ -85,7 +129,9 @@ function evolve(previous,direction,frame,mcb,translation,ticker,mf,story){
   const old=previous&&previous.proofs||{};
   const proofs={};let narrative=story;
   for(const [name,present] of Object.entries(flags)){
-    const prior=old[name]||null;const on=!!present,src=sourceOf(name,snap);
+    const prior=old[name]||null,src=sourceOf(name,snap);
+    const superseded=isSupersededNative(name,snap,mcb.nativeSignal||{});
+    const on=!!present&&!superseded;
     let p=prior?{...prior}:{name,group:family(name),firstSeenAt:null,seenCount:0,reaffirmations:0,
       activeSince:null,lastSeenAt:null,lastFadedAt:null,sourceTs:null,state:'NOT_SEEN'};
     if(on){
@@ -99,6 +145,13 @@ function evolve(previous,direction,frame,mcb,translation,ticker,mf,story){
         p.activeSince=now;
       }
       p.seenCount++;p.lastSeenAt=now;p.state='ACTIVE';
+      p.supersededByTs=null;
+    }else if(superseded){
+      if(prior&&prior.state==='ACTIVE'){
+        p.state='SUPERSEDED';p.lastFadedAt=now;p.activeSince=null;
+        p.supersededByTs=superseded.opposingTs;
+        narrative=recordEvent(narrative,now,price,direction,'SUPERSEDED',name,p.group,superseded.opposingTs);
+      }
     }else if(p.state==='ACTIVE'){
       p.lastFadedAt=now;p.state='FADED';p.activeSince=null;
       narrative=recordEvent(narrative,now,price,direction,'FADED',name,p.group,src);
@@ -126,50 +179,59 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
   const prev=previous&&previous.version===VERSION?previous:null;
   const structural=mcb&&mcb.currentLobe&&mcb.currentLobe.structuralDirection||
     mcb&&mcb.structural15m&&mcb.structural15m.structuralDirection||null;
-  const mcbProposal=structural||(baseThesis&&baseThesis.candidateDirection)||null;
+  // MCB's current candidate has directional authority NOW, including REVERSAL_FORMING.
+  // Structural E15→E15 direction is a separate maturity marker, never a reason to
+  // hide the new MCB proposal or wait for an instantaneous PM confluence.
+  const rawProposal=baseThesis&&(baseThesis.candidateDirection||baseThesis.direction)||null;
+  const mcbProposal=DIRECTIONS.includes(rawProposal)?rawProposal:null;
   const degraded=!!(mcb&&mcb.dataQuality&&mcb.dataQuality.degraded);
   const directions={};let narratives=[];
   for(const direction of DIRECTIONS){
     const old=prev&&prev.chains&&prev.chains[direction]||null;
-    // v0.3 uses the native and price-behavior feed; no new collector or decisions.
     const proxy={...mcb,nativeSignal:native,priceBehavior};
-    const result=evolve(old,direction,frame,proxy,translation,ticker,mf,old&&old.story||[]);
-    directions[direction]=result;
+    directions[direction]=evolve(old,direction,frame,proxy,translation,ticker,mf,old&&old.story||[]);
   }
-  let primary=prev&&prev.primaryThesis||mcbProposal||null;
-  if(!DIRECTIONS.includes(primary))primary=mcbProposal;
-  const contender=mcbProposal&&mcbProposal!==primary?mcbProposal:null;
-  const snap=contender?directions[contender]:null;
-  const p=snap&&snap.measures||{};
-  const priceAcceptance=!!(contender&&signed(p.pm3,contender)&&signed(p.pm5,contender)&&
-    finite(p.eff3)&&p.eff3>=.25);
-  const families=snap&&snap.families||[];
-  const enoughIndependentFamilies=families.includes('MCB3')&&families.includes('MCB15')&&
-    families.includes('CONVERSION');
-  // Hypothetical handoff, NEVER a live admission signal.
-  const shadowHandoff=!!(!degraded&&contender&&priceAcceptance&&enoughIndependentFamilies);
-  if(shadowHandoff)primary=contender;
-  if(prev&&prev.primaryThesis&&primary!==prev.primaryThesis){
-    const e={ts:now,price:Number(frame.market.price),from:prev.primaryThesis,to:primary,
-      cause:'MCB_STRUCTURAL_CANDIDATE_AND_PRICE_CONVERSION',decisionImpact:false};
-    narratives=(prev.handoffs||[]).concat(e).slice(-12);
+  const primary=!degraded&&mcbProposal?mcbProposal:(prev&&prev.primaryThesis||null);
+  const proposalFresh=!!(!degraded&&mcbProposal);
+  const price=priceDominance(frame);
+  const previousPrimary=prev&&prev.primaryThesis||null;
+  if(previousPrimary&&primary&&primary!==previousPrimary){
+    narratives=(prev.handoffs||[]).concat({
+      ts:now,price:Number(frame.market.price),from:previousPrimary,to:primary,
+      cause:'NEW_MCB_DIRECTION_PROPOSAL',structuralDirection:structural,
+      priceDominanceDirection:price.direction,decisionImpact:false
+    }).slice(-12);
   }else narratives=prev&&prev.handoffs||[];
   for(const direction of DIRECTIONS){
-    const ch=directions[direction];ch.role=primary===direction?'PRINCIPALE':'CONCURRENTE';
-    const v=ch.measures||{};
-    const opposingPrice=signed(v.pm3,other(direction))&&signed(v.pm5,other(direction));
+    const ch=directions[direction],v=ch.measures||{};
+    ch.role=primary===direction?'PRINCIPALE':'CONCURRENTE';
+    const opposingPm=signed(v.pm3,other(direction))&&signed(v.pm5,other(direction));
+    const priceOpposes=!!(price.direction&&price.direction!==direction);
+    const priceSupports=price.direction===direction;
+    ch.priceRelation=priceSupports?'SOUTIENT':priceOpposes?'CONTREDIT':
+      price.context30mDirection===direction?'30M_SOUTIENT_15M_CONTESTE':
+      price.context30mDirection?'30M_OPPOSE_15M_CONTESTE':'EN_OBSERVATION';
     ch.phase=ch.role==='PRINCIPALE'
-      ?(opposingPrice||ch.contraryCount>ch.activeProofCount?'CONTESTEE':'ACTIVE')
-      :(ch.families.length>=3&&signed(v.pm3,direction)?'EN_CONSTRUCTION':'OBSERVATION');
+      ?(degraded?'DONNEES_DEGRADEES':priceOpposes||opposingPm?'CONTESTEE':'MCB_PROPOSEE')
+      :(priceSupports?'PRIX_FAVORABLE':signed(v.pm3,direction)?'EN_CONSTRUCTION':'OBSERVATION');
   }
-  return {version:VERSION,decisionImpact:false,ts:now,
+  const priceAcceptance=!!(primary&&price.direction===primary);
+  const structuralAgreement=!!(primary&&structural===primary);
+  const handoffState=!proposalFresh?'MCB_INDISPONIBLE'
+    :priceAcceptance&&structuralAgreement?'PROPOSITION_MCB_STRUCTURE_ET_PRIX_ALIGNES'
+    :priceAcceptance?'PROPOSITION_MCB_PRIX_ALIGNE'
+    :price.direction&&price.direction!==primary?'PROPOSITION_MCB_PRIX_OPPOSE'
+    :'PROPOSITION_MCB_PRIX_EN_MATURATION';
+  return {version:VERSION,revision:'mcb-proposal-and-price-persistence-v0.4.1',
+    decisionImpact:false,ts:now,
     dataQuality:degraded?'DATA_DEGRADED':'DATA_OK',
-    mcbAuthority:mcbProposal,primaryThesis:primary,
+    mcbAuthority:mcbProposal,structuralDirection:structural,primaryThesis:primary,
+    proposalFresh,priceDominance:price,
     chains:directions,short:directions.short,long:directions.long,
-    handoff:{state:shadowHandoff?'TRANSFERT_SHADOW_OBSERVE':contender?'CANDIDAT_MCB_EN_ATTENTE_DU_PRIX':'AUCUN_TRANSFERT',
-      candidate:contender,mcbProposed:!!contender,priceAcceptance,proofFamilies:families,
-      handoffValidatedShadow:shadowHandoff,decisionImpact:false},
+    handoff:{state:handoffState,candidate:primary,mcbProposed:proposalFresh,
+      structuralAgreement,priceAcceptance,priceDominanceDirection:price.direction,
+      shortTermRespiration:price.shortTermOpposes,decisionImpact:false},
     handoffs:narratives,
-    semantics:'Parallel LONG/SHORT evidence histories. Only MCB proposes direction; price tests handoff. No live decision authority.'};
+    semantics:'MCB proposes current search direction instantly; structural maturity and 15m/30m price dominance are independently observable; trade authority unchanged.'};
 }
 module.exports={VERSION,evaluate,conditionsFor};

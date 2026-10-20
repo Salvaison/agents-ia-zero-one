@@ -951,3 +951,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Replays #148 : ancienne simulation sauvegardée (15:47–16:15) indique une entrée hypothétique vers 15:50 sous le bypass PM solide ; les segments antérieurs ont ensuite tourné, donc pas de relecture tick par tick reproductible sur ce créneau.
 - #145 et #146 (PAIR_MAJOR_QUALITATIVE) ne sont pas affectés par cette exception sub-80.
 - Nouveau test ciblé LOW_EDGE, PM contradictoires, préservation des autres verrous ; 31 tests V4 verts. Détails dans `knowledge/v4.10.8-low-edge-rolling-requalification-2026-10-20.md`.
+
+## 2026-10-20 — Elastic v0.4.1 — autorité MCB / dominance prix distinctes
+- SHADOW PUR, révision rétrocompatible dans `elastic-dual-chain-shadow-v0.4` : `primaryThesis` suit immédiatement la proposition `baseThesis.candidateDirection` (MCB), même si la trajectoire structurelle 15m reste ancienne et même si PM3/PM5 ne sont pas synchronisés. Ce changement **n'autorise pas un trade**.
+- Les nets de prix 3/5/15/30 minutes restent visibles séparément. Alignement ou divergence 15/30m qualifie la persistance sans score arbitraire.
+- Un E3/E15 confirmé ancien, remplacé par le signal opposé plus récent, devient `SUPERSEDED` dans sa chaîne et n'est plus compté comme observation active. Les preuves sont affichées comme observations/familles, pas comme votes.
+- Interface État V4 : MCB proposé, trajet 15m, prix 15/30m, anciens signaux dépassés dans les deux fenêtres LONG/SHORT.
+- Replay du 20/10 : SHORT proposé dès ~17:15:40 Paris (au lieu du transfert tardif ~17:33) ; ancien E15 UP retiré de la liste active, trajet MCB15 SHORT seulement vers ~17:30 ; aucun changement V4.10.8 actif.
+- Tests et détails : `knowledge/elastic-v0.4.1-mcb-proposal-price-persistence-2026-10-20.md`.

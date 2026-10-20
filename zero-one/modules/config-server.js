@@ -5198,12 +5198,18 @@ function renderElasticDualV04(current) {
     const signals=Object.values(pr).filter(function(p){return p&&p.state==='ACTIVE';});
     const pro=signals.filter(function(p){return !p.name.includes('OPPOSITE')&&!p.name.includes('DISAGREE')&&!p.name.includes('LOW_YIELD')&&!p.name.includes('EFFORT_LOW_YIELD')}).slice(0,4);
     const contra=signals.filter(function(p){return p.name.includes('OPPOSITE')||p.name.includes('DISAGREE')||p.name.includes('LOW_YIELD')}).slice(0,3);
+    const superseded=Object.values(pr).filter(function(p){return p&&p.state==='SUPERSEDED';}).sort(function(a,b){return (b.lastFadedAt||0)-(a.lastFadedAt||0);}).slice(0,2);
+    const dom=x.priceDominance||{},windows=dom.windows||{},w15=windows.m15||{},w30=windows.m30||{};
+    const fmtNet=function(w){return w.available?money(w.netUsd):'—';};
     const tags=a=>a.length?a.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · '+((p.activeSince&&c.lastUpdatedAt)?((c.lastUpdatedAt-p.activeSince)/60000).toFixed(1):'0')+'m'+
       (p.reaffirmations?' · repris '+p.reaffirmations+'x':'')+'</div>'}).join(''):'<div class="elastic-dual-event">—</div>';
     const recent=(c.story||[]).slice().reverse();
     return '<section class="elastic-dual-card '+direction+'" aria-label="Chaîne '+direction.toUpperCase()+'">'+
-      '<div class="elastic-dual-title">'+direction.toUpperCase()+' <span class="elastic-dual-role">'+escTrade(human(c.role||'SHADOW'))+'</span></div>'+
-      '<div class="elastic-dual-status">'+escTrade(human(c.phase))+' · '+Number(c.activeProofCount||0)+' preuves · '+Number(c.contraryCount||0)+' oppositions</div>'+
+      '<div class="elastic-dual-title">'+direction.toUpperCase()+' <span class="elastic-dual-role">'+escTrade(human(c.role||'SHADOW'))+' MCB</span></div>'+
+      '<div class="elastic-dual-status">'+escTrade(human(c.phase))+' · prix '+escTrade(human(c.priceRelation))+
+      ' · '+Number(c.activeProofCount||0)+' observations / '+Number((c.families||[]).length)+' familles · '+Number(c.contraryCount||0)+' oppositions (pas des votes)</div>'+
+      '<div class="elastic-dual-status" style="font-size:9px;border-top:1px dotted #eee;padding-top:4px;">'+
+      'PRIX 15m <b>'+fmtNet(w15)+'</b> · 30m <b>'+fmtNet(w30)+'</b></div>'+
       '<div class="elastic-dual-kpis">'+
        '<div>LBW15 <b>'+v3Signed(v.lbw15,1)+'</b></div><div>LBW3 <b>'+v3Signed(v.lbw3,1)+'</b></div>'+
        '<div>MF15 <b>'+v3Signed(v.mf15,1)+'</b></div><div>MF3 <b>'+v3Signed(v.mf3,1)+'</b></div>'+
@@ -5212,15 +5218,20 @@ function renderElasticDualV04(current) {
        '<div>PM Live <b>'+money(v.pmLive)+'</b></div><div>eff. 3m <b>'+percent(v.eff3)+'</b></div>'+
        '<div>yield/P75 <b>'+v3Fmt(v.yieldVsP75,2)+'x</b></div><div>effort/P75 <b>'+v3Fmt(v.effortVsP75,2)+'x</b></div>'+
        '</div>'+
-       '<div class="elastic-dual-events"><div class="heading">PREUVES ACTIVES</div>'+tags(pro)+
-       '<div class="heading" style="margin-top:6px;">CONTRE-PREUVES</div>'+tags(contra)+'</div>'+
+       '<div class="elastic-dual-events"><div class="heading">OBSERVATIONS ACTUELLES</div>'+tags(pro)+
+       '<div class="heading" style="margin-top:6px;">CONTRE-PREUVES</div>'+tags(contra)+
+       (superseded.length?'<div class="heading" style="margin-top:6px;">SIGNAL HISTORIQUE DÉPASSÉ</div>'+superseded.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · remplacé par signal opposé</div>';}).join(''):'')+'</div>'+
        '<div class="elastic-dual-events"><div class="heading">RÉCIT RÉCENT</div>'+rows(recent,4)+'</div>'+
        '<details class="elastic-dual-full" data-elastic-chain="'+direction+'"><summary>Historique des événements ('+Number((c.story||[]).length)+')</summary>'+rows(recent.slice(4),16)+'</details>'+
        '</section>';
   }
   return '<div class="elastic-dual-header">ELASTIC v0.4 · CHAÎNES PARALLÈLES '+
-    '<span class="elastic-dual-note">MCB '+escTrade(human(x.mcbAuthority))+' · '+escTrade(human(x.handoff&&x.handoff.state))+
-    ' · SHADOW PUR / sans autorité de trading</span></div>'+
+    '<span class="elastic-dual-note">MCB propose '+escTrade(human(x.mcbAuthority))+
+    ' · trajet 15m '+escTrade(human(x.structuralDirection))+
+    ' · prix 15/30m '+escTrade(human(x.priceDominance&&x.priceDominance.direction||
+      (x.priceDominance&&x.priceDominance.context30mDirection
+        ?x.priceDominance.context30mDirection+' / 15m contesté':'INDÉCIS')))+
+    ' · SHADOW PUR</span></div>'+
     '<div class="elastic-dual-grid">'+draw('long')+draw('short')+'</div>';
 }
 
