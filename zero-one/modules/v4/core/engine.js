@@ -25,7 +25,7 @@ const admissionCounterfactualShadow=require('../experiments/admission-counterfac
 const elasticSyncShadow=require('../experiments/elastic-sync-shadow');
 const elasticDualChainShadow=require('../experiments/elastic-dual-chain-shadow');
 
-const VERSION='v4.10.7-local-retry-requalification-20261017';
+const VERSION='v4.10.8-low-edge-rolling-requalification-20261020';
 
 function evaluate(frame,position=null,previousEvaluation=null){
   const previousMcb=previousEvaluation&&previousEvaluation.mcb||null;

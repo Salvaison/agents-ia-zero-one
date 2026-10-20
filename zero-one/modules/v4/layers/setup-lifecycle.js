@@ -156,7 +156,31 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
   const syncReady=!!coherence.coherent;
   const roomReady=!(structuralRoom&&structuralRoom.admissionBlocked);
   const activityReady=!(marketQuality&&marketQuality.admissionBlocked);
-  const lowEdgeSub80=!!(marketQuality&&marketQuality.lowEdge&&!majorPair&&!reinforcedUpBypass);
+  // V4.10.8: a sub-80 15m pair in CHOP may arm a setup when rolling
+  // PM3 AND PM5 already convert in the MCB candidate direction with the same
+  // reinforced efficiency (37.5%) required by entryContinuityProof in CHOP.
+  // This is NOT entry permission: fresh post-setup PM and every other gate remain.
+  const lowEdgeBase=!!(marketQuality&&marketQuality.lowEdge&&!majorPair&&!reinforcedUpBypass);
+  const lowEdgeH=rollingTranslation&&rollingTranslation.horizons||{};
+  const lowEdgeNet3=Number(lowEdgeH.net3mUsd),lowEdgeNet5=Number(lowEdgeH.net5mUsd);
+  const lowEdgeEff3=Number(lowEdgeH.efficiency3m);
+  const lowEdgePmAligned=(candidate==='long'
+    ?lowEdgeNet3>0&&lowEdgeNet5>0
+    :candidate==='short'&&lowEdgeNet3<0&&lowEdgeNet5<0);
+  const lowEdgeOverrideReady=!!(
+    lowEdgeBase&&syncReady&&
+    Number.isFinite(lowEdgeNet3)&&Number.isFinite(lowEdgeNet5)&&
+    Number.isFinite(lowEdgeEff3)&&lowEdgePmAligned&&lowEdgeEff3>=.375
+  );
+  const lowEdgeSub80=lowEdgeBase&&!lowEdgeOverrideReady;
+  const lowEdgeException={
+    eligible:lowEdgeBase,ready:lowEdgeOverrideReady,
+    status:!lowEdgeBase?'NOT_REQUIRED':lowEdgeOverrideReady?'ROLLING_3M_5M_REQUALIFIED':'WAIT_ROLLING_3M_5M',
+    minEfficiency3m:.375,net3mUsd:Number.isFinite(lowEdgeNet3)?lowEdgeNet3:null,
+    net5mUsd:Number.isFinite(lowEdgeNet5)?lowEdgeNet5:null,
+    efficiency3m:Number.isFinite(lowEdgeEff3)?lowEdgeEff3:null,
+    structural3mCoherent:syncReady,postSetupPmStillRequired:true,decisionImpact:'SETUP_ONLY'
+  };
   const reinforced3m=nativeSignal&&nativeSignal.reinforced3mUp||null;
   const reinforced3mEventTs=reinforced3m&&reinforced3m.event?Number(reinforced3m.event.ts):null;
   const n3CycleTs=Number(n3.startTs);
@@ -253,7 +277,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       thesisConsumed,structuralEventTs,lastExitTs,lastConsumedSetupKey,
       campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked,
       capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
-      pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
+      pairClass,majorPair,lowEdgeSub80,lowEdgeException,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
       reinforced3mShortClose,noNewShort:reinforced3mShortClose,
       mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
       timingShadow,
@@ -290,7 +314,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
       campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked:false,
       capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
       backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
-      pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
+      pairClass,majorPair,lowEdgeSub80,lowEdgeException,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
       reinforced3mShortClose:false,noNewShort:false,timingShadow,
       mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
       admissionAllowed:false,
@@ -309,7 +333,7 @@ function evaluate(frame,baseThesis,mcb,background,structuralRoom,marketQuality,n
     campaignKey,lastCampaignKey,lastCampaignLoss,campaignReset,campaignResetReason,nativeAfterExit,localRetryRequalification,campaignRetryBlocked:false,
     capitulationGuard:capitulationGuard||null,fourHourArmToken,capitulationReversal,
     backgroundQualifier:against?'COUNTER_1H_WAVE':'WITH_1H_WAVE',
-    pairClass,majorPair,lowEdgeSub80,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
+    pairClass,majorPair,lowEdgeSub80,lowEdgeException,reinforcedUpBypass,counterBackgroundLocalProof,alignedAfterExtreme,
     reinforced3mShortClose:false,noNewShort:false,timingShadow,
     mfMemory,mfTransferRequired:!!mfMemory.requiresTransfer,
     admissionAllowed:true,

@@ -943,3 +943,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Affichage dans TRADES → État V4 : deux fenêtres côte à côte au-dessus de l'État vivant, détail des événements extensible. Mobile compact, aucune modification BOONO-TV.
 - Elastic v0.3 et la logique de V4.10.7 restent inchangés. Fichiers et limites documentés dans `knowledge/elastic-dual-chain-shadow-v0.4-2026-10-20.md`.
 - 26 tests V4 passés ; tests dédiés lifecycle, dual story, handoff sans prix et DATA_DEGRADED.
+
+## 2026-10-20 — V4.10.8 LOW_EDGE Rolling Requalification
+- ACTIVE, modification limitée à `modules/v4/layers/setup-lifecycle.js` : dans CHOP/LOW_EDGE et MCB sub-80, PM rolling 3m et 5m directionnellement alignés + efficiency3m >= 37,5 % + cohérence MCB3 lèvent **uniquement** le veto LOW_EDGE du setup.
+- Les preuves PM post-setup restent fraîches et obligatoires, avec la continuité renforcée existante. Aucun changement direction MCB, MF Memory, SETUP_LATE, BOUNDARY_CONTEST, anti-churn, risque ou sorties.
+- Ajout de `setup.lowEdgeException` (status et valeurs) pour l'audit de toutes les permissions/refus.
+- Replays #148 : ancienne simulation sauvegardée (15:47–16:15) indique une entrée hypothétique vers 15:50 sous le bypass PM solide ; les segments antérieurs ont ensuite tourné, donc pas de relecture tick par tick reproductible sur ce créneau.
+- #145 et #146 (PAIR_MAJOR_QUALITATIVE) ne sont pas affectés par cette exception sub-80.
+- Nouveau test ciblé LOW_EDGE, PM contradictoires, préservation des autres verrous ; 31 tests V4 verts. Détails dans `knowledge/v4.10.8-low-edge-rolling-requalification-2026-10-20.md`.
