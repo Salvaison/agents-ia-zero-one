@@ -2346,6 +2346,28 @@ app.get('/', requireAuth, (req, res) => {
         font-size: 13px;
       }
       .page-wrap { max-width: 480px; margin: 0 auto; }
+      /* Elastic v0.4: two market stories above the living V4 state. */
+      body:has(#tab2-statev2.active) .page-wrap { max-width: 780px; }
+      .elastic-dual-header {display:flex;justify-content:space-between;align-items:center;gap:6px;margin:8px 0 6px;font-family:"SF Mono",Menlo,monospace;font-size:10px;font-weight:800;letter-spacing:.05em;}
+      .elastic-dual-note{font-size:9px;color:#777;letter-spacing:0;font-weight:400;}
+      .elastic-dual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:9px;}
+      .elastic-dual-card{min-width:0;background:#fff;border:1px solid #dcdfe3;border-top:3px solid #aab4c1;border-radius:9px;padding:9px 10px;font:10px/1.48 "SF Mono",Menlo,monospace;}
+      .elastic-dual-card.short{border-top-color:#b45353;}
+      .elastic-dual-card.long{border-top-color:#278b61;}
+      .elastic-dual-title{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800;font-size:13px;letter-spacing:.05em;}
+      .elastic-dual-role{font-size:8px;padding:2px 5px;border-radius:4px;background:#f1f3f5;color:#45505c;letter-spacing:0;text-align:right;}
+      .elastic-dual-status{font-size:9px;color:#686d73;margin:3px 0 7px;}
+      .elastic-dual-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 9px;border-top:1px solid #eceef0;padding-top:6px;}
+      .elastic-dual-kpis div{min-width:0;overflow-wrap:anywhere;}
+      .elastic-dual-kpis b{color:#1c252c;font-weight:700;}
+      .elastic-dual-events{margin:7px 0 0;border-top:1px solid #eceef0;padding-top:5px;}
+      .elastic-dual-events .heading{font-weight:800;font-size:9px;color:#4a535a;margin-bottom:3px;}
+      .elastic-dual-event{font-size:9px;padding:2px 0;border-bottom:1px dotted #f1f1f1;color:#3a4248;overflow-wrap:anywhere;}
+      .elastic-dual-event em{font-style:normal;color:#8c949b;}
+      .elastic-dual-full{margin-top:6px;padding-top:4px;border-top:1px solid #eceef0;}
+      .elastic-dual-full summary{cursor:pointer;font-size:9px;font-weight:700;color:#546987;}
+      .elastic-dual-full .elastic-dual-event{font-size:9px;}
+      @media(max-width:560px){.elastic-dual-grid{gap:5px}.elastic-dual-card{padding:7px 6px;font-size:9px}.elastic-dual-title{font-size:11px}.elastic-dual-role{font-size:7px}.elastic-dual-kpis{gap:4px}.elastic-dual-header{font-size:9px}.elastic-dual-note{font-size:8px}}
       .mono { font-family: "SF Mono", "Menlo", "Consolas", monospace; font-variant-numeric: tabular-nums; }
 
       .ticker {
@@ -5158,6 +5180,50 @@ async function loadBoono() {
   }
 }
 
+function renderElasticDualV04(current) {
+  const x=current&&current.elasticDualChainShadow||null;
+  if(!x||!x.chains)return '<div class="elastic-dual-header">ELASTIC v0.4 · DEUX CHAÎNES <span class="elastic-dual-note">SHADOW PUR · données en attente</span></div>';
+  const human=n=>String(n||'—').replace(/_/g,' ');
+  const money=n=>n===null||n===undefined||!Number.isFinite(Number(n))?'—':(Number(n)>=0?'+':'')+Number(n).toFixed(1)+' $';
+  const percent=n=>n===null||n===undefined||!Number.isFinite(Number(n))?'—':(Number(n)*100).toFixed(0)+' %';
+  const rows=(list,max)=>{
+    return (list||[]).slice(0,max).map(function(q){
+      const time=q.ts?tradeTime(q.ts).split(' ').pop():'—';
+      return '<div class="elastic-dual-event"><em>'+escTrade(time)+'</em> '+escTrade(human(q.type))+
+        ' · <b>'+escTrade(human(q.name))+'</b></div>';
+    }).join('');
+  };
+  function draw(direction){
+    const c=x.chains[direction]||{},v=c.measures||{},pr=c.proofs||{};
+    const signals=Object.values(pr).filter(function(p){return p&&p.state==='ACTIVE';});
+    const pro=signals.filter(function(p){return !p.name.includes('OPPOSITE')&&!p.name.includes('DISAGREE')&&!p.name.includes('LOW_YIELD')&&!p.name.includes('EFFORT_LOW_YIELD')}).slice(0,4);
+    const contra=signals.filter(function(p){return p.name.includes('OPPOSITE')||p.name.includes('DISAGREE')||p.name.includes('LOW_YIELD')}).slice(0,3);
+    const tags=a=>a.length?a.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · '+((p.activeSince&&c.lastUpdatedAt)?((c.lastUpdatedAt-p.activeSince)/60000).toFixed(1):'0')+'m'+
+      (p.reaffirmations?' · repris '+p.reaffirmations+'x':'')+'</div>'}).join(''):'<div class="elastic-dual-event">—</div>';
+    const recent=(c.story||[]).slice().reverse();
+    return '<section class="elastic-dual-card '+direction+'" aria-label="Chaîne '+direction.toUpperCase()+'">'+
+      '<div class="elastic-dual-title">'+direction.toUpperCase()+' <span class="elastic-dual-role">'+escTrade(human(c.role||'SHADOW'))+'</span></div>'+
+      '<div class="elastic-dual-status">'+escTrade(human(c.phase))+' · '+Number(c.activeProofCount||0)+' preuves · '+Number(c.contraryCount||0)+' oppositions</div>'+
+      '<div class="elastic-dual-kpis">'+
+       '<div>LBW15 <b>'+v3Signed(v.lbw15,1)+'</b></div><div>LBW3 <b>'+v3Signed(v.lbw3,1)+'</b></div>'+
+       '<div>MF15 <b>'+v3Signed(v.mf15,1)+'</b></div><div>MF3 <b>'+v3Signed(v.mf3,1)+'</b></div>'+
+       '<div>pente MF15 <b>'+v3Signed(v.mf15Slope,2)+'</b></div><div>pente MF3 <b>'+v3Signed(v.mf3Slope,2)+'</b></div>'+
+       '<div>PM3 <b>'+money(v.pm3)+'</b></div><div>PM5 <b>'+money(v.pm5)+'</b></div>'+
+       '<div>PM Live <b>'+money(v.pmLive)+'</b></div><div>eff. 3m <b>'+percent(v.eff3)+'</b></div>'+
+       '<div>yield/P75 <b>'+v3Fmt(v.yieldVsP75,2)+'x</b></div><div>effort/P75 <b>'+v3Fmt(v.effortVsP75,2)+'x</b></div>'+
+       '</div>'+
+       '<div class="elastic-dual-events"><div class="heading">PREUVES ACTIVES</div>'+tags(pro)+
+       '<div class="heading" style="margin-top:6px;">CONTRE-PREUVES</div>'+tags(contra)+'</div>'+
+       '<div class="elastic-dual-events"><div class="heading">RÉCIT RÉCENT</div>'+rows(recent,4)+'</div>'+
+       '<details class="elastic-dual-full" data-elastic-chain="'+direction+'"><summary>Historique des événements ('+Number((c.story||[]).length)+')</summary>'+rows(recent.slice(4),16)+'</details>'+
+       '</section>';
+  }
+  return '<div class="elastic-dual-header">ELASTIC v0.4 · CHAÎNES PARALLÈLES '+
+    '<span class="elastic-dual-note">MCB '+escTrade(human(x.mcbAuthority))+' · '+escTrade(human(x.handoff&&x.handoff.state))+
+    ' · SHADOW PUR / sans autorité de trading</span></div>'+
+    '<div class="elastic-dual-grid">'+draw('long')+draw('short')+'</div>';
+}
+
 async function loadTrades() {
   loadBoono(); // onglet BOONO historique volontairement inchangé
   const stateEl = document.getElementById('tab2-statev2');
@@ -5199,7 +5265,9 @@ async function loadTrades() {
     else living += '<div><b>V4</b> état courant indisponible.</div>';
     if (ld) living += '<div style="margin-top:7px;opacity:.7;"><b>Dernière décision journalisée</b> ' + escTrade(ld.action) + ' — ' + escTrade(ld.reason) + ' · ' + tradeTime(ld.ts) + '</div>';
     living += '</div></div>';
-    stateEl.innerHTML = liveCard + living + posHtml;
+    const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
+    stateEl.innerHTML = liveCard + renderElasticDualV04(current) + living + posHtml;
+    stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});
     updateV3LivePriceDom();
 
     const executed = (data.executed || []).map(function(t,i){ return Object.assign({}, t, {__tradeNo:i+1}); }).reverse();

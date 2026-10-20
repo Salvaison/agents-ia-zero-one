@@ -936,3 +936,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Snapshot documenté : V4.10.7 flat, DATA_OK, 143 trades, HEAD 94a76e5 au moment de la passation.
 - Occurrence clé conservée : DN LIVE15 stack-ready à 15:30:35 Paris @ 82443.4, confirmé, MFE shadow +293.1 $, MAE -8.4 $, avant l’entrée réelle #143.
 - Aucun changement trading ni BOONO-TV.
+
+## 2026-10-20 — Elastic dual-chain v0.4, interface État V4
+- SHADOW PUR, `decisionImpact:false` : LONG et SHORT suivis en parallèle, preuves présentes/disparues/réaffirmées, sourceTs des événements natifs, mesures MCB/LBW/MF/PM/efficiency/ticker/MA.
+- Le registre conserve chaque récit à travers une sortie de trade ; MCB15 reste le proposant structurel, handoff v0.4 uniquement hypothèse instrumentée par la conversion de prix.
+- Affichage dans TRADES → État V4 : deux fenêtres côte à côte au-dessus de l'État vivant, détail des événements extensible. Mobile compact, aucune modification BOONO-TV.
+- Elastic v0.3 et la logique de V4.10.7 restent inchangés. Fichiers et limites documentés dans `knowledge/elastic-dual-chain-shadow-v0.4-2026-10-20.md`.
+- 26 tests V4 passés ; tests dédiés lifecycle, dual story, handoff sans prix et DATA_DEGRADED.

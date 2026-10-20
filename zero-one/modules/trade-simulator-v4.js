@@ -287,7 +287,7 @@ function compactV4(x){
     translation:x.translation,ticker:x.ticker,mfStructureShadow:x.mfStructureShadow||null,
     continuationReentryShadow:x.continuationReentryShadow||null,
     priceBehaviorShadow:x.priceBehaviorShadow||null,
-    live15AcceptanceShadow:x.live15AcceptanceShadow||null,admissionCounterfactualShadow:x.admissionCounterfactualShadow||null,elasticSyncShadow:x.elasticSyncShadow||null,structuralHandoff:x.structuralHandoff||null,
+    live15AcceptanceShadow:x.live15AcceptanceShadow||null,admissionCounterfactualShadow:x.admissionCounterfactualShadow||null,elasticSyncShadow:x.elasticSyncShadow||null,elasticDualChainShadow:x.elasticDualChainShadow||null,structuralHandoff:x.structuralHandoff||null,
     entryTranslation:x.entryTranslation||null,entryTicker:x.entryTicker||null,
     risk:x.risk,action:x.action,contract:x.contract,v3Shadow:x.v3Shadow||null};
 }

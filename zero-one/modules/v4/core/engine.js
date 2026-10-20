@@ -23,6 +23,7 @@ const priceBehaviorShadow=require('../experiments/price-behavior-shadow');
 const live15AcceptanceShadow=require('../experiments/live15-acceptance-shadow');
 const admissionCounterfactualShadow=require('../experiments/admission-counterfactual-shadow');
 const elasticSyncShadow=require('../experiments/elastic-sync-shadow');
+const elasticDualChainShadow=require('../experiments/elastic-dual-chain-shadow');
 
 const VERSION='v4.10.7-local-retry-requalification-20261017';
 
@@ -133,6 +134,11 @@ function evaluate(frame,position=null,previousEvaluation=null){
     frame,setup,entryBaseThesis,thesis,mcb,native,translation,priceBehavior,
     previousEvaluation&&previousEvaluation.elasticSyncShadow||null
   );
+  // v0.4 observes both market stories. It has no setup, action or risk authority.
+  const elasticDualChain=elasticDualChainShadow.evaluate(
+    frame,mcb,native,baseThesis,translation,ticker,mfStructure,priceBehavior,
+    previousEvaluation&&previousEvaluation.elasticDualChainShadow||null
+  );
 
   const entryThesis=setup&&setup.status==='SETUP'
     ?{state:'SETUP',direction:setup.direction,candidateDirection:setup.direction,mode:baseThesis&&baseThesis.mode||null,authority:'MCB_ONLY'}
@@ -178,6 +184,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     live15AcceptanceShadow:live15Acceptance,
     admissionCounterfactualShadow:admissionCounterfactual,
     elasticSyncShadow:elasticSync,
+    elasticDualChainShadow:elasticDualChain,
     structuralHandoff,
     entryTranslation,
     entryTicker,
@@ -215,6 +222,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
         signalMemory:['3m','15m'],tickerDecisionImpact:false,pmDecisionImpact:false,
         semantic:'continuous study of price effort/yield and conversion in relation to remembered native signal sequence; observation only'},
       elasticSyncShadow:{decisionImpact:false,version:elasticSyncShadow.VERSION,ordered:false,learnObservedOrder:true,tracks:['ACTUAL_EVENT_ORDER','PAIRWISE_LAGS','PRICE_CONSUMED','E3_RELAXATIONS','PLUS220_BEFORE_MINUS180']},
+      elasticDualChainShadow:{decisionImpact:false,version:elasticDualChainShadow.VERSION,tracks:['PARALLEL_LONG_SHORT','PROOF_LIFECYCLE','MF_LBW_SLOPES','MA_REJECTION_CANDIDATES','MCB_PRICE_HANDOFF_SHADOW'],semantic:'two persistent market stories; all handoffs are observational and cannot alter V4 action'},
       admissionCounterfactualShadow:{decisionImpact:false,version:admissionCounterfactualShadow.VERSION,
         qualification:['PRICE_BEHAVIOR_INTERESTING','WAVE_MEMORY_ALIGNED','MCB_CANDIDATE_SAME_DIRECTION','PM3_PM5_ALIGNED','EFF3_GTE_25PCT','DATA_OK'],
         tracks:['BLOCKERS','MFE_MAE','PLUS220_BEFORE_MINUS180','BOUNDARY_CROSS','LIVE3_CONTINUATION','CONFIRMED3_CONTINUATION','STRUCTURAL3_ALIGNMENT'],
