@@ -122,15 +122,52 @@ function conditionsFor(direction,snap,v,previous,frame,mcb){
   return conditions;
 }
 const MAX_MILESTONES=30;
-function causalMilestones(previous,current,frame,mcb,native,direction){
+const CROSS_SAMPLE_MAX_GAP_MS=90000;
+function waveGeometry(frame,previous){
+  const now=Number(frame.market.timestamp),audit=frame.sources&&frame.sources.auditRows||[];
+  const specs={m3:['liveBw','liveLbw'],m15:['live15BwRaw','live15LbwRaw']};
+  const out={};
+  for(const [tf,[bwKey,lbwKey]] of Object.entries(specs)){
+    const valid=audit.filter(r=>finite(r&&r.ts)&&Number(r.ts)<=now&&
+      finite(r[bwKey])&&finite(r[lbwKey])).sort((a,b)=>Number(a.ts)-Number(b.ts));
+    const current=valid[valid.length-1]||null,prevRow=valid[valid.length-2]||null;
+    const old=previous&&previous[tf]||null;
+    if(!current||now-Number(current.ts)>CROSS_SAMPLE_MAX_GAP_MS){
+      out[tf]={available:false,lastCrossing:old&&old.lastCrossing||null};
+      continue;
+    }
+    const spread=Number(current[bwKey])-Number(current[lbwKey]);
+    const a=prevRow?Number(prevRow[bwKey])-Number(prevRow[lbwKey]):null;
+    const deltaTime=prevRow?(Number(current.ts)-Number(prevRow.ts))/60000:null;
+    const contiguous=deltaTime!==null&&deltaTime>0&&deltaTime*60000<=CROSS_SAMPLE_MAX_GAP_MS;
+    const crossed=!!(contiguous&&a!==null&&a!==0&&spread!==0&&
+      (a<0&&spread>0||a>0&&spread<0)&&
+      !(old&&old.lastCrossing&&old.lastCrossing.sourceTs===Number(current.ts)));
+    const lastCrossing=crossed?{
+      event:spread>0?'BW_CROSSES_ABOVE_LBW':'BW_CROSSES_BELOW_LBW',
+      sourceTs:Number(current.ts),fromSpread:a,toSpread:spread,
+      observedAt:now,price:Number(frame.market.price)
+    }:old&&old.lastCrossing||null;
+    out[tf]={available:true,sourceTs:Number(current.ts),bw:Number(current[bwKey]),
+      lbw:Number(current[lbwKey]),spread,spreadMagnitude:Math.abs(spread),
+      spreadRatePerMinute:contiguous?(spread-a)/deltaTime:null,
+      relation:spread>0?'BW_ABOVE_LBW':spread<0?'BW_BELOW_LBW':'INTERSECTION',
+      crossNow:crossed,lastCrossing,
+      sinceCrossMinutes:lastCrossing?(now-lastCrossing.sourceTs)/60000:null,
+      linkedNativeFamily:tf==='m3'?'E3':'E15',decisionImpact:false,
+      semantic:'independent geometric observation related to native E3/E15; no additional vote or trading authority'};
+  }
+  return out;
+}
+function causalMilestones(previous,current,frame,mcb,native,direction,geometry){
   const now=Number(frame.market.timestamp),price=Number(frame.market.price);
   const old=previous&&previous.proofs||{},proofs=current.proofs||{};
   const priorTimeline=previous&&Array.isArray(previous.milestones)?previous.milestones:[];
   const milestones=priorTimeline.slice(),added=[];
-  const append=(name,type,sourceTs,group,value)=>{
+  const append=(name,type,sourceTs,group,value,eventDirection=direction)=>{
     const key=name+'|'+type+'|'+(sourceTs??now);
     if(milestones.some(e=>e.key===key))return;
-    const item={key,observedAt:now,sourceTs:sourceTs??null,price,direction,
+    const item={key,observedAt:now,sourceTs:sourceTs??null,price,direction:eventDirection,
       event:name,type,group,value:value??null};
     milestones.push(item);added.push(item);
   };
@@ -158,6 +195,20 @@ function causalMilestones(previous,current,frame,mcb,native,direction){
     const cur=proofs[name],was=old[name];
     if(!cur||cur.state!=='ACTIVE'||was&&was.state==='ACTIVE')continue;
     append(name,was?'REASSERTED':'OBSERVED',now,group,null);
+  }
+  // Shared geometric events: not votes and not additional E3/E15 confirmations.
+  // They are visible in both stories, with a neutral event direction.
+  if(mcb&&mcb.dataQuality&&mcb.dataQuality.degraded!==true){
+    for(const [tf,id,group] of [['m3','BW_LBW_CROSS_3M','MCB3'],
+      ['m15','BW_LBW_CROSS_15M','MCB15']]){
+      const geom=geometry&&geometry[tf];
+      if(!geom||!geom.crossNow||!geom.lastCrossing)continue;
+      const crossing=geom.lastCrossing;
+      append(id,'GEOMETRIC_CROSS',crossing.sourceTs,group,
+        {relation:crossing.event,fromSpread:crossing.fromSpread,
+          toSpread:crossing.toSpread,linkedNativeFamily:geom.linkedNativeFamily},
+        null);
+    }
   }
   const p=previous&&previous.measures||{},v=current.measures||{};
   const c=(label,older,newer)=>{
@@ -239,11 +290,12 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
   const mcbProposal=DIRECTIONS.includes(rawProposal)?rawProposal:null;
   const degraded=!!(mcb&&mcb.dataQuality&&mcb.dataQuality.degraded);
   const directions={};let narratives=[];
+  const geometry=waveGeometry(frame,prev&&prev.waveGeometry||null);
   for(const direction of DIRECTIONS){
     const old=prev&&prev.chains&&prev.chains[direction]||null;
     const proxy={...mcb,nativeSignal:native,priceBehavior};
     const next=evolve(old,direction,frame,proxy,translation,ticker,mf,old&&old.story||[]);
-    const milestones=causalMilestones(old,next,frame,proxy,native,direction);
+    const milestones=causalMilestones(old,next,frame,proxy,native,direction,geometry);
     directions[direction]={...next,...milestones};
   }
   const primary=!degraded&&mcbProposal?mcbProposal:(prev&&prev.primaryThesis||null);
@@ -277,11 +329,11 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
     :priceAcceptance?'PROPOSITION_MCB_PRIX_ALIGNE'
     :price.direction&&price.direction!==primary?'PROPOSITION_MCB_PRIX_OPPOSE'
     :'PROPOSITION_MCB_PRIX_EN_MATURATION';
-  return {version:VERSION,revision:'mcb-proposal-and-price-persistence-v0.4.1',
+  return {version:VERSION,revision:'bw-lbw-cross-distinct-v0.4.3',
     decisionImpact:false,ts:now,
     dataQuality:degraded?'DATA_DEGRADED':'DATA_OK',
     mcbAuthority:mcbProposal,structuralDirection:structural,primaryThesis:primary,
-    proposalFresh,priceDominance:price,
+    proposalFresh,priceDominance:price,waveGeometry:geometry,
     chains:directions,short:directions.short,long:directions.long,
     handoff:{state:handoffState,candidate:primary,mcbProposed:proposalFresh,
       structuralAgreement,priceAcceptance,priceDominanceDirection:price.direction,
@@ -289,4 +341,4 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
     handoffs:narratives,
     semantics:'MCB proposes current search direction instantly; structural maturity and 15m/30m price dominance are independently observable; trade authority unchanged.'};
 }
-module.exports={VERSION,evaluate,conditionsFor};
+module.exports={VERSION,evaluate,conditionsFor,waveGeometry};

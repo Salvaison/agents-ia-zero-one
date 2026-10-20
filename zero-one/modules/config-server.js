@@ -5201,6 +5201,16 @@ function renderElasticDualV04(current) {
     const superseded=Object.values(pr).filter(function(p){return p&&p.state==='SUPERSEDED';}).sort(function(a,b){return (b.lastFadedAt||0)-(a.lastFadedAt||0);}).slice(0,2);
     const dom=x.priceDominance||{},windows=dom.windows||{},w15=windows.m15||{},w30=windows.m30||{};
     const fmtNet=function(w){return w.available?money(w.netUsd):'—';};
+    const geometry=x.waveGeometry||{};
+    const bwLbwSummary=function(tf,label){
+      const g=geometry[tf]||{};
+      if(!g.available)return '<div class="elastic-dual-event">'+label+' · indisponible</div>';
+      const rate=g.spreadRatePerMinute===null||g.spreadRatePerMinute===undefined?'—':v3Signed(g.spreadRatePerMinute,2);
+      const since=g.sinceCrossMinutes===null||g.sinceCrossMinutes===undefined?'aucun croisement suivi':
+        'croisement '+Number(g.sinceCrossMinutes).toFixed(1)+' min';
+      return '<div class="elastic-dual-event">'+label+' · BW−LBW <b>'+
+        v3Signed(g.spread,2)+'</b> · Δ/min '+rate+' · '+escTrade(since)+'</div>';
+    };
     const tags=a=>a.length?a.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · '+((p.activeSince&&c.lastUpdatedAt)?((c.lastUpdatedAt-p.activeSince)/60000).toFixed(1):'0')+'m'+
       (p.reaffirmations?' · repris '+p.reaffirmations+'x':'')+'</div>'}).join(''):'<div class="elastic-dual-event">—</div>';
     const recent=(c.story||[]).slice().reverse();
@@ -5219,6 +5229,9 @@ function renderElasticDualV04(current) {
        '<div>PM Live <b>'+money(v.pmLive)+'</b></div><div>eff. 3m <b>'+percent(v.eff3)+'</b></div>'+
        '<div>yield/P75 <b>'+v3Fmt(v.yieldVsP75,2)+'x</b></div><div>effort/P75 <b>'+v3Fmt(v.effortVsP75,2)+'x</b></div>'+
        '</div>'+
+       '<div class="elastic-dual-events"><div class="heading">CROISEMENTS BW / LBW · ÉVÉNEMENT DISTINCT</div>'+
+       bwLbwSummary('m3','3m')+bwLbwSummary('m15','15m')+
+       '<div class="elastic-dual-event">Liés aux E3/E15 · sans double comptage ni autorité de trading</div></div>'+
        '<div class="elastic-dual-events"><div class="heading">OBSERVATIONS ACTUELLES</div>'+tags(pro)+
        '<div class="heading" style="margin-top:6px;">CONTRE-PREUVES</div>'+tags(contra)+
        (superseded.length?'<div class="heading" style="margin-top:6px;">SIGNAL HISTORIQUE DÉPASSÉ</div>'+superseded.map(function(p){return '<div class="elastic-dual-event">'+escTrade(human(p.name))+' · remplacé par signal opposé</div>';}).join(''):'')+'</div>'+
@@ -5228,7 +5241,7 @@ function renderElasticDualV04(current) {
        '<details class="elastic-dual-full" data-elastic-chain="'+direction+'"><summary>Historique des événements ('+Number((c.story||[]).length)+')</summary>'+rows(recent.slice(4),16)+'</details>'+
        '</section>';
   }
-  return '<div class="elastic-dual-header">ELASTIC v0.4 · CHAÎNES PARALLÈLES '+
+  return '<div class="elastic-dual-header">ELASTIC v0.4.3 · CHAÎNES PARALLÈLES '+
     '<span class="elastic-dual-note">MCB propose '+escTrade(human(x.mcbAuthority))+
     ' · trajet 15m '+escTrade(human(x.structuralDirection))+
     ' · prix 15/30m '+escTrade(human(x.priceDominance&&x.priceDominance.direction||

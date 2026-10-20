@@ -135,3 +135,56 @@ test('E15 confirmed is a new milestone when confirmation becomes available, not 
   assert.equal(e.observedAt,10030000);
   assert.ok(e.observedAt>e.sourceTs);
 });
+
+test('BW/LBW crosses are distinct shared geometric events, not extra votes or E3/E15 aliases',()=>{
+  const t=10000000,base=fixture(t,83000,'short',-50,-90);
+  const r0={ts:t-30000,lastPrice:83020,priceMove:-20,
+    liveBw:38,liveLbw:40,live15BwRaw:77.5,live15LbwRaw:80.4,mf15Pente:1.5};
+  const r1={...r0,ts:t,liveBw:36,liveLbw:38,live15BwRaw:77.54,live15LbwRaw:80.44};
+  base.frame.sources.auditRows=[r0,r1];
+  const a=run(base);
+  assert.equal(a.waveGeometry.m3.crossNow,false);
+  assert.equal(a.waveGeometry.m15.crossNow,false);
+  const next=fixture(t+30000,82900,'short',-80,-100);
+  const r2={...r1,ts:t+30000,liveBw:40.49,liveLbw:38.99,
+    live15BwRaw:79.34,live15LbwRaw:78.91,lastPrice:82900};
+  next.frame.sources.auditRows=[r0,r1,r2];
+  next.native.live3={fresh:true,up:null,dn:{ts:t+10000,type:'DN',value:40.49}};
+  next.native.live15={fresh:true,up:null,dn:{ts:t+10000,type:'DN',value:79.34}};
+  const b=run(next,a);
+  assert.equal(b.waveGeometry.m3.lastCrossing.event,'BW_CROSSES_ABOVE_LBW');
+  assert.equal(b.waveGeometry.m15.lastCrossing.event,'BW_CROSSES_ABOVE_LBW');
+  assert.equal(b.waveGeometry.m3.lastCrossing.sourceTs,t+30000);
+  assert.equal(b.waveGeometry.m15.lastCrossing.sourceTs,t+30000);
+  assert.equal(b.waveGeometry.m15.linkedNativeFamily,'E15');
+  assert.equal(b.waveGeometry.m15.decisionImpact,false);
+  for(const direction of ['long','short']){
+    const story=b.chains[direction];
+    assert.ok(story.milestones.some(x=>x.event==='BW_LBW_CROSS_3M'&&x.type==='GEOMETRIC_CROSS'&&x.direction===null));
+    assert.ok(story.milestones.some(x=>x.event==='BW_LBW_CROSS_15M'&&x.type==='GEOMETRIC_CROSS'&&x.direction===null));
+    assert.ok(!Object.keys(story.proofs).some(x=>x.startsWith('BW_LBW_CROSS')));
+  }
+  const control=fixture(t+30000,82900,'short',-80,-100);
+  control.frame.sources.auditRows=[r0,r1,{...r2,liveBw:35,live15BwRaw:76}];
+  control.native=next.native;
+  const withoutCross=run(control,a);
+  for(const direction of ['short','long']){
+    assert.equal(b.chains[direction].activeProofCount,withoutCross.chains[direction].activeProofCount);
+    assert.deepEqual(b.chains[direction].families,withoutCross.chains[direction].families);
+  }
+  const repeat=run({...next,frame:{...next.frame,market:{timestamp:t+60000,price:82900}}},b);
+  assert.equal(repeat.waveGeometry.m3.crossNow,false);
+  assert.equal(repeat.chains.short.milestones.filter(e=>e.event==='BW_LBW_CROSS_3M').length,1);
+  assert.equal(repeat.chains.short.milestones.filter(e=>e.event==='BW_LBW_CROSS_15M').length,1);
+});
+test('BW/LBW geometric cross cannot be inferred across stale observations',()=>{
+ const t=10000000;
+ const f=fixture(t,82000,'short');
+ f.frame.sources.auditRows=[
+  {ts:t-240000,lastPrice:82050,liveBw:25,liveLbw:30,live15BwRaw:60,live15LbwRaw:65},
+  {ts:t,lastPrice:82000,liveBw:30,liveLbw:25,live15BwRaw:65,live15LbwRaw:60}];
+ const e=run(f);
+ assert.equal(e.waveGeometry.m3.crossNow,false);
+ assert.equal(e.waveGeometry.m15.crossNow,false);
+ assert.ok(!e.chains.short.milestones.some(x=>x.type==='GEOMETRIC_CROSS'));
+});

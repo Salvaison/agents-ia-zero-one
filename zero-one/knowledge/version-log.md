@@ -966,3 +966,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Interface État V4 : « JALONS CAUSAUX » et historique repliable dans chacune des deux fenêtres Elastic.
 - Vérification AUDIT 20/10 : E15 DN Live ~17h01, E3 DN Live ~17h02, LBW3 croise 0 ~17h12, E15 DN confirmé ~17h15 ; LBW15 reste positif (~+55 à 17h15).
 - Aucun changement de règles actives V4.10.8 ; voir `knowledge/elastic-v0.4.2-causal-milestones-2026-10-20.md`.
+
+## 2026-10-20 — Elastic v0.4.3 : croisement BW/LBW distinct
+- Le croisement BW/LBW n'est **pas** un événement central : géométrie mesurée séparément des événements natifs E3/E15 et du franchissement zéro de LBW.
+- SHADOW PUR : calcul du spread BW−LBW et de sa vitesse en 3m/15m, franchissements entre deux AUDIT consécutifs (<=90s), suivi de la persistance, avec `sourceTs` / `observedAt` et jalons communs aux histoires LONG/SHORT.
+- Les croisements BW/LBW sont corrélés aux E3/E15, donc **aucun nouveau vote**, aucun incrément de `activeProofCount` ni des familles MCB, aucune permission d'entrée.
+- Replay 20/10 : BW/LBW15 croise à 17:01:13, BW/LBW3 à 17:02:43, chacun correspondant au signal natif Live de sa TF. LBW3 franchit zéro plus tard (~17:12), LBW15 ne franchit pas zéro.
+- Interface Etat V4 : mesures géométriques et jalons distincts dans les deux fenêtres. Voir `knowledge/elastic-v0.4.3-bw-lbw-cross-distinct-2026-10-20.md`.
