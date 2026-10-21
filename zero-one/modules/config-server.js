@@ -348,30 +348,17 @@ app.get('/api/diagnostic', requireAuth, (req, res) => {
   }
 });
 
-// Elastic overlays the SAME Waves 3m OHLC source onto a separate PM3 scale.
+// Elastic renders Waves 3m OHLC behind a centered buy/sell duel; no PM3 line.
 // Read-only endpoint; no reuse of trading state or admission authority.
 app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
   try{
     const now=Date.now(),minutes=90,t0=now-minutes*60000;
     const candles=waveUiPriceSeries('3m',t0-180000,now).slice(-45);
-    const raw=fs.existsSync(AUDIT_HISTORY_PATH)?
-      JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH,'utf8')):[];
-    const rows=(Array.isArray(raw)?raw:[])
-      .filter(x=>x&&Number.isFinite(Number(x.ts))&&Number.isFinite(Number(x.lastPrice))&&
-        Number(x.ts)<=now&&Number(x.ts)>=t0-180000)
-      .sort((a,b)=>Number(a.ts)-Number(b.ts));
-    const conversion=[];let j=0;
-    for(let i=0;i<rows.length;i++){
-      const r=rows[i],ts=Number(r.ts),cut=ts-180000;
-      while(j<i&&Number(rows[j].ts)<cut)j++;
-      if(ts<t0||ts-Number(rows[j].ts)<90000)continue;
-      conversion.push({ts,pm3Usd:Number(r.lastPrice)-Number(rows[j].lastPrice)});
-    }
     res.set('Cache-Control','no-store');
-    res.json({version:'elastic-wave-3m-overlay-v0.1',source:'Waves/mcb_3m.csv + mcb_3m_live.csv',
-      timeframe:'3m',period:{from:t0,to:now},candles,conversion,
-      priceAxis:'BTC_USD',conversionAxis:'PM3_NET_USD_3M',
-      note:'Independent vertical axes, shared time horizontal axis; candle OHLC is identical to Waves 3m source. PM3 derived from 3m price translation history. Read only.'});
+    res.json({version:'elastic-wave-3m-overlay-v0.2',source:'Waves/mcb_3m.csv + mcb_3m_live.csv',
+      timeframe:'3m',period:{from:t0,to:now},candles,
+      priceAxis:'BTC_USD',
+      note:'Price candles are the identical Waves 3m OHLC source. The central translucent buy/sell duel is rendered independently, without a PM3 line or right-hand price-level anchor. Read only.'});
   }catch(err){res.status(500).json({error:'Elastic 3m price chart unavailable',detail:err.message});}
 });
 app.get('/api/elastic-history',requireAuth,(req,res)=>{

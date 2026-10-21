@@ -144,7 +144,7 @@ test('conversion quality changes are one transition, not paired INTERRUPTION plu
  assert.equal(b.conviction.pmLiveDirection,'short');
  assert.equal(b.conviction.decisionImpact,false);
 });
-test('two transparent conversion squares render on independent PM3 axis above candle canvas',async()=>{
+test('large central duel overlays candles without PM3 blue line, right axis or BTC-price anchoring',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
  const T=Date.now(),canvas={getBoundingClientRect:()=>({width:420,height:268})};
  const svg={innerHTML:'',attributes:{},setAttribute(k,v){this.attributes[k]=v;}};
@@ -165,17 +165,31 @@ test('two transparent conversion squares render on independent PM3 axis above ca
     {ts:T-15*60000,open:82480,high:82580,low:82400,close:82530}],
     conversion:[{ts:T-180000,pm3Usd:-70},{ts:T-90000,pm3Usd:20},{ts:T,pm3Usd:45}]})})};
  vm.runInNewContext(src,ctx);
- const x=ev(f());x.effort={available:true,buyBtc:.2,sellBtc:5,sampleCount:30};
+ const x=ev(f());x.effort={available:true,buyBtc:3,sellBtc:6,sampleCount:30};
  x.conversion.pm3=45;
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
  assert.equal(optsCaptured.length,1);
  assert.equal(optsCaptured[0].opts.theme,'interface');
  assert.equal(optsCaptured[0].opts.candleMs,180000);
  assert.equal(optsCaptured[0].rows.length,2);
- assert.equal((svg.innerHTML.match(/class="el-conversion-square"/g)||[]).length,2);
- assert.ok(svg.innerHTML.includes('class="el-pm3-trace"'));
- assert.ok(svg.innerHTML.includes('PM3 $'));
- assert.ok(axis.innerHTML.includes('82'));
+ assert.equal(optsCaptured[0].opts.padding.right,10);
+ const boxes=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.equal(boxes.length,2);
+ const left=boxes[0].map(Number),right=boxes[1].map(Number);
+ assert.equal(left[1]+left[3],right[1],'squares meet at center');
+ const center=optsCaptured[0].opts.padding.left+(420-optsCaptured[0].opts.padding.left-optsCaptured[0].opts.padding.right)/2;
+ assert.ok(Math.abs(right[1]-center)<1,'join lies at midpoint of chart, not price');
+ assert.ok(left[3]>100&&right[3]>140,'squares fill chart rather than tiny right-hand objects');
+ assert.ok(left[3]+right[3]>270,'combined squares occupy most plotting width');
+ assert.ok(!svg.innerHTML.includes('el-pm3-trace'),'blue PM3 path removed');
+ assert.ok(!svg.innerHTML.includes('el-pm3-scale'),'right-hand PM3 axis removed');
+ assert.ok(!svg.innerHTML.includes('PM3 $'),'no PM3 caption in chart');
+ assert.ok(axis.innerHTML.includes('82'),'BTC candles still have left price axis');
+ x.conversion.pm3=-90;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
+ const next=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.equal(next[0][1],boxes[0][1]);
+ assert.equal(next[0][2],boxes[0][2],'changing PM3 does not move square vertically');
  assert.equal(loading.style.display,'none');
  assert.equal(svg.attributes.viewBox,'0 0 420 268');
 });
@@ -254,7 +268,7 @@ test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
  assert.ok(html.includes('eff3'));
  assert.ok(html.includes('id="elastic-price-candles"'));
  assert.ok(html.includes('id="elastic-conversion-overlay"'));
- assert.ok(html.includes('BTC · axe gauche')&&html.includes('PM3 $ · axe droit'));
+ assert.ok(html.includes('BTC · axe gauche')&&html.includes('Surfaces · volume acheteurs / vendeurs'));
  assert.ok(html.includes('PRIX'));
  assert.ok(html.includes('CHAÎNE DE THÈSE'));
  assert.ok(!html.includes('CONVICTION / ticker'));
@@ -262,20 +276,20 @@ test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
  assert.ok(!html.includes('class="el-price-trail"'));
 });
 
-test('Waves OHLC 3m is the price source; chart and conversion have independent vertical axes',()=>{
+test('Waves OHLC 3m remains the price source while duel is independently centered without a PM3 trace',()=>{
  const ui=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
  const server=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
  assert.ok(server.includes("app.get('/api/elastic-chart-3m'"));
  assert.ok(server.includes("waveUiPriceSeries('3m',t0-180000,now)"),'must reuse Waves 3m candle source');
- assert.ok(server.includes("version:'elastic-wave-3m-overlay-v0.1'"));
- assert.ok(server.includes("priceAxis:'BTC_USD',conversionAxis:'PM3_NET_USD_3M'"));
- assert.ok(server.includes("Number(r.lastPrice)-Number(rows[j].lastPrice)"));
+ assert.ok(server.includes("version:'elastic-wave-3m-overlay-v0.2'"));
+ assert.ok(server.includes("priceAxis:'BTC_USD'"));
+ assert.ok(!server.includes("const conversion=[]"),'server does not calculate unused PM3 line');
  assert.ok(ui.includes('window.BoonoCharts.drawPrice(canvas,candles'));
  assert.ok(ui.includes("theme:'interface'"));
- assert.ok(ui.includes('const ypm=v=>'));
- assert.ok(ui.includes('const yprice=v=>'));
- assert.ok(ui.includes('const mtime=ts=>'));
- assert.ok(ui.includes('class="el-pm3-trace"'));
+ assert.ok(ui.includes('const cx=pad.left+plotW/2,cy=pad.top+plotH/2'));
+ assert.ok(ui.includes('const maxSide=Math.min(plotW*.465,plotH*.76,174)'));
+ assert.ok(!ui.includes('const ypm=v=>'));
+ assert.ok(!ui.includes('class="el-pm3-trace"'));
  assert.ok(ui.includes('class="el-conversion-square"'));
  assert.ok(!ui.includes('priceTrailAxes'),'old rotated price trace should be unused');
 });

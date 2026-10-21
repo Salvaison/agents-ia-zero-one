@@ -1025,3 +1025,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Une **échelle verticale BTC/USD à gauche** et une **échelle PM3/USD distincte à droite** ; temps horizontal commun. Courbe PM3 et carrés buy/sell semi-transparents en superposition sur le chart de bougies, sans altérer l'axe du prix.
 - Endpoint auth `/api/elastic-chart-3m` lecture seule : 90 min de bougies Waves confirmées/Live, observations PM3 roulantes calculées depuis le journal AUDIT. Validation source : 29 bougies 3m OHLC réelles sur 84 min.
 - Interface monocollone 480px, chaîne de thèse et historique causal inchangés. Aucun changement du moteur V4.10.10 / exécution / admission / stop gain. Rapport `knowledge/elastic-v0.5.4-candles-3m-independent-conversion-axis-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.5 : grand duel au centre des bougies 3m
+- Retour sur capture : la courbe bleue PM3 et sa graduation droite sont retirées ; les chiffres PM3/PM5/Live restent dans les trois lignes de mesure au-dessus.
+- Les deux carrés translucides (21 %) se touchent au **milieu géométrique de la zone graphique**, sans attache au prix BTC, au PM3 ni au dernier chandelier. Surfaces proportionnelles aux volumes initiateurs acheteur/vendeur ; le plus grand carré occupe au maximum ~46,5 % de la largeur utile et ~76 % de la hauteur, les deux pouvant remplir ~93 % de la largeur quand les volumes sont égaux.
+- Les chandeliers OHLC 3m et la MA200 restent les mêmes que Vagues. Suppression des calculs d'audit PM3 inutiles dans le nouvel endpoint v0.2 ; pas de modification du moteur de trading, des journaux Elastic ni de BOONO-TV.
+- Tests : géométrie centrale, taille, absence de ligne bleue, axe prix BTC conservé, invariance de position après inversion de PM3. Rapport `knowledge/elastic-v0.5.5-central-duel-over-3m-candles-2026-10-21.md`.

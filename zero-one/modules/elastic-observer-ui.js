@@ -48,10 +48,10 @@ function effort(x){
    '<span class="el-down">VENTE '+(q.available?sell.toFixed(3)+' BTC':'—')+'</span></div>'+
    '<div class="el-overlay-chart" role="group" aria-label="Bougies BTC 3 minutes derrière la conversion PM3 et volumes des deux camps">'+
    '<canvas id="elastic-price-candles" aria-label="Graphique prix BTC 3m, comme dans Vagues"></canvas>'+
-   '<svg id="elastic-conversion-overlay" aria-label="Conversion PM3 semi-transparente sur échelle indépendante"></svg>'+
+   '<svg id="elastic-conversion-overlay" aria-label="Deux grands carrés de conversion semi-transparents centrés sur les bougies 3m, indépendants du prix"></svg>'+
    '<div id="elastic-price-axis" class="el-price-axis" aria-hidden="true"></div>'+
    '<div id="elastic-chart-loading" class="el-chart-loading">Bougies 3m · chargement…</div></div>'+
-   '<div class="el-duel-legend"><span>PRIX BTC · axe gauche</span><span>PM3 $ · axe droit</span><span>Temps · bas</span></div></div>';
+   '<div class="el-duel-legend"><span>PRIX BTC · axe gauche</span><span>Surfaces · volume acheteurs / vendeurs</span><span>Temps · bas</span></div></div>';
 }
 function display(x){
  const h=x&&x.elasticObserverShadow||null;
@@ -62,7 +62,7 @@ function display(x){
    '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
    (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.4 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.5 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
@@ -209,7 +209,7 @@ window.loadElasticChart3m=async function(snapshot){
   if(!(w>90&&h>100))return;
   const end=n(data.period&&data.period.to)||Date.now();
   const t0=end-90*60000,t1=end+6*60000;
-  const pad={left:43,right:47,top:11,bottom:20};
+  const pad={left:43,right:10,top:11,bottom:20};
   const chart=window.BoonoCharts.drawPrice(canvas,candles,{
    theme:'interface',t0,t1,boundsT0:t0,boundsT1:end,candleMs:180000,
    padding:pad,maxBodyWidth:9,pricePadPct:.04,minPriceSpan:300,priceSnap:50,
@@ -219,46 +219,29 @@ window.loadElasticChart3m=async function(snapshot){
   if(!chart)throw new Error('dessin des bougies indisponible');
   const plotH=chart.plotHeight,plotW=chart.plotWidth;
   const yprice=v=>window.BoonoCharts.mapPrice(v,chart.bounds,pad.top,plotH);
-  const mtime=ts=>window.BoonoCharts.mapTime(ts,t0,t1,pad.left,plotW);
-  const conv=(data.conversion||[]).filter(c=>n(c.ts)!==null&&n(c.pm3Usd)!==null
-    &&Number(c.ts)>=t0&&Number(c.ts)<=end);
-  const values=conv.map(c=>Math.abs(Number(c.pm3Usd)));
-  const pmNow=n(cv.conversion&&cv.conversion.pm3);
-  if(pmNow!==null)values.push(Math.abs(pmNow));
-  const limit=Math.max(25,Math.ceil(Math.max(0,...values)*1.2/25)*25);
-  const ypm=v=>pad.top+(limit-Number(v))/(2*limit)*plotH;
-  const norm=x=>Math.max(pad.top,Math.min(pad.top+plotH,x));
-  const line=conv.length>1?'<path class="el-pm3-trace" d="'+conv.map((c,i)=>
-   (i?'L':'M')+mtime(c.ts).toFixed(1)+' '+ypm(c.pm3Usd).toFixed(1)).join(' ')+
-   '" fill="none" stroke="#366fba" stroke-opacity=".90" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>':'';
-  const mid=ypm(0);
-  const zero='<line x1="'+pad.left+'" y1="'+mid.toFixed(1)+'" x2="'+(w-pad.right)+
-   '" y2="'+mid.toFixed(1)+'" stroke="#547ca8" stroke-width=".8" stroke-dasharray="3 4" opacity=".68"/>';
   const effort=cv.effort||{},volA=Math.max(0,n(effort.buyBtc)||0),volB=Math.max(0,n(effort.sellBtc)||0);
   let duel='';
   if(effort.available){
-    const max=Math.max(volA,volB,.001),size=v=>Math.max(11,Math.min(28,Math.round(Math.sqrt(v/max)*26)));
+    // Center the conversion confrontation within the CHART ITSELF.
+    // Its geometry is entirely INDEPENDENT of the current BTC price, PM3
+    // value and last candle location. Only its area reflects trade volume.
+    const cx=pad.left+plotW/2,cy=pad.top+plotH/2;
+    const maxSide=Math.min(plotW*.465,plotH*.76,174);
+    const max=Math.max(volA,volB,.001);
+    const size=v=>Math.max(18,Math.round(Math.sqrt(v/max)*maxSide));
     const leftSize=size(volA),rightSize=size(volB);
-    const xs=Math.min(w-pad.right-28,mtime(end));
-    const cy=norm(ypm(pmNow===null?0:pmNow));
-    const s=(x,sz,color)=>'<rect class="el-conversion-square" x="'+x.toFixed(1)+
-      '" y="'+Math.max(pad.top,Math.min(pad.top+plotH-sz,cy-sz/2)).toFixed(1)+
-      '" width="'+sz+'" height="'+sz+'" rx="2.8" fill="'+color+
-      '" fill-opacity=".19" stroke="'+color+'" stroke-opacity=".85" stroke-width="1.5"/>';
-    duel=s(xs-leftSize,leftSize,'#16804b')+s(xs,rightSize,'#bf4149')+
-      '<line x1="'+xs.toFixed(1)+'" y1="'+Math.max(pad.top,cy-20).toFixed(1)+
-      '" x2="'+xs.toFixed(1)+'" y2="'+Math.min(pad.top+plotH,cy+20).toFixed(1)+
-      '" stroke="#3d566a" stroke-opacity=".85" stroke-width="1.3"/>';
+    const square=(x,sz,color)=>'<rect class="el-conversion-square" x="'+x.toFixed(1)+
+      '" y="'+(cy-sz/2).toFixed(1)+'" width="'+sz.toFixed(1)+
+      '" height="'+sz.toFixed(1)+'" rx="4" fill="'+color+
+      '" fill-opacity=".21" stroke="'+color+'" stroke-opacity=".80" stroke-width="2"/>';
+    duel=square(cx-leftSize,leftSize,'#16804b')+square(cx,rightSize,'#bf4149')+
+      '<line class="el-duel-contact" x1="'+cx.toFixed(1)+'" y1="'+(cy-maxSide/2-6).toFixed(1)+
+      '" x2="'+cx.toFixed(1)+'" y2="'+(cy+maxSide/2+6).toFixed(1)+
+      '" stroke="#3d566a" stroke-opacity=".75" stroke-width="1.3"/>';
   }
-  const yTicks=[-limit,-limit/2,0,limit/2,limit].map(v=>{
-    const yy=ypm(v);return '<text class="el-pm3-scale" x="'+(w-2).toFixed(1)+
-       '" y="'+(yy+3).toFixed(1)+'" font-size="8" text-anchor="end" fill="#376ca7">'+
-       (v>0?'+':'')+Math.round(v)+'</text>';
-  }).join('');
   svg.setAttribute('viewBox','0 0 '+w+' '+h);
   svg.setAttribute('preserveAspectRatio','none');
-  svg.innerHTML=zero+line+duel+yTicks+
-    '<text x="'+(w-4)+'" y="11" text-anchor="end" font-size="8" fill="#376ca7">PM3 $</text>';
+  svg.innerHTML=duel;
   if(axis){
     const step=chart.bounds.hi-chart.bounds.lo>950?200:100;
     const marks=[];
