@@ -1042,3 +1042,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Affichage direct à l'intérieur des carrés acheteur et vendeur du **volume agressif initiateur BTC** observé sur trois minutes, avec `ACHAT` / `VENTE` pour les grands carrés. Infobulle du montant précis, format adaptatif pour petits volumes/carrés, plaquette claire discrète derrière chaque valeur.
 - Libellés de volume au-dessus simplifiés pour éviter la duplication. Les carrés continuent de se déplacer autour de la ligne centrale fixe selon le prix BTC et gardent leur dimension relative à l'effort.
 - Bougies 3m Vagues, MA200, prix du déplacement et moteurs V4.10.10 inchangés, sans modification des signaux ni des ordres. Rapport `knowledge/elastic-v0.5.7-volume-labels-inside-duel-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.8 : volume BTC en gras sans fond blanc
+- Les deux carrés montrent uniquement leur quantité `X.XXX BTC` en **vert/rouge entièrement opaque et gras 900**, sans plaquette blanche, sans ACHAT/VENTE dupliqué dans le carré.
+- Les valeurs complètes **ACHAT X.XXX BTC** et **VENTE Y.YYY BTC** réapparaissent au-dessus du graphique comme précédemment.
+- Adaptation du texte aux carrés compacts et aux volumes très faibles. Bougies 3m Vagues, ligne centrale fixe, mouvement conjoint des carrés, montant de déplacement du prix et données inchangés.
+- Modification UI sans impact décisionnel ; V4.10.10 et les protections restent identiques. Rapport `knowledge/elastic-v0.5.8-plain-bold-volume-labels-2026-10-21.md`.

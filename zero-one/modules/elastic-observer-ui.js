@@ -44,8 +44,8 @@ function effort(x){
    esc(cv.direction||'—').toUpperCase()+'</b></div></div>';
  const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0);
  return '<div class="el-duel"><div class="el-section-title">PRIX BTC · BOUGIES 3m + CONVERSION</div>'+
-   conv+'<div class="el-duel-volumes"><span class="el-up">ACHAT · BTC / 3m</span>'+
-   '<span class="el-down">VENTE · BTC / 3m</span></div>'+
+   conv+'<div class="el-duel-volumes"><span class="el-up">ACHAT '+(q.available?buy.toFixed(3)+' BTC':'—')+'</span>'+
+   '<span class="el-down">VENTE '+(q.available?sell.toFixed(3)+' BTC':'—')+'</span></div>'+
    '<div class="el-overlay-chart" role="group" aria-label="Bougies BTC 3 minutes derrière la conversion PM3 et volumes des deux camps">'+
    '<canvas id="elastic-price-candles" aria-label="Graphique prix BTC 3m, comme dans Vagues"></canvas>'+
    '<svg id="elastic-conversion-overlay" aria-label="Duel de conversion semi-transparent : deux carrés accolés se déplaçant selon le BTC autour de l’axe central fixe"></svg>'+
@@ -64,7 +64,7 @@ function display(x){
    '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
    (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.7 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.8 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
@@ -244,32 +244,23 @@ window.loadElasticChart3m=async function(snapshot){
       Math.max(-1,Math.min(1,priceShift/priceRange)):0;
     const offset=ratio*travel,contact=cx+offset;
     const square=(x,sz,color,volume,side)=>{
-      const y=cy-sz/2,mid=x+sz/2,compact=sz<55,large=sz>=76;
+      const y=cy-sz/2,mid=x+sz/2;
       const amount=volume>0&&volume<.001?volume.toExponential(1):
         volume>0&&volume<.01?volume.toFixed(4):volume.toFixed(3);
-      const line=compact?amount:amount+' BTC';
-      const font=large?11:compact?8:9.2;
-      const maxText=Math.max(10,sz-7);
+      const line=amount+' BTC';
+      const font=sz>=90?12:sz>=55?10:9;
+      const maxText=Math.max(10,sz-6);
       const shrink=line.length*font*.62>maxText?
         ' textLength="'+maxText.toFixed(1)+'" lengthAdjust="spacingAndGlyphs"':'';
-      const chipW=Math.min(sz-4,Math.max(13,Math.min(maxText,line.length*font*.61+7)));
-      const chipH=compact?16:32;
-      const labelY=compact?cy+3:cy+9;
       return '<g class="el-conversion-camp">'+
         '<title>'+side+' : '+volume.toFixed(volume<.01?5:3)+' BTC initiateurs sur 3m</title>'+
         '<rect class="el-conversion-square" x="'+x.toFixed(1)+
         '" y="'+y.toFixed(1)+'" width="'+sz.toFixed(1)+
         '" height="'+sz.toFixed(1)+'" rx="4" fill="'+color+
         '" fill-opacity=".21" stroke="'+color+'" stroke-opacity=".80" stroke-width="2"/>'+
-        '<rect class="el-volume-label-back" x="'+(mid-chipW/2).toFixed(1)+
-        '" y="'+(cy-chipH/2).toFixed(1)+'" width="'+chipW.toFixed(1)+
-        '" height="'+chipH.toFixed(1)+'" rx="3" fill="#fff" fill-opacity=".80"/>'+
-        (compact?'':'<text class="el-volume-side" x="'+mid.toFixed(1)+'" y="'+(cy-6).toFixed(1)+
-         '" font-size="'+(large?9:8)+'" font-weight="750" fill="'+color+
-         '" text-anchor="middle">'+side+'</text>')+
-        '<text class="el-volume-amount" x="'+mid.toFixed(1)+'" y="'+labelY.toFixed(1)+
-        '" font-family="SF Mono,Menlo,monospace" font-size="'+font+'" font-weight="800"'+
-        ' text-anchor="middle" fill="'+(side==='ACHAT'?'#0c6540':'#a92736')+'"'+shrink+
+        '<text class="el-volume-amount" x="'+mid.toFixed(1)+'" y="'+(cy+font*.34).toFixed(1)+
+        '" font-family="SF Mono,Menlo,monospace" font-size="'+font+'" font-weight="900"'+
+        ' text-anchor="middle" fill="'+color+'" fill-opacity="1"'+shrink+
         '>'+line+'</text>'+
         '</g>';
     };

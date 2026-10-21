@@ -346,7 +346,16 @@ test('BTC volumes appear INSIDE both semi-transparent moving squares, including 
  assert.ok(svg.innerHTML.includes('45.317 BTC'));
  assert.ok(svg.innerHTML.includes('ACHAT : 115.480 BTC initiateurs'));
  assert.ok(svg.innerHTML.includes('VENTE : 45.317 BTC initiateurs'));
- assert.equal((svg.innerHTML.match(/class="el-volume-label-back"/g)||[]).length,2);
+ assert.equal((svg.innerHTML.match(/class="el-volume-label-back"/g)||[]).length,0);
+ assert.equal((svg.innerHTML.match(/class="el-volume-side"/g)||[]).length,0);
+ assert.ok(!svg.innerHTML.includes('fill="#fff" fill-opacity=".80"'));
+ assert.equal((svg.innerHTML.match(/font-weight="900"/g)||[]).length,2);
+ assert.equal((svg.innerHTML.match(/fill-opacity="1"/g)||[]).length,2);
+ assert.ok(svg.innerHTML.includes('fill="#16804b" fill-opacity="1"'));
+ assert.ok(svg.innerHTML.includes('fill="#bf4149" fill-opacity="1"'));
+ const header=ctx.window.renderElasticObserverV05({elasticObserverShadow:snap});
+ assert.ok(header.includes('ACHAT 115.480 BTC'));
+ assert.ok(header.includes('VENTE 45.317 BTC'));
  const groups=[...svg.innerHTML.matchAll(/<g class="el-conversion-camp">([\s\S]*?)<\/g>/g)];
  assert.equal(groups.length,2);
  for(const g of groups){
