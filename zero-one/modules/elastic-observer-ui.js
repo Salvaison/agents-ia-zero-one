@@ -42,47 +42,16 @@ function effort(x){
    ' · effort/P75 '+(n(cv.effortVsP75)!==null?Number(cv.effortVsP75).toFixed(2)+'×':'—')+'</div>'+
    '<div>Qualité <b>'+esc(cv.quality||'UNCLASSIFIED')+'</b> · direction <b class="'+tone(cv.direction)+'">'+
    esc(cv.direction||'—').toUpperCase()+'</b></div></div>';
- if(!q.available)return '<div class="el-duel"><div class="el-section-title">DUEL · 3m</div>'+conv+
-   '<div class="el-duel-notice">Volumes directionnels indisponibles.</div></div>';
  const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0);
- const max=Math.max(buy,sell,.00001),sz=v=>Math.max(12,Math.round(Math.sqrt(v/max)*52));
- const b=sz(buy),s=sz(sell),price=n(q.priceNetUsd)||0;
- const dir=fromDelta(0,price),range=Math.max(n(q.priceRangeUsd)||0,1);
- const plotX=delta=>170+Math.max(-1,Math.min(1,delta/range))*64;
- const contact=Math.round(plotX(price)),centerY=58;
- // Price path is drawn UNDER the two translucent effort squares.
- // Shared horizontal axis = BTC displacement; vertical = time oldest -> newest.
- const trail=(q.priceTrail||[]).filter(p=>n(p.ts)!==null&&n(p.deltaUsd)!==null);
- const t0=trail.length?Number(trail[0].ts):0,t1=trail.length?Number(trail[trail.length-1].ts):0;
- const pricePath=trail.length>=2&&t1>t0?'M'+trail.map(p=>
-   plotX(Number(p.deltaUsd)).toFixed(1)+' '+(109-(Number(p.ts)-t0)/(t1-t0)*51).toFixed(1)
- ).join(' L'):'';
- const priceLayer=pricePath?
-   '<path class="el-price-underlay" d="'+pricePath+'" stroke="#ffffff" stroke-width="5" opacity=".86" fill="none" stroke-linejoin="round"/>'+
-   '<path class="el-price-trail" d="'+pricePath+'" stroke="#2069a2" stroke-width="2.5" opacity=".9" fill="none" stroke-linejoin="round"/>'+
-   '<circle cx="'+plotX(price).toFixed(1)+'" cy="58" r="2.4" fill="#2069a2"/>':'';
- const square=(x,y,w,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+
-   '" rx="3" fill="'+col+'" fill-opacity=".12" stroke="'+col+'" stroke-opacity=".75" stroke-width="1.8"/>';
- const ticks=[-2,-1,0,1,2].map(i=>{
-   const x=170+i*32,v=i*range/2;
-   return '<line x1="'+x+'" y1="114" x2="'+x+'" y2="120" stroke="#93a0aa" stroke-width="1"/>'+
-     '<text x="'+x+'" y="133" text-anchor="middle" fill="#71808c" font-size="8">'+fmt(v,0)+'</text>';
- }).join('');
- return '<div class="el-duel"><div class="el-section-title">DUEL · 3m</div>'+conv+
-   '<div class="el-duel-volumes"><span class="el-up">ACHAT '+buy.toFixed(3)+' BTC</span>'+
-   '<span class="el-down">VENTE '+sell.toFixed(3)+' BTC</span></div>'+
-   '<svg role="img" aria-label="Carrés acheteur et vendeur accolés, prix déplaçant les deux, graduation en dollars BTC" viewBox="0 0 340 160" width="100%" xmlns="http://www.w3.org/2000/svg">'+
-   '<rect x="5" y="3" width="330" height="154" rx="6" fill="#fafbfc" stroke="#d9e0e6"/>'+
-   '<line x1="170" y1="10" x2="170" y2="114" stroke="#9ca8b2" stroke-dasharray="4 3" stroke-width="1.5"/>'+
-   '<text x="9" y="56" font-size="7.6" fill="#657888">NOW</text>'+
-   '<text x="9" y="108" font-size="7.6" fill="#657888">−3m</text>'+
-   priceLayer+
-   square(contact-b,centerY-b/2,b,'#16804b')+square(contact,centerY-s/2,s,'#bb3e42')+
-   '<line x1="'+contact+'" y1="'+(centerY-Math.max(b,s)/2-4)+'" x2="'+contact+'" y2="'+(centerY+Math.max(b,s)/2+4)+'" stroke="#586978" stroke-width="1"/>'+
-   '<line x1="94" y1="114" x2="246" y2="114" stroke="#9eabb7" stroke-width="1"/>'+
-   ticks+
-   '<text x="170" y="149" text-anchor="middle" font-size="11" font-weight="750" fill="'+
-     (dir==='long'?'#16804b':dir==='short'?'#bb3e42':'#53616e')+'">PRIX '+esc(money(price))+'</text></svg></div>';
+ return '<div class="el-duel"><div class="el-section-title">PRIX BTC · BOUGIES 3m + CONVERSION</div>'+
+   conv+'<div class="el-duel-volumes"><span class="el-up">ACHAT '+(q.available?buy.toFixed(3)+' BTC':'—')+'</span>'+
+   '<span class="el-down">VENTE '+(q.available?sell.toFixed(3)+' BTC':'—')+'</span></div>'+
+   '<div class="el-overlay-chart" role="group" aria-label="Bougies BTC 3 minutes derrière la conversion PM3 et volumes des deux camps">'+
+   '<canvas id="elastic-price-candles" aria-label="Graphique prix BTC 3m, comme dans Vagues"></canvas>'+
+   '<svg id="elastic-conversion-overlay" aria-label="Conversion PM3 semi-transparente sur échelle indépendante"></svg>'+
+   '<div id="elastic-price-axis" class="el-price-axis" aria-hidden="true"></div>'+
+   '<div id="elastic-chart-loading" class="el-chart-loading">Bougies 3m · chargement…</div></div>'+
+   '<div class="el-duel-legend"><span>PRIX BTC · axe gauche</span><span>PM3 $ · axe droit</span><span>Temps · bas</span></div></div>';
 }
 function display(x){
  const h=x&&x.elasticObserverShadow||null;
@@ -93,7 +62,7 @@ function display(x){
    '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
    (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.3 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.4 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
@@ -218,5 +187,88 @@ window.loadElasticObserverHistory=function(){
    if(st.events.length)paintHistory();
    if(!st.events.length&&!st.loading)fetchHistoryPage(false);
  }
+};
+// Candle renderer is intentionally reused from Waves through BoonoCharts.
+// Both overlays share TIME on x, not value on y: BTC left, PM3 right.
+window.loadElasticChart3m=async function(snapshot){
+ const cv=snapshot&&snapshot.elasticObserverShadow||null;
+ const canvas=document.getElementById('elastic-price-candles');
+ const svg=document.getElementById('elastic-conversion-overlay');
+ const axis=document.getElementById('elastic-price-axis');
+ const loading=document.getElementById('elastic-chart-loading');
+ if(!cv||!canvas||!svg||!window.BoonoCharts||!window.BoonoCharts.drawPrice)return;
+ try{
+  const res=await fetch('/api/elastic-chart-3m',{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  if(document.getElementById('elastic-price-candles')!==canvas)return;
+  const candles=(data.candles||[]).filter(c=>n(c.ts)!==null&&
+    [c.open,c.high,c.low,c.close].every(v=>n(v)!==null));
+  if(candles.length<2)throw new Error('bougies 3m indisponibles');
+  const w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height;
+  if(!(w>90&&h>100))return;
+  const end=n(data.period&&data.period.to)||Date.now();
+  const t0=end-90*60000,t1=end+6*60000;
+  const pad={left:43,right:47,top:11,bottom:20};
+  const chart=window.BoonoCharts.drawPrice(canvas,candles,{
+   theme:'interface',t0,t1,boundsT0:t0,boundsT1:end,candleMs:180000,
+   padding:pad,maxBodyWidth:9,pricePadPct:.04,minPriceSpan:300,priceSnap:50,
+   priceGridMinor:100,priceGridMajor:200,hourGrid:true,
+   maAbove:'#1f9d55',maBelow:'#d33'
+  });
+  if(!chart)throw new Error('dessin des bougies indisponible');
+  const plotH=chart.plotHeight,plotW=chart.plotWidth;
+  const yprice=v=>window.BoonoCharts.mapPrice(v,chart.bounds,pad.top,plotH);
+  const mtime=ts=>window.BoonoCharts.mapTime(ts,t0,t1,pad.left,plotW);
+  const conv=(data.conversion||[]).filter(c=>n(c.ts)!==null&&n(c.pm3Usd)!==null
+    &&Number(c.ts)>=t0&&Number(c.ts)<=end);
+  const values=conv.map(c=>Math.abs(Number(c.pm3Usd)));
+  const pmNow=n(cv.conversion&&cv.conversion.pm3);
+  if(pmNow!==null)values.push(Math.abs(pmNow));
+  const limit=Math.max(25,Math.ceil(Math.max(0,...values)*1.2/25)*25);
+  const ypm=v=>pad.top+(limit-Number(v))/(2*limit)*plotH;
+  const norm=x=>Math.max(pad.top,Math.min(pad.top+plotH,x));
+  const line=conv.length>1?'<path class="el-pm3-trace" d="'+conv.map((c,i)=>
+   (i?'L':'M')+mtime(c.ts).toFixed(1)+' '+ypm(c.pm3Usd).toFixed(1)).join(' ')+
+   '" fill="none" stroke="#366fba" stroke-opacity=".90" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>':'';
+  const mid=ypm(0);
+  const zero='<line x1="'+pad.left+'" y1="'+mid.toFixed(1)+'" x2="'+(w-pad.right)+
+   '" y2="'+mid.toFixed(1)+'" stroke="#547ca8" stroke-width=".8" stroke-dasharray="3 4" opacity=".68"/>';
+  const effort=cv.effort||{},volA=Math.max(0,n(effort.buyBtc)||0),volB=Math.max(0,n(effort.sellBtc)||0);
+  let duel='';
+  if(effort.available){
+    const max=Math.max(volA,volB,.001),size=v=>Math.max(11,Math.min(28,Math.round(Math.sqrt(v/max)*26)));
+    const leftSize=size(volA),rightSize=size(volB);
+    const xs=Math.min(w-pad.right-28,mtime(end));
+    const cy=norm(ypm(pmNow===null?0:pmNow));
+    const s=(x,sz,color)=>'<rect class="el-conversion-square" x="'+x.toFixed(1)+
+      '" y="'+Math.max(pad.top,Math.min(pad.top+plotH-sz,cy-sz/2)).toFixed(1)+
+      '" width="'+sz+'" height="'+sz+'" rx="2.8" fill="'+color+
+      '" fill-opacity=".19" stroke="'+color+'" stroke-opacity=".85" stroke-width="1.5"/>';
+    duel=s(xs-leftSize,leftSize,'#16804b')+s(xs,rightSize,'#bf4149')+
+      '<line x1="'+xs.toFixed(1)+'" y1="'+Math.max(pad.top,cy-20).toFixed(1)+
+      '" x2="'+xs.toFixed(1)+'" y2="'+Math.min(pad.top+plotH,cy+20).toFixed(1)+
+      '" stroke="#3d566a" stroke-opacity=".85" stroke-width="1.3"/>';
+  }
+  const yTicks=[-limit,-limit/2,0,limit/2,limit].map(v=>{
+    const yy=ypm(v);return '<text class="el-pm3-scale" x="'+(w-2).toFixed(1)+
+       '" y="'+(yy+3).toFixed(1)+'" font-size="8" text-anchor="end" fill="#376ca7">'+
+       (v>0?'+':'')+Math.round(v)+'</text>';
+  }).join('');
+  svg.setAttribute('viewBox','0 0 '+w+' '+h);
+  svg.setAttribute('preserveAspectRatio','none');
+  svg.innerHTML=zero+line+duel+yTicks+
+    '<text x="'+(w-4)+'" y="11" text-anchor="end" font-size="8" fill="#376ca7">PM3 $</text>';
+  if(axis){
+    const step=chart.bounds.hi-chart.bounds.lo>950?200:100;
+    const marks=[];
+    for(let v=Math.ceil(chart.bounds.lo/step)*step;v<=chart.bounds.hi;v+=step){
+      marks.push('<span style="top:'+yprice(v).toFixed(1)+'px">'+
+        Math.round(v).toLocaleString('fr-FR')+'</span>');
+    }
+    axis.innerHTML=marks.join('');
+  }
+  if(loading)loading.style.display='none';
+ }catch(err){if(loading){loading.textContent='Bougies 3m : '+err.message;loading.style.display='block';}}
 };
 })();

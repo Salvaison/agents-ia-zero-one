@@ -104,7 +104,7 @@ test('browser client renders 7 families and historical controls without twin col
  vm.runInNewContext(code,context);
  const s=ev(f());
  const html=context.window.renderElasticObserverV05({elasticObserverShadow:s});
- for(const label of ['MCB 15','MCB 3','FLOW','MA','CONVERSION','BOUNDARY','CONTEXT','CHRONOLOGIE','6 h','24 h','48 h','DUEL']){
+ for(const label of ['MCB 15','MCB 3','FLOW','MA','CONVERSION','BOUNDARY','CONTEXT','CHRONOLOGIE','6 h','24 h','48 h','PRIX BTC']){
   assert.ok(html.includes(label),label);
  }
  assert.ok(!html.includes('CONTRE-PREUVES'));
@@ -144,26 +144,40 @@ test('conversion quality changes are one transition, not paired INTERRUPTION plu
  assert.equal(b.conviction.pmLiveDirection,'short');
  assert.equal(b.conviction.decisionImpact,false);
 });
-test('tug-of-war squares remain touching, prices shift both regardless of effort sizes',()=>{
- const uiCode=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
- const context={window:{},document:{},fetch:async()=>({ok:true,json:async()=>({events:[]})})};
- vm.runInNewContext(uiCode,context);
- const a=ev(f());a.lastEvent={observedAt:10000000,family:'MCB15',key:'E15',type:'CONFIRMED'};
- a.effort={available:true,buyBtc:.2,sellBtc:5,priceNetUsd:22,priceRangeUsd:50,sampleCount:3};
- const h=context.window.renderElasticObserverV05({elasticObserverShadow:a});
- const rs=[...h.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" rx="3"/g)];
- assert.equal(rs.length,2);
- const x=Number(rs[0][1]),side=Number(rs[0][3]),right=Number(rs[1][1]);
- assert.equal(x+side,right);
- assert.ok(right>170,'positive price moves both boxes right despite larger selling square');
- assert.ok(Number(rs[1][3])>side);
- assert.ok(h.includes('graduation en dollars BTC'));
- assert.ok(h.includes('CHAÎNE DE THÈSE'));
- assert.ok(h.includes('PM Live'));
- a.effort.priceNetUsd=-22;
- const h2=context.window.renderElasticObserverV05({elasticObserverShadow:a});
- const rs2=[...h2.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" rx="3"/g)];
- assert.ok(Number(rs2[1][1])<170);
+test('two transparent conversion squares render on independent PM3 axis above candle canvas',async()=>{
+ const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const T=Date.now(),canvas={getBoundingClientRect:()=>({width:420,height:268})};
+ const svg={innerHTML:'',attributes:{},setAttribute(k,v){this.attributes[k]=v;}};
+ const axis={innerHTML:''},loading={style:{},textContent:''};
+ const nodes={'elastic-price-candles':canvas,'elastic-conversion-overlay':svg,
+  'elastic-price-axis':axis,'elastic-chart-loading':loading};
+ const optsCaptured=[];
+ const ctx={window:{BoonoCharts:{
+    drawPrice:(can,rows,opts)=>{optsCaptured.push({can,rows,opts});
+      return {bounds:{lo:82000,hi:83000},padding:opts.padding,
+        plotWidth:420-opts.padding.left-opts.padding.right,
+        plotHeight:268-opts.padding.top-opts.padding.bottom};},
+    mapPrice:(v,b,top,height)=>top+(b.hi-v)/(b.hi-b.lo)*height,
+    mapTime:(ts,t0,t1,left,width)=>left+(ts-t0)/(t1-t0)*width
+  }},document:{getElementById:id=>nodes[id]||null},
+  fetch:async url=>({ok:true,json:async()=>({period:{to:T},candles:[
+    {ts:T-18*60000,open:82400,high:82500,low:82350,close:82480},
+    {ts:T-15*60000,open:82480,high:82580,low:82400,close:82530}],
+    conversion:[{ts:T-180000,pm3Usd:-70},{ts:T-90000,pm3Usd:20},{ts:T,pm3Usd:45}]})})};
+ vm.runInNewContext(src,ctx);
+ const x=ev(f());x.effort={available:true,buyBtc:.2,sellBtc:5,sampleCount:30};
+ x.conversion.pm3=45;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
+ assert.equal(optsCaptured.length,1);
+ assert.equal(optsCaptured[0].opts.theme,'interface');
+ assert.equal(optsCaptured[0].opts.candleMs,180000);
+ assert.equal(optsCaptured[0].rows.length,2);
+ assert.equal((svg.innerHTML.match(/class="el-conversion-square"/g)||[]).length,2);
+ assert.ok(svg.innerHTML.includes('class="el-pm3-trace"'));
+ assert.ok(svg.innerHTML.includes('PM3 $'));
+ assert.ok(axis.innerHTML.includes('82'));
+ assert.equal(loading.style.display,'none');
+ assert.equal(svg.attributes.viewBox,'0 0 420 268');
 });
 test('chronology stays collapsed without fetching and fetches paginated events when opened',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
@@ -238,40 +252,32 @@ test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
  assert.ok(html.indexOf('el-list-bubble')<html.indexOf('el-duel-bubble'));
  assert.ok(html.includes('el-duel-metrics'));
  assert.ok(html.includes('eff3'));
- assert.ok(html.includes('width="330" height="154"'));
+ assert.ok(html.includes('id="elastic-price-candles"'));
+ assert.ok(html.includes('id="elastic-conversion-overlay"'));
+ assert.ok(html.includes('BTC · axe gauche')&&html.includes('PM3 $ · axe droit'));
  assert.ok(html.includes('PRIX'));
  assert.ok(html.includes('CHAÎNE DE THÈSE'));
  assert.ok(!html.includes('CONVICTION / ticker'));
  assert.ok(!html.includes('Les carrés restent accolés'));
+ assert.ok(!html.includes('class="el-price-trail"'));
 });
 
-test('duel overlays BTC price path under transparent volume squares on identical price axis',()=>{
- const ts=10000000,step=1000,ticks=[];
- for(let i=0;i<=180;i++){
-   const move=i===0?0:i===180?24:i<60?i*.8:i<120?48-(i-60)*1.6:-48+(i-120)*1.2;
-   ticks.push({ts:ts-180000+i*step,price:82800+move,volume:.01,side:i%3?1:2});
- }
- const obs=ev(f(ts,{ticks}));
- assert.ok(obs.effort.available);
- assert.equal(obs.effort.priceNetUsd,24);
- assert.ok(obs.effort.priceTrail.length>=10);
- assert.ok(obs.effort.priceTrail.length<=122);
- assert.equal(obs.effort.priceTrail[0].deltaUsd,0);
- assert.equal(obs.effort.priceTrail.at(-1).deltaUsd,24);
- assert.equal(obs.effort.priceTrailAxes.horizontal,'BTC_PRICE_DISPLACEMENT_USD_FROM_FIRST_TICK');
- assert.ok(Math.min(...obs.effort.priceTrail.map(x=>x.deltaUsd))<0);
- assert.ok(Math.max(...obs.effort.priceTrail.map(x=>x.deltaUsd))>0);
- const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
- const ctx={window:{},document:{}};vm.runInNewContext(src,ctx);
- const html=ctx.window.renderElasticObserverV05({elasticObserverShadow:obs});
- const pathIndex=html.indexOf('class="el-price-trail"');
- const squareIndex=html.indexOf('rx="3" fill="#16804b"');
- assert.ok(pathIndex>=0&&squareIndex>pathIndex,'price is SVG underlay beneath squares');
- assert.ok(html.includes('el-price-underlay'));
- assert.ok(html.includes('fill-opacity=".12"'));
- assert.ok(html.includes('NOW')&&html.includes('−3m'));
- assert.ok(html.includes('graduation en dollars BTC'));
- assert.equal((html.match(/class="el-price-trail"/g)||[]).length,1);
+test('Waves OHLC 3m is the price source; chart and conversion have independent vertical axes',()=>{
+ const ui=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const server=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
+ assert.ok(server.includes("app.get('/api/elastic-chart-3m'"));
+ assert.ok(server.includes("waveUiPriceSeries('3m',t0-180000,now)"),'must reuse Waves 3m candle source');
+ assert.ok(server.includes("version:'elastic-wave-3m-overlay-v0.1'"));
+ assert.ok(server.includes("priceAxis:'BTC_USD',conversionAxis:'PM3_NET_USD_3M'"));
+ assert.ok(server.includes("Number(r.lastPrice)-Number(rows[j].lastPrice)"));
+ assert.ok(ui.includes('window.BoonoCharts.drawPrice(canvas,candles'));
+ assert.ok(ui.includes("theme:'interface'"));
+ assert.ok(ui.includes('const ypm=v=>'));
+ assert.ok(ui.includes('const yprice=v=>'));
+ assert.ok(ui.includes('const mtime=ts=>'));
+ assert.ok(ui.includes('class="el-pm3-trace"'));
+ assert.ok(ui.includes('class="el-conversion-square"'));
+ assert.ok(!ui.includes('priceTrailAxes'),'old rotated price trace should be unused');
 });
 test('price overlay with sparse or unavailable ticks falls back without synthetic price path',()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');

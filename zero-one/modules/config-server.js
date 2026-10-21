@@ -348,6 +348,32 @@ app.get('/api/diagnostic', requireAuth, (req, res) => {
   }
 });
 
+// Elastic overlays the SAME Waves 3m OHLC source onto a separate PM3 scale.
+// Read-only endpoint; no reuse of trading state or admission authority.
+app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
+  try{
+    const now=Date.now(),minutes=90,t0=now-minutes*60000;
+    const candles=waveUiPriceSeries('3m',t0-180000,now).slice(-45);
+    const raw=fs.existsSync(AUDIT_HISTORY_PATH)?
+      JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH,'utf8')):[];
+    const rows=(Array.isArray(raw)?raw:[])
+      .filter(x=>x&&Number.isFinite(Number(x.ts))&&Number.isFinite(Number(x.lastPrice))&&
+        Number(x.ts)<=now&&Number(x.ts)>=t0-180000)
+      .sort((a,b)=>Number(a.ts)-Number(b.ts));
+    const conversion=[];let j=0;
+    for(let i=0;i<rows.length;i++){
+      const r=rows[i],ts=Number(r.ts),cut=ts-180000;
+      while(j<i&&Number(rows[j].ts)<cut)j++;
+      if(ts<t0||ts-Number(rows[j].ts)<90000)continue;
+      conversion.push({ts,pm3Usd:Number(r.lastPrice)-Number(rows[j].lastPrice)});
+    }
+    res.set('Cache-Control','no-store');
+    res.json({version:'elastic-wave-3m-overlay-v0.1',source:'Waves/mcb_3m.csv + mcb_3m_live.csv',
+      timeframe:'3m',period:{from:t0,to:now},candles,conversion,
+      priceAxis:'BTC_USD',conversionAxis:'PM3_NET_USD_3M',
+      note:'Independent vertical axes, shared time horizontal axis; candle OHLC is identical to Waves 3m source. PM3 derived from 3m price translation history. Read only.'});
+  }catch(err){res.status(500).json({error:'Elastic 3m price chart unavailable',detail:err.message});}
+});
 app.get('/api/elastic-history',requireAuth,(req,res)=>{
   try{
     const hours=[6,24,48].includes(Number(req.query.hours))?Number(req.query.hours):6;
@@ -2405,6 +2431,14 @@ app.get('/', requireAuth, (req, res) => {
       .el-more{margin-top:5px;border:1px solid #d4dbe0;background:#f8fafb;border-radius:5px;cursor:pointer;font-size:9px;padding:6px 12px;color:#405362;}
       .el-more[hidden]{display:none;}
       .el-duel svg{display:block;margin:auto;max-width:440px;}
+      .el-overlay-chart{height:268px;position:relative;width:100%;overflow:hidden;border:1px solid #dfe3e7;border-radius:5px;background:#fff;}
+      .el-overlay-chart canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+      .el-overlay-chart svg{position:absolute;inset:0;width:100%;height:100%;max-width:none;pointer-events:none;}
+      .el-price-axis{position:absolute;top:0;bottom:0;left:0;width:43px;pointer-events:none;font:8px 'SF Mono',Menlo,monospace;color:#555;}
+      .el-price-axis span{position:absolute;left:1px;width:40px;transform:translateY(-50%);background:rgba(255,255,255,.88);text-align:right;padding-right:3px;}
+      .el-chart-loading{position:absolute;left:46px;right:43px;top:6px;font-size:9px;color:#82909d;text-align:center;pointer-events:none;}
+      .el-duel-legend{display:flex;gap:5px;justify-content:space-between;color:#697887;font-size:8px;padding:3px 0;}
+      .el-duel-volumes{padding-bottom:3px;}
       .el-grid{display:block;margin-top:5px}
       .el-section{min-width:0;border:0;border-bottom:1px solid #e6e9ec;border-radius:0;padding:5px 0 6px;background:transparent;}
       .el-section:last-child{border-bottom:0;padding-bottom:0;}
@@ -5373,6 +5407,7 @@ async function loadTrades() {
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       living + posHtml;
     if(window.loadElasticObserverHistory)window.loadElasticObserverHistory();
+    if(window.loadElasticChart3m)window.loadElasticChart3m(current);
     stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});
     updateV3LivePriceDom();
 

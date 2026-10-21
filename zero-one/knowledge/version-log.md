@@ -1019,3 +1019,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - **Axe horizontal commun de déplacement BTC en USD** pour prix et contact entre carrés ; vertical = temps (plus ancien en bas, le plus récent au niveau des carrés), explicitement distinct d'un graphique temporel classique.
 - Prix comprimé en 30 fenêtres temporelles, premiers/derniers/maxima/minima conservés (~120 points) ; aucune estimation de prix lorsque les ticks exploitables manquent.
 - Aucun changement d'autorité décisionnelle, moteur V4.10.10 ni protections 120/90 et 220/180 ; journal v0.5 intact. Rapport `knowledge/elastic-v0.5.3-price-underlay-duel-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.4 : bougies 3m de Vagues + conversion superposée
+- Correction demandée : **ne plus afficher le prix en tracé vertical**. Réutiliser réellement `waveUiPriceSeries('3m')` et `BoonoCharts.drawPrice` de Vagues (OHLC 3m et MA200).
+- Une **échelle verticale BTC/USD à gauche** et une **échelle PM3/USD distincte à droite** ; temps horizontal commun. Courbe PM3 et carrés buy/sell semi-transparents en superposition sur le chart de bougies, sans altérer l'axe du prix.
+- Endpoint auth `/api/elastic-chart-3m` lecture seule : 90 min de bougies Waves confirmées/Live, observations PM3 roulantes calculées depuis le journal AUDIT. Validation source : 29 bougies 3m OHLC réelles sur 84 min.
+- Interface monocollone 480px, chaîne de thèse et historique causal inchangés. Aucun changement du moteur V4.10.10 / exécution / admission / stop gain. Rapport `knowledge/elastic-v0.5.4-candles-3m-independent-conversion-axis-2026-10-21.md`.
