@@ -33,45 +33,58 @@ const tfRow=(name,w)=>{
   ' · Live '+(live?'<b class="'+tone(live.type==='UP'?'long':'short')+'">'+esc(live.type)+' provisoire</b>':'—')+'</div></div>';
 };
 function effort(x){
- const q=x&&x.effort||{},evt=x&&x.lastEvent||null;
- const label=evt?date(evt.observedAt)+' · '+evt.family+' / '+evt.key+' '+evt.type:'Chronologie · aucune transition suivie';
- const latest=esc(label.length>56?label.slice(0,53)+'…':label);
- if(!q.available)return '<div class="el-duel-notice">Dernier événement : '+latest+
-   ' · Duel indisponible : volumes acheteurs/vendeurs initiateurs non mesurables sur cette fenêtre.</div>';
- const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0),max=Math.max(buy,sell,0.00001);
- const sz=v=>Math.max(14,Math.round(Math.sqrt(v/max)*61));
+ const q=x&&x.effort||{},cv=x&&x.conversion||{};
+ const conv='<div class="el-duel-metrics"><div>PM3 '+cnum(cv.pm3,1,fromDelta(0,cv.pm3))+
+   ' $ · PM5 '+cnum(cv.pm5,1,fromDelta(0,cv.pm5))+
+   ' $ · PM Live '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $</div>'+
+   '<div>eff3 '+(n(cv.efficiency3m)!==null?Math.round(cv.efficiency3m*100)+' %':'—')+
+   ' · yield/P75 '+(n(cv.yieldVsP75)!==null?Number(cv.yieldVsP75).toFixed(2)+'×':'—')+
+   ' · effort/P75 '+(n(cv.effortVsP75)!==null?Number(cv.effortVsP75).toFixed(2)+'×':'—')+'</div>'+
+   '<div>Qualité <b>'+esc(cv.quality||'UNCLASSIFIED')+'</b> · direction <b class="'+tone(cv.direction)+'">'+
+   esc(cv.direction||'—').toUpperCase()+'</b></div></div>';
+ if(!q.available)return '<div class="el-duel"><div class="el-section-title">DUEL · 3m</div>'+conv+
+   '<div class="el-duel-notice">Volumes directionnels indisponibles.</div></div>';
+ const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0);
+ const max=Math.max(buy,sell,.00001),sz=v=>Math.max(12,Math.round(Math.sqrt(v/max)*52));
  const b=sz(buy),s=sz(sell),price=n(q.priceNetUsd)||0;
- const pd=fromDelta(0,price),range=Math.max(n(q.priceRangeUsd)||0,1);
- const drift=Math.round(Math.max(-1,Math.min(1,price/range))*69),contact=180+drift;
- const rect=(x,y,w,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+'" rx="4" fill="'+col+'" fill-opacity=".20" stroke="'+col+'" stroke-width="2.3"/>';
- const indicator=contact===180?'':('<line x1="180" y1="158" x2="'+contact+'" y2="158" stroke="'+(pd==='long'?'#16804b':'#bd444b')+'" stroke-width="3" stroke-linecap="round"/>'+
-   '<circle cx="'+contact+'" cy="158" r="3.5" fill="'+(pd==='long'?'#16804b':'#bd444b')+'"/>');
- return '<div class="el-duel"><div class="el-duel-title">Duel · terrain gagné sur 3m (prix indépendant du volume)</div>'+
-   '<svg role="img" aria-label="Deux carrés accolés, déplacement conjoint par le prix, tailles proportionnelles aux volumes initiateurs" viewBox="0 0 360 202" width="100%" xmlns="http://www.w3.org/2000/svg">'+
-   '<text x="180" y="15" text-anchor="middle" font-size="9" fill="#586672">'+latest+'</text>'+
-   '<line x1="180" y1="27" x2="180" y2="167" stroke="#84909c" stroke-dasharray="5 4" stroke-width="1.5"/>'+
-   '<text x="180" y="36" text-anchor="middle" font-size="8" fill="#85919b">AXE INITIAL</text>'+
-   rect(contact-b,108-b/2,b,'#16804b')+rect(contact,108-s/2,s,'#bb3e42')+
-   '<line x1="'+contact+'" y1="'+Math.max(38,108-Math.max(b,s)/2-6)+'" x2="'+contact+'" y2="'+Math.min(151,108+Math.max(b,s)/2+6)+'" stroke="#40515d" stroke-width="1.2"/>'+
-   indicator+
-   '<text x="78" y="173" text-anchor="middle" font-size="9" fill="#16804b">ACHAT '+buy.toFixed(3)+' BTC</text>'+
-   '<text x="282" y="173" text-anchor="middle" font-size="9" fill="#bb3e42">VENTE '+sell.toFixed(3)+' BTC</text>'+
-   '<text x="180" y="192" text-anchor="middle" font-size="11" font-weight="700" fill="'+(pd==='long'?'#16804b':pd==='short'?'#bb3e42':'#56636c')+'">PRIX '+esc(money(price))+'</text>'+
-   '</svg>'+
-   '<div class="el-foot">Les carrés restent accolés : tailles ∝ volumes, leur position commune suit le prix et non le plus gros carré. Translation normalisée à l’amplitude 3m ('+money(q.priceRangeUsd)+'). '+Number(q.sampleCount||0)+' transactions publiques OKX.</div></div>';
+ const dir=fromDelta(0,price),range=Math.max(n(q.priceRangeUsd)||0,1);
+ const drift=Math.round(Math.max(-1,Math.min(1,price/range))*64),contact=170+drift;
+ const square=(x,y,w,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+
+   '" rx="3" fill="'+col+'" fill-opacity=".22" stroke="'+col+'" stroke-width="2"/>';
+ const ticks=[-2,-1,0,1,2].map(i=>{
+   const x=170+i*32,v=i*range/2;
+   return '<line x1="'+x+'" y1="114" x2="'+x+'" y2="120" stroke="#93a0aa" stroke-width="1"/>'+
+     '<text x="'+x+'" y="133" text-anchor="middle" fill="#71808c" font-size="8">'+fmt(v,0)+'</text>';
+ }).join('');
+ return '<div class="el-duel"><div class="el-section-title">DUEL · 3m</div>'+conv+
+   '<div class="el-duel-volumes"><span class="el-up">ACHAT '+buy.toFixed(3)+' BTC</span>'+
+   '<span class="el-down">VENTE '+sell.toFixed(3)+' BTC</span></div>'+
+   '<svg role="img" aria-label="Carrés acheteur et vendeur accolés, prix déplaçant les deux, graduation en dollars BTC" viewBox="0 0 340 160" width="100%" xmlns="http://www.w3.org/2000/svg">'+
+   '<rect x="5" y="3" width="330" height="154" rx="6" fill="#fafbfc" stroke="#d9e0e6"/>'+
+   '<line x1="170" y1="10" x2="170" y2="114" stroke="#9ca8b2" stroke-dasharray="4 3" stroke-width="1.5"/>'+
+   square(contact-b,68-b/2,b,'#16804b')+square(contact,68-s/2,s,'#bb3e42')+
+   '<line x1="'+contact+'" y1="'+(63-Math.max(b,s)/2)+'" x2="'+contact+'" y2="'+(73+Math.max(b,s)/2)+'" stroke="#586978" stroke-width="1"/>'+
+   '<line x1="94" y1="114" x2="246" y2="114" stroke="#9eabb7" stroke-width="1"/>'+
+   ticks+
+   '<text x="170" y="149" text-anchor="middle" font-size="11" font-weight="750" fill="'+
+     (dir==='long'?'#16804b':dir==='short'?'#bb3e42':'#53616e')+'">PRIX '+esc(money(price))+'</text></svg></div>';
 }
 function display(x){
  const h=x&&x.elasticObserverShadow||null;
  if(!h)return '<div class="el-wrap"><b>ELASTIC v0.5</b> · attente de la première évaluation</div>';
  const cv=h.conversion||{},ma=h.ma||{},fl=h.flow||{},b=h.boundary||{},ctx=h.context||{};
- const dir=h.mcbProposal||null,conv=h.conviction||{};
+ const dir=h.mcbProposal||null,chain=h.thesisChain||{};
+ const chainRows=(chain.supports||[]).map(a=>
+   '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
+   (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-wrap"><div class="el-head"><b>ELASTIC v0.5.1 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.2 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
   ' · prix <b class="'+tone(h.priceDirection)+'">'+esc((h.priceDirection||'—').toUpperCase())+'</b></div>'+
-  '<div class="el-conviction"><b>CONVICTION / ticker</b> '+esc(conv.tickerConfirmed?'CONFIRMED':conv.tickerStatus||'NOT_CONFIRMED')+' · <b>PM Live</b> '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $ · PM3/5 '+esc(conv.pm3Pm5Aligned?'ALIGNÉS':'EN OBSERVATION')+' · '+esc(conv.label||'UNDER_OBSERVATION')+'</div>'+
+  '<div class="el-chain"><b>CHAÎNE DE THÈSE '+esc((dir||'—').toUpperCase())+'</b>'+
+    '<div>'+(chainRows||'<span class="el-old">Aucune observation alignée pour l’instant</span>')+'</div></div>'+
   '<div class="el-grid">'+
    tfRow('MCB 15',h.shared&&h.shared.MCB15)+
    tfRow('MCB 3',h.shared&&h.shared.MCB3)+
@@ -81,15 +94,10 @@ function display(x){
    '<div class="el-section"><div class="el-section-title">MA · épisodes confirmés</div>'+
    ['3m','15m'].map(tf=>{const z=ma[tf]||{};return '<div class="el-measure">MA'+(tf==='3m'?'3':'15')+' '+cnum(z.distanceUsd,1,fromDelta(0,z.distanceUsd))+' $'+
      ' · '+esc(z.state||'UNOBSERVED')+' · '+Number(z.retestCount||0)+' retests · '+Number(z.confirmedContactBars||0)+' bougies contact</div>';}).join('')+'</div>'+
-   '<div class="el-section"><div class="el-section-title">CONVERSION <small>qualités anglaises · hypothèses descriptives</small></div>'+
-   '<div class="el-measure">PM3 '+cnum(cv.pm3,1,fromDelta(0,cv.pm3))+' $ · PM5 '+cnum(cv.pm5,1,fromDelta(0,cv.pm5))+
-   ' $ · PM Live '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $</div>'+
-   '<div class="el-measure">eff3 '+(n(cv.efficiency3m)!==null?Math.round(cv.efficiency3m*100)+' %':'—')+
-   ' · yield/P75 '+(n(cv.yieldVsP75)!==null?Number(cv.yieldVsP75).toFixed(2)+'×':'—')+
-   ' · effort/P75 '+(n(cv.effortVsP75)!==null?Number(cv.effortVsP75).toFixed(2)+'×':'—')+'</div>'+
-   '<div class="el-measure">Qualité <b class="'+tone(cv.direction)+'">'+esc(cv.quality||'UNCLASSIFIED')+'</b>'+
-    (cv.temporalQuality?' · évolution '+esc(cv.temporalQuality):'')+
-   ' · direction <b class="'+tone(cv.direction)+'">'+esc(cv.direction||'non établie')+'</b></div></div>'+
+   '<div class="el-section"><div class="el-section-title">CONVERSION</div>'+
+   '<div class="el-measure">Qualité <b>'+esc(cv.quality||'UNCLASSIFIED')+'</b>'+
+   ' · sens <b class="'+tone(cv.direction)+'">'+esc((cv.direction||'—').toUpperCase())+'</b>'+
+   (cv.temporalQuality?' · '+esc(cv.temporalQuality):'')+'</div></div>'+
    '<div class="el-section"><div class="el-section-title">BOUNDARY</div>'+
    '<div class="el-measure">'+esc(b.state||'—')+
    ' · '+esc((b.nearestAhead&&b.nearestAhead.kind)||'aucune limite en avant')+
@@ -105,7 +113,7 @@ function display(x){
    ' · 4h '+esc(ctx.h4&&ctx.h4.structuralDirection||'—')+
    ' · Daily '+esc(ctx.daily&&ctx.daily.structuralDirection||'—')+
    ' · Weekly '+esc(ctx.weekly&&ctx.weekly.structuralDirection||'—')+'</div></div>'+
-   '</div>'+
+   '</div></section><section class="el-wrap el-duel-bubble">'+
    effort(h)+
    '<details id="elastic-chronology" class="el-chronology"'+(window.elasticHistoryState&&window.elasticHistoryState.open?' open':'')+'>'+
    '<summary>CHRONOLOGIE · mémoire persistante <span class="el-old">(cliquer pour ouvrir / refermer)</span></summary>'+
@@ -113,8 +121,7 @@ function display(x){
    '<label>Famille <select id="elastic-history-family"><option value="">Toutes</option><option value="MCB15">MCB15</option><option value="MCB3">MCB3</option><option value="FLOW">FLOW</option><option value="MA">MA</option><option value="CONVERSION">CONVERSION</option><option value="BOUNDARY">BOUNDARY</option><option value="CONTEXT">CONTEXT</option></select></label></div>'+
    '<div id="elastic-history" class="el-history-list">Ouvre la chronologie pour charger les événements.</div>'+
    '<button type="button" id="elastic-history-more" class="el-more" hidden>Afficher les événements plus anciens</button></details>'+
-   '<div class="el-foot">Heure observée distincte de la bougie source. Les états remplacés restent dans le journal ; aucun double comptage E3/E15 et BW/LBW.</div>'+
-   '</div>';
+   '</section></div>';
  return markup;
 }
 function date(ts){return n(ts)===null?'—':new Date(Number(ts)).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}

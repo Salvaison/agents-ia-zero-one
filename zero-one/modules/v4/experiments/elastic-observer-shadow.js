@@ -148,9 +148,73 @@ function liveEvent(native,tf){
  const e=x&&x.fresh&&(x.dn||x.up);
  return e&&finite(e.ts)?{type:e.type,sourceTs:Number(e.ts),value:num(e.value)}:null;
 }
+// Causal chain = concise currently supportive phenomena, not a weighted vote.
+// Observations remain distinct; native E3/E15 and BW/LBW are linked, not votes.
+function thesisEvidence(result,previous){
+ const direction=result.mcbProposal,now=result.ts,items=[];
+ if(!['long','short'].includes(direction))return {direction:null,supports:[],opposes:[],decisionImpact:false};
+ const aligned=v=>sign(v)===direction;
+ const add=(family,label,dir,ts,value=null,detail=null)=>{
+   if(!['long','short'].includes(dir))return;
+   const sourced=['native_confirmed','native_provisional','native_related_not_separate_vote'].includes(detail);
+   const key=family+'|'+label+'|'+(sourced&&finite(ts)?Number(ts):'ACTIVE');
+   const obj={key,family,label,direction:dir,observedAt:now,sourceTs:num(ts),value,detail};
+   if(dir===direction)items.push(obj);
+   else conflicts.push(obj);
+ };
+ const conflicts=[];
+ for(const [tf,family] of [['15m','MCB15'],['3m','MCB3']]){
+   const wave=result.shared[family]||{},s=result.signals[tf]||{};
+   const name=tf==='15m'?'E15':'E3',confirmed=s.confirmed,live=s.live;
+   if(confirmed&&confirmed.type)add(family,name+' '+confirmed.type+' confirmed',
+     confirmed.type==='UP'?'long':'short',confirmed.sourceTs,confirmed.value,'native_confirmed');
+   if(live&&live.type)add(family,name+' '+live.type+' live',
+     live.type==='UP'?'long':'short',live.sourceTs,live.value,'native_provisional');
+   const dx=wave.lbwDelta;
+   if(finite(dx)&&Number(dx)!==0)add(family,'LBW'+(tf==='15m'?'15':'3')+' '+(dx>0?'↑':'↓'),
+     sign(dx),wave.liveTs,dx,'confirmed_to_live_delta');
+   const cross=wave.cross&&wave.cross.lastCrossing;
+   if(cross&&finite(cross.sourceTs)){
+     const type=cross.event==='BW_CROSSES_ABOVE_LBW'?'short':
+       cross.event==='BW_CROSSES_BELOW_LBW'?'long':null;
+     if(type&&now-Number(cross.sourceTs)<=tfToMs(tf)*2)
+       add(family,'BW/LBW'+(tf==='15m'?'15':'3')+' cross',type,cross.sourceTs,
+         wave.cross.spread,'native_related_not_separate_vote');
+   }
+ }
+ for(const [tf,label,point] of [['15m','MF15',result.flow.mf15],['3m','MF3',result.flow.mf3]]){
+   if(point&&finite(point.confirmed)&&finite(point.live)){
+     const delta=point.live-point.confirmed;
+     if(delta!==0)add('FLOW',label+' '+(delta>0?'↑':'↓'),sign(delta),
+       result.shared[tf==='15m'?'MCB15':'MCB3'].liveTs,delta,'confirmed_to_live_delta');
+   }
+ }
+ const conv=result.conversion||{};
+ for(const [field,label] of [['pmLive','PM Live'],['pm3','PM3'],['pm5','PM5']]){
+   const v=num(conv[field]);
+   if(v!==null&&v!==0)add('CONVERSION',label,sign(v),now,v,'measured_price_conversion');
+ }
+ for(const [tf,label] of [['3m','MA3'],['15m','MA15']]){
+   const m=result.ma&&result.ma[tf]||{},d=num(m.distanceUsd);
+   if(['HELD','REJECTED','LOST'].includes(m.state)&&d!==null&&d!==0)
+     add('MA',label+' '+m.state,sign(d),m.lastTransitionAt,d,'last_confirmed_interaction');
+ }
+ const prior=previous&&previous.thesisChain&&previous.thesisChain.direction===direction?
+   previous.thesisChain:null;
+ const persist=(arr,side)=>{
+   const recognized=new Map(((prior&&prior[side])||[])
+     .map(x=>[x.key,x.observedAt]));
+   return arr.map(x=>({...x,observedAt:recognized.get(x.key)||now}))
+     .sort((a,b)=>(a.observedAt||0)-(b.observedAt||0));
+ };
+ return {direction,supports:persist(items,'supports'),opposes:persist(conflicts,'opposes'),
+   decisionImpact:false,
+   semantic:'Chronological supportive observations for the MCB proposal; never cumulative permission, score, or independent double-count of native/cross'};
+}
+function tfToMs(tf){return tf==='3m'?180000:900000;}
 function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavior,room,background,quality,geometry,prev){
  const previous=prev&&prev.version===VERSION?prev:null,now=Number(frame.market.timestamp),price=Number(frame.market.price);
- const result={version:VERSION,revision:'tug-of-war-history-paging-v0.5.1',decisionImpact:false,ts:now,price,
+ const result={version:VERSION,revision:'compact-shared-thesis-chain-v0.5.2',decisionImpact:false,ts:now,price,
    mcbProposal:baseThesis&&baseThesis.candidateDirection||null,
    mcbStructural:mcb&&mcb.currentLobe&&mcb.currentLobe.structuralDirection||null,
    priceDirection:null,shared:{},signals:{},ma:{},flow:{},boundary:{},context:{},
@@ -251,6 +315,7 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
    dataQuality:mcb&&mcb.dataQuality&&mcb.dataQuality.degraded?'DEGRADED':'OK',
    h1:background&&background.oneHour||null,h4:background&&background.fourHour||null,
    daily:background&&background.daily||null,weekly:background&&background.weekly||null};
+ result.thesisChain=thesisEvidence(result,previous);
  // Compact state: historical events are appended to the dedicated rotating NDJSON log.
  // No 24/30-event clipping; each transition is persisted once and queried by timeframe.
   return result;

@@ -104,7 +104,7 @@ test('browser client renders 7 families and historical controls without twin col
  vm.runInNewContext(code,context);
  const s=ev(f());
  const html=context.window.renderElasticObserverV05({elasticObserverShadow:s});
- for(const label of ['MCB 15','MCB 3','FLOW','MA','CONVERSION','BOUNDARY','CONTEXT','CHRONOLOGIE','6 h','24 h','48 h','Duel']){
+ for(const label of ['MCB 15','MCB 3','FLOW','MA','CONVERSION','BOUNDARY','CONTEXT','CHRONOLOGIE','6 h','24 h','48 h','DUEL']){
   assert.ok(html.includes(label),label);
  }
  assert.ok(!html.includes('CONTRE-PREUVES'));
@@ -151,19 +151,19 @@ test('tug-of-war squares remain touching, prices shift both regardless of effort
  const a=ev(f());a.lastEvent={observedAt:10000000,family:'MCB15',key:'E15',type:'CONFIRMED'};
  a.effort={available:true,buyBtc:.2,sellBtc:5,priceNetUsd:22,priceRangeUsd:50,sampleCount:3};
  const h=context.window.renderElasticObserverV05({elasticObserverShadow:a});
- const rs=[...h.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ const rs=[...h.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" rx="3"/g)];
  assert.equal(rs.length,2);
  const x=Number(rs[0][1]),side=Number(rs[0][3]),right=Number(rs[1][1]);
  assert.equal(x+side,right);
- assert.ok(right>180,'positive price moves both boxes right despite larger selling square');
+ assert.ok(right>170,'positive price moves both boxes right despite larger selling square');
  assert.ok(Number(rs[1][3])>side);
- assert.ok(h.includes('MCB15 / E15'));
- assert.ok(h.includes('CONVICTION / ticker'));
+ assert.ok(h.includes('graduation en dollars BTC'));
+ assert.ok(h.includes('CHAÎNE DE THÈSE'));
  assert.ok(h.includes('PM Live'));
  a.effort.priceNetUsd=-22;
  const h2=context.window.renderElasticObserverV05({elasticObserverShadow:a});
- const rs2=[...h2.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
- assert.ok(Number(rs2[1][1])<180);
+ const rs2=[...h2.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" rx="3"/g)];
+ assert.ok(Number(rs2[1][1])<170);
 });
 test('chronology stays collapsed without fetching and fetches paginated events when opened',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
@@ -201,4 +201,46 @@ test('chronology stays collapsed without fetching and fetches paginated events w
  assert.equal(ctx.window.elasticHistoryState.open,false);
  const closedHtml=ctx.window.renderElasticObserverV05({elasticObserverShadow:ev(f())});
  assert.ok(!closedHtml.includes('<details id="elastic-chronology" class="el-chronology" open'));
+});
+
+test('thesis chain retains initial observation times and tracks conditions lighting in any order',()=>{
+ const a=ev(f(10000000));
+ const short=a.thesisChain;
+ assert.equal(short.direction,'short');
+ assert.equal(short.decisionImpact,false);
+ assert.ok(short.supports.some(x=>x.label==='PM Live'));
+ assert.ok(short.supports.some(x=>x.label==='PM3'));
+ assert.ok(short.opposes.some(x=>x.label.startsWith('LBW')));
+ assert.ok(!short.supports.some(x=>x.label.includes('TICKER')),'ticker is not the thesis chain');
+ const b=ev(f(10030000),a);
+ assert.equal(b.thesisChain.supports.find(x=>x.label==='PM Live').observedAt,10000000);
+ const p=f(10060000);p.sources.auditRows[0].priceMove=21;
+ const c=ev(p,b);
+ assert.ok(!c.thesisChain.supports.some(x=>x.label==='PM Live'));
+ assert.ok(c.thesisChain.opposes.some(x=>x.label==='PM Live'));
+ const dd=ev(f(10090000),c);
+ assert.equal(dd.thesisChain.supports.find(x=>x.label==='PM Live').observedAt,10090000);
+ assert.ok(dd.thesisChain.supports.every((x,i,a)=>i===0||a[i-1].observedAt<=x.observedAt));
+});
+test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
+ const ui=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const style=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
+ assert.ok(style.includes('body:has(#tab2-statev2.active) .page-wrap { max-width: 480px; }'));
+ assert.ok(style.includes('.el-grid{display:block'));
+ assert.ok(style.includes('border-bottom:1px solid #e6e9ec'));
+ const c={window:{},document:{}};vm.runInNewContext(ui,c);
+ const snap=ev(f());snap.effort={available:true,buyBtc:2,sellBtc:1,
+   priceNetUsd:25,priceRangeUsd:100,sampleCount:100};
+ const html=c.window.renderElasticObserverV05({elasticObserverShadow:snap});
+ assert.equal((html.match(/class="el-wrap /g)||[]).length,2);
+ assert.ok(html.includes('el-list-bubble'));
+ assert.ok(html.includes('el-duel-bubble'));
+ assert.ok(html.indexOf('el-list-bubble')<html.indexOf('el-duel-bubble'));
+ assert.ok(html.includes('el-duel-metrics'));
+ assert.ok(html.includes('eff3'));
+ assert.ok(html.includes('width="330" height="154"'));
+ assert.ok(html.includes('PRIX'));
+ assert.ok(html.includes('CHAÎNE DE THÈSE'));
+ assert.ok(!html.includes('CONVICTION / ticker'));
+ assert.ok(!html.includes('Les carrés restent accolés'));
 });

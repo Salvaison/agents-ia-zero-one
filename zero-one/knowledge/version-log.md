@@ -1007,3 +1007,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Correction du doublonnage des transitions de qualité CONVERSION : un seul `TRANSITION` avec les deux valeurs au lieu d'un `INTERRUPTED` suivi d'un `OBSERVED`. L'ancien journal reste intact (ne pas réécrire rétrospectivement le passé).
 - Inspection : 510 événements en 170 minutes, dont 421 issus de CONVERSION avant correction ; pagination lue sur 548 événements en cinq pages sans doublon.
 - Détails : `knowledge/elastic-v0.5.1-tug-duel-conviction-history-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.2 : colonne téléphone, chaîne de thèse, duel gradué
+- Réponse au retour utilisateur : largeur 480px sur écran d'ordinateur et mobile ; sept familles compactées en une seule bulle et séparées par une ligne fine. Graphe duel dans sa propre bulle compacte avec cadre et graduation en déplacement BTC (−amplitude 3m à +amplitude 3m).
+- Trois lignes de chiffres PM3 / PM5 / PM Live, efficacité, yield/effort P75, classe et direction au sommet du graphe à la place de la dernière ligne Chronologie ; suppression du paragraphe explicatif et de la répétition complète de CONVERSION dans la liste.
+- `CHAÎNE DE THÈSE` remplace la qualification de « conviction ticker ». Elle représente les phénomènes actifs en accord avec la proposition MCB : E15/E3 confirmé et Live, progressions LBW/MF 15m/3m, croisements BW/LBW, PM Live/3/5, état MA. Premier moment de reconnaissance mémorisé ; départ/réapparition enregistrés comme épisodes distincts. **Aucun vote, score ou ordre d'allumage imposé**.
+- Le ticker ne devient pas un verrou. Shadow `decisionImpact:false`, V4.10.10 et ses protections unchanged, anciens journaux conservés. Détails `knowledge/elastic-v0.5.2-compact-family-chain-duel-2026-10-21.md`.
