@@ -1,5 +1,6 @@
 'use strict';
 const {finite}=require('../core/utils');
+const gainFloor=require('./gain-floor');
 
 const ABSOLUTE_MAX_LOSS_USD=500;
 
@@ -24,6 +25,7 @@ function evaluate(frame,position,mcb,thesis,translation,ticker,context){
       :(hardStopSource==='CURRENT_LOSS'?'V4 hard absolute risk cap 500 USD breached':null),
     position:position?{direction:position.direction,entryPrice:position.entryPrice,currentPrice:price,
       currentSignedUsd,lossUsd,mfeUsd,maeUsd}:null,
+    gainProtection:position?gainFloor.evaluate(position,{mfeUsd,currentSignedUsd}):null,
     rr:{decisionImpact:false,status:'INFORMATIVE_ONLY',
       note:'V4 n utilise aucun target R/R arbitraire pour autoriser ou refuser une direction'},
     context:{decisionImpact:false,status:context&&context.status||'NEUTRAL'},

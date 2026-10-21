@@ -973,3 +973,10 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les croisements BW/LBW sont corrélés aux E3/E15, donc **aucun nouveau vote**, aucun incrément de `activeProofCount` ni des familles MCB, aucune permission d'entrée.
 - Replay 20/10 : BW/LBW15 croise à 17:01:13, BW/LBW3 à 17:02:43, chacun correspondant au signal natif Live de sa TF. LBW3 franchit zéro plus tard (~17:12), LBW15 ne franchit pas zéro.
 - Interface Etat V4 : mesures géométriques et jalons distincts dans les deux fenêtres. Voir `knowledge/elastic-v0.4.3-bw-lbw-cross-distinct-2026-10-20.md`.
+
+## 2026-10-21 — V4.10.9 : plancher économique 120/90 puis 220/180
+- ACTIVE, protection virtuelle, à paliers de **déplacement favorable BTC** (USD prix, non USD PNL). MFE observé >=120 arme un plancher de +90 ; MFE observé >=220 relève irréversiblement le plancher à +180 ; symétrie LONG/SHORT.
+- Même ordre de sortie `EXIT_ECONOMIC_PROFIT_FLOOR`, avec `gainGuardStage` et prix stop virtuel audité dans `risk.gainProtection` / `action.evidence`. Décision à la prochaine évaluation V4 ; **pas de stop réel transmis à OKX, ni de prix de fill garanti en cas de gap**.
+- `EXIT_RISK` 500 demeure prioritaire. TP1/runner et toutes les entrées, sorties structurelles, campagnes et anti-churn inchangés.
+- User a explicitement repoussé l'analyse/refonte Elastic à l'après-midi : Elastic v0.4.3 n'est pas modifié.
+- Tests sur seuils, LONG/SHORT, gaps, coexistence avec TP1/220/180, non-régression V4 ; détails `knowledge/v4.10.9-staged-economic-gain-floor-2026-10-21.md`.

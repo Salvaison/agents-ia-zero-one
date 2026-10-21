@@ -1,6 +1,7 @@
 'use strict';
 const {opposite}=require('../core/utils');
 const {ECONOMIC_MOVE_MIN_USD}=require('./market-quality');
+const gainFloor=require('./gain-floor');
 
 const TP1_FRACTION=.25;
 const MFE_MINIMUM_USD=ECONOMIC_MOVE_MIN_USD*2;
@@ -95,14 +96,18 @@ function adverseMicroProof(position,ticker){
   return {ready,opp,status:ticker.status,direction:ticker.direction,yieldVsP75:Number.isFinite(y75)?y75:null,effortVsP75:Number.isFinite(effort)?effort:null};
 }
 function economicProfitFloorExit(position,risk){
-  const rp=risk&&risk.position||null;
-  if(!position||!rp)return null;
-  const mfe=Number(rp.mfeUsd)||0,current=Number(rp.currentSignedUsd);
-  if(!(Number.isFinite(current)&&mfe>=ECONOMIC_PROFIT_ARM_USD&&current<=ECONOMIC_PROFIT_FLOOR_USD))return null;
+  if(!position||!risk||!risk.position)return null;
+  const guard=risk.gainProtection||gainFloor.evaluate(position,risk.position);
+  if(!guard.triggered)return null;
   return {
     type:'EXIT_ECONOMIC_PROFIT_FLOOR',direction:position.direction,stage:'ECONOMIC_GAIN_FLOOR',
-    reason:'MFE reached the 220 USD economic arm and favorable terrain returned to/below 180 USD; preserve an economically viable winner without waiting for thesis invalidation',
-    evidence:{mfeUsd:mfe,currentSignedUsd:current,armUsd:ECONOMIC_PROFIT_ARM_USD,floorUsd:ECONOMIC_PROFIT_FLOOR_USD}
+    reason:guard.stage==='EARLY_120_90'
+      ?'observed BTC price MFE reached 120 USD and favourable price returned to/below 90 USD; secure early economic floor at next evaluation'
+      :'observed BTC price MFE reached 220 USD and favourable price returned to/below 180 USD; secure higher economic floor at next evaluation',
+    evidence:{mfeUsd:guard.mfeUsd,currentSignedUsd:guard.currentSignedUsd,
+      armUsd:guard.armUsd,floorUsd:guard.floorUsd,
+      gainGuardStage:guard.stage,virtualStopPrice:guard.virtualStopPrice,
+      exchangeOrderPlaced:false,guaranteedFillAtStop:false}
   };
 }
 function productiveAdversePmProof(position,translation){
