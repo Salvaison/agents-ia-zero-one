@@ -45,11 +45,45 @@ function buySellEffort(frame,minutes=3){
     .sort((a,b)=>a.ts-b.ts);
   let buy=0,sell=0;
   for(const t of a){if(Number(t.side)===1)buy+=Number(t.volume);else sell+=Number(t.volume);}
+  // Price trail uses the SAME horizontal BTC displacement scale as the two
+  // semi-transparent squares. Vertical progress is elapsed time (oldest bottom).
+  // Retain first/last plus bucket extrema to avoid obscuring sharp reversals.
+  const trail=[];
+  if(a.length>=2){
+    const start=Number(a[0].price),t0=Number(a[0].ts),t1=Number(a[a.length-1].ts);
+    const buckets=new Map(),span=Math.max(t1-t0,1),count=30;
+    for(const t of a){
+      const bin=Math.min(count-1,Math.floor((Number(t.ts)-t0)/span*count));
+      let b=buckets.get(bin);
+      if(!b){b={first:t,last:t,min:t,max:t};buckets.set(bin,b);}
+      else {
+        b.last=t;
+        if(Number(t.price)<Number(b.min.price))b.min=t;
+        if(Number(t.price)>Number(b.max.price))b.max=t;
+      }
+    }
+    const byTimestamp=new Map();
+    for(const b of buckets.values()){
+      for(const t of [b.first,b.min,b.max,b.last]){
+        // Timestamp/price pair is sufficient; do not ship full tick history.
+        byTimestamp.set(Number(t.ts)+'|'+Number(t.price),
+          {ts:Number(t.ts),deltaUsd:Number(t.price)-start});
+      }
+    }
+    for(const t of [...byTimestamp.values()].sort((x,y)=>x.ts-y.ts))
+      trail.push(t);
+    if(!trail.length||trail[0].ts!==t0)trail.unshift({ts:t0,deltaUsd:0});
+    if(trail[trail.length-1].ts!==t1)
+      trail.push({ts:t1,deltaUsd:Number(a[a.length-1].price)-start});
+  }
   return {available:a.length>=2&&buy+sell>0,windowMinutes:minutes,sampleCount:a.length,
     buyBtc:buy,sellBtc:sell,netAggressiveBtc:buy-sell,
     priceNetUsd:a.length>=2?Number(a[a.length-1].price)-Number(a[0].price):null,
     priceRangeUsd:a.length>=2?
       Math.max(...a.map(x=>Number(x.price)))-Math.min(...a.map(x=>Number(x.price))):null,
+    priceTrail:trail,
+    priceTrailAxes:{horizontal:'BTC_PRICE_DISPLACEMENT_USD_FROM_FIRST_TICK',
+      vertical:'ELAPSED_TIME_OLDEST_AT_BOTTOM_LATEST_AT_SQUARES'},
     note:'Aggressor volume from public OKX BTC-USDT-SWAP trade ticks, not net positions or true market-wide buyer/seller strength'};
 }
 function conversion(frame,translation,ticker,priceBehavior,previous){
@@ -214,7 +248,7 @@ function thesisEvidence(result,previous){
 function tfToMs(tf){return tf==='3m'?180000:900000;}
 function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavior,room,background,quality,geometry,prev){
  const previous=prev&&prev.version===VERSION?prev:null,now=Number(frame.market.timestamp),price=Number(frame.market.price);
- const result={version:VERSION,revision:'compact-shared-thesis-chain-v0.5.2',decisionImpact:false,ts:now,price,
+ const result={version:VERSION,revision:'transparent-price-overlay-v0.5.3',decisionImpact:false,ts:now,price,
    mcbProposal:baseThesis&&baseThesis.candidateDirection||null,
    mcbStructural:mcb&&mcb.currentLobe&&mcb.currentLobe.structuralDirection||null,
    priceDirection:null,shared:{},signals:{},ma:{},flow:{},boundary:{},context:{},

@@ -48,9 +48,21 @@ function effort(x){
  const max=Math.max(buy,sell,.00001),sz=v=>Math.max(12,Math.round(Math.sqrt(v/max)*52));
  const b=sz(buy),s=sz(sell),price=n(q.priceNetUsd)||0;
  const dir=fromDelta(0,price),range=Math.max(n(q.priceRangeUsd)||0,1);
- const drift=Math.round(Math.max(-1,Math.min(1,price/range))*64),contact=170+drift;
+ const plotX=delta=>170+Math.max(-1,Math.min(1,delta/range))*64;
+ const contact=Math.round(plotX(price)),centerY=58;
+ // Price path is drawn UNDER the two translucent effort squares.
+ // Shared horizontal axis = BTC displacement; vertical = time oldest -> newest.
+ const trail=(q.priceTrail||[]).filter(p=>n(p.ts)!==null&&n(p.deltaUsd)!==null);
+ const t0=trail.length?Number(trail[0].ts):0,t1=trail.length?Number(trail[trail.length-1].ts):0;
+ const pricePath=trail.length>=2&&t1>t0?'M'+trail.map(p=>
+   plotX(Number(p.deltaUsd)).toFixed(1)+' '+(109-(Number(p.ts)-t0)/(t1-t0)*51).toFixed(1)
+ ).join(' L'):'';
+ const priceLayer=pricePath?
+   '<path class="el-price-underlay" d="'+pricePath+'" stroke="#ffffff" stroke-width="5" opacity=".86" fill="none" stroke-linejoin="round"/>'+
+   '<path class="el-price-trail" d="'+pricePath+'" stroke="#2069a2" stroke-width="2.5" opacity=".9" fill="none" stroke-linejoin="round"/>'+
+   '<circle cx="'+plotX(price).toFixed(1)+'" cy="58" r="2.4" fill="#2069a2"/>':'';
  const square=(x,y,w,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+
-   '" rx="3" fill="'+col+'" fill-opacity=".22" stroke="'+col+'" stroke-width="2"/>';
+   '" rx="3" fill="'+col+'" fill-opacity=".12" stroke="'+col+'" stroke-opacity=".75" stroke-width="1.8"/>';
  const ticks=[-2,-1,0,1,2].map(i=>{
    const x=170+i*32,v=i*range/2;
    return '<line x1="'+x+'" y1="114" x2="'+x+'" y2="120" stroke="#93a0aa" stroke-width="1"/>'+
@@ -62,8 +74,11 @@ function effort(x){
    '<svg role="img" aria-label="Carrés acheteur et vendeur accolés, prix déplaçant les deux, graduation en dollars BTC" viewBox="0 0 340 160" width="100%" xmlns="http://www.w3.org/2000/svg">'+
    '<rect x="5" y="3" width="330" height="154" rx="6" fill="#fafbfc" stroke="#d9e0e6"/>'+
    '<line x1="170" y1="10" x2="170" y2="114" stroke="#9ca8b2" stroke-dasharray="4 3" stroke-width="1.5"/>'+
-   square(contact-b,68-b/2,b,'#16804b')+square(contact,68-s/2,s,'#bb3e42')+
-   '<line x1="'+contact+'" y1="'+(63-Math.max(b,s)/2)+'" x2="'+contact+'" y2="'+(73+Math.max(b,s)/2)+'" stroke="#586978" stroke-width="1"/>'+
+   '<text x="9" y="56" font-size="7.6" fill="#657888">NOW</text>'+
+   '<text x="9" y="108" font-size="7.6" fill="#657888">−3m</text>'+
+   priceLayer+
+   square(contact-b,centerY-b/2,b,'#16804b')+square(contact,centerY-s/2,s,'#bb3e42')+
+   '<line x1="'+contact+'" y1="'+(centerY-Math.max(b,s)/2-4)+'" x2="'+contact+'" y2="'+(centerY+Math.max(b,s)/2+4)+'" stroke="#586978" stroke-width="1"/>'+
    '<line x1="94" y1="114" x2="246" y2="114" stroke="#9eabb7" stroke-width="1"/>'+
    ticks+
    '<text x="170" y="149" text-anchor="middle" font-size="11" font-weight="750" fill="'+
@@ -78,7 +93,7 @@ function display(x){
    '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
    (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.2 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.3 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+

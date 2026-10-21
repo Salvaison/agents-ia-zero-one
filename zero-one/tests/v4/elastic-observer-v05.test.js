@@ -244,3 +244,44 @@ test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
  assert.ok(!html.includes('CONVICTION / ticker'));
  assert.ok(!html.includes('Les carrés restent accolés'));
 });
+
+test('duel overlays BTC price path under transparent volume squares on identical price axis',()=>{
+ const ts=10000000,step=1000,ticks=[];
+ for(let i=0;i<=180;i++){
+   const move=i===0?0:i===180?24:i<60?i*.8:i<120?48-(i-60)*1.6:-48+(i-120)*1.2;
+   ticks.push({ts:ts-180000+i*step,price:82800+move,volume:.01,side:i%3?1:2});
+ }
+ const obs=ev(f(ts,{ticks}));
+ assert.ok(obs.effort.available);
+ assert.equal(obs.effort.priceNetUsd,24);
+ assert.ok(obs.effort.priceTrail.length>=10);
+ assert.ok(obs.effort.priceTrail.length<=122);
+ assert.equal(obs.effort.priceTrail[0].deltaUsd,0);
+ assert.equal(obs.effort.priceTrail.at(-1).deltaUsd,24);
+ assert.equal(obs.effort.priceTrailAxes.horizontal,'BTC_PRICE_DISPLACEMENT_USD_FROM_FIRST_TICK');
+ assert.ok(Math.min(...obs.effort.priceTrail.map(x=>x.deltaUsd))<0);
+ assert.ok(Math.max(...obs.effort.priceTrail.map(x=>x.deltaUsd))>0);
+ const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const ctx={window:{},document:{}};vm.runInNewContext(src,ctx);
+ const html=ctx.window.renderElasticObserverV05({elasticObserverShadow:obs});
+ const pathIndex=html.indexOf('class="el-price-trail"');
+ const squareIndex=html.indexOf('rx="3" fill="#16804b"');
+ assert.ok(pathIndex>=0&&squareIndex>pathIndex,'price is SVG underlay beneath squares');
+ assert.ok(html.includes('el-price-underlay'));
+ assert.ok(html.includes('fill-opacity=".12"'));
+ assert.ok(html.includes('NOW')&&html.includes('−3m'));
+ assert.ok(html.includes('graduation en dollars BTC'));
+ assert.equal((html.match(/class="el-price-trail"/g)||[]).length,1);
+});
+test('price overlay with sparse or unavailable ticks falls back without synthetic price path',()=>{
+ const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const ctx={window:{},document:{}};vm.runInNewContext(src,ctx);
+ const obs=ev(f());
+ assert.equal(obs.effort.available,false);
+ let html=ctx.window.renderElasticObserverV05({elasticObserverShadow:obs});
+ assert.ok(!html.includes('class="el-price-trail"'));
+ obs.effort={available:true,buyBtc:1,sellBtc:1,priceNetUsd:0,priceRangeUsd:1,priceTrail:[],sampleCount:2};
+ html=ctx.window.renderElasticObserverV05({elasticObserverShadow:obs});
+ assert.ok(!html.includes('class="el-price-trail"'));
+ assert.ok(!html.includes('NaN')&&!html.includes('undefined'));
+});

@@ -1013,3 +1013,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Trois lignes de chiffres PM3 / PM5 / PM Live, efficacité, yield/effort P75, classe et direction au sommet du graphe à la place de la dernière ligne Chronologie ; suppression du paragraphe explicatif et de la répétition complète de CONVERSION dans la liste.
 - `CHAÎNE DE THÈSE` remplace la qualification de « conviction ticker ». Elle représente les phénomènes actifs en accord avec la proposition MCB : E15/E3 confirmé et Live, progressions LBW/MF 15m/3m, croisements BW/LBW, PM Live/3/5, état MA. Premier moment de reconnaissance mémorisé ; départ/réapparition enregistrés comme épisodes distincts. **Aucun vote, score ou ordre d'allumage imposé**.
 - Le ticker ne devient pas un verrou. Shadow `decisionImpact:false`, V4.10.10 et ses protections unchanged, anciens journaux conservés. Détails `knowledge/elastic-v0.5.2-compact-family-chain-duel-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.3 : prix sous le duel semi-transparent
+- Shadow/UI uniquement. Trajectoire BTC 3min (bleue) intégrée **sous les deux carrés de volumes agressifs** dans le même graphique SVG. Carrés avec remplissage semi-transparent (12 %).
+- **Axe horizontal commun de déplacement BTC en USD** pour prix et contact entre carrés ; vertical = temps (plus ancien en bas, le plus récent au niveau des carrés), explicitement distinct d'un graphique temporel classique.
+- Prix comprimé en 30 fenêtres temporelles, premiers/derniers/maxima/minima conservés (~120 points) ; aucune estimation de prix lorsque les ticks exploitables manquent.
+- Aucun changement d'autorité décisionnelle, moteur V4.10.10 ni protections 120/90 et 220/180 ; journal v0.5 intact. Rapport `knowledge/elastic-v0.5.3-price-underlay-duel-2026-10-21.md`.
