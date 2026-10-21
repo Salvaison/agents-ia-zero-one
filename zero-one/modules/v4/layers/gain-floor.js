@@ -27,7 +27,7 @@ function evaluate(position,riskPosition){
     virtualStopPrice,triggered,
     mfeUsd:mfe,currentSignedUsd:current,
     isVirtual:true,exchangeOrderPlaced:false,
-    executionTiming:'NEXT_V4_DECISION',guaranteedFillAtStop:false,
+    executionTiming:'FIRST_OKX_PRICE_TICK_OR_V4_DECISION',guaranteedFillAtStop:false,
     note:'Fixed non-decreasing BTC price gain floor; observations can gap below virtual stop. Not a continuous trailing stop.'
   };
 }

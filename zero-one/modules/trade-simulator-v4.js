@@ -11,6 +11,9 @@ const {buildRuntimeFrame}=require('./v3lab/adapters/runtime-frame');
 const v4=require('./v4/core/engine');
 const {appendRotatingNdjson}=require('./v3lab/storage/rotating-ndjson');
 const tpMultiFractionShadow=require('./v4/experiments/tp-multifraction-shadow');
+const gainFloor=require('./v4/layers/gain-floor');
+const riskLayer=require('./v4/layers/risk');
+const actionLayer=require('./v4/layers/action');
 
 const {V3LabEngine}=require('./v3lab/core/engine');
 const v3Engine=new V3LabEngine({
@@ -26,7 +29,9 @@ const v3Engine=new V3LabEngine({
 });
 
 const VERSION=v4.VERSION||'v4.1-e15-quality-20261001';
-const DATA=path.join(__dirname,'../data');
+const DATA=process.env.NODE_ENV==='test'&&process.env.BOONO_V4_TEST_DATA_DIR
+  ?path.resolve(process.env.BOONO_V4_TEST_DATA_DIR)
+  :path.join(__dirname,'../data');
 const STATE_PATH=path.join(DATA,'trade-sim-v4-state.json');
 const HISTORY_PATH=path.join(DATA,'trade-sim-v4-history.json');
 const DECISIONS_PATH=path.join(DATA,'trade-sim-v4-decisions.ndjson');
@@ -216,16 +221,89 @@ function ensureTrack(module,pos){
     liveTracks.set(module,t);
   }return t;
 }
+function finalizePositionExit(module,state,pos,result){
+  const exitRec=recordExit(module,pos,result);
+  recordDecision(state,module,result);
+  state.lastExitByModule=state.lastExitByModule||{};
+  const exitPnlUsd=exitRec&&Number.isFinite(Number(exitRec.pnlUsd))
+    ?Number(exitRec.pnlUsd):pnlUsdFor(pos,result.price);
+  state.lastExitByModule[module]={
+    lastExitTs:Number(result.marketTimestamp)||Date.now(),
+    lastExitTimestamp:nowIso(),
+    direction:pos.direction,
+    setupId:pos.entrySetupId||null,
+    setupKey:pos.entrySetupKey||null,
+    campaignKey:pos.entryCampaignKey||null,
+    fourHourArmToken:pos.entryFourHourArmToken||null,
+    capitulationReversal:!!pos.entryCapitulationReversal,
+    pnlUsd:exitPnlUsd,
+    mfeUsd:Number(pos.metrics&&pos.metrics.mfeUsd)||0,
+    maeUsd:Number(pos.metrics&&pos.metrics.maeUsd)||0,
+    exitKind:result.action.type
+  };
+  state.modules[module]=null;
+  liveTracks.delete(module);
+  saveState(state);
+  return '[V4] '+module.toUpperCase()+' '+result.action.type+' '+pos.direction+
+    ' @ '+result.price+' -- '+result.action.reason;
+}
+// Fast hard protection for paper trades: OKX price ticks, not the slower
+// strategy evaluation. No E3/E15, PM3, ticker or trend confirmation required.
+// This still simulates an exit at the first *observed* price, not an OKX order.
+function protectOnPriceTick(module,t,px,ts){
+  // Legacy V3 shadow uses a separate liveTracks key but has no V4 position.
+  if(!['scalp','day','swing'].includes(module))return null;
+  if(!Number.isFinite(px)||!Number.isFinite(ts)||
+     ts>Date.now()+5000||Date.now()-ts>15000)return null;
+  const signed=t.direction==='long'?px-t.entryPrice:t.entryPrice-px;
+  const first= gainFloor.evaluate(t,{mfeUsd:t.mfeUsd,currentSignedUsd:signed});
+  if(!first.armed||(!first.triggered&&t.savedGainStage===first.stage))return null;
+  const state=loadState();
+  const pos=state.modules&&state.modules[module]||null;
+  if(!pos||pos.entryTimestamp!==t.entryTimestamp){liveTracks.delete(module);return null;}
+  updateMetrics(pos,px,ts,module);
+  const risk=riskLayer.evaluate({market:{price:px}},pos,null,null,null,null,null);
+  const guard=risk.gainProtection;
+  if(!guard||!guard.armed)return null;
+  if(!guard.triggered){
+    // Record the MFE arm at most once per stage, so restart cannot forget it.
+    if(t.savedGainStage!==guard.stage){
+      t.savedGainStage=guard.stage;
+      saveState(state);
+    }
+    return null;
+  }
+  const action=risk.hardStopBreached?{
+    type:'EXIT_RISK',direction:pos.direction,stage:'TICK_RISK_PRIORITY',
+    reason:risk.hardStopReason||'observed hard risk breached',
+    evidence:{triggerSource:'OKX_PRICE_TICK',tickTs:ts}
+  }:actionLayer.economicProfitFloorExit(pos,risk);
+  if(!action)return null;
+  action.evidence={...(action.evidence||{}),triggerSource:'OKX_PRICE_TICK',
+    tickTs:ts,decisionDelayMs:Math.max(0,Date.now()-ts)};
+  const result={...(state.lastEvaluation||{}),version:VERSION,
+    price:px,marketTimestamp:ts,risk,action,
+    tickOnlyEvaluation:true};
+  const message=finalizePositionExit(module,state,pos,result);
+  console.log('[V4][HARD_GAIN_GUARD]',message,'tickTs',new Date(ts).toISOString(),
+    'MFE',guard.mfeUsd,'current',guard.currentSignedUsd,
+    'floor',guard.floorUsd,'virtualStop',guard.virtualStopPrice);
+  return message;
+}
 priceStream.on('price',tick=>{
   const px=Number(tick&&tick.price),ts=Number(tick&&tick.ts)||Date.now();
   if(!Number.isFinite(px))return;
   liveTicks.push({ts,price:px});
   const cutoff=ts-30*60*1000;
   while(liveTicks.length&&liveTicks[0].ts<cutoff)liveTicks.shift();
-  for(const t of liveTracks.values()){
+  for(const [module,t] of liveTracks){
+    if(t.lastTickTs&&ts<t.lastTickTs)continue;
+    t.lastTickTs=ts;
     const signed=t.direction==='long'?px-t.entryPrice:t.entryPrice-px;
     if(signed>t.mfeUsd){t.mfeUsd=signed;t.mfeAt=new Date(ts).toISOString();}
     if(-signed>t.maeUsd){t.maeUsd=-signed;t.maeAt=new Date(ts).toISOString();}
+    try{protectOnPriceTick(module,t,px,ts);}
+    catch(err){console.error('[V4][HARD_GAIN_GUARD_ERROR]',err&&err.stack||err);}
   }
 });
 function updateMetrics(pos,price,ts,module){
@@ -414,25 +492,7 @@ function simulateModule(module,primaryVol,divRaw,config,volByTf){
       }
     }
     if(String(result.action.type).startsWith('EXIT_')){
-      const exitRec=recordExit(module,pos,result);recordDecision(state,module,result);
-      state.lastExitByModule=state.lastExitByModule||{};
-      const exitPnlUsd=exitRec&&Number.isFinite(Number(exitRec.pnlUsd))?Number(exitRec.pnlUsd):pnlUsdFor(pos,result.price);
-      state.lastExitByModule[module]={
-        lastExitTs:Number(result.marketTimestamp)||Date.now(),
-        lastExitTimestamp:nowIso(),
-        direction:pos.direction,
-        setupId:pos.entrySetupId||null,
-        setupKey:pos.entrySetupKey||null,
-        campaignKey:pos.entryCampaignKey||null,
-        fourHourArmToken:pos.entryFourHourArmToken||null,
-        capitulationReversal:!!pos.entryCapitulationReversal,
-        pnlUsd:exitPnlUsd,
-        mfeUsd:Number(pos.metrics&&pos.metrics.mfeUsd)||0,
-        maeUsd:Number(pos.metrics&&pos.metrics.maeUsd)||0,
-        exitKind:result.action.type
-      };
-      state.modules[module]=null;liveTracks.delete(module);saveState(state);
-      return '[V4] '+module.toUpperCase()+' '+result.action.type+' '+pos.direction+' @ '+result.price+' -- '+result.action.reason;
+      return finalizePositionExit(module,state,pos,result);
     }
     pos.lastContext=compactV4(result);pos.lastEvaluationAt=nowIso();
     recordDecision(state,module,result);saveState(state);return null;
@@ -472,4 +532,5 @@ function computeLiquidationPrice(entryPrice,direction,leverage){
 }
 const ORDER_DEFAULTS={leverage:SIZING.leverage,orderType:'market',openType:'isolated'};
 module.exports={simulateModule,loadState,ORDER_DEFAULTS,computeLiquidationPrice,VERSION,engine:v4,SIZING,DEFAULT_FEE_MODEL,
-  sizingSnapshot,pnlUsdFor,applySizing,applyPartialTakeProfit,normalizeFeeModel,positionFeeModel,feeRate,executedQuoteNotional,executionFeeUsd};
+  sizingSnapshot,pnlUsdFor,applySizing,applyPartialTakeProfit,normalizeFeeModel,positionFeeModel,feeRate,executedQuoteNotional,executionFeeUsd,
+  __testEnsureTrack:process.env.NODE_ENV==='test'?ensureTrack:undefined};

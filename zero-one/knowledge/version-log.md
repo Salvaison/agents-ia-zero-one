@@ -980,3 +980,11 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - `EXIT_RISK` 500 demeure prioritaire. TP1/runner et toutes les entrées, sorties structurelles, campagnes et anti-churn inchangés.
 - User a explicitement repoussé l'analyse/refonte Elastic à l'après-midi : Elastic v0.4.3 n'est pas modifié.
 - Tests sur seuils, LONG/SHORT, gaps, coexistence avec TP1/220/180, non-régression V4 ; détails `knowledge/v4.10.9-staged-economic-gain-floor-2026-10-21.md`.
+
+## 2026-10-21 — V4.10.10 hard gain floor sur flux OKX tick
+- ACTIVE paper trading : à partir du MFE tick observé de +120 $ / +220 $ prix BTC, le plancher +90 $ / +180 $ est armé et mémorisé.
+- Exit `EXIT_ECONOMIC_PROFIT_FLOOR` immédiatement sur le **premier tick OKX public observé** qui repasse à ou sous le plancher ; **aucune attente** de PM3, ticker, E3/E15, ni du prochain cycle d'évaluation V4. Priorité du hard risk 500 $ conservée.
+- Ce n'est PAS un ordre stop OKX réel : aucun fill garanti, sortie simulée au prix tick effectivement enregistré ; timestamps trop vieux/futurs ignorés.
+- Clôture et enregistrement anti-churn unifiés entre sortie du cycle V4 et sortie de stream, checkpoints d'armement persistés une fois par étage ; V3 shadow ignoré par ce contrôleur dur.
+- Elastic v0.4.3 et son interface **inchangés** ; recommandations UX discutées séparément. Rapport `knowledge/v4.10.10-hard-stream-gain-floor-2026-10-21.md`.
+- 47 tests V4 complets avant déploiement, y compris intégration de stream avec données isolées sous `NODE_ENV=test`.

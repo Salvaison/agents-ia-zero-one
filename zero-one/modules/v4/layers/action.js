@@ -102,8 +102,8 @@ function economicProfitFloorExit(position,risk){
   return {
     type:'EXIT_ECONOMIC_PROFIT_FLOOR',direction:position.direction,stage:'ECONOMIC_GAIN_FLOOR',
     reason:guard.stage==='EARLY_120_90'
-      ?'observed BTC price MFE reached 120 USD and favourable price returned to/below 90 USD; secure early economic floor at next evaluation'
-      :'observed BTC price MFE reached 220 USD and favourable price returned to/below 180 USD; secure higher economic floor at next evaluation',
+      ?'observed BTC price MFE reached 120 USD and favourable price returned to/below 90 USD; exit at first observed price without extra confirmation'
+      :'observed BTC price MFE reached 220 USD and favourable price returned to/below 180 USD; exit at first observed price without extra confirmation',
     evidence:{mfeUsd:guard.mfeUsd,currentSignedUsd:guard.currentSignedUsd,
       armUsd:guard.armUsd,floorUsd:guard.floorUsd,
       gainGuardStage:guard.stage,virtualStopPrice:guard.virtualStopPrice,
