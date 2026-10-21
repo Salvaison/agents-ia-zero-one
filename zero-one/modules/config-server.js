@@ -39,7 +39,7 @@ const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
-const {readRecentNdjson}=require('./v3lab/storage/rotating-ndjson');
+const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
 
@@ -52,6 +52,7 @@ const TRADES_V2_STATE_PATH = path.join(__dirname, '../data/trade-sim-v4-state.js
 const TRADES_V2_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-v4-history.json');
 const TRADES_V2_DECISIONS_PATH = path.join(__dirname, '../data/trade-sim-v4-decisions.ndjson');
 const TRADES_V2_EVAL_PATH = path.join(__dirname, '../data/trade-sim-v4-evaluations.ndjson');
+const ELASTIC_OBSERVER_EVENTS_PATH=path.join(__dirname,'../data/elastic-observer-events.ndjson');
 const TRADES_V2_WAVES_PATH = path.join(__dirname, '../data/trade-sim-v4-waves.json');
 const TRADES_V3_ARCHIVE_HISTORY_PATH = path.join(__dirname, '../data/trade-sim-v3lab-history.json');
 /* Moteur Boono (19/08/2026) -- seconde logique, fichiers separes. */
@@ -347,6 +348,19 @@ app.get('/api/diagnostic', requireAuth, (req, res) => {
   }
 });
 
+app.get('/api/elastic-history',requireAuth,(req,res)=>{
+  try{
+    const hours=[6,24,48].includes(Number(req.query.hours))?Number(req.query.hours):6;
+    const since=Date.now()-hours*3600000;
+    const all=readNdjsonSince(ELASTIC_OBSERVER_EVENTS_PATH,since)
+      .filter(e=>e&&Number.isFinite(e.observedAt)&&e.observedAt>=since);
+    const MAX=3000,tail=all.slice(-MAX);
+    res.set('Cache-Control','no-store');
+    res.json({version:'elastic-observer-shadow-v0.5',hours,events:tail,
+      count:tail.length,totalInWindow:all.length,truncated:all.length>MAX,
+      note:'History begins at v0.5 deployment; native source bar time and actual observation time differ. Full audit archive stored in rotated NDJSON.'});
+  }catch(e){res.status(500).json({error:'elastic history unavailable',detail:e.message});}
+});
 app.get('/api/trades', requireAuth, (req, res) => {
   let state = { version: 'v4-prototype-0.1', modules: { scalp: null, day: null, swing: null } };
   let history = [];
@@ -2368,6 +2382,34 @@ app.get('/', requireAuth, (req, res) => {
       .elastic-dual-full summary{cursor:pointer;font-size:9px;font-weight:700;color:#546987;}
       .elastic-dual-full .elastic-dual-event{font-size:9px;}
       @media(max-width:560px){.elastic-dual-grid{gap:5px}.elastic-dual-card{padding:7px 6px;font-size:9px}.elastic-dual-title{font-size:11px}.elastic-dual-role{font-size:7px}.elastic-dual-kpis{gap:4px}.elastic-dual-header{font-size:9px}.elastic-dual-note{font-size:8px}}
+      /* Elastic v0.5: compact shared measures + full causal history */
+      .el-wrap{background:#fff;border:1px solid #dbe0e5;border-radius:10px;margin:8px 0 10px;padding:11px;font:10px/1.5 "SF Mono",Menlo,monospace;}
+      .el-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;letter-spacing:.03em;flex-wrap:wrap}
+      .el-head span,.el-foot,.el-old{color:#8b9298;font-weight:400}
+      .el-overview{font-size:11px;padding:8px 0;border-bottom:1px solid #e5e7eb;}
+      .el-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+      .el-section{min-width:0;border:1px solid #eceff1;border-radius:7px;padding:7px;background:#fff;}
+      .el-section-title{font-weight:800;margin-bottom:4px;font-size:10px;letter-spacing:.03em;}
+      .el-section-title small{font-size:8px;font-weight:400;color:#939aa0;}
+      .el-measure{margin:3px 0;font-size:10px;overflow-wrap:anywhere;}
+      .el-up{color:#16804b;font-weight:750}
+      .el-down{color:#bb3e42;font-weight:750}
+      .el-neutral{color:#53616e;font-weight:650}
+      .el-duel{border:1px solid #e5e9ed;border-radius:8px;padding:9px;margin-top:8px;}
+      .el-duel-title{font-size:10px;font-weight:750;margin-bottom:4px;}
+      .el-duel-grid{display:grid;grid-template-columns:1fr 76px 1fr;gap:6px;align-items:center;min-height:92px;}
+      .el-fighter{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;font-size:9px;min-width:0;text-align:center;}
+      .el-buy-square{display:block;background:#16804b2b;border:2px solid #16804b;border-radius:4px;}
+      .el-sell-square{display:block;background:#bb3e422b;border:2px solid #bb3e42;border-radius:4px;}
+      .el-duel-line{height:75px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-left:2px dashed #a5adb5;font-size:9px;text-align:center;}
+      .el-duel-notice{padding:9px;color:#687581;border:1px dotted #cfd5db;border-radius:6px;margin-top:8px;}
+      .el-history-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 5px;}
+      .el-history-head label{font-size:9px;color:#687581;}
+      .el-history-head select{font:inherit;padding:3px;border:1px solid #d7dce1;border-radius:4px;background:#fff;}
+      .el-history-list{max-height:390px;overflow:auto;border:1px solid #e5e9ed;border-radius:6px;padding:6px;background:#fcfcfd;}
+      .el-hist-row{font-size:9px;border-bottom:1px dotted #eceff1;padding:5px 1px;overflow-wrap:anywhere;}
+      .el-foot{font-size:9px;margin-top:5px;line-height:1.45;}
+      @media(max-width:540px){.el-grid{grid-template-columns:1fr}.el-wrap{padding:7px}.el-measure{font-size:9px}.el-duel-grid{grid-template-columns:1fr 63px 1fr;}.el-duel-line{font-size:8px;}}
       .mono { font-family: "SF Mono", "Menlo", "Consolas", monospace; font-variant-numeric: tabular-nums; }
 
       .ticker {
@@ -2911,10 +2953,18 @@ app.get('/', requireAuth, (req, res) => {
       </div>
 
 <script src="/boono-charts.js"></script>
+<script src="/elastic-observer-ui.js"></script>
 <script src="/app.js"></script>
     </body>
     </html>
   `);
+});
+
+// Elastic v0.5 shared observation renderer — authenticated and read-only.
+app.get('/elastic-observer-ui.js',requireAuth,(req,res)=>{
+  const file=path.join(__dirname,'elastic-observer-ui.js');
+  res.set('Cache-Control','no-store');
+  res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
 });
 
 // Shared BOONO charts renderer — same browser drawing core for Vagues and BOONO-TV.
@@ -5293,7 +5343,10 @@ async function loadTrades() {
     if (ld) living += '<div style="margin-top:7px;opacity:.7;"><b>Dernière décision journalisée</b> ' + escTrade(ld.action) + ' — ' + escTrade(ld.reason) + ' · ' + tradeTime(ld.ts) + '</div>';
     living += '</div></div>';
     const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
-    stateEl.innerHTML = liveCard + renderElasticDualV04(current) + living + posHtml;
+    stateEl.innerHTML = liveCard +
+      (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
+      living + posHtml;
+    if(window.loadElasticObserverHistory)window.loadElasticObserverHistory();
     stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});
     updateV3LivePriceDom();
 

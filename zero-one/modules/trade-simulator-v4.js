@@ -38,6 +38,7 @@ const DECISIONS_PATH=path.join(DATA,'trade-sim-v4-decisions.ndjson');
 const EVAL_PATH=path.join(DATA,'trade-sim-v4-evaluations.ndjson');
 const V3_SHADOW_PATH=path.join(DATA,'trade-sim-v3-shadow-v4.ndjson');
 const TP_SHADOW_PATH=path.join(DATA,'trade-sim-v4-tp-shadow.ndjson');
+const ELASTIC_EVENTS_PATH=path.join(DATA,'elastic-observer-events.ndjson');
 const ROT={maxBytes:32*1024*1024,maxSegments:16};
 const SIZING={
   capitalUsd:1000,
@@ -293,7 +294,8 @@ function protectOnPriceTick(module,t,px,ts){
 priceStream.on('price',tick=>{
   const px=Number(tick&&tick.price),ts=Number(tick&&tick.ts)||Date.now();
   if(!Number.isFinite(px))return;
-  liveTicks.push({ts,price:px});
+  liveTicks.push({ts,price:px,volume:Number.isFinite(Number(tick.volume))?Number(tick.volume):null,
+    side:tick.side===1||tick.side===2?tick.side:null});
   const cutoff=ts-30*60*1000;
   while(liveTicks.length&&liveTicks[0].ts<cutoff)liveTicks.shift();
   for(const [module,t] of liveTracks){
@@ -365,7 +367,8 @@ function compactV4(x){
     translation:x.translation,ticker:x.ticker,mfStructureShadow:x.mfStructureShadow||null,
     continuationReentryShadow:x.continuationReentryShadow||null,
     priceBehaviorShadow:x.priceBehaviorShadow||null,
-    live15AcceptanceShadow:x.live15AcceptanceShadow||null,admissionCounterfactualShadow:x.admissionCounterfactualShadow||null,elasticSyncShadow:x.elasticSyncShadow||null,elasticDualChainShadow:x.elasticDualChainShadow||null,structuralHandoff:x.structuralHandoff||null,
+    live15AcceptanceShadow:x.live15AcceptanceShadow||null,admissionCounterfactualShadow:x.admissionCounterfactualShadow||null,elasticSyncShadow:x.elasticSyncShadow||null,elasticDualChainShadow:x.elasticDualChainShadow||null,
+    elasticObserverShadow:x.elasticObserverShadow||null,structuralHandoff:x.structuralHandoff||null,
     entryTranslation:x.entryTranslation||null,entryTicker:x.entryTicker||null,
     risk:x.risk,action:x.action,contract:x.contract,v3Shadow:x.v3Shadow||null};
 }
@@ -378,6 +381,12 @@ function recordDecision(state,module,result){
   appendRotatingNdjson(DECISIONS_PATH,{ts:nowIso(),version:VERSION,module,action:a.type,reason:a.reason,fingerprint:fp,context:compactV4(result)},ROT);
 }
 function recordEval(module,result,pos){
+  if(module==='day'&&result.elasticObserverShadow&&Array.isArray(result.elasticObserverShadow.newEvents)){
+    for(const e of result.elasticObserverShadow.newEvents){
+      appendRotatingNdjson(ELASTIC_EVENTS_PATH,{...e,ts:new Date(e.observedAt).toISOString(),
+        version:result.elasticObserverShadow.version,decisionImpact:false},{maxBytes:8*1024*1024,maxSegments:32});
+    }
+  }
   appendRotatingNdjson(EVAL_PATH,{ts:nowIso(),version:VERSION,module,
     position:pos?{direction:pos.direction,entryPrice:pos.entryPrice,entryTimestamp:pos.entryTimestamp,
       tp1Taken:!!pos.tp1Taken,realizedPnlUsd:pos.realizedPnlUsd,grossRealizedPnlUsd:pos.grossRealizedPnlUsd,

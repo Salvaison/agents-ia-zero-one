@@ -988,3 +988,13 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Clôture et enregistrement anti-churn unifiés entre sortie du cycle V4 et sortie de stream, checkpoints d'armement persistés une fois par étage ; V3 shadow ignoré par ce contrôleur dur.
 - Elastic v0.4.3 et son interface **inchangés** ; recommandations UX discutées séparément. Rapport `knowledge/v4.10.10-hard-stream-gain-floor-2026-10-21.md`.
 - 47 tests V4 complets avant déploiement, y compris intégration de stream avec données isolées sous `NODE_ENV=test`.
+
+## 2026-10-21 — Elastic v0.5 : sept familles communes, qualités anglaises et historique durable
+- SHADOW PUR, V4.10.10 et hard-gain stops **inchangés**. Nouveau module `elastic-observer-shadow.js` en parallèle d'Elastic v0.4.3 (ce dernier reste audit/expérimental).
+- Interface Elastic refondue : mesures uniques MCB15, MCB3, FLOW, MA, CONVERSION, BOUNDARY, CONTEXT ; BW/LBW/MF dernière bougie confirmée grise → Live colorée selon la **variation** ; relation BW/LBW et pente structurelle E→E.
+- États MA : CONTACT, DEPART, RETEST, HELD, REJECTED, LOST ; épisodes fondés sur barres confirmées 3m/15m, aucun nouveau veto.
+- Qualités de conversion en anglais : SILENT, INEFFICIENT, PRODUCTIVE, EASY, POWERFUL, EXCEPTIONAL, CONTESTED ; hypothèses temporelles ABSORBED / EXHAUSTED ; aucun score probabiliste inventé.
+- Suppression en UI de la duplication des deux colonnes, « X preuves/familles/oppositions », « repris Nx », contre-preuves, signaux historiques dépassés, jalons et récit récent redondants. Les signaux Confirmed vs Live restent distincts ; E15 DN confirmé remplace l'état UP confirmé, l'historique est conservé.
+- Journal de transitions `data/elastic-observer-events.ndjson` persistant, rotation 8Mo×(1+32 segments), route auth `/api/elastic-history?hours=6|24|48` avec indication du nombre et du tronquage. Historique **prospectif depuis l'activation** ; aucune fausse reconstitution du passé.
+- Diagramme descriptif des volumes agressifs acheteurs/vendeurs sur trois minutes depuis les transactions publiques OKX, surface des carrés proportionnelle au volume BTC et déplacement de prix affiché séparément ; n'affiche pas de carrés en absence de données de volume exploitable.
+- Tests source/transition/MA/conversion/UI/duel et journal + replay isolé : voir `knowledge/elastic-v0.5-shared-measures-causal-history-2026-10-21.md`.

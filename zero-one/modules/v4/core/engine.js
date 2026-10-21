@@ -24,6 +24,7 @@ const live15AcceptanceShadow=require('../experiments/live15-acceptance-shadow');
 const admissionCounterfactualShadow=require('../experiments/admission-counterfactual-shadow');
 const elasticSyncShadow=require('../experiments/elastic-sync-shadow');
 const elasticDualChainShadow=require('../experiments/elastic-dual-chain-shadow');
+const elasticObserverShadow=require('../experiments/elastic-observer-shadow');
 
 const VERSION='v4.10.10-hard-stream-gain-floor-20261021';
 
@@ -140,6 +141,12 @@ function evaluate(frame,position=null,previousEvaluation=null){
     previousEvaluation&&previousEvaluation.elasticDualChainShadow||null
   );
 
+  const elasticObserver=elasticObserverShadow.evaluate(
+    frame,mcb,native,baseThesis,translation,ticker,mfStructure,priceBehavior,
+    room,background,quality,elasticDualChain.waveGeometry,
+    previousEvaluation&&previousEvaluation.elasticObserverShadow||null
+  );
+
   const entryThesis=setup&&setup.status==='SETUP'
     ?{state:'SETUP',direction:setup.direction,candidateDirection:setup.direction,mode:baseThesis&&baseThesis.mode||null,authority:'MCB_ONLY'}
     :{state:'OBSERVE',direction:null,candidateDirection:null,authority:'MCB_ONLY'};
@@ -185,6 +192,7 @@ function evaluate(frame,position=null,previousEvaluation=null){
     admissionCounterfactualShadow:admissionCounterfactual,
     elasticSyncShadow:elasticSync,
     elasticDualChainShadow:elasticDualChain,
+    elasticObserverShadow:elasticObserver,
     structuralHandoff,
     entryTranslation,
     entryTicker,
