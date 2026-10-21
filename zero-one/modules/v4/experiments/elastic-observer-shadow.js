@@ -48,6 +48,8 @@ function buySellEffort(frame,minutes=3){
   return {available:a.length>=2&&buy+sell>0,windowMinutes:minutes,sampleCount:a.length,
     buyBtc:buy,sellBtc:sell,netAggressiveBtc:buy-sell,
     priceNetUsd:a.length>=2?Number(a[a.length-1].price)-Number(a[0].price):null,
+    priceRangeUsd:a.length>=2?
+      Math.max(...a.map(x=>Number(x.price)))-Math.min(...a.map(x=>Number(x.price))):null,
     note:'Aggressor volume from public OKX BTC-USDT-SWAP trade ticks, not net positions or true market-wide buyer/seller strength'};
 }
 function conversion(frame,translation,ticker,priceBehavior,previous){
@@ -148,16 +150,19 @@ function liveEvent(native,tf){
 }
 function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavior,room,background,quality,geometry,prev){
  const previous=prev&&prev.version===VERSION?prev:null,now=Number(frame.market.timestamp),price=Number(frame.market.price);
- const result={version:VERSION,decisionImpact:false,ts:now,price,
+ const result={version:VERSION,revision:'tug-of-war-history-paging-v0.5.1',decisionImpact:false,ts:now,price,
    mcbProposal:baseThesis&&baseThesis.candidateDirection||null,
    mcbStructural:mcb&&mcb.currentLobe&&mcb.currentLobe.structuralDirection||null,
    priceDirection:null,shared:{},signals:{},ma:{},flow:{},boundary:{},context:{},
    conversion:null,effort:null,eventCount:previous&&previous.eventCount||0,newEvents:[],
-   eventState:{},note:'Seven shared families, unique transitions; no setup/action/risk authority'};
+   eventState:{},lastEvent:previous&&previous.lastEvent||null,
+   note:'Seven shared families, unique transitions; no setup/action/risk authority'};
  const push=(family,key,type,before,after,sourceTs,dir=null,detail=null)=>{
    result.eventCount++;
-   result.newEvents.push({id:result.eventCount,observedAt:now,sourceTs:sourceTs??null,price,
-     family,key,type,direction:dir,previous:before??null,current:after??null,detail:detail??null});
+   const event={id:result.eventCount,observedAt:now,sourceTs:sourceTs??null,price,
+     family,key,type,direction:dir,previous:before??null,current:after??null,detail:detail??null};
+   result.newEvents.push(event);
+   result.lastEvent=event;
  };
  for(const tf of ['15m','3m']){
    const w=waveform(frame,tf,mcb,native,geometry),key=tf==='3m'?'MCB3':'MCB15';
@@ -199,12 +204,16 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
  const cv=result.conversion,oldc=previous&&previous.conversion||null;
  const cmp=(x)=>x&&[x.quality,x.direction,x.temporalQuality||''].join('|');
  if(!oldc||cmp(cv)!==cmp(oldc)){
-   if(oldc)push('CONVERSION','CONVERSION','INTERRUPTED',oldc.quality,cv.quality,now,oldc.direction);
    const restore=previous&&previous.previousConversion&&previous.previousConversion.key===cmp(cv)&&
      now-previous.previousConversion.ts<15*60000;
-   push('CONVERSION','CONVERSION',restore?'RESTORED':'OBSERVED',
-     oldc&&oldc.quality||null,cv.quality,now,cv.direction,
-     {pm3:cv.pm3,pm5:cv.pm5,efficiency3m:cv.efficiency3m,effortVsP75:cv.effortVsP75,yieldVsP75:cv.yieldVsP75});
+   const lifecycle=!oldc?'OBSERVED':cv.quality==='UNCLASSIFIED'?'INTERRUPTED':
+     restore?'RESTORED':'TRANSITION';
+   // One state change = ONE causal record, preserving previous and next quality.
+   push('CONVERSION','CONVERSION',lifecycle,
+     oldc?{quality:oldc.quality,direction:oldc.direction}:null,
+     {quality:cv.quality,direction:cv.direction},now,cv.direction,
+     {pm3:cv.pm3,pm5:cv.pm5,pmLive:cv.pmLive,efficiency3m:cv.efficiency3m,
+       effortVsP75:cv.effortVsP75,yieldVsP75:cv.yieldVsP75});
  }else if(cv.samples===3)push('CONVERSION','CONVERSION','CONFIRMED',cv.quality,cv.quality,now,cv.direction,
    {persistenceSamples:3});
  result.lastConversion={key:cmp(cv),ts:now};
@@ -212,6 +221,23 @@ function evaluate(frame,mcb,native,baseThesis,translation,ticker,mf,priceBehavio
    previous&&previous.previousConversion||null;
  result.effort=buySellEffort(frame,3);
  result.priceDirection=sign(result.effort.priceNetUsd);
+ const pmDir=sign(cv.pmLive);
+ const tkStatus=ticker&&ticker.status||'UNKNOWN';
+ const tkDirection=ticker&&ticker.direction||null;
+ const proposed=result.mcbProposal;
+ const rollingAligned=!!(proposed&&sign(cv.pm3)===proposed&&sign(cv.pm5)===proposed);
+ const liveAligned=!!(proposed&&pmDir===proposed);
+ const tickerConfirmed=!!(proposed&&ticker&&ticker.confirmed&&
+   (ticker.thesisDirection===proposed||ticker.direction===proposed));
+ result.conviction={tickerStatus:tkStatus,tickerDirection:tkDirection,
+   tickerConfirmed,pmLiveDirection:pmDir,pmLiveAligned:liveAligned,
+   pm3Pm5Aligned:rollingAligned,conversionQuality:cv.quality,
+   label:tickerConfirmed&&rollingAligned?'TICKER_CONFIRMED_PM_ALIGNED':
+     rollingAligned&&liveAligned?'PM_LIVE_AND_ROLLING_ALIGNED':
+     rollingAligned?'ROLLING_ALIGNED_PM_LIVE_MIXED':
+     'UNDER_OBSERVATION',
+   semantic:'Descriptive alignment and ticker qualification, never a probability or additional trade gate',
+   decisionImpact:false};
  const levels=frame.sources&&frame.sources.levels||[];
  const nearest=(pred)=>levels.filter(x=>x&&finite(x.price)&&pred(x))
    .map(x=>({label:x.label||x.token||null,price:Number(x.price),

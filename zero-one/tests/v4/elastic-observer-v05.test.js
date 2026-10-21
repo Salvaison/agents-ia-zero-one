@@ -129,3 +129,76 @@ test('historical transitions survive current-state changes and 6/24/48h queries'
   assert.equal(read(48)[1].type,'SUPERSEDED');
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('conversion quality changes are one transition, not paired INTERRUPTION plus OBSERVED',()=>{
+ const a=ev(f());
+ const b=ev(f(10030000),a,{}, {horizons:{net3mUsd:120,net5mUsd:111,efficiency3m:.8}},
+   {current:{yieldVsP75:1.7,effortVsP75:.7}},
+   {travel:{yieldVsP75:1.7,effortVsP75:.7}});
+ const transitions=b.newEvents.filter(x=>x.family==='CONVERSION');
+ assert.equal(transitions.length,1);
+ assert.equal(transitions[0].type,'TRANSITION');
+ assert.equal(transitions[0].previous.quality,'SILENT');
+ assert.equal(transitions[0].current.quality,'EASY');
+ assert.equal(b.lastEvent.type,'TRANSITION');
+ assert.equal(b.conviction.pmLiveDirection,'short');
+ assert.equal(b.conviction.decisionImpact,false);
+});
+test('tug-of-war squares remain touching, prices shift both regardless of effort sizes',()=>{
+ const uiCode=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const context={window:{},document:{},fetch:async()=>({ok:true,json:async()=>({events:[]})})};
+ vm.runInNewContext(uiCode,context);
+ const a=ev(f());a.lastEvent={observedAt:10000000,family:'MCB15',key:'E15',type:'CONFIRMED'};
+ a.effort={available:true,buyBtc:.2,sellBtc:5,priceNetUsd:22,priceRangeUsd:50,sampleCount:3};
+ const h=context.window.renderElasticObserverV05({elasticObserverShadow:a});
+ const rs=[...h.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.equal(rs.length,2);
+ const x=Number(rs[0][1]),side=Number(rs[0][3]),right=Number(rs[1][1]);
+ assert.equal(x+side,right);
+ assert.ok(right>180,'positive price moves both boxes right despite larger selling square');
+ assert.ok(Number(rs[1][3])>side);
+ assert.ok(h.includes('MCB15 / E15'));
+ assert.ok(h.includes('CONVICTION / ticker'));
+ assert.ok(h.includes('PM Live'));
+ a.effort.priceNetUsd=-22;
+ const h2=context.window.renderElasticObserverV05({elasticObserverShadow:a});
+ const rs2=[...h2.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.ok(Number(rs2[1][1])<180);
+});
+test('chronology stays collapsed without fetching and fetches paginated events when opened',async()=>{
+ const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const details={open:false},output={innerHTML:'',scrollTop:0},hours={value:'6'},family={value:''},more={hidden:true};
+ const nodes={'elastic-chronology':details,'elastic-history':output,'elastic-history-hours':hours,
+  'elastic-history-family':family,'elastic-history-more':more};
+ const requests=[],now=Date.now();
+ const ctx={window:{},document:{getElementById:id=>nodes[id]||null},
+  fetch:async url=>{
+    requests.push(url);
+    const page=requests.length===1?[
+      {id:2,observedAt:now-2000,type:'CONFIRMED',family:'MCB3',key:'E3',current:{type:'DN',sourceTs:now-3000},price:82000},
+      {id:3,observedAt:now-1000,type:'TRANSITION',family:'CONVERSION',key:'CONVERSION',previous:{quality:'SILENT'},current:{quality:'EASY'},price:82020}]:[
+      {id:1,observedAt:now-3000,type:'OBSERVED',family:'MCB15',key:'E15',current:{type:'UP',sourceTs:now-5000},price:81950}];
+    return {ok:true,json:async()=>({events:page,hasMore:requests.length===1,nextBeforeId:page[0].id,
+      totalInWindow:3})};
+  }};
+ vm.runInNewContext(src,ctx);
+ const html=ctx.window.renderElasticObserverV05({elasticObserverShadow:ev(f())});
+ assert.ok(html.includes('<details id="elastic-chronology"'));
+ assert.ok(!html.includes('<details id="elastic-chronology" class="el-chronology" open'));
+ ctx.window.loadElasticObserverHistory();
+ assert.equal(requests.length,0);
+ details.open=true;details.ontoggle();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(requests.length,1);
+ assert.ok(output.innerHTML.includes('TRANSITION'));
+ assert.equal(more.hidden,false);
+ more.onclick();await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(requests.length,2);
+ assert.ok(requests[1].includes('beforeId=2'));
+ assert.ok(output.innerHTML.includes('MCB15'));
+ assert.equal(more.hidden,true);
+ details.open=false;details.ontoggle();
+ assert.equal(ctx.window.elasticHistoryState.open,false);
+ const closedHtml=ctx.window.renderElasticObserverV05({elasticObserverShadow:ev(f())});
+ assert.ok(!closedHtml.includes('<details id="elastic-chronology" class="el-chronology" open'));
+});

@@ -33,31 +33,45 @@ const tfRow=(name,w)=>{
   ' · Live '+(live?'<b class="'+tone(live.type==='UP'?'long':'short')+'">'+esc(live.type)+' provisoire</b>':'—')+'</div></div>';
 };
 function effort(x){
- const q=x&&x.effort||{};
- if(!q.available)return '<div class="el-duel-notice">Duel agressif acheteurs/vendeurs : volume directionnel indisponible pour cette fenêtre (ne pas substituer Effort/P75).</div>';
+ const q=x&&x.effort||{},evt=x&&x.lastEvent||null;
+ const label=evt?date(evt.observedAt)+' · '+evt.family+' / '+evt.key+' '+evt.type:'Chronologie · aucune transition suivie';
+ const latest=esc(label.length>56?label.slice(0,53)+'…':label);
+ if(!q.available)return '<div class="el-duel-notice">Dernier événement : '+latest+
+   ' · Duel indisponible : volumes acheteurs/vendeurs initiateurs non mesurables sur cette fenêtre.</div>';
  const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0),max=Math.max(buy,sell,0.00001);
- const sz=v=>Math.max(13,Math.round(Math.sqrt(v/max)*66));
- const b=sz(buy),s=sz(sell),price=q.priceNetUsd;
- const pd=fromDelta(0,price);
- return '<div class="el-duel"><div class="el-duel-title">Duel · transactions initiées 3m</div>'+
-   '<div class="el-duel-grid"><div class="el-fighter"><span class="el-buy-square" style="width:'+b+'px;height:'+b+'px"></span>'+
-   '<span class="el-up">Acheteurs '+buy.toFixed(3)+' BTC</span></div>'+
-   '<div class="el-duel-line"><span>PRIX</span><b class="'+tone(pd)+'">'+money(price)+'</b></div>'+
-   '<div class="el-fighter"><span class="el-sell-square" style="width:'+s+'px;height:'+s+'px"></span>'+
-   '<span class="el-down">Vendeurs '+sell.toFixed(3)+' BTC</span></div></div>'+
-   '<div class="el-foot">Surface des carrés ∝ volume agressif · prix = déplacement net indépendant · '+Number(q.sampleCount||0)+' transactions observées</div></div>';
+ const sz=v=>Math.max(14,Math.round(Math.sqrt(v/max)*61));
+ const b=sz(buy),s=sz(sell),price=n(q.priceNetUsd)||0;
+ const pd=fromDelta(0,price),range=Math.max(n(q.priceRangeUsd)||0,1);
+ const drift=Math.round(Math.max(-1,Math.min(1,price/range))*69),contact=180+drift;
+ const rect=(x,y,w,col)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+w+'" rx="4" fill="'+col+'" fill-opacity=".20" stroke="'+col+'" stroke-width="2.3"/>';
+ const indicator=contact===180?'':('<line x1="180" y1="158" x2="'+contact+'" y2="158" stroke="'+(pd==='long'?'#16804b':'#bd444b')+'" stroke-width="3" stroke-linecap="round"/>'+
+   '<circle cx="'+contact+'" cy="158" r="3.5" fill="'+(pd==='long'?'#16804b':'#bd444b')+'"/>');
+ return '<div class="el-duel"><div class="el-duel-title">Duel · terrain gagné sur 3m (prix indépendant du volume)</div>'+
+   '<svg role="img" aria-label="Deux carrés accolés, déplacement conjoint par le prix, tailles proportionnelles aux volumes initiateurs" viewBox="0 0 360 202" width="100%" xmlns="http://www.w3.org/2000/svg">'+
+   '<text x="180" y="15" text-anchor="middle" font-size="9" fill="#586672">'+latest+'</text>'+
+   '<line x1="180" y1="27" x2="180" y2="167" stroke="#84909c" stroke-dasharray="5 4" stroke-width="1.5"/>'+
+   '<text x="180" y="36" text-anchor="middle" font-size="8" fill="#85919b">AXE INITIAL</text>'+
+   rect(contact-b,108-b/2,b,'#16804b')+rect(contact,108-s/2,s,'#bb3e42')+
+   '<line x1="'+contact+'" y1="'+Math.max(38,108-Math.max(b,s)/2-6)+'" x2="'+contact+'" y2="'+Math.min(151,108+Math.max(b,s)/2+6)+'" stroke="#40515d" stroke-width="1.2"/>'+
+   indicator+
+   '<text x="78" y="173" text-anchor="middle" font-size="9" fill="#16804b">ACHAT '+buy.toFixed(3)+' BTC</text>'+
+   '<text x="282" y="173" text-anchor="middle" font-size="9" fill="#bb3e42">VENTE '+sell.toFixed(3)+' BTC</text>'+
+   '<text x="180" y="192" text-anchor="middle" font-size="11" font-weight="700" fill="'+(pd==='long'?'#16804b':pd==='short'?'#bb3e42':'#56636c')+'">PRIX '+esc(money(price))+'</text>'+
+   '</svg>'+
+   '<div class="el-foot">Les carrés restent accolés : tailles ∝ volumes, leur position commune suit le prix et non le plus gros carré. Translation normalisée à l’amplitude 3m ('+money(q.priceRangeUsd)+'). '+Number(q.sampleCount||0)+' transactions publiques OKX.</div></div>';
 }
 function display(x){
  const h=x&&x.elasticObserverShadow||null;
  if(!h)return '<div class="el-wrap"><b>ELASTIC v0.5</b> · attente de la première évaluation</div>';
  const cv=h.conversion||{},ma=h.ma||{},fl=h.flow||{},b=h.boundary||{},ctx=h.context||{};
- const dir=h.mcbProposal||null;
+ const dir=h.mcbProposal||null,conv=h.conviction||{};
  const mfpart=p=>pair(p);
- const markup='<div class="el-wrap"><div class="el-head"><b>ELASTIC v0.5 · MÉMOIRE COMMUNE</b>'+
+ const markup='<div class="el-wrap"><div class="el-head"><b>ELASTIC v0.5.1 · MÉMOIRE COMMUNE</b>'+
   '<span>SHADOW / aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
   ' · prix <b class="'+tone(h.priceDirection)+'">'+esc((h.priceDirection||'—').toUpperCase())+'</b></div>'+
+  '<div class="el-conviction"><b>CONVICTION / ticker</b> '+esc(conv.tickerConfirmed?'CONFIRMED':conv.tickerStatus||'NOT_CONFIRMED')+' · <b>PM Live</b> '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $ · PM3/5 '+esc(conv.pm3Pm5Aligned?'ALIGNÉS':'EN OBSERVATION')+' · '+esc(conv.label||'UNDER_OBSERVATION')+'</div>'+
   '<div class="el-grid">'+
    tfRow('MCB 15',h.shared&&h.shared.MCB15)+
    tfRow('MCB 3',h.shared&&h.shared.MCB3)+
@@ -93,9 +107,12 @@ function display(x){
    ' · Weekly '+esc(ctx.weekly&&ctx.weekly.structuralDirection||'—')+'</div></div>'+
    '</div>'+
    effort(h)+
-   '<div class="el-history-head"><b>CHRONOLOGIE · mémoire persistante</b>'+
-   '<label>Fenêtre <select id="elastic-history-hours"><option value="6">6 h</option><option value="24">24 h</option><option value="48">48 h</option></select></label></div>'+
-   '<div id="elastic-history" class="el-history-list">Chargement de l’historique…</div>'+
+   '<details id="elastic-chronology" class="el-chronology"'+(window.elasticHistoryState&&window.elasticHistoryState.open?' open':'')+'>'+
+   '<summary>CHRONOLOGIE · mémoire persistante <span class="el-old">(cliquer pour ouvrir / refermer)</span></summary>'+
+   '<div class="el-history-head"><label>Fenêtre <select id="elastic-history-hours"><option value="6">6 h</option><option value="24">24 h</option><option value="48">48 h</option></select></label>'+
+   '<label>Famille <select id="elastic-history-family"><option value="">Toutes</option><option value="MCB15">MCB15</option><option value="MCB3">MCB3</option><option value="FLOW">FLOW</option><option value="MA">MA</option><option value="CONVERSION">CONVERSION</option><option value="BOUNDARY">BOUNDARY</option><option value="CONTEXT">CONTEXT</option></select></label></div>'+
+   '<div id="elastic-history" class="el-history-list">Ouvre la chronologie pour charger les événements.</div>'+
+   '<button type="button" id="elastic-history-more" class="el-more" hidden>Afficher les événements plus anciens</button></details>'+
    '<div class="el-foot">Heure observée distincte de la bougie source. Les états remplacés restent dans le journal ; aucun double comptage E3/E15 et BW/LBW.</div>'+
    '</div>';
  return markup;
@@ -103,37 +120,81 @@ function display(x){
 function date(ts){return n(ts)===null?'—':new Date(Number(ts)).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 function shortVal(v){
  if(v===null||v===undefined)return '—';
- if(typeof v==='object'){if(v.type)return v.type+' · '+date(v.sourceTs);if(v.to)return v.to;return JSON.stringify(v).slice(0,160);}
+ if(typeof v==='object'){if(v.quality)return v.quality+(v.direction?' ('+v.direction+')':'');if(v.type)return v.type+' · '+date(v.sourceTs);if(v.to)return v.to;return JSON.stringify(v).slice(0,100);}
  return String(v);
 }
-window.elasticObserverHours=window.elasticObserverHours||6;
+// Stable client-side state survives the 30s trade panel redraw.
+const initialHistory=window.elasticHistoryState||{
+ open:false,hours:6,family:'',events:[],hasMore:false,beforeId:null,
+ totalInWindow:0,loadedAt:0,loading:false,scrollTop:0
+};
+window.elasticHistoryState=initialHistory;
 window.renderElasticObserverV05=display;
-window.loadElasticObserverHistory=async function(){
- const out=document.getElementById('elastic-history'),sel=document.getElementById('elastic-history-hours');
+const historyHtml=e=>{
+ const dir=e.direction||null,before=shortVal(e.previous),after=shortVal(e.current);
+ return '<div class="el-hist-row"><span class="el-old">'+esc(date(e.observedAt))+'</span> '+
+  '<b>'+esc(e.family)+' / '+esc(e.key)+'</b> '+
+  '<span class="'+tone(dir)+'">'+esc(e.type)+'</span> '+
+  (before==='—'?'':' <span class="el-old">'+esc(before)+'</span> → ')+
+  '<b class="'+tone(dir)+'">'+esc(after)+'</b> · prix '+money(e.price)+
+  (e.sourceTs&&e.sourceTs!==e.observedAt?' <span class="el-old">· source '+esc(date(e.sourceTs))+'</span>':'')+'</div>';
+};
+function paintHistory(){
+ const st=window.elasticHistoryState,out=document.getElementById('elastic-history');
  if(!out)return;
- if(sel){sel.value=String(window.elasticObserverHours);sel.onchange=()=>{
-   window.elasticObserverHours=Number(sel.value)||6;window.loadElasticObserverHistory();
- };}
+ out.innerHTML='<div class="el-foot">'+st.events.length+' affichés sur '+st.totalInWindow+
+  ' transitions enregistrées dans la fenêtre. Charger les pages suivantes pour voir les plus anciennes.</div>'+
+  (st.events.length?st.events.map(historyHtml).join(''):'<div class="el-foot">Aucun événement dans cette période.</div>');
+ out.scrollTop=st.scrollTop||0;
+ const more=document.getElementById('elastic-history-more');
+ if(more){more.hidden=!st.hasMore;more.disabled=!!st.loading;more.onclick=()=>fetchHistoryPage(true);}
+}
+async function fetchHistoryPage(older){
+ const st=window.elasticHistoryState;
+ if(st.loading)return;
+ st.loading=true;
  try{
-  const res=await fetch('/api/elastic-history?hours='+encodeURIComponent(window.elasticObserverHours),{cache:'no-store'});
+  const q='hours='+encodeURIComponent(st.hours)+'&limit=120'+
+   (st.family?'&family='+encodeURIComponent(st.family):'')+
+   (older&&st.beforeId?'&beforeId='+encodeURIComponent(st.beforeId):'');
+  const res=await fetch('/api/elastic-history?'+q,{cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
-  const j=await res.json(),events=j.events||[];
-  const newest=events.slice().reverse();
-  out.innerHTML='<div class="el-foot">'+events.length+' transitions'+
-   (j.truncated?' · limite de 3 000 entrées atteinte':'')+
-   ' · historique disponible depuis la mise en service de v0.5</div>'+
-   (newest.length?newest.map(e=>{
-     const dir=e.direction||null;
-     const before=shortVal(e.previous),after=shortVal(e.current);
-     const old=before==='—'?'':' <span class="el-old">'+esc(before)+'</span> → ';
-     return '<div class="el-hist-row"><span class="el-old">'+esc(date(e.observedAt))+'</span> '+
-      '<b>'+esc(e.family)+' / '+esc(e.key)+'</b> '+
-      '<span class="'+tone(dir)+'">'+esc(e.type)+'</span> '+
-      old+'<b class="'+tone(dir)+'">'+esc(after)+'</b>'+
-      ' · prix '+money(e.price)+
-      (e.sourceTs&&e.sourceTs!==e.observedAt?' <span class="el-old">· source '+esc(date(e.sourceTs))+'</span>':'')+
-      '</div>';
-   }).join(''):'<div class="el-foot">Aucune transition encore enregistrée sur cette fenêtre.</div>');
- }catch(err){out.textContent='Historique non disponible : '+err.message;}
+  const j=await res.json(),page=(j.events||[]).slice().reverse();
+  if(older){const known=new Set(st.events.map(e=>e.id));st.events=st.events.concat(page.filter(e=>!known.has(e.id)));}
+  else {st.events=page;st.scrollTop=0;}
+  st.hasMore=!!j.hasMore;st.beforeId=j.nextBeforeId||null;
+  st.totalInWindow=Number(j.totalInWindow)||0;st.loadedAt=Date.now();
+ }catch(err){
+  const el=document.getElementById('elastic-history');
+  if(el)el.textContent='Historique indisponible : '+err.message;
+  st.loading=false;return;
+ }
+ st.loading=false;paintHistory();
+}
+window.loadElasticObserverHistory=function(){
+ const st=window.elasticHistoryState,details=document.getElementById('elastic-chronology');
+ if(!details)return;
+ const out=document.getElementById('elastic-history'),hours=document.getElementById('elastic-history-hours');
+ const family=document.getElementById('elastic-history-family');
+ if(hours){hours.value=String(st.hours);hours.onchange=()=>{
+   st.hours=Number(hours.value)||6;st.events=[];st.beforeId=null;st.loadedAt=0;st.scrollTop=0;
+   fetchHistoryPage(false);
+ };}
+ if(family){family.value=st.family;family.onchange=()=>{
+   st.family=family.value;st.events=[];st.beforeId=null;st.loadedAt=0;st.scrollTop=0;
+   fetchHistoryPage(false);
+ };}
+ details.ontoggle=()=>{
+   st.open=details.open;
+   if(details.open){
+     if(st.events.length)paintHistory();
+     if(!st.events.length||Date.now()-st.loadedAt>90000)fetchHistoryPage(false);
+   }
+ };
+ if(out)out.onscroll=()=>{st.scrollTop=out.scrollTop;};
+ if(details.open){
+   if(st.events.length)paintHistory();
+   if(!st.events.length&&!st.loading)fetchHistoryPage(false);
+ }
 };
 })();

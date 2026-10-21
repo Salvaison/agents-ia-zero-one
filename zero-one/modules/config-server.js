@@ -352,13 +352,24 @@ app.get('/api/elastic-history',requireAuth,(req,res)=>{
   try{
     const hours=[6,24,48].includes(Number(req.query.hours))?Number(req.query.hours):6;
     const since=Date.now()-hours*3600000;
+    const family=['MCB15','MCB3','FLOW','MA','CONVERSION','BOUNDARY','CONTEXT']
+      .includes(String(req.query.family||''))?String(req.query.family):null;
+    const beforeId=Number(req.query.beforeId);
+    const limit=Math.max(20,Math.min(200,Number(req.query.limit)||100));
+    // Reverse NDJSON parsing can reverse events sharing one evaluation timestamp.
+    // The observer's monotonically increasing id is the stable pagination order.
     const all=readNdjsonSince(ELASTIC_OBSERVER_EVENTS_PATH,since)
-      .filter(e=>e&&Number.isFinite(e.observedAt)&&e.observedAt>=since);
-    const MAX=3000,tail=all.slice(-MAX);
+      .filter(e=>e&&Number.isFinite(e.observedAt)&&e.observedAt>=since&&
+        Number.isSafeInteger(Number(e.id))&&(!family||e.family===family))
+      .sort((a,b)=>Number(a.id)-Number(b.id));
+    const validBefore=Number.isSafeInteger(beforeId)&&beforeId>0;
+    const eligible=validBefore?all.filter(e=>Number(e.id)<beforeId):all;
+    const events=eligible.slice(-limit);
     res.set('Cache-Control','no-store');
-    res.json({version:'elastic-observer-shadow-v0.5',hours,events:tail,
-      count:tail.length,totalInWindow:all.length,truncated:all.length>MAX,
-      note:'History begins at v0.5 deployment; native source bar time and actual observation time differ. Full audit archive stored in rotated NDJSON.'});
+    res.json({version:'elastic-observer-shadow-v0.5',hours,family,events,
+      count:events.length,totalInWindow:all.length,hasMore:eligible.length>events.length,
+      nextBeforeId:events.length?events[0].id:null,limit,
+      note:'Paginated event history, newest page first. Actual observation time is different from the source bar. Archive rotation retention applies.'});
   }catch(e){res.status(500).json({error:'elastic history unavailable',detail:e.message});}
 });
 app.get('/api/trades', requireAuth, (req, res) => {
@@ -2386,7 +2397,14 @@ app.get('/', requireAuth, (req, res) => {
       .el-wrap{background:#fff;border:1px solid #dbe0e5;border-radius:10px;margin:8px 0 10px;padding:11px;font:10px/1.5 "SF Mono",Menlo,monospace;}
       .el-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;letter-spacing:.03em;flex-wrap:wrap}
       .el-head span,.el-foot,.el-old{color:#8b9298;font-weight:400}
-      .el-overview{font-size:11px;padding:8px 0;border-bottom:1px solid #e5e7eb;}
+      .el-overview{font-size:11px;padding:8px 0 5px;}
+      .el-conviction{font-size:10px;padding:5px 7px;border:1px solid #dfe4e9;border-radius:6px;background:#f7f8fa;margin-bottom:5px;}
+      .el-chronology{margin-top:11px;border-top:1px solid #e7e9ed;padding-top:8px;}
+      .el-chronology>summary{font-weight:750;cursor:pointer;list-style-position:inside;font-size:10px;}
+      .el-chronology[open]>summary{margin-bottom:6px;}
+      .el-more{margin-top:5px;border:1px solid #d4dbe0;background:#f8fafb;border-radius:5px;cursor:pointer;font-size:9px;padding:6px 12px;color:#405362;}
+      .el-more[hidden]{display:none;}
+      .el-duel svg{display:block;margin:auto;max-width:440px;}
       .el-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
       .el-section{min-width:0;border:1px solid #eceff1;border-radius:7px;padding:7px;background:#fff;}
       .el-section-title{font-weight:800;margin-bottom:4px;font-size:10px;letter-spacing:.03em;}

@@ -998,3 +998,12 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Journal de transitions `data/elastic-observer-events.ndjson` persistant, rotation 8Mo×(1+32 segments), route auth `/api/elastic-history?hours=6|24|48` avec indication du nombre et du tronquage. Historique **prospectif depuis l'activation** ; aucune fausse reconstitution du passé.
 - Diagramme descriptif des volumes agressifs acheteurs/vendeurs sur trois minutes depuis les transactions publiques OKX, surface des carrés proportionnelle au volume BTC et déplacement de prix affiché séparément ; n'affiche pas de carrés en absence de données de volume exploitable.
 - Tests source/transition/MA/conversion/UI/duel et journal + replay isolé : voir `knowledge/elastic-v0.5-shared-measures-causal-history-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.1 : duel mobile et chronologie paginée
+- SHADOW/UI UNIQUEMENT, V4.10.10 et stops 120/90–220/180 inchangés.
+- Duel volumes acheteur/vendeur OKX sous forme de deux **carrés accolés**, décalés ensemble suivant **le déplacement du prix**, indépendamment de leur taille. Axe initial pointillé fixe, dernier événement de chronologie en tête de l'axe et déplacement net du prix au pied. Translation normalisée à l'amplitude observée en 3m.
+- En-tête : conviction **qualifiée par le ticker**, PM Live mis en évidence comme premier juge de conversion du prix, suivi PM3/PM5 ; aucune probabilité fabriquée ni autorité supplémentaire d'admission.
+- Chronologie fermée par défaut, ouverte par clic, historique 6/24/48 h paginé (120 événements/pages), filtrable par famille ; ne télécharge rien lorsqu'elle reste fermée. Ordre de pagination corrigé par identifiant pour les événements qui partagent le même horodatage.
+- Correction du doublonnage des transitions de qualité CONVERSION : un seul `TRANSITION` avec les deux valeurs au lieu d'un `INTERRUPTED` suivi d'un `OBSERVED`. L'ancien journal reste intact (ne pas réécrire rétrospectivement le passé).
+- Inspection : 510 événements en 170 minutes, dont 421 issus de CONVERSION avant correction ; pagination lue sur 548 événements en cinq pages sans doublon.
+- Détails : `knowledge/elastic-v0.5.1-tug-duel-conviction-history-2026-10-21.md`.
