@@ -1037,3 +1037,8 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Un trait de déplacement connecte visuellement l'axe initial à leur point de contact mobile. Réserve de largeur pour conserver les carrés importants pendant leur glissement.
 - En dessous du graphe de bougies 3m et MA200 de Vagues apparaît `PRIX ±X.X $ · 3m` (couleur haussière/baissière). Pas de courbe bleue PM3.
 - Seulement l'interface et ses tests ; admissions, moteur V4.10.10, stops 120/90 et 220/180, journaux Elastic et BOONO-TV inchangés. Rapport `knowledge/elastic-v0.5.6-moving-duel-price-label-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.7 : volumes BTC inscrits dans les carrés
+- Affichage direct à l'intérieur des carrés acheteur et vendeur du **volume agressif initiateur BTC** observé sur trois minutes, avec `ACHAT` / `VENTE` pour les grands carrés. Infobulle du montant précis, format adaptatif pour petits volumes/carrés, plaquette claire discrète derrière chaque valeur.
+- Libellés de volume au-dessus simplifiés pour éviter la duplication. Les carrés continuent de se déplacer autour de la ligne centrale fixe selon le prix BTC et gardent leur dimension relative à l'effort.
+- Bougies 3m Vagues, MA200, prix du déplacement et moteurs V4.10.10 inchangés, sans modification des signaux ni des ordres. Rapport `knowledge/elastic-v0.5.7-volume-labels-inside-duel-2026-10-21.md`.

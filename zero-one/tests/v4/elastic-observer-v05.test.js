@@ -322,3 +322,48 @@ test('price overlay with sparse or unavailable ticks falls back without syntheti
  assert.ok(!html.includes('class="el-price-trail"'));
  assert.ok(!html.includes('NaN')&&!html.includes('undefined'));
 });
+
+test('BTC volumes appear INSIDE both semi-transparent moving squares, including compact cases',async()=>{
+ const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const T=Date.now(),canvas={getBoundingClientRect:()=>({width:420,height:268})};
+ const svg={innerHTML:'',setAttribute(){}},axis={innerHTML:''},loading={style:{}};
+ const priceEl={textContent:'',className:''};
+ const nodes={'elastic-price-candles':canvas,'elastic-conversion-overlay':svg,
+   'elastic-price-axis':axis,'elastic-chart-loading':loading,'elastic-duel-price':priceEl};
+ const ctx={window:{BoonoCharts:{
+   drawPrice:(c,r,o)=>({bounds:{lo:82000,hi:83000},padding:o.padding,
+     plotWidth:420-o.padding.left-o.padding.right,plotHeight:268-o.padding.top-o.padding.bottom}),
+   mapPrice:(v,b,t,h)=>t+(b.hi-v)/(b.hi-b.lo)*h
+ }},document:{getElementById:id=>nodes[id]},fetch:async()=>({ok:true,json:async()=>({
+   period:{to:T},candles:[{ts:T-360000,open:82500,high:82600,low:82450,close:82580},
+   {ts:T-180000,open:82580,high:82680,low:82560,close:82650}]})})};
+ vm.runInNewContext(src,ctx);
+ const snap=ev(f());snap.effort={available:true,buyBtc:115.4804,
+   sellBtc:45.3172,priceNetUsd:73.2,priceRangeUsd:99.1,sampleCount:2000};
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:snap});
+ assert.equal((svg.innerHTML.match(/class="el-volume-amount"/g)||[]).length,2);
+ assert.ok(svg.innerHTML.includes('115.480 BTC'));
+ assert.ok(svg.innerHTML.includes('45.317 BTC'));
+ assert.ok(svg.innerHTML.includes('ACHAT : 115.480 BTC initiateurs'));
+ assert.ok(svg.innerHTML.includes('VENTE : 45.317 BTC initiateurs'));
+ assert.equal((svg.innerHTML.match(/class="el-volume-label-back"/g)||[]).length,2);
+ const groups=[...svg.innerHTML.matchAll(/<g class="el-conversion-camp">([\s\S]*?)<\/g>/g)];
+ assert.equal(groups.length,2);
+ for(const g of groups){
+   const s=g[1],rect=s.match(/class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/);
+   const label=s.match(/class="el-volume-amount" x="([\d.]+)" y="([\d.]+)"/);
+   assert.ok(rect&&label);
+   const [x,y,w,h]=rect.slice(1).map(Number),[tx,ty]=label.slice(1).map(Number);
+   assert.ok(tx>x&&tx<x+w&&ty>y&&ty<y+h,'label centered inside its own square');
+ }
+ assert.ok(svg.innerHTML.includes('el-duel-zero-axis'));
+ assert.ok(svg.innerHTML.includes('el-duel-movement'));
+ assert.equal(priceEl.textContent,'PRIX +73.2 $ · 3m');
+ snap.effort.buyBtc=.004;
+ snap.effort.sellBtc=100;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:snap});
+ assert.ok(svg.innerHTML.includes('0.0040'),'tiny volume not misleadingly rounded to zero');
+ assert.ok(svg.innerHTML.includes('textLength='),'narrow square text fit is explicitly constrained');
+ assert.ok(svg.innerHTML.includes('100.000 BTC'));
+ assert.ok(svg.innerHTML.includes('BTC initiateurs sur 3m'));
+});
