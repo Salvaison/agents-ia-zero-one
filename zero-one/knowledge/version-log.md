@@ -1031,3 +1031,9 @@ L'état actuel en flat est bien bloqué LONG par `DEEP_4H_WAIT_UP_SUB60`; la pos
 - Les deux carrés translucides (21 %) se touchent au **milieu géométrique de la zone graphique**, sans attache au prix BTC, au PM3 ni au dernier chandelier. Surfaces proportionnelles aux volumes initiateurs acheteur/vendeur ; le plus grand carré occupe au maximum ~46,5 % de la largeur utile et ~76 % de la hauteur, les deux pouvant remplir ~93 % de la largeur quand les volumes sont égaux.
 - Les chandeliers OHLC 3m et la MA200 restent les mêmes que Vagues. Suppression des calculs d'audit PM3 inutiles dans le nouvel endpoint v0.2 ; pas de modification du moteur de trading, des journaux Elastic ni de BOONO-TV.
 - Tests : géométrie centrale, taille, absence de ligne bleue, axe prix BTC conservé, invariance de position après inversion de PM3. Rapport `knowledge/elastic-v0.5.5-central-duel-over-3m-candles-2026-10-21.md`.
+
+## 2026-10-21 — Elastic v0.5.6 : duel mobile et valeur prix restaurée
+- Deux grands carrés restent accolés et peuvent **glisser ensemble à droite/gauche de la ligne pointillée verticale fixe au centre** suivant la variation net BTC 3m (déplacement / amplitude observée), sans suivre PM3, PM Live ni la bougie courante.
+- Un trait de déplacement connecte visuellement l'axe initial à leur point de contact mobile. Réserve de largeur pour conserver les carrés importants pendant leur glissement.
+- En dessous du graphe de bougies 3m et MA200 de Vagues apparaît `PRIX ±X.X $ · 3m` (couleur haussière/baissière). Pas de courbe bleue PM3.
+- Seulement l'interface et ses tests ; admissions, moteur V4.10.10, stops 120/90 et 220/180, journaux Elastic et BOONO-TV inchangés. Rapport `knowledge/elastic-v0.5.6-moving-duel-price-label-2026-10-21.md`.

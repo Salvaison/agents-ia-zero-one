@@ -2424,6 +2424,7 @@ app.get('/', requireAuth, (req, res) => {
       .el-price-axis{position:absolute;top:0;bottom:0;left:0;width:43px;pointer-events:none;font:8px 'SF Mono',Menlo,monospace;color:#555;}
       .el-price-axis span{position:absolute;left:1px;width:40px;transform:translateY(-50%);background:rgba(255,255,255,.88);text-align:right;padding-right:3px;}
       .el-chart-loading{position:absolute;left:46px;right:43px;top:6px;font-size:9px;color:#82909d;text-align:center;pointer-events:none;}
+      .el-duel-price-value{text-align:center;font:800 12px/1.4 'SF Mono',Menlo,monospace;letter-spacing:.03em;padding:3px 0 1px;}
       .el-duel-legend{display:flex;gap:5px;justify-content:space-between;color:#697887;font-size:8px;padding:3px 0;}
       .el-duel-volumes{padding-bottom:3px;}
       .el-grid{display:block;margin-top:5px}

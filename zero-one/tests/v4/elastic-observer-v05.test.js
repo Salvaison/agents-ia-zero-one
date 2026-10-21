@@ -144,13 +144,14 @@ test('conversion quality changes are one transition, not paired INTERRUPTION plu
  assert.equal(b.conviction.pmLiveDirection,'short');
  assert.equal(b.conviction.decisionImpact,false);
 });
-test('large central duel overlays candles without PM3 blue line, right axis or BTC-price anchoring',async()=>{
+test('duel moves together around fixed axis with BTC 3m displacement and price label',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
  const T=Date.now(),canvas={getBoundingClientRect:()=>({width:420,height:268})};
  const svg={innerHTML:'',attributes:{},setAttribute(k,v){this.attributes[k]=v;}};
  const axis={innerHTML:''},loading={style:{},textContent:''};
+ const priceEl={textContent:'',className:''};
  const nodes={'elastic-price-candles':canvas,'elastic-conversion-overlay':svg,
-  'elastic-price-axis':axis,'elastic-chart-loading':loading};
+  'elastic-price-axis':axis,'elastic-chart-loading':loading,'elastic-duel-price':priceEl};
  const optsCaptured=[];
  const ctx={window:{BoonoCharts:{
     drawPrice:(can,rows,opts)=>{optsCaptured.push({can,rows,opts});
@@ -165,7 +166,8 @@ test('large central duel overlays candles without PM3 blue line, right axis or B
     {ts:T-15*60000,open:82480,high:82580,low:82400,close:82530}],
     conversion:[{ts:T-180000,pm3Usd:-70},{ts:T-90000,pm3Usd:20},{ts:T,pm3Usd:45}]})})};
  vm.runInNewContext(src,ctx);
- const x=ev(f());x.effort={available:true,buyBtc:3,sellBtc:6,sampleCount:30};
+ const x=ev(f());x.effort={available:true,buyBtc:3,sellBtc:6,sampleCount:30,
+   priceNetUsd:30,priceRangeUsd:50};
  x.conversion.pm3=45;
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
  assert.equal(optsCaptured.length,1);
@@ -176,11 +178,16 @@ test('large central duel overlays candles without PM3 blue line, right axis or B
  const boxes=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
  assert.equal(boxes.length,2);
  const left=boxes[0].map(Number),right=boxes[1].map(Number);
- assert.equal(left[1]+left[3],right[1],'squares meet at center');
+ assert.equal(left[1]+left[3],right[1],'squares remain touching');
  const center=optsCaptured[0].opts.padding.left+(420-optsCaptured[0].opts.padding.left-optsCaptured[0].opts.padding.right)/2;
- assert.ok(Math.abs(right[1]-center)<1,'join lies at midpoint of chart, not price');
- assert.ok(left[3]>100&&right[3]>140,'squares fill chart rather than tiny right-hand objects');
- assert.ok(left[3]+right[3]>270,'combined squares occupy most plotting width');
+ const central=[...svg.innerHTML.matchAll(/<line class="el-duel-zero-axis" x1="([\d.]+)"/g)];
+ assert.equal(central.length,1);
+ assert.ok(Math.abs(Number(central[0][1])-center)<1,'dashed zero axis remains centered');
+ assert.ok(right[1]>center+10,'positive BTC displacement moves both squares right');
+ assert.ok(left[3]>90&&right[3]>125,'squares are still large');
+ assert.ok(left[3]+right[3]>220,'combined duel occupies substantial chart width');
+ assert.ok(svg.innerHTML.includes('class="el-duel-movement"'));
+ assert.equal(priceEl.textContent,'PRIX +30.0 $ · 3m');
  assert.ok(!svg.innerHTML.includes('el-pm3-trace'),'blue PM3 path removed');
  assert.ok(!svg.innerHTML.includes('el-pm3-scale'),'right-hand PM3 axis removed');
  assert.ok(!svg.innerHTML.includes('PM3 $'),'no PM3 caption in chart');
@@ -189,7 +196,15 @@ test('large central duel overlays candles without PM3 blue line, right axis or B
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
  const next=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
  assert.equal(next[0][1],boxes[0][1]);
- assert.equal(next[0][2],boxes[0][2],'changing PM3 does not move square vertically');
+ assert.equal(next[0][2],boxes[0][2],'changing PM3 does not move squares vertically');
+ x.effort.priceNetUsd=-30;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
+ const reversed=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.ok(Number(reversed[1][1])<center-10,'negative BTC displacement shifts both left');
+ assert.equal(reversed[0][2],boxes[0][2],'direction reversal does not alter box heights');
+ assert.equal(reversed[0][3],boxes[0][3],'direction reversal does not alter effort sizes');
+ assert.equal(priceEl.textContent,'PRIX -30.0 $ · 3m');
+ assert.ok(priceEl.className.includes('el-down'));
  assert.equal(loading.style.display,'none');
  assert.equal(svg.attributes.viewBox,'0 0 420 268');
 });
@@ -287,7 +302,9 @@ test('Waves OHLC 3m remains the price source while duel is independently centere
  assert.ok(ui.includes('window.BoonoCharts.drawPrice(canvas,candles'));
  assert.ok(ui.includes("theme:'interface'"));
  assert.ok(ui.includes('const cx=pad.left+plotW/2,cy=pad.top+plotH/2'));
- assert.ok(ui.includes('const maxSide=Math.min(plotW*.465,plotH*.76,174)'));
+ assert.ok(ui.includes('const maxSide=Math.min(plotW*.365,plotH*.73,150)'));
+ assert.ok(ui.includes('class="el-duel-zero-axis"'));
+ assert.ok(ui.includes('priceShift/priceRange'));
  assert.ok(!ui.includes('const ypm=v=>'));
  assert.ok(!ui.includes('class="el-pm3-trace"'));
  assert.ok(ui.includes('class="el-conversion-square"'));
