@@ -87,3 +87,34 @@ Comparer V4.10.10 intacte vs V1 shadow sur mêmes points de décision, mêmes fr
 **Phase 2** : replay comparatif, tuning anti-churn par rôle, sur plusieurs périodes dont pertes et trades excellents.
 **Phase 3** : proposer un diff limité, obtenir validation distincte avant d'accorder à Elastic l'autorité de trading paper V1 ; garder V4 en shadow de comparaison, rollback et journal complet.
 Serveur = vérité opérationnelle ; code = état implémenté ; archives = mémoire ; hypothèses = hypothèses.
+
+## X. Addendum utilisateur du 22/10 — naissance lente, confirmation rapide, statistique 4×15 min
+**Statut : nouvelle orientation conceptuelle validée pour la conception V1 ; aucun pouvoir trading activé.**
+
+### Antériorité de l'occasion : ne pas confondre premier signal rapide et naissance
+- L'opportunité commence souvent dans le **contexte lent** : localisation prix sur MCB, range/support/résistance, horizon 1h comme mémoire de contexte, structure E15→E15 et perte de vitesse de la tendance en cours. Un E15 Live n'a pas à être la première manifestation mesurable pour qu'une hypothèse lente existe.
+- **MCB15 propose une campagne candidate**, puis le 3m rend observable une tentative de retournement ou la confirmation tactique. Un E3 UP/DN et une PM productive peuvent être des contre-efforts au mouvement dominant, et non l'origine d'une nouvelle thèse.
+- Pivots et épisodes **E15 eux-mêmes** disposent de la même mémoire causale que les E3 : tentatives de sommet/creux, respirations, E15 Live provisoire, E15 confirmé, absorption ou rejet, conservation du terrain. Lien parent E15-campagne → enfants E3-cycles.
+- Chaîne de référence (03:30 du 22/10) : préparation lente préalable → E3 DN Live → BW/LBWcross3 (même phénomène MCB3) → PM Live et PM3 productifs → E3 DN confirmé → E15 DN Live → BW/LBWcross15 (même phénomène MCB15) → maintien du terrain. L'ordre précis peut varier ; c'est le lien causal et la conversion qui comptent, pas une checklist.
+- **L'état lent ne doit pas devenir veto systématique au changement de camp** : reconnaître `SLOW_TREND_WEAKENING`, `COUNTER_ATTACK`, `TRANSITION_CANDIDATE` et `ACCEPTED_REVERSAL` avec critères d'effort, MF, prix conservé et géométrie, plutôt qu'attendre un E15 confirmé quand la meilleure conversion a déjà eu lieu.
+
+### Ticker temporel de qualité : fenêtre d'une heure en 4×15 minutes
+Les classes `POWERFUL/INEFFICIENT/EASY/...` sont **nominales** : une moyenne numérique arbitraire de ces étiquettes ne serait pas interprétable. Utiliser les observations d'effort/rendement sous-jacentes et une **distribution temporelle conditionnée par la direction**.
+Pour chaque bougie 15m enregistrer :
+1. Proportion de temps **LONG / SHORT / CONTESTED** et phases `INITIATING/PRODUCTIVE/BREATHING/EXHAUSTING` ; la durée est mesurée sur le temps effectif des évaluations disponibles, avec leurs manques de données.
+2. Effort BTC agressif acheteurs/vendeurs **agrégé sans double compter les fenêtres glissantes 3m**, rendement prix réellement obtenu, prix retenu après contre-mouvement, PM Live/3/5 directionnel et efficacité.
+3. Temps **PRODUCTIVE/EASY/POWERFUL** dans la direction dominante vs temps **INEFFICIENT/ABSORBED/EXHAUSTED**, fréquence des alternances de qualification, dispersion et confirmation/rétractation des E3/E15 Live.
+4. Pente LBW15, MF15 et tendance des quatre barres, évolution du ratio rendement/effort et persistance des contre-attaques, sans agréger des indicateurs fortement corrélés en « votes » séparés.
+Sur les quatre barres successives, dériver un **résumé de régime d'une heure** (`PERSISTENT_LONG`, `PERSISTENT_SHORT`, `ASYMMETRIC_CONTEST`, `WEAKENING`, `TRANSITION_UNCONFIRMED`) avec confiance fondée sur la couverture et la stabilité, **pas une probabilité de gain ni une instruction directe de trade**.
+Comparer un résumé roulant d'une heure au dernier 15m pour montrer si l'accélération récente est rupture, respiration ou continuation du régime. Préférer agrégations temporelles/volumiques explicites à la simple moyenne des classes.
+
+### Contrat de machine MCB + Elastic
+`SLOW_CONTEXT/BACKGROUND → STRUCTURAL_TENSION → TRANSITION_PROPOSED_BY_MCB15 → MICRO_3M_COUNTERTEST_OR_CONFIRMATION → LIVE_PRICE_CONVERSION → EARLY_ADMISSION_WINDOW → RETENTION / RESPIRATION / REACCELERATION → EXHAUSTION/INVALIDATION`.
+
+L'ordre des *observations précises* E3/E15 Live/PM peut varier ; la causalité lente est la mémoire parent. En cas de premier E3 contraire échoué, conserver le même parent pour la tentative E3 suivante. En cas de première attaque déjà gagnante, ne pas exiger une deuxième par dogme.
+
+**Garde-fous** : le « contexte lent d'abord » ne doit pas devenir un nouveau filtre 1h rigide qui recrée les anciennes abstentions ; sécurité DATA_OK/risk/frais/doublons restent hors machine. Les anti-churns économiques redondants seront migrés un à un, après replay.
+
+### Priorité d'infrastructure devenue impérative
+Le 22/10, le suivi HTTP a prouvé un problème de quota Internet : les 12 rapports détaillés (103,6 Mo JSON) et le snapshot vivant (~5,9 Mo) étaient livrés par le rafraîchissement normal de TRADES. Correctif UI déployé (commits `7003280`, `c270641`), JSON compressé mesuré ~71 Ko/30s au lieu d'environ 110 Mo avant correction. Les historiques détaillés restent sur Amsterdam ; les rapports deviennent chargés sur demande. Référence `knowledge/ui-bandwidth-emergency-2026-10-22.md`.
+La lecture SHADOWS reste calculatoirement lourde : échantillon temporairement ramené de 360 à 60 snapshots (~30 min) ; un journal de statistiques compact 48 h est encore à construire. Ne pas transformer le temps de téléchargement corrigé en prétendue preuve de statistiques couvrant 48 h.
