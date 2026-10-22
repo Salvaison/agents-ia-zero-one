@@ -61,6 +61,34 @@ const BOONO_HISTORY_PATH = path.join(__dirname, '../data/moteur-boono-history.js
 const AUDIT_HISTORY_PATH = path.join(__dirname, '../data/audit-history.json');
 const SHADOWS_CACHE_TTL_MS = 90000;
 let shadowsResponseCache={at:0,payload:null};
+// The full Sync object may exceed 5 MB. Keep complete evidence on Amsterdam;
+ // never serialize 50 completed campaigns to a browser every 30 seconds.
+function compactUiElasticSync(sync){
+  if(!sync)return null;
+  const ep=sync.activeEpisode||null;
+  return {version:sync.version,decisionImpact:sync.decisionImpact,state:sync.state,
+    activeEpisode:ep?{
+      id:ep.id,direction:ep.direction,startedAt:ep.startedAt,startedPrice:ep.startedPrice,
+      orderSignature:Array.isArray(ep.orderSignature)?ep.orderSignature.slice(-40):[],
+      orderString:String(ep.orderString||'').slice(-850),
+      maxFavorableUsd:ep.maxFavorableUsd,maxAdverseUsd:ep.maxAdverseUsd,
+      relaxationCount:ep.relaxationCount,success220BeforeMinus180:ep.success220BeforeMinus180
+    }:null,
+    completedCount:Array.isArray(sync.completed)?sync.completed.length:0};
+}
+function compactV4UiEval(full){
+  if(!full||typeof full!=='object')return null;
+  const {elasticSyncShadow,elasticDualChainShadow,admissionCounterfactualShadow,
+    continuationReentryShadow,live15AcceptanceShadow,structuralHandoff,...core}=full;
+  return {...core,elasticSyncShadow:compactUiElasticSync(elasticSyncShadow)};
+}
+function compactV4UiReportContext(full){
+  if(!full||typeof full!=='object')return full||null;
+  const {elasticSyncShadow,elasticDualChainShadow,elasticObserverShadow,
+    admissionCounterfactualShadow,continuationReentryShadow,
+    live15AcceptanceShadow,structuralHandoff,...core}=full;
+  return core;
+}
 function shadowsCurrentFromEval(latest,tpLatest=null){
   latest=latest||{};
   return {
@@ -69,7 +97,7 @@ function shadowsCurrentFromEval(latest,tpLatest=null){
     structuralHandoff:latest.structuralHandoff||null,
     live15Acceptance:latest.live15AcceptanceShadow||null,
     admissionCounterfactual:latest.admissionCounterfactualShadow||null,
-    elasticSync:latest.elasticSyncShadow||null,
+    elasticSync:compactUiElasticSync(latest.elasticSyncShadow),
     dataQuality:latest.dataQuality||latest.mcb&&latest.mcb.dataQuality||null,
     mfTemporal:latest.mfStructureShadow&&latest.mfStructureShadow.temporal||null,
     tpOptimization:tpLatest
@@ -385,47 +413,8 @@ app.get('/api/elastic-history',requireAuth,(req,res)=>{
       note:'Paginated event history, newest page first. Actual observation time is different from the source bar. Archive rotation retention applies.'});
   }catch(e){res.status(500).json({error:'elastic history unavailable',detail:e.message});}
 });
-app.get('/api/trades', requireAuth, (req, res) => {
-  let state = { version: 'v4-prototype-0.1', modules: { scalp: null, day: null, swing: null } };
-  let history = [];
-  let decisions = [];
-  let waves = [];
-  let archivedV3 = [];
-  let lastDecision = null;
-  try {
-    if (fs.existsSync(TRADES_V2_STATE_PATH)) state = JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH, 'utf8'));
-  } catch (e) { /* etat absent ou transitoirement illisible */ }
-  try {
-    if (fs.existsSync(TRADES_V2_HISTORY_PATH)) {
-      const h = JSON.parse(fs.readFileSync(TRADES_V2_HISTORY_PATH, 'utf8'));
-      history = Array.isArray(h) ? h : [];
-    }
-  } catch (e) { /* historique vide */ }
-  try {
-    const d = readRecentNdjson(TRADES_V2_DECISIONS_PATH,1);
-    lastDecision = Array.isArray(d) && d.length ? d[d.length - 1] : null;
-  } catch (e) { /* decision absente */ }
-  try {
-    if (fs.existsSync(TRADES_V2_WAVES_PATH)) {
-      const w = JSON.parse(fs.readFileSync(TRADES_V2_WAVES_PATH, 'utf8'));
-      waves = Array.isArray(w) ? w.slice(-50) : [];
-    }
-  } catch (e) { /* vagues vides */ }
-  try {
-    if (fs.existsSync(TRADES_V3_ARCHIVE_HISTORY_PATH)) {
-      const h3 = JSON.parse(fs.readFileSync(TRADES_V3_ARCHIVE_HISTORY_PATH, 'utf8'));
-      archivedV3 = Array.isArray(h3) ? h3 : [];
-    }
-  } catch (e) { /* archive V3 vide */ }
-
-  /* API UI legere : l'historique synthétique reste complet, mais les gros
-   * contextes entry/exit ne sont envoyés que pour les derniers rapports.
-   * Les fichiers source complets restent inchangés sur disque. */
-  const ongoing = state.modules || { scalp: null, day: null, swing: null };
-  const executedFull = history.map(t => Object.assign({}, t, {
-    pnlPercent: t.pnlPercentLeveraged !== undefined ? t.pnlPercentLeveraged : t.pnlPercentPrice,
-  }));
-  const tradeSummary = (t) => ({
+let tradesUiHistoryCache={size:-1,mtimeMs:-1,executed:[],reports:[],totalCount:0};
+const tradeSummary = (t) => ({
     version:t&&t.version||null,module:t&&t.module||'day',direction:t&&t.direction||null,
     entryTimestamp:t&&t.entryTimestamp||null,exitTimestamp:t&&t.exitTimestamp||null,
     entryPrice:t&&t.entryPrice,exitPrice:t&&t.exitPrice,
@@ -444,13 +433,63 @@ app.get('/api/trades', requireAuth, (req, res) => {
     mfeCapturedPct:t&&t.mfeCapturedPct,godYieldSeen:!!(t&&t.godYieldSeen),
     entryArchetype:t&&t.entryContext&&t.entryContext.opportunity&&t.entryContext.opportunity.archetype||null
   });
-  const executed = executedFull.map(tradeSummary);
-  const reports = executedFull.slice(-12);
-  const archivedV3Summary = archivedV3.map(tradeSummary);
+function readTradesUiHistory(){
+  const st=fs.statSync(TRADES_V2_HISTORY_PATH);
+  if(st.size===tradesUiHistoryCache.size&&st.mtimeMs===tradesUiHistoryCache.mtimeMs)
+    return tradesUiHistoryCache;
+  const h=JSON.parse(fs.readFileSync(TRADES_V2_HISTORY_PATH,'utf8'));
+  if(!Array.isArray(h))throw new Error('V4 history malformed');
+  const executed=h.map(t=>tradeSummary({...t,pnlPercent:
+    t.pnlPercentLeveraged!==undefined?t.pnlPercentLeveraged:t.pnlPercentPrice}));
+  const reports=h.slice(-12).map(t=>({
+    ...t,entryContext:compactV4UiReportContext(t.entryContext),
+    exitContext:compactV4UiReportContext(t.exitContext)
+  }));
+  tradesUiHistoryCache={size:st.size,mtimeMs:st.mtimeMs,executed,reports,totalCount:h.length};
+  return tradesUiHistoryCache;
+}
+app.get('/api/trades/reports',requireAuth,(req,res)=>{
+  try{
+    const c=readTradesUiHistory();
+    res.set('Cache-Control','private,no-store');
+    res.json({version:'v4-ui-lazy-reports-v1',totalCount:c.totalCount,reports:c.reports});
+  }catch(err){res.status(500).json({error:'V4 reports unavailable',detail:err.message});}
+});
+let archivedV3UiCache={size:-1,mtimeMs:-1,executed:[]};
+function readArchivedV3Ui(){
+  const st=fs.statSync(TRADES_V3_ARCHIVE_HISTORY_PATH);
+  if(st.size===archivedV3UiCache.size&&st.mtimeMs===archivedV3UiCache.mtimeMs)
+    return archivedV3UiCache.executed;
+  const h=JSON.parse(fs.readFileSync(TRADES_V3_ARCHIVE_HISTORY_PATH,'utf8'));
+  const executed=(Array.isArray(h)?h:[]).map(tradeSummary);
+  archivedV3UiCache={size:st.size,mtimeMs:st.mtimeMs,executed};
+  return executed;
+}
+app.get('/api/trades', requireAuth, (req, res) => {
+  let state = { version: 'v4-prototype-0.1', modules: { scalp: null, day: null, swing: null } };
+  let archivedV3Summary=[];
+  let uiHistory={executed:[],reports:[],totalCount:0};
+  let lastDecision = null;
+  try {
+    if (fs.existsSync(TRADES_V2_STATE_PATH)) state = JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH, 'utf8'));
+  } catch (e) { /* etat absent ou transitoirement illisible */ }
+  try {uiHistory=readTradesUiHistory();}catch(_){}
+  try {
+    const d = readRecentNdjson(TRADES_V2_DECISIONS_PATH,1);
+    lastDecision = Array.isArray(d) && d.length ? d[d.length - 1] : null;
+  } catch (e) { /* decision absente */ }
+  try{archivedV3Summary=readArchivedV3Ui();}catch(_){}
+
+  /* API UI legere : l'historique synthétique reste complet, mais les gros
+   * contextes entry/exit ne sont envoyés que pour les derniers rapports.
+   * Les fichiers source complets restent inchangés sur disque. */
+  const ongoing = state.modules || { scalp: null, day: null, swing: null };
+
+  const executed = uiHistory.executed;
   const stateUi = {
     version:state.version||null,
     modules:state.modules||{scalp:null,day:null,swing:null},
-    lastEvaluation:state.lastEvaluation||null,
+    lastEvaluation:compactV4UiEval(state.lastEvaluation),
     startedAt:state.startedAt||null,
     migratedAt:state.migratedAt||null,
     previousVersion:state.previousVersion||null
@@ -463,8 +502,8 @@ app.get('/api/trades', requireAuth, (req, res) => {
     version: state.version || 'v4-prototype-0.1',
     ongoing,
     executed,
-    reports,
-    reportMeta:{detailCount:reports.length,totalCount:executedFull.length},
+    reports:[], // large contexts are loaded ONLY when Reports tab is opened
+    reportMeta:{detailCount:uiHistory.reports.length,totalCount:uiHistory.totalCount},
     state:stateUi,
     decisions:[],
     waves:[],
@@ -477,7 +516,7 @@ app.get('/api/trades', requireAuth, (req, res) => {
 // Observatoire SHADOWS — synthese live + fenetre recente, aucun impact trading.
 app.get('/api/shadows', requireAuth, (req, res) => {
   try {
-    const EVAL_LIMIT=360;
+    const EVAL_LIMIT=60; // emergency 30-minute shadow sample; 360 full snapshots blocked the UI for ~25s
     let state={};
     try {
       if(fs.existsSync(TRADES_V2_STATE_PATH))state=JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH,'utf8'));
@@ -511,13 +550,9 @@ app.get('/api/shadows', requireAuth, (req, res) => {
     const excludedDataDegraded=evalsAll.filter(shadowEvalDataDegraded);
     const evals=evalsAll.filter(x=>!shadowEvalDataDegraded(x));
 
+    // Same cached, summary-only trade array used by TRADES; TP ranking is retained.
     let history=[];
-    try {
-      if(fs.existsSync(TRADES_V2_HISTORY_PATH)){
-        const h=JSON.parse(fs.readFileSync(TRADES_V2_HISTORY_PATH,'utf8'));
-        history=Array.isArray(h)?h:[];
-      }
-    } catch (_) {}
+    try{history=readTradesUiHistory().executed;}catch(_){}
 
     const latest=evalsAll.length?evalsAll[evalsAll.length-1]:(state.lastEvaluation||{});
     const firstTs=evals.length?Date.parse(evals[0].ts||''):NaN;
@@ -1514,7 +1549,7 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
     const frames=audit.map(r=>waveUiFrame(r,null));
     waveUiDecorateMa(frames);
     let history=[], state={};
-    try { history=JSON.parse(fs.readFileSync(TRADES_V2_HISTORY_PATH,'utf8')); if(!Array.isArray(history))history=[]; } catch(_){}
+    try { history=readTradesUiHistory().executed; } catch(_){}
     try { state=JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH,'utf8')); } catch(_){}
     const openPosition=state.modules&&state.modules.day||null;
     const livingEval=state.lastEvaluation?Object.assign({},state.lastEvaluation,{position:openPosition}):null;
@@ -3098,7 +3133,13 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
     }
     if (el.dataset.main === 'trades') {
       const shadowsTab=document.querySelector('.tab[data-tab2="shadows"]');
-      if(shadowsTab&&shadowsTab.classList.contains('active')){
+      const reportsTab=document.querySelector('.tab[data-tab2="reportsv2"]');
+      const wavesTab=document.querySelector('.tab[data-tab2="waves"]');
+      if(reportsTab&&reportsTab.classList.contains('active')){
+        loadV4Reports(); // no 30-second reports download
+      }else if(wavesTab&&wavesTab.classList.contains('active')){
+        waveLiveFollow=true;loadWaveLive(false);
+      }else if(shadowsTab&&shadowsTab.classList.contains('active')){
         loadShadows();
         tradesAutoRefresh=setInterval(loadShadows,30000);
       }else{
@@ -3124,7 +3165,7 @@ document.querySelectorAll('.tab[data-tab2]').forEach(el => {
     if (el.dataset.tab2 === 'reportsv2' || el.dataset.tab2 === 'waves') {
       if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
       if (el.dataset.tab2 === 'waves') { waveLiveFollow=true; loadWaveLive(false); }
-      else stopWaveLiveRefresh();
+      else {stopWaveLiveRefresh();loadV4Reports();}
     } else if (el.dataset.tab2 === 'shadows') {
       stopWaveLiveRefresh();
       if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
@@ -5349,7 +5390,37 @@ function renderElasticDualV04(current) {
     '<div class="elastic-dual-grid">'+draw('long')+draw('short')+'</div>';
 }
 
+// Reports are deliberately loaded ONCE when the user opens the Reports tab.
+let v4ReportsLoadedForCount=null;
+let v4ReportsLoading=false;
+let v4ExpectedReportsCount=null;
+async function loadV4Reports(){
+  const el=document.getElementById('tab2-reportsv2');
+  if(!el||v4ReportsLoading||(v4ReportsLoadedForCount!==null&&v4ReportsLoadedForCount===v4ExpectedReportsCount))return;
+  v4ReportsLoading=true;
+  el.innerHTML='<div class="placeholder-note">Chargement des 12 derniers rapports…</div>';
+  try{
+    const res=await fetch('/api/trades/reports',{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const detailed=(data.reports||[]).slice().reverse();
+    const main=detailed.length
+      ?'<div class="diag-module"><div class="diag-details">'+detailed.length+
+        ' derniers rapports · données détaillées chargées sur demande</div></div>'+
+        detailed.map(renderV2Report).join('')
+      :'<div class="placeholder-note">Aucun rapport disponible.</div>';
+    el.innerHTML=main;
+    v4ReportsLoadedForCount=Number(data.totalCount)||0;
+    v4ExpectedReportsCount=v4ReportsLoadedForCount;
+  }catch(e){
+    el.innerHTML='<div class="ledger-empty">Rapports indisponibles : '+escTrade(e.message)+'</div>';
+  }finally{v4ReportsLoading=false;}
+}
+let tradesLoadInProgress=false;
 async function loadTrades() {
+  // Avoid overlapping network transfers on slow/mobile connections.
+  if(tradesLoadInProgress||document.hidden)return;
+  tradesLoadInProgress=true;
   loadBoono(); // onglet BOONO historique volontairement inchangé
   const stateEl = document.getElementById('tab2-statev2');
   const historyEl = document.getElementById('tab2-historyv2');
@@ -5433,24 +5504,17 @@ async function loadTrades() {
       (executed.length ? executed.map(renderV2HistoryRow).join('') : '<div class="placeholder-note">Aucun trade V4 cloturé pour le moment.</div>') +
       archiveSummary +
       (archivedV3.length ? archivedV3.map(renderV2HistoryRow).join('') : '');
-    const detailedReports = (data.reports || []).slice().reverse();
-    const v4Reports = detailedReports.length
-      ? '<div class="diag-module" style="opacity:.72;"><div class="diag-details">Rapports détaillés : ' + detailedReports.length + ' derniers trades V4 · historique complet conservé sur Amsterdam.</div></div>' +
-        detailedReports.map(renderV2Report).join('')
-      : '<div class="placeholder-note">Aucun compte rendu V4 encore. Le premier sera généré automatiquement à la clôture d’un trade V4.</div>';
-    const v3Reports = archivedV3.length
-      ? '<div class="diag-module" style="opacity:.72;"><div class="diag-details"><b>ARCHIVE V3</b> · historique synthétique visible dans Historique ; contextes détaillés non rechargés toutes les 30 s.</div></div>'
-      : '';
-    reportsEl.innerHTML = v4Reports + v3Reports;
-    if (hadReportDom) {
-      reportsEl.querySelectorAll('details[data-report-key]').forEach(function(el) {
-        el.open = openReportKeys.has(el.dataset.reportKey);
-      });
+    const reportTotal=Number(data.reportMeta&&data.reportMeta.totalCount)||0;
+    if(v4ExpectedReportsCount!==reportTotal){
+      v4ExpectedReportsCount=reportTotal;
+      v4ReportsLoadedForCount=null;
+      if(reportsEl)reportsEl.innerHTML='<div class="placeholder-note">Ouvrez l’onglet Rapports pour charger les derniers rapports détaillés (aucun téléchargement automatique).</div>';
     }
   } catch (e) {
     stateEl.innerHTML = '<div class="ledger-empty">Erreur V4 : ' + escTrade(e.message) + '</div>';
     historyEl.innerHTML = '<div class="ledger-empty">Historique indisponible.</div>';
-    reportsEl.innerHTML = '<div class="ledger-empty">Rapports indisponibles.</div>';
+  } finally {
+    tradesLoadInProgress=false;
   }
 }
 
@@ -5677,8 +5741,15 @@ async function saveParams() {
 }
 loadLevels();
 loadScenarios();
-loadTrades();
-tradesAutoRefresh = setInterval(loadTrades, 30000);
+const firstMain=document.querySelector('.main-nav-item[data-main="trades"].active');
+const firstReport=document.querySelector('.tab[data-tab2="reportsv2"].active');
+const firstWaves=document.querySelector('.tab[data-tab2="waves"].active');
+if(firstMain&&!firstReport&&!firstWaves){
+  loadTrades();
+  tradesAutoRefresh=setInterval(loadTrades,30000);
+}else if(firstMain&&firstReport){
+  loadV4Reports();
+}
 connectV3LivePrice();
 document.getElementById('chatToggle').addEventListener('click', () => {
   document.getElementById('chatPanel').classList.add('open');
