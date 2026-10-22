@@ -1083,6 +1083,36 @@ app.get('/api/shadows', requireAuth, (req, res) => {
   }
 });
 
+// Isolated V5 PAPER positions. Never read V4 history for pink bands; no
+// broker action. Return numeric UTC timestamps, no raw V5 analysis state.
+function waveUiV5PaperTrades(startTs,endTs){
+  try{
+    const file=path.join(__dirname,'../data/v5-paper-state.json');
+    const state=JSON.parse(fs.readFileSync(file,'utf8'));
+    if(state.mode!=='PAPER_ONLY_0_USD_ORDERS'||state.brokerOrdersEnabled!==false)return[];
+    const trades=(Array.isArray(state.history)?state.history:[]).map(t=>({
+      trade:Number(t.tradeNo),entryTs:Number(t.entryAt),exitTs:Number(t.exitAt),
+      entryPrice:Number(t.entryPrice),exitPrice:Number(t.exitPrice),
+      direction:t.direction,netPnlUsd:Number(t.netPnlUsd),
+      exitReason:String(t.exitReason||'PAPER_EXIT').slice(0,90),
+      source:'V5_PAPER',open:false
+    }));
+    if(state.position){
+      const t=state.position;
+      trades.push({trade:Number(state.completed||0)+1,entryTs:Number(t.entryAt),
+        exitTs:null,entryPrice:Number(t.entryPrice),exitPrice:null,
+        direction:t.direction,netPnlUsd:Number(t.lastNetPnlUsd)||0,
+        exitReason:null,source:'V5_PAPER',open:true});
+    }
+    return trades.filter(t=>Number.isSafeInteger(t.trade)&&t.trade>0&&
+      Number.isFinite(t.entryTs)&&t.entryTs>0&&
+      Number.isFinite(t.entryPrice)&&t.entryPrice>0&&
+      (t.exitTs===null||(Number.isFinite(t.exitTs)&&t.exitTs>=t.entryTs))&&
+      ['long','short'].includes(t.direction)&&
+      t.entryTs<=endTs&&(t.exitTs===null||t.exitTs>=startTs))
+      .sort((a,b)=>a.entryTs-b.entryTs).slice(-150);
+  }catch(_){return[];}
+}
 // Rapport V4 complet a la demande depuis la Wave.
 // Un seul trade est lu/envoye au clic afin de garder /api/trades leger.
 app.get('/api/trade-report/:tradeNo', requireAuth, (req, res) => {
@@ -1566,6 +1596,7 @@ function waveUiBuildSnapshot48(){
     sampling:{wave3Bars:r3.length,wave15Bars:r15.length,frames:frames.length},
     sourceContract:{tradingImpact:false,geometry:'confirmed MCB bars only',state:'none',semantic:'older 36h frozen/compact; newest 12h remain live-rich'},
     signalEvents,events,frames,
+    v5PaperTrades:waveUiV5PaperTrades(startTs,endTs),
     priceSeries:{
       '3m':waveUiPriceSeries('3m',startTs,endTs),
       '15m':waveUiPriceSeries('15m',startTs,endTs)
@@ -1634,6 +1665,7 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
         '15m':waveUiPriceSeries('15m',cut,now)
       },
       liveState,
+      v5PaperTrades:waveUiV5PaperTrades(now-48*3600000,now),
       events,frames
     });
   } catch(e) {
@@ -3045,7 +3077,7 @@ app.get('/', requireAuth, (req, res) => {
     </div>
     <div class="wave-scroll-shell"><div id="wavePriceScroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wavePriceCanvas" class="wave-canvas wave-price-canvas"></canvas></div></div><div id="wavePriceYAxis" class="wave-price-axis" aria-hidden="true"></div></div>
   </div>
-  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue pour afficher le résumé du trade.</span></div>
+  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue V4 ou rose V5 PAPER pour afficher le résumé du trade.</span></div>
   <div class="wave-band">
     <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-module-title-wrap"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span><button class="wave-info-btn" type="button" data-wave-info="wave15" aria-label="Informations Vague 15m">i</button></span></div></div>
     <div class="wave-scroll-shell"><div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div><div id="wave15YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
@@ -3360,16 +3392,77 @@ function waveTradeSpans(events,endTs) {
     return z;
   });
 }
+function waveV5TradeSpans(trades,endTs){
+  // V5 source is deliberately independent of the V4 ENTER/EXIT event stream.
+  return (trades||[]).filter(function(t){
+    return t&&t.source==='V5_PAPER'&&Number.isSafeInteger(Number(t.trade))&&
+      Number.isFinite(Number(t.entryTs))&&Number(t.entryTs)>0&&
+      (t.exitTs===null||t.exitTs===undefined||
+        (Number.isFinite(Number(t.exitTs))&&Number(t.exitTs)>=Number(t.entryTs)));
+  }).map(function(t){
+    return {source:'V5_PAPER',trade:Number(t.trade),entryTs:Number(t.entryTs),
+      drawEndTs:t.exitTs===null||t.exitTs===undefined?Number(endTs):Number(t.exitTs),
+      exitTs:t.exitTs===null||t.exitTs===undefined?null:Number(t.exitTs),
+      entryPrice:Number(t.entryPrice),
+      exitPrice:t.exitPrice===null||t.exitPrice===undefined?null:Number(t.exitPrice),
+      netPnlUsd:t.netPnlUsd===null||t.netPnlUsd===undefined?null:Number(t.netPnlUsd),
+      exitReason:t.exitReason||null,direction:t.direction,open:!!t.open};
+  });
+}
+function wavePaintV5Bands(canvas,zones,t0,t1,padding){
+  // Overlay on the returned BoonoCharts price canvas without changing the
+  // shared chart renderer. Fit in the exact same plot interval / box.
+  if(!canvas||!zones||!zones.length)return[];
+  const box=canvas.getBoundingClientRect();
+  if(!box.width||!box.height)return[];
+  const ratio=canvas.width/box.width,ctx=canvas.getContext('2d');
+  const L=padding.left,W=box.width-padding.left-padding.right;
+  const top=padding.top,h=box.height-padding.top-padding.bottom;
+  const map=ts=>L+(ts-t0)/Math.max(1,t1-t0)*W;
+  const hit=[];
+  ctx.save();ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.beginPath();ctx.rect(L,top,W,h);ctx.clip();
+  zones.forEach(function(z){
+    const left=Math.max(t0,z.entryTs),right=Math.min(t1,z.drawEndTs);
+    if(right<=left||z.entryTs>t1||z.drawEndTs<t0)return;
+    const x1=map(left),x2=map(right),width=Math.max(1,x2-x1);
+    ctx.fillStyle='rgba(224,72,151,.15)';
+    ctx.fillRect(x1,top,width,h);
+    ctx.strokeStyle='rgba(190,53,121,.72)';ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x1+.5,top);ctx.lineTo(x1+.5,top+h);
+    if(!z.open){ctx.moveTo(x2-.5,top);ctx.lineTo(x2-.5,top+h);}
+    ctx.stroke();
+    hit.push({x1,x2,y1:top,y2:top+h,trade:z,source:'V5_PAPER'});
+  });
+  ctx.restore();
+  return hit;
+}
 function waveSelectedTradeSpan() {
   if(waveSelectedTradeId===null||!waveReplayData||!waveReplayData.frames||!waveReplayData.frames.length)return null;
   const endTs=Number(waveReplayData.frames[waveReplayData.frames.length-1].ts);
-  return waveTradeSpans(waveReplayData.events||[],endTs).find(function(z){return String(z.trade)===String(waveSelectedTradeId);})||null;
+  if(String(waveSelectedTradeId).startsWith('V5:'))
+    return waveV5TradeSpans(waveReplayData.v5PaperTrades||[],endTs)
+      .find(function(z){return 'V5:'+z.trade===String(waveSelectedTradeId);})||null;
+  return waveTradeSpans(waveReplayData.events||[],endTs)
+    .find(function(z){return String(z.trade)===String(waveSelectedTradeId);})||null;
 }
 function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Cliquer une plage bleue pour afficher le résumé du trade.</span>';
+    el.innerHTML='<span class="muted">Trades : <b style="color:#478dab">bleu V4</b> · <b style="color:#c13c80">rose V5 PAPER</b>. Cliquer une plage pour lire sa position.</span>';
+    return;
+  }
+  if(t.source==='V5_PAPER'){
+    const end=t.exitTs?'Sortie '+waveParis(t.exitTs)+' @ '+waveNum(t.exitPrice,1):
+      'POSITION OUVERTE · plage prolongée jusqu’au LIVE';
+    const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
+    el.innerHTML='<span class="info"><span class="head" style="color:#ba3277">V5 PAPER #'+
+      escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
+      'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
+      ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
+      '</span><span class="muted">V5 · simulation indépendante</span>';
     return;
   }
   const move=(t.exitPrice!==null&&t.exitPrice!==undefined&&t.entryPrice!==null&&t.entryPrice!==undefined)
@@ -3416,9 +3509,12 @@ async function waveOpenTradeReport(tradeNo) {
 function waveSelectTradeAtPointer(ev,canvas) {
   if(!canvas)return false;
   const rect=canvas.getBoundingClientRect(),x=ev.clientX-rect.left,y=ev.clientY-rect.top;
-  const zone=(canvas._waveTradeZones||[]).find(function(z){return x>=z.x1&&x<=z.x2&&y>=z.y1&&y<=z.y2;});
+  const hits=(canvas._waveTradeZones||[]).filter(function(z){
+    return x>=z.x1&&x<=z.x2&&y>=z.y1&&y<=z.y2;
+  });
+  const zone=hits.find(z=>z.source==='V5_PAPER')||hits[0];
   if(!zone)return false;
-  waveSelectedTradeId=String(zone.trade.trade);
+  waveSelectedTradeId=zone.source==='V5_PAPER'?'V5:'+zone.trade.trade:String(zone.trade.trade);
   waveRenderTradePanel();
   return true;
 }
@@ -3465,6 +3561,7 @@ function drawWavePrice(canvas,idx) {
   const frames=waveReplayData.frames,t0=Number(frames[0].ts),t1=Number(frames[frames.length-1].ts);
   const series=waveReplayData.priceSeries&&waveReplayData.priceSeries[wavePriceTf]||[];
   const endTs=t1,spans=waveTradeSpans(waveReplayData.events||[],endTs);
+  const v5Spans=waveV5TradeSpans(waveReplayData.v5PaperTrades||[],endTs);
   const sc=document.getElementById('wavePriceScroll');
   let boundsT0=t0,boundsT1=t1;
   if(sc&&sc.scrollWidth>sc.clientWidth+2){
@@ -3486,7 +3583,9 @@ function drawWavePrice(canvas,idx) {
     priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
   });
-  canvas._waveTradeZones=result&&result.tradeZones||[];
+  canvas._waveTradeZones=(result&&result.tradeZones||[]).concat(
+    wavePaintV5Bands(canvas,v5Spans,t0,t1,
+      result&&result.padding||{left:36,right:9,top:12,bottom:18}));
 
   const latestSeriesRow=series.length?series[series.length-1]:null;
   const liveStatePrice=waveReplayData&&waveReplayData.liveState&&waveReplayData.liveState.price;
@@ -3605,6 +3704,18 @@ function drawWaveBand(canvas, key, idx) {
     ctx.moveTo(x2-.4,T);ctx.lineTo(x2-.4,T+h);
     ctx.stroke();
     canvas._waveTradeZones.push({x1:x1,x2:x2,y1:T,y2:T+h,trade:z});
+  });
+  waveV5TradeSpans(waveReplayData.v5PaperTrades||[],t1).forEach(function(z){
+    const start=Math.max(t0,z.entryTs),end=Math.min(t1,z.drawEndTs);
+    if(end<=start||start>=t1||end<=t0)return;
+    const x1=tx(start),x2=tx(end),width=Math.max(1,x2-x1);
+    ctx.fillStyle='rgba(224,72,151,.15)';
+    ctx.fillRect(x1,T,width,h);
+    ctx.strokeStyle='rgba(190,53,121,.72)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x1+.4,T);ctx.lineTo(x1+.4,T+h);
+    if(!z.open){ctx.moveTo(x2-.4,T);ctx.lineTo(x2-.4,T+h);}
+    ctx.stroke();
+    canvas._waveTradeZones.push({x1,x2,y1:T,y2:T+h,trade:z,source:'V5_PAPER'});
   });
 
   let lastHour = null;
@@ -4066,6 +4177,7 @@ function waveMergeSnapshotData(live,snapshot){
     snapshotLoaded:true,
     frames:frames,
     events:Array.from(eventMap.values()).sort(function(a,b){return Number(a.ts)-Number(b.ts);}),
+    v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[],
     signalEvents:{wave3:mergeSignals('wave3'),wave15:mergeSignals('wave15')},
     priceSeries:{
       '3m':waveMergePriceSeries(snapshot.priceSeries&&snapshot.priceSeries['3m'],live.priceSeries&&live.priceSeries['3m']),
@@ -4134,6 +4246,7 @@ function waveMergeLiveData(base,recent){
   }
   return Object.assign({},base,recent,{
     live:true,
+    v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[],
     frames:frames,
     events:Array.from(eventMap.values()).sort(function(a,b){return Number(a.ts)-Number(b.ts);}),
     signalEvents:{wave3:mergeSignals('wave3'),wave15:mergeSignals('wave15')},
