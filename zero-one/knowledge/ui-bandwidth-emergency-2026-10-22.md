@@ -37,3 +37,12 @@ L'utilisateur a consommé son enveloppe de 200 Go d'Internet et a dû acheter un
 - `GET /api/trades/reports` sur demande = **537 728 octets sur le fil** (3 015 770 décompressés), une seule fois quand l'utilisateur ouvre Rapports.
 - À titre indicatif 71 450 octets × 2 880 rafraîchissements/jour ≈206 Mo/jour pour TRADES en continu, sans compter Vagues, SHADOWS, WebSocket, autres services et en-têtes réseau. Il ne s'agit **pas** d'une mesure exhaustive du trafic facturé.
 - Le correctif respecte le rafraîchissement de 30 secondes lorsque TRADES est actif et visible ; il n'interrompt pas les protections ni le moteur V4.10.10.
+
+## Addendum — autres flux compressés
+Après le correctif principal, audit réseau réel en HTTP authentifié local sur production :
+- `GET /api/wave-live?hours=12` : **1 480 447 octets sans compression**, puis **196 793 octets gzip** lors du test du correctif.
+- `GET /api/audit-history` : **3 370 371 octets sans compression**, puis **444 868 octets gzip**.
+- `GET /api/boono` : **342 806 octets sans compression**, puis **41 501 octets gzip**.
+- `GET /api/wave-snapshot` adopte également gzip lorsqu'il est accepté ; ce snapshot n'est pas censé être téléchargé à chaque tick.
+- Ces valeurs sont indépendantes du flux TRADES (~71 Ko gzip/30s). Les vues simultanément ouvertes peuvent cumuler leur consommation ; fermer les onglets inutilisés sur un forfait mobile.
+- Les données et leur signification restent inchangées ; seule la sérialisation HTTP change. Tous les clients sans support gzip continuent de recevoir un JSON valide non comprimé.

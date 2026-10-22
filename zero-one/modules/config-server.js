@@ -1544,7 +1544,7 @@ app.get('/api/wave-snapshot', requireAuth, (req,res)=>{
   try{
     const data=waveUiBuildSnapshot48();
     res.set('Cache-Control','private, max-age=60');
-    res.json(data);
+    sendUiJson(req,res,data);
   }catch(e){
     res.status(500).json({error:'wave snapshot indisponible',detail:e.message});
   }
@@ -1585,7 +1585,7 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
     }
     events.sort((a,b)=>a.ts-b.ts);
     res.set('Cache-Control','no-store');
-    res.json({
+    sendUiJson(req,res,{
       version:'wave-live-0.1',live:true,generatedAt:new Date().toISOString(),
       period:{start:frames.length?new Date(frames[0].ts).toISOString():new Date(cut).toISOString(),end:frames.length?new Date(frames[frames.length-1].ts).toISOString():new Date(now).toISOString(),label:'LIVE Amsterdam · '+hours+'h glissantes'},
       sampling:{auditSeconds:30,frames:frames.length},
@@ -1625,7 +1625,7 @@ app.get('/api/boono', requireAuth, (req, res) => {
       history = Array.isArray(h) ? h : [];
     }
   } catch (e) { /* le moteur n'a peut-etre encore rien produit */ }
-  res.json({ position, history, abstention });
+  sendUiJson(req,res,{ position, history, abstention });
 });
 
 app.get('/api/audit-history', requireAuth, (req, res) => {
@@ -1636,7 +1636,7 @@ app.get('/api/audit-history', requireAuth, (req, res) => {
       history = Array.isArray(data) ? data : [];
     }
   } catch (e) { /* liste vide */ }
-  res.json({ history });
+  sendUiJson(req,res,{ history });
 });
 
 // ── Page AUDIT independante (31/07/2026) ───────────────────────────────────────
