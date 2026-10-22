@@ -38,6 +38,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../.env') }
 const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
+const zlib = require('zlib');
 const path = require('path');
 const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
@@ -126,6 +127,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Compress bulky UI JSON only when the browser advertises gzip support.
+// Keep original object/contract and do asynchronous compression off the event loop.
+function sendUiJson(req,res,value){
+  if(!String(req.headers['accept-encoding']||'').includes('gzip'))
+    return res.json(value);
+  const raw=JSON.stringify(value);
+  if(Buffer.byteLength(raw)<2048)return res.json(value);
+  zlib.gzip(raw,{level:3},(err,buf)=>{
+    if(err){if(!res.headersSent)res.json(value);return;}
+    res.set('Content-Encoding','gzip');
+    res.set('Vary','Accept-Encoding');
+    res.type('json');
+    res.send(buf);
+  });
+}
 function requireAuth(req, res, next) {
   if (req.session && req.session.authenticated) return next();
   return res.redirect('/login');
@@ -452,7 +468,7 @@ app.get('/api/trades/reports',requireAuth,(req,res)=>{
   try{
     const c=readTradesUiHistory();
     res.set('Cache-Control','private,no-store');
-    res.json({version:'v4-ui-lazy-reports-v1',totalCount:c.totalCount,reports:c.reports});
+    sendUiJson(req,res,{version:'v4-ui-lazy-reports-v1',totalCount:c.totalCount,reports:c.reports});
   }catch(err){res.status(500).json({error:'V4 reports unavailable',detail:err.message});}
 });
 let archivedV3UiCache={size:-1,mtimeMs:-1,executed:[]};
@@ -498,7 +514,7 @@ app.get('/api/trades', requireAuth, (req, res) => {
     ts:lastDecision.ts||null,action:lastDecision.action||null,reason:lastDecision.reason||null,
     module:lastDecision.module||null,version:lastDecision.version||null
   } : null;
-  res.json({
+  sendUiJson(req,res,{
     version: state.version || 'v4-prototype-0.1',
     ongoing,
     executed,
@@ -533,7 +549,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
         cache:{hit:true,ageMs:cacheAge,ttlMs:SHADOWS_CACHE_TTL_MS}
       };
       res.set('Cache-Control','no-store');
-      return res.json(payload);
+      return sendUiJson(req,res,payload);
     }
 
     let evalsAll=[];
@@ -1027,7 +1043,7 @@ app.get('/api/shadows', requireAuth, (req, res) => {
     };
     shadowsResponseCache={at:Date.now(),payload};
     res.set('Cache-Control','no-store');
-    res.json(payload);
+    sendUiJson(req,res,payload);
   } catch (e) {
     res.status(500).json({error:'shadows indisponibles',detail:e.message});
   }

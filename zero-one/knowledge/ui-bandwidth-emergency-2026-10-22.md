@@ -30,3 +30,10 @@ L'utilisateur a consommé son enveloppe de 200 Go d'Internet et a dû acheter un
 - Seul `config-server` est redémarré.
 - Ne pas supprimer les historiques de trades. Les données complètes restent stockées sur Amsterdam et disponibles pour l'investigation hors navigateur.
 - Le nouveau journal décisionnel **48 h à taille compacte** doit être un chantier séparé : ni purge des logs existants ni assurance de 48 h au stade actuel.
+
+## Addendum — compression HTTP gzip (mesurée sur serveur de test)
+- Compression asynchrone native zlib uniquement pour les réponses JSON lourdes TRADES, rapports à la demande et SHADOWS, lorsque le navigateur accepte `gzip` ; les autres clients conservent le JSON ordinaire.
+- Tests HTTP avec authentification réelle locale : `GET /api/trades` = **71 450 octets sur le fil** (`Content-Encoding: gzip`, contre 473 900 octets décompressés). Second rafraîchissement après construction du cache ≈374 ms.
+- `GET /api/trades/reports` sur demande = **537 728 octets sur le fil** (3 015 770 décompressés), une seule fois quand l'utilisateur ouvre Rapports.
+- À titre indicatif 71 450 octets × 2 880 rafraîchissements/jour ≈206 Mo/jour pour TRADES en continu, sans compter Vagues, SHADOWS, WebSocket, autres services et en-têtes réseau. Il ne s'agit **pas** d'une mesure exhaustive du trafic facturé.
+- Le correctif respecte le rafraîchissement de 30 secondes lorsque TRADES est actif et visible ; il n'interrompt pas les protections ni le moteur V4.10.10.
