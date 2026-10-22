@@ -392,6 +392,40 @@ app.get('/api/diagnostic', requireAuth, (req, res) => {
   }
 });
 
+// BOONO V5 experimental PAPER, isolated from V4. Compact authenticated read only.
+app.get('/api/v5',requireAuth,(req,res)=>{
+  try{
+    const v5path=path.join(__dirname,'../data/v5-shadow-memory-state.json');
+    const paperPath=path.join(__dirname,'../data/v5-paper-state.json');
+    const memory=JSON.parse(fs.readFileSync(v5path,'utf8'));
+    const paper=fs.existsSync(paperPath)?JSON.parse(fs.readFileSync(paperPath,'utf8')):null;
+    const count=a=>(a||[]).reduce((s,v)=>s+Number(v||0),0);
+    const market=memory.observation||{};
+    const last=memory.anchor||{};
+    const hour=memory.hour||{};
+    const payload={version:'v5-paper-ui-v0.1',updatedAt:market.ts||null,
+      mode:paper?paper.mode:'PAPER_STARTING',brokerOrdersEnabled:false,
+      v4DecisionImpact:false,market:{price:market.price,
+        quality:market.quality,qualityDirection:market.qualityDirection,
+        pmLive:market.pmLive,sourceAt:market.ts},
+      confirmedE15:last.confirmed&&last.confirmed.direction||null,
+      liveE15:last.live&&last.live.direction||null,
+      memory:{segments:(memory.threads||[]).length,unresolvedLinks:(memory.lineageEdges||[]).length,
+        qualityCoverage:hour.coverage,
+        qualityBias:hour.observedBias,
+        buckets:(hour.buckets||[]).map(b=>({from:b.from,to:b.to,count:b.count,
+          coverage:b.coverage,qualityCoverage:b.qualityCoverage,
+          qualities:b.qualityShare,productiveShare:b.productiveShare,
+          directionCounts:b.directions,price:b.price,meanYieldVsP75:b.meanYieldVsP75}))},
+      opportunity:paper&&paper.lastHypothesis||null,
+      paper:paper?{startedAt:paper.startAt,completed:paper.completed,wins:paper.wins,
+        losses:paper.losses,equityUsd:paper.equityUsd,realizedUsd:paper.realizedUsd,
+        feesUsd:paper.feesUsd,position:paper.position,lastAction:paper.lastAction,
+        latestTrades:(paper.history||[]).slice(-7).reverse()}:null};
+    res.set('Cache-Control','no-store');
+    sendUiJson(req,res,payload);
+  }catch(err){res.status(503).json({error:'V5 paper observer unavailable',detail:err.message});}
+});
 // Elastic renders Waves 3m OHLC behind a centered buy/sell duel; no PM3 line.
 // Read-only endpoint; no reuse of trading state or admission authority.
 app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
@@ -2458,6 +2492,18 @@ app.get('/', requireAuth, (req, res) => {
       .elastic-dual-full .elastic-dual-event{font-size:9px;}
       @media(max-width:560px){.elastic-dual-grid{gap:5px}.elastic-dual-card{padding:7px 6px;font-size:9px}.elastic-dual-title{font-size:11px}.elastic-dual-role{font-size:7px}.elastic-dual-kpis{gap:4px}.elastic-dual-header{font-size:9px}.elastic-dual-note{font-size:8px}}
       /* Elastic v0.5: compact shared measures + full causal history */
+      .v5-observer{background:#f8fafb;border:1px solid #c8d9e7;border-top:3px solid #467ca3;
+        border-radius:9px;margin:8px 0;padding:10px;font:10px/1.55 'SF Mono',Menlo,monospace;}
+      .v5-observer b{font-weight:800}
+      .v5-head{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;font-size:11px;font-weight:800}
+      .v5-muted{color:#657482}.v5-row{padding:4px 0;border-bottom:1px solid #e1e8ed}
+      .v5-quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:7px 0}
+      .v5-quality-bar{border-radius:4px;padding:5px 2px;text-align:center;background:#e6ebef;font-size:9px}
+      .v5-quality-bar.long{background:#d9eee2;color:#087245}
+      .v5-quality-bar.short{background:#f7dedf;color:#a82d38}
+      .v5-paper-position{padding:5px;margin:6px 0;background:#fff;border:1px solid #dce2e9;border-radius:4px}
+      .v5-ledger{font-size:9px;border-top:1px dotted #cdd7dd;margin-top:6px;padding-top:4px}
+      .v5-warn{font-weight:800;color:#9b5727}
       .el-wrap{background:#fff;border:1px solid #dbe0e5;border-radius:10px;margin:8px 0 10px;padding:11px;font:10px/1.5 "SF Mono",Menlo,monospace;}
       .el-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;letter-spacing:.03em;flex-wrap:wrap}
       .el-head span,.el-foot,.el-old{color:#8b9298;font-weight:400}
@@ -5432,6 +5478,70 @@ async function loadV4Reports(){
     el.innerHTML='<div class="ledger-empty">Rapports indisponibles : '+escTrade(e.message)+'</div>';
   }finally{v4ReportsLoading=false;}
 }
+// V5 is a separate observable paper agent, not a new rule inside V4.
+let v5PanelLoading=false;
+async function loadV5PaperPanel(){
+  const el=document.getElementById('v5-paper-live');
+  if(!el||v5PanelLoading||document.hidden)return;
+  v5PanelLoading=true;
+  try{
+    const res=await fetch('/api/v5',{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const d=await res.json(),p=d.paper||{},o=d.opportunity||{},m=d.memory||{},v=d.market||{};
+    const fmt=x=>x===null||x===undefined||!isFinite(Number(x))?'—':Number(x).toFixed(1);
+    const signed=x=>x===null||x===undefined||!isFinite(Number(x))?'—':
+      (Number(x)>0?'+':'')+Number(x).toFixed(2);
+    const time=x=>x?new Date(Number(x)).toLocaleTimeString('fr-FR',
+      {timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+    const bar=(m.buckets||[]).map(function(b){
+      const long=(b.directionCounts&&b.directionCounts.long)||0;
+      const short=(b.directionCounts&&b.directionCounts.short)||0;
+      const kind=long>short?'long':short>long?'short':'';
+      const qq=Object.entries(b.qualities||{}).sort((a,c)=>c[1]-a[1])[0]||['UNKNOWN',0];
+      return '<div class="v5-quality-bar '+kind+'"><b>'+time(b.from).slice(0,5)+'</b>'+
+        '<div>'+escTrade(qq[0])+'</div>'+
+        '<div>'+Math.round(100*Number(qq[1]))+' %</div>'+
+        '<div>Δ '+signed(b.price&&b.price.netUsd)+'$</div></div>';
+    }).join('');
+    const evidence=(o.evidence||[]).slice(0,6).map(x=>'<div>+ '+escTrade(x)+'</div>').join('');
+    const contrary=(o.contradictions||[]).slice(0,6).map(x=>'<div>− '+escTrade(x)+'</div>').join('');
+    const pos=p.position;
+    const posHtml=pos?
+      '<div class="v5-paper-position"><b>POSITION '+escTrade((pos.direction||'').toUpperCase())+
+      '</b> @ '+fmt(pos.entryPrice)+' · prix '+fmt(pos.lastPrice)+
+      ' · PNL net indicatif '+signed(pos.lastNetPnlUsd)+' $'+
+      ' · MFE '+fmt(pos.mfePriceUsd)+'$ · MAE '+fmt(pos.maePriceUsd)+'$</div>':
+      '<div class="v5-paper-position">FLAT · En attente d’une chaîne exploitable.</div>';
+    const trades=(p.latestTrades||[]).slice(0,5).map(t=>
+      '<div class="v5-ledger">#'+Number(t.tradeNo||0)+' '+escTrade((t.direction||'').toUpperCase())+
+      ' '+fmt(t.entryPrice)+' → '+fmt(t.exitPrice)+' · NET '+signed(t.netPnlUsd)+
+      ' $ · '+escTrade(t.exitReason||'')+'</div>').join('');
+    const elNow=document.getElementById('v5-paper-live');
+    if(!elNow)return;
+    elNow.innerHTML='<div class="v5-head"><span>BOONO V5 · HYPOTHÈSES + PAPER TRADES</span>'+
+      '<span class="v5-warn">ORDRES RÉELS : DÉSACTIVÉS</span></div>'+
+      '<div class="v5-row">MCB15 '+escTrade(d.confirmedE15||'—').toUpperCase()+
+      ' · Live '+escTrade(d.liveE15||'—').toUpperCase()+
+      ' · '+Number(m.segments||0)+' segments E15 · '+Number(m.unresolvedLinks||0)+
+      ' relations à étudier</div>'+
+      '<div class="v5-row"><b>HYPOTHÈSE '+escTrade((o.direction||'INDECISE').toUpperCase())+
+      '</b> · '+escTrade(o.phase||'INITIALISATION')+
+      '<div>'+escTrade(o.hypothesis||'Premières observations…')+'</div></div>'+
+      '<div class="v5-row">'+evidence+contrary+'</div>'+
+      '<div class="v5-row">PM Live '+signed(v.pmLive)+' $ · QUALITÉ '+escTrade(v.quality||'—')+
+      ' · <b>4×15m</b> ('+Math.round((Number(m.qualityCoverage)||0)*100)+'% observations)</div>'+
+      '<div class="v5-quality-grid">'+bar+'</div>'+
+      '<div class="v5-row"><b>PAPER</b> · '+Number(p.completed||0)+' trade(s) clôturé(s)'+
+      ' · '+Number(p.wins||0)+' gagnant(s) · PNL net '+signed(p.realizedUsd)+
+      ' $ · Equity '+fmt(p.equityUsd)+' $ · frais inclus</div>'+
+      posHtml+trades+
+      '<div class="v5-muted">V5 distinct de V4.10.10 · dernière observation '+time(d.updatedAt)+
+      ' · frais taker modélisés, slippage et funding non modélisés.</div>';
+  }catch(err){
+    const elNow=document.getElementById('v5-paper-live');
+    if(elNow)elNow.textContent='V5 paper indisponible : '+err.message;
+  }finally{v5PanelLoading=false;}
+}
 let tradesLoadInProgress=false;
 async function loadTrades() {
   // Avoid overlapping network transfers on slow/mobile connections.
@@ -5479,8 +5589,10 @@ async function loadTrades() {
     living += '</div></div>';
     const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
     stateEl.innerHTML = liveCard +
+      '<div id="v5-paper-live" class="v5-observer">BOONO V5 · Lecture de l’hypothèse et des paper trades…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       living + posHtml;
+    loadV5PaperPanel();
     if(window.loadElasticObserverHistory)window.loadElasticObserverHistory();
     if(window.loadElasticChart3m)window.loadElasticChart3m(current);
     stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});

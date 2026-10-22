@@ -30,8 +30,11 @@ function processEvent(s,e){
   const v=typeof e.current==='string'?{quality:e.current}:e.current||{},d=e.detail||{};
   if(v.quality&&['TRANSITION','RESTORED','CONFIRMED'].includes(e.type))
    s.lastQuality={at,quality:v.quality,direction:v.direction||e.direction||null,
-    pm3:num(d.pm3),pm5:num(d.pm5),pmLive:num(d.pmLive),
-    yieldVsP75:num(d.yieldVsP75),effortVsP75:num(d.effortVsP75)};
+    pm3:num(d.pm3)??(s.lastQuality?.pm3??null),
+    pm5:num(d.pm5)??(s.lastQuality?.pm5??null),
+    pmLive:num(d.pmLive)??(s.lastQuality?.pmLive??null),
+    yieldVsP75:num(d.yieldVsP75)??(s.lastQuality?.yieldVsP75??null),
+    effortVsP75:num(d.effortVsP75)??(s.lastQuality?.effortVsP75??null)};
   return {type:'QUALITY_CHANGE',at,id:e.id};
  }
  const tf=e.family==='MCB15'?'15m':e.family==='MCB3'?'3m':null;

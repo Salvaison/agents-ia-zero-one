@@ -3,10 +3,15 @@
 // Never imports V4 action/trade executors. Writes only its own v5-shadow-* files.
 const fs=require('fs'),path=require('path');
 const core=require('./elastic-memory-engine');
+const opp=require('./opportunity-engine');
+const paperCore=require('./paper-trader');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const AUDIT=path.join(DATA,'audit-history.json');
 const EVENT=path.join(DATA,'elastic-observer-events.ndjson');
 const STATE=path.join(DATA,'v5-shadow-memory-state.json');
+const PAPER=path.join(DATA,'v5-paper-state.json');
+const TRADES=path.join(DATA,'v5-paper-trades.ndjson');
+const DECISIONS=path.join(DATA,'v5-paper-decisions.ndjson');
 const JOURNAL=path.join(DATA,'v5-shadow-samples.ndjson');
 const TRANSITIONS=path.join(DATA,'v5-shadow-events.ndjson');
 const WATCH_MS=30000;
@@ -49,7 +54,22 @@ function readBootstrap(){
  const rows=JSON.parse(fs.readFileSync(AUDIT,'utf8'));
  const events=parsedLines(fs.readFileSync(EVENT,'utf8'));
  const prior=fs.existsSync(STATE)?JSON.parse(fs.readFileSync(STATE,'utf8')):null;
- if(prior&&prior.version===core.VERSION)return {state:prior,bootstrap:'RESUMED_COMPACT'};
+ if(prior&&prior.version===core.VERSION){
+   // Resume the missing AUDIT samples and events in causal order, without
+   // back-dating paper trades or discarding qualitative transitions.
+   const missing=rows.filter(x=>x.ts>prior.lastSampleTs);
+   const pending=events.filter(e=>Number(e.id)>Number(prior.lastEventId||0))
+     .sort((a,b)=>a.observedAt-b.observedAt||a.id-b.id);
+   let index=0,restored=0;
+   for(const a of missing){
+     const group=[];
+     while(index<pending.length&&pending[index].observedAt<=a.ts)
+       group.push(pending[index++]);
+     const r=core.step(prior,slim(a),group);
+     if(r.changed)restored++;
+   }
+   return {state:prior,bootstrap:'RESUMED_CAUSAL_CATCHUP',restored};
+ }
  // Only replay samples whose source market data and observed Elastic events overlap.
  const eventStart=events.length?events[0].observedAt:Date.now();
  const from=Math.max(eventStart,Date.now()-24*3600000);
@@ -97,6 +117,15 @@ function main(){
   return;
  }
  const begin=readBootstrap();let state=begin.state;
+ let paper=fs.existsSync(PAPER)?JSON.parse(fs.readFileSync(PAPER,'utf8')):null;
+ if(!paper||paper.version!==paperCore.VERSION){
+   paper=paperCore.newState();
+   paper.startAt=Date.now(); // paper trading starts NOW, no retrospective entries
+   atomic(PAPER,paper);
+ }
+ console.log('[V5 PAPER] '+JSON.stringify({status:'READY',startAt:paper.startAt,
+   mode:paper.mode,completed:paper.completed,open:!!paper.position,
+   brokerOrdersEnabled:false}));
  atomic(STATE,state);startCursor();
  console.log('[V5 SHADOW] '+JSON.stringify({status:'BOOTSTRAPPED',source:begin.bootstrap,
    observations:state.counts.samples,linked:state.counts.linked,
@@ -109,7 +138,12 @@ function main(){
  function tick(){
   if(busy)return;busy=true;
   try{
-   const audit=readLastAudit(),incoming=backlog.concat(newEvents());backlog=[];
+   const audit=readLastAudit();
+   const candidates=backlog.concat(newEvents());
+   // Elastic evaluations typically arrive AFTER the latest 30s Audit row.
+   // Keep future-observed events until a source sample can consume them.
+   const incoming=candidates.filter(e=>Number(e.observedAt)<=audit.ts);
+   backlog=candidates.filter(e=>Number(e.observedAt)>audit.ts);
    if(Date.now()-audit.ts>5*60000){
     if(!tick.staleLogged){console.error('[V5 SHADOW] AUDIT_STALE');tick.staleLogged=true;}
     return;
@@ -120,6 +154,34 @@ function main(){
    if(!r.changed)return;
    atomic(STATE,state);
    appendCompact(JOURNAL,r.compact);
+   const fresh=(p,maxMs)=>{
+     try{const st=fs.statSync(p);return Date.now()-st.mtimeMs<=maxMs;}catch(_){return false;}
+   };
+   const mcdir=path.resolve(ROOT,'../data/mcb-live');
+   const marketDataQuality=
+     fresh(path.join(mcdir,'mcb_3m_live.csv'),120000)&&
+     fresh(path.join(mcdir,'mcb_15m_live.csv'),180000)&&
+     fresh(path.join(mcdir,'mcb_3m.csv'),8*60000)&&
+     fresh(path.join(mcdir,'mcb_15m.csv'),20*60000)?
+       'DATA_OK':'DATA_DEGRADED';
+   const hypothesis=opp.evaluate(state,{marketNow:Date.now(),
+     dataQuality:marketDataQuality});
+   const trade=paperCore.step(paper,hypothesis,{ts:audit.ts,price:audit.lastPrice,
+     enableNewEntries:true,sourceAgeMs:Date.now()-audit.ts,
+     dataQuality:marketDataQuality});
+   paper=trade.state;atomic(PAPER,paper);
+   appendCompact(DECISIONS,{ts:audit.ts,price:audit.lastPrice,
+     phase:hypothesis.phase,direction:hypothesis.direction,ready:hypothesis.ready,
+     slowKind:hypothesis.slowKind||null,entryKey:hypothesis.entryKey||null,
+     evidence:hypothesis.evidence,contradictions:hypothesis.contradictions,
+     action:trade.event&&trade.event.type||'NO_ACTION',reason:trade.reason||null,
+     position:paper.position&&paper.position.direction||null,
+     netEquity:paper.equityUsd,marketDataQuality,brokerOrdersEnabled:false});
+   if(trade.event){
+     if(trade.event.type==='EXIT'&&paper.history.length)
+       appendCompact(TRADES,paper.history.at(-1));
+     console.log('[V5 PAPER TRADE] '+JSON.stringify(trade.event));
+   }
    if(r.significant){
     const window=state.events.filter(e=>e.at>=audit.ts-3*60000).slice(-12);
     appendCompact(TRANSITIONS,{ts:audit.ts,linked:state.counts.linked,
@@ -129,7 +191,10 @@ function main(){
    console.log('[V5 SHADOW] '+JSON.stringify({time:new Date(audit.ts).toISOString(),
      price:r.compact.price,anchor:r.compact.e15,live:r.compact.e15Live,
      quality:r.compact.quality,events:r.significant,thread:r.compact.threadId,
-     hourBias:r.compact.hourBias,coverage:r.compact.hourCoverage}));
+     hourBias:r.compact.hourBias,coverage:r.compact.hourCoverage,
+     hypothesis:hypothesis.phase,ready:hypothesis.ready,
+     paperPosition:paper.position&&paper.position.direction||null,
+     paperTrades:paper.completed,marketDataQuality}));
   }catch(e){console.error('[V5 SHADOW] '+String(e.stack||e).slice(0,900));}
   finally{busy=false;}
  }
