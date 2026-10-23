@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const src=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
 const start=src.indexOf('let v5PanelLoading=false;');
-const end=src.indexOf('let tradesLoadInProgress=false;',start);
+const end=src.indexOf('// Structural V5 is the *current* analysis;',start);
 assert.ok(start>0&&end>start);
 const body=src.slice(start,end);
 const ref=Date.parse('2026-10-23T07:56:04.111Z');
@@ -24,7 +24,7 @@ function payload(status){
 }
 async function render(status){
  const el={innerHTML:'',textContent:''};
- const ctx={document:{getElementById:id=>id==='v5-paper-live'?el:null,hidden:false},
+ const ctx={document:{getElementById:id=>id==='v5-paper-live'?el:id==='v5-paper-archive'?{open:true}:null,hidden:false},
   fetch:async()=>({ok:true,json:async()=>payload(status)}),escTrade:s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'),Date,Number,Math,Object,String,Array,isFinite};
  vm.createContext(ctx);vm.runInContext(body,ctx);
  await vm.runInContext('loadV5PaperPanel()',ctx);

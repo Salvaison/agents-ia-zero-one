@@ -456,6 +456,7 @@ app.get('/api/v5-structure',requireAuth,(req,res)=>{
         recent:h.attempts.recent.slice(-5)},
       horizon:h.horizon,conversion:h.conversion,
       evidence:h.supporting,contradictions:h.contesting,
+      recentChanges:(state.summaries||[]).slice(-7),
       cautions:h.uncertainties,scenarios:h.proposedScenarios,
       integrity:h.evidenceAsOf,
       decisionImpact:false,tradingEnabled:false};
@@ -2925,7 +2926,8 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div class="placeholder-note">V4 — chargement.</div>
+<div id="v5-structure-live" class="v5-observer">V5 STRUCTURE — connexion à la lecture vivante…</div>
+<div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
 <div class="placeholder-note">Aucun trade V4 cloture pour l'instant.</div>
@@ -3283,6 +3285,7 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
         loadShadows();
         tradesAutoRefresh=setInterval(loadShadows,30000);
       }else{
+        loadV5StructureLive();
         loadTrades();
         tradesAutoRefresh=setInterval(loadTrades,30000);
       }
@@ -3315,6 +3318,7 @@ document.querySelectorAll('.tab[data-tab2]').forEach(el => {
       stopWaveLiveRefresh();
       const tradesMain = document.querySelector('.main-nav-item[data-main="trades"]');
       if (tradesMain && tradesMain.classList.contains('active') && !tradesAutoRefresh) {
+        if(el.dataset.tab2==='statev2')loadV5StructureLive();
         loadTrades();
         tradesAutoRefresh = setInterval(loadTrades, 30000);
       }
@@ -5682,9 +5686,12 @@ async function loadV4Reports(){
 }
 // V5 is a separate observable paper agent, not a new rule inside V4.
 let v5PanelLoading=false;
+let v5PaperArchiveHtmlCache=null;
 async function loadV5PaperPanel(){
   const el=document.getElementById('v5-paper-live');
-  if(!el||v5PanelLoading||document.hidden)return;
+  const archive=document.getElementById('v5-paper-archive');
+  if(!el||!archive||!archive.open||v5PanelLoading||document.hidden)return;
+  if(v5PaperArchiveHtmlCache!==null){el.innerHTML=v5PaperArchiveHtmlCache;return;}
   v5PanelLoading=true;
   try{
     const res=await fetch('/api/v5',{cache:'no-store'});
@@ -5770,11 +5777,88 @@ async function loadV5PaperPanel(){
       '<div class="v5-muted">V5 distinct de V4.10.10 · '+(frozen?'DERNIÈRE observation figée ':'observation ')+
       time(d.lastPaperAt||d.updatedAt)+
       ' · heures des preuves converties depuis UTC vers Stockholm. Frais taker modélisés, slippage et funding non modélisés.</div>';
+    if(frozen)v5PaperArchiveHtmlCache=elNow.innerHTML;
   }catch(err){
     const elNow=document.getElementById('v5-paper-live');
     if(elNow)elNow.textContent='V5 paper indisponible : '+err.message;
   }finally{v5PanelLoading=false;}
 }
+// Structural V5 is the *current* analysis; separate 30s low-bandwidth poll.
+// This never calls /api/trades and continues even when V4 state is stale.
+let v5StructuralLivePending=false;
+let v5StructuralLiveLast=null;
+const v5Time=ms=>ms?new Date(Number(ms)).toLocaleTimeString('fr-FR',
+  {timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+function renderV5StructuralLive(a){
+ const el=document.getElementById('v5-structure-live');if(!el)return;
+ const n=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(1);
+ const signed=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
+   (Number(x)>0?'+':'')+Number(x).toFixed(1);
+ const safe=x=>escTrade(String(x===undefined||x===null?'—':x));
+ const S=a.structure||{},J=a.enjeu||{},B=a.boundary||{},
+       H=a.horizon||{},C=a.conversion||{},A=a.attempts||{},I=a.integrity||{};
+ const age=Math.max(0,Date.now()-Number(a.ts||0));
+ const stale=!a.ts||age>150000||I.dataIntegrity!=='ASOF_OK';
+ const slow=I.elasticEventStatus!=='EVENT_STREAM_OBSERVED';
+ const area=J.valueArea||'VALUE_UNKNOWN';
+ const level=J.profileFrontier||J.nearest||null;
+ const crossing=level?'<b>'+safe(level.key)+' '+n(level.price)+' $</b>':'frontière non déterminée';
+ const a0=(a.scenarios||[]).slice(0,2).map(x=>
+   '<div class="v5-row"><b>'+safe(x.kind)+'</b> · '+safe(x.required)+'</div>').join('');
+ const trail=(a.recentChanges||[]).slice(-4).reverse().map(x=>
+   '<div class="v5-muted">'+v5Time(x.ts)+' · BTC '+n(x.price)+
+   ' $ · '+safe(x.phase)+(Number(x.materialEvents||0)?
+     ' · '+Number(x.materialEvents)+' événement(s)':'')+'</div>').join('');
+ const price= n(a.price);
+ el.innerHTML=
+   '<div class="v5-head"><span>V5 STRUCTURE · LECTURE VIVANTE</span>'+
+     '<span style="color:#08794a;">OBSERVATION SEULE · AUCUN TRADE</span></div>'+
+   '<div class="v5-row"><b>BTC '+price+' $</b> · relevé '+v5Time(a.ts)+
+     ' (Stockholm) · âge '+Math.round(age/1000)+' s</div>'+
+   (stale?'<div class="v5-row v5-warn">SOURCE STRUCTURELLE PÉRIMÉE : ne pas interpréter comme un signal actuel.</div>':'')+
+   (slow?'<div class="v5-row v5-warn">Événements Elastic non récents : aucune synchro E3/E15 actuelle présumée.</div>':'')+
+   '<div class="v5-row"><b>ENJEU</b> '+safe(area)+' · frontière '+crossing+
+     ' · état '+safe(B.stage||'non testé')+'</div>'+
+   '<div class="v5-row"><b>VAGUES</b> 15m '+safe(S.direction||'inconnue').toUpperCase()+
+     ' · 1h '+safe(S.context1h||'inconnu').toUpperCase()+
+     ' · 4h '+safe(S.context4h||'inconnu').toUpperCase()+
+     ' · E3 '+safe(S.childDirection||'inconnu').toUpperCase()+'</div>'+
+   '<div class="v5-row"><b>PHÉNOMÈNE</b> '+safe(a.phase)+
+     ' · E15 UP '+Number(A.e15Up3h||0)+'/3h · E3 UP '+Number(A.e3Up90m||0)+'/90m'+
+     ' <span class="v5-muted">(tentatives reconnues, pas votes)</span></div>'+
+   '<div class="v5-row"><b>EFFETS</b> prix Δ1h '+signed(H.priceNet1h)+' $'+
+     ' · MF15 Δ1h '+signed(H.mf15Delta1h)+
+     ' · PM Live '+signed(C.pmLive)+' $'+
+     ' · QUALITÉ '+safe(C.quality||'non disponible')+' (descriptif)</div>'+
+   '<div class="v5-row"><b>SCÉNARIOS CONDITIONNELS</b>'+a0+'</div>'+
+   '<div class="v5-row"><b>ÉVOLUTION OBSERVÉE</b>'+trail+'</div>'+
+   '<div class="v5-row"><b>PREUVES</b> '+(a.evidence||[]).slice(0,3).map(safe).join(' · ')+'</div>'+
+   ((a.contradictions||[]).length?'<div class="v5-row"><b>CONTRADICTIONS</b> '+
+      a.contradictions.slice(0,3).map(safe).join(' · ')+'</div>':'')+
+   '<div class="v5-muted">Lecture MCB / niveaux / prix actuelle. V5 PAPER figé ci-dessous. '+
+     'Ni hypothèse macro imposée, ni ordre automatique.</div>';
+}
+async function loadV5StructureLive(){
+ const tab=document.getElementById('tab2-statev2');
+ const main=document.querySelector('.main-nav-item[data-main="trades"]');
+ if(!tab||!tab.classList.contains('active')||
+    main&&!main.classList.contains('active')||document.hidden||v5StructuralLivePending)return;
+ v5StructuralLivePending=true;
+ try{
+   const r=await fetch('/api/v5-structure',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const result=await r.json();
+   v5StructuralLiveLast=result;
+   renderV5StructuralLive(result);
+ }catch(err){
+   const el=document.getElementById('v5-structure-live');
+   if(el)el.textContent='V5 STRUCTURE · Données non actualisées : '+err.message;
+ }finally{v5StructuralLivePending=false;}
+}
+document.addEventListener('toggle',function(e){
+ if(e.target&&e.target.id==='v5-paper-archive'&&e.target.open)loadV5PaperPanel();
+},true);
+setInterval(loadV5StructureLive,30000);
 let tradesLoadInProgress=false;
 async function loadTrades() {
   // Avoid overlapping network transfers on slow/mobile connections.
@@ -5821,11 +5905,17 @@ async function loadTrades() {
     if (ld) living += '<div style="margin-top:7px;opacity:.7;"><b>Dernière décision journalisée</b> ' + escTrade(ld.action) + ' — ' + escTrade(ld.reason) + ' · ' + tradeTime(ld.ts) + '</div>';
     living += '</div></div>';
     const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
-    stateEl.innerHTML = liveCard +
-      '<div id="v5-paper-live" class="v5-observer">BOONO V5 · Lecture de l’hypothèse et des paper trades…</div>'+
+    const archiveWasOpen=!!stateEl.querySelector('#v5-paper-archive[open]');
+    stateEl.innerHTML =
+      '<div id="v5-structure-live" class="v5-observer">V5 STRUCTURE — lecture actualisée du marché…</div>'+
+      liveCard+
+      '<details id="v5-paper-archive" class="v5-observer" '+(archiveWasOpen?'open':'')+'>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5 PAPER · ARCHIVE ARRÊTÉE · 22 trades clôturés (ouvrir pour consulter)</summary>'+
+        '<div id="v5-paper-live">Historique PAPER sur demande…</div></details>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       living + posHtml;
-    loadV5PaperPanel();
+    loadV5StructureLive();
+    if(archiveWasOpen)loadV5PaperPanel();
     if(window.loadElasticObserverHistory)window.loadElasticObserverHistory();
     if(window.loadElasticChart3m)window.loadElasticChart3m(current);
     stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});
@@ -6106,6 +6196,7 @@ const firstMain=document.querySelector('.main-nav-item[data-main="trades"].activ
 const firstReport=document.querySelector('.tab[data-tab2="reportsv2"].active');
 const firstWaves=document.querySelector('.tab[data-tab2="waves"].active');
 if(firstMain&&!firstReport&&!firstWaves){
+  loadV5StructureLive();
   loadTrades();
   tradesAutoRefresh=setInterval(loadTrades,30000);
 }else if(firstMain&&firstReport){
