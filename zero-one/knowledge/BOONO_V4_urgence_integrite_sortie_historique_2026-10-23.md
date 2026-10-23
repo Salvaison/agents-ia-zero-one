@@ -33,3 +33,16 @@
 - Cette réparation est **une intervention d'intégrité**, pas une preuve de rentabilité de V4. Les évaluations V4 peuvent encore consommer beaucoup de RAM à cause des mémoires Elastic volumineuses, et les NDJSON de décisions/évaluations tournent trop rapidement pour conserver 48h.
 - L'historique full original est préservé sur le VPS mais la partie « rapports détaillés » de l'UI utilise maintenant les contextes compactés ; ses historiques Elastic Sync complets antérieurs sont à consulter dans l'archive.
 - Aucun ordre financé n'a été envoyé au marché ; le système analysé était en paper trading.
+
+## Addendum de validation après remise en service — 23/10 14h28 Stockholm
+
+- Code d'intégrité testé : **96 tests V4/V5 réussis** ; commit principal `c56a0e9`.
+- Après clôture de la position DAY à 81 475,9 $, état V4 confirmé FLAT avant redémarrage de `cerveau-central`. Redémarrage contrôlé effectué uniquement alors qu'aucune position n'était ouverte.
+- **Deux évaluations distantes d'une minute ont confirmé la reprise :** horodatages marchés 23/10 **14h27m36s** puis **14h28m36s** Stockholm. Le moteur avait continué son cycle de 30s à l'intérieur de cette période.
+- `dataQuality.state=DATA_OK`, position `scalp/day/swing=null`, `NO_TRADE` avec raison `LOW_EDGE_REQUIRES_MAJOR_MCB_OR_REINFORCED_UP + WAIT_MF_MEMORY` ; **aucune règle d'admission changée**.
+- Contrôle de l'historique : **168 opérations, aucune double identité (module + entryTimestamp)**, dernière opération DAY LONG @81 669,3 → 81 475,9, `EXIT_ECONOMIC_PROFIT_FLOOR`, net **−5,050354 $**, frais **1,498224 $**, MFE **+217,7 $ BTC**. Le P&L cumulé affiché de l'historique mixte est **−38,439 $** (ne pas le confondre avec une série homogène nette de frais).
+- Route HTTP authentifiée `GET /api/trades` : **200 OK**, **168 trades résumés**, état DAY `null`, timestamp de l'évaluation mis à jour, ~**73 539 octets** gzip et ~645 ms au contrôle.
+- Dernière date de modification du journal d'erreur `cerveau-central-error.log` : **12h16m34s UTC**. Aucune nouvelle erreur `Invalid string length` durant la fenêtre de validation après redémarrage. Le processus PM2 était online, RSS ~196 MiB lors du second contrôle.
+- `boono-v5-shadow` (paper trading V5) demeure `stopped`, et l'observateur `boono-v5-structure-readonly` continue. Aucun changement BOONO-TV/OVH.
+
+**Réserve :** une vérification sur une dizaine de minutes et deux observations indépendantes du temps ne constitue pas une garantie de santé à 24h. Le suivi de la mémoire et les journaux décisionnels compacts 48h restent des chantiers ouverts.
