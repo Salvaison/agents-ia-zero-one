@@ -1135,7 +1135,12 @@ function waveUiV5PaperTrades(startTs,endTs){
       exitReason:String(t.exitReason||'PAPER_EXIT').slice(0,90),
       source:'V5_PAPER',open:false
     }));
-    if(state.position){
+    // An unresolved position in a stopped V5 PAPER ledger is NOT live.
+    // Keep it intact in the archive, but never extend its pink span to the
+    // current price after V5 has stopped observing the market.
+    const paperAgeMs=Date.now()-Number(state.lastObservationAt||0);
+    const paperIsLive=Number(state.lastObservationAt)>0&&paperAgeMs>=0&&paperAgeMs<=90000;
+    if(state.position&&paperIsLive){
       const t=state.position;
       trades.push({trade:Number(state.completed||0)+1,entryTs:Number(t.entryAt),
         exitTs:null,entryPrice:Number(t.entryPrice),exitPrice:null,

@@ -14,7 +14,7 @@ function browserTools(){
 }
 const T=1792681200000;
 function fakePaper(){
- return {mode:'PAPER_ONLY_0_USD_ORDERS',brokerOrdersEnabled:false,completed:1,
+ return {mode:'PAPER_ONLY_0_USD_ORDERS',brokerOrdersEnabled:false,lastObservationAt:T-30000,completed:1,
   history:[{tradeNo:1,entryAt:T-300000,exitAt:T-120000,entryPrice:81800,exitPrice:81900,
     direction:'long',netPnlUsd:.34,exitReason:'EXIT_GAIN_FLOOR_PAPER'}],
   position:{entryAt:T-60000,entryPrice:81920,direction:'short',lastNetPnlUsd:-1.19}};
@@ -23,7 +23,7 @@ test('V5 spans are derived from independent paper positions, not V4 transactions
  const fn=extract('function waveUiV5PaperTrades(','// Rapport V4 complet');
  const state=fakePaper();
  const mock={existsSync:()=>true,readFileSync:()=>JSON.stringify(state)};
- const ctx={fs:mock,path:{join:()=>'/simulated/v5-paper-state.json'},__dirname:'/app/modules'};
+ const ctx={fs:mock,path:{join:()=>'/simulated/v5-paper-state.json'},__dirname:'/app/modules',Date:{now:()=>T}};
  vm.runInNewContext(fn,ctx);
  const spans=ctx.waveUiV5PaperTrades(T-3600000,T);
  assert.equal(spans.length,2);
@@ -32,6 +32,12 @@ test('V5 spans are derived from independent paper positions, not V4 transactions
  assert.equal(spans[1].entryTs,T-60000);
  assert.equal(spans[0].netPnlUsd,.34);assert.equal(spans[1].netPnlUsd,-1.19);
  assert.equal(ctx.waveUiV5PaperTrades(T+180000,T+360000).length,1,'open position extends into current live');
+ state.lastObservationAt=T-4*3600000;
+ const frozen=ctx.waveUiV5PaperTrades(T-3600000,T);
+ assert.equal(frozen.length,1,'frozen V5 retains only actually closed trades');
+ assert.equal(frozen[0].trade,1);
+ assert.equal(frozen[0].open,false);
+ assert.ok(state.position,'unresolved V5 position is preserved in original paper ledger');
  state.brokerOrdersEnabled=true;
  assert.equal(ctx.waveUiV5PaperTrades(T-3600000,T).length,0,'never accept real order mode');
 });
