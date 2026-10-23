@@ -399,12 +399,18 @@ app.get('/api/v5',requireAuth,(req,res)=>{
     const paperPath=path.join(__dirname,'../data/v5-paper-state.json');
     const memory=JSON.parse(fs.readFileSync(v5path,'utf8'));
     const paper=fs.existsSync(paperPath)?JSON.parse(fs.readFileSync(paperPath,'utf8')):null;
+    const lastPaperAt=Number(paper&&paper.lastObservationAt||0);
+    // Never label a stopped or outdated paper ledger as a LIVE V5 opinion.
+    const paperStatus=lastPaperAt>0&&Date.now()-lastPaperAt>=0&&
+      Date.now()-lastPaperAt<=90000?'PAPER_RECENT':'FROZEN_ARCHIVE';
     const count=a=>(a||[]).reduce((s,v)=>s+Number(v||0),0);
     const market=memory.observation||{};
     const last=memory.anchor||{};
     const hour=memory.hour||{};
     const payload={version:'v5-paper-ui-v0.1',updatedAt:market.ts||null,
       mode:paper?paper.mode:'PAPER_STARTING',brokerOrdersEnabled:false,
+      paperStatus,lastPaperAt,evidenceOriginalTimezone:'UTC',
+      evidenceSemantic:'NATIVE_E15_E3_EVENTS_NOT_STRUCTURAL_TRAJECTORY',
       v4DecisionImpact:false,market:{price:market.price,
         quality:market.quality,qualityDirection:market.qualityDirection,
         pmLive:market.pmLive,sourceAt:market.ts},
@@ -5684,11 +5690,34 @@ async function loadV5PaperPanel(){
     const res=await fetch('/api/v5',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const d=await res.json(),p=d.paper||{},o=d.opportunity||{},m=d.memory||{},v=d.market||{};
+    const frozen=d.paperStatus!=='PAPER_RECENT';
     const fmt=x=>x===null||x===undefined||!isFinite(Number(x))?'—':Number(x).toFixed(1);
     const signed=x=>x===null||x===undefined||!isFinite(Number(x))?'—':
       (Number(x)>0?'+':'')+Number(x).toFixed(2);
     const time=x=>x?new Date(Number(x)).toLocaleTimeString('fr-FR',
       {timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+    // The old V5 engine wrote UTC times inside its evidence strings.
+    // Match each UTC clock against the closest actual observation day.
+    const localEvidence=function(value){
+      return String(value||'')
+        .replace(/^MCB15 confirmé /,'Événement E15 confirmé ')
+        .replace(/^MCB15 Live provisoire /,'Événement E15 Live provisoire ')
+        .replace(/^E3 CONFIRMED /,'Événement E3 confirmé ')
+        .replace(/observé ([0-2][0-9]):([0-5][0-9])/g,
+        function(_,hh,mm){
+          const ref=Number(o.sourceAt||d.lastPaperAt)||0;
+          const dt=new Date(ref);
+          const midnight=Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate());
+          let best=null;
+          for(const offset of [-1,0,1]){
+            const candidate=midnight+offset*86400000+Number(hh)*3600000+Number(mm)*60000;
+            if(best===null||Math.abs(candidate-ref)<Math.abs(best-ref))best=candidate;
+          }
+          const loc=new Date(best).toLocaleTimeString('fr-FR',{
+            timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
+          return 'observé '+loc+' (Stockholm ; '+hh+':'+mm+' UTC)';
+        });
+    };
     const bar=(m.buckets||[]).map(function(b){
       const long=(b.directionCounts&&b.directionCounts.long)||0;
       const short=(b.directionCounts&&b.directionCounts.short)||0;
@@ -5699,13 +5728,14 @@ async function loadV5PaperPanel(){
         '<div>'+Math.round(100*Number(qq[1]))+' %</div>'+
         '<div>Δ '+signed(b.price&&b.price.netUsd)+'$</div></div>';
     }).join('');
-    const evidence=(o.evidence||[]).slice(0,6).map(x=>'<div>+ '+escTrade(x)+'</div>').join('');
+    const evidence=(o.evidence||[]).slice(0,6).map(x=>'<div>+ '+escTrade(localEvidence(x))+'</div>').join('');
     const contrary=(o.contradictions||[]).slice(0,6).map(x=>'<div>− '+escTrade(x)+'</div>').join('');
     const pos=p.position;
     const posHtml=pos?
-      '<div class="v5-paper-position"><b>POSITION '+escTrade((pos.direction||'').toUpperCase())+
-      '</b> @ '+fmt(pos.entryPrice)+' · prix '+fmt(pos.lastPrice)+
-      ' · PNL net indicatif '+signed(pos.lastNetPnlUsd)+' $'+
+      '<div class="v5-paper-position"><b>'+(frozen?'POSITION PAPER FIGÉE ':'POSITION ')+
+      escTrade((pos.direction||'').toUpperCase())+
+      '</b> @ '+fmt(pos.entryPrice)+' · '+(frozen?'dernier prix enregistré ':'prix ')+fmt(pos.lastPrice)+
+      ' · PNL net '+(frozen?'figé ':'indicatif ')+signed(pos.lastNetPnlUsd)+' $'+
       ' · MFE '+fmt(pos.mfePriceUsd)+'$ · MAE '+fmt(pos.maePriceUsd)+'$</div>':
       '<div class="v5-paper-position">FLAT · En attente d’une chaîne exploitable.</div>';
     const trades=(p.latestTrades||[]).slice(0,5).map(t=>
@@ -5714,25 +5744,32 @@ async function loadV5PaperPanel(){
       ' $ · '+escTrade(t.exitReason||'')+'</div>').join('');
     const elNow=document.getElementById('v5-paper-live');
     if(!elNow)return;
-    elNow.innerHTML='<div class="v5-head"><span>BOONO V5 · HYPOTHÈSES + PAPER TRADES</span>'+
-      '<span class="v5-warn">ORDRES RÉELS : DÉSACTIVÉS</span></div>'+
+    elNow.innerHTML='<div class="v5-head"><span>BOONO V5 PAPER · '+
+      (frozen?'ARCHIVE GELÉE':'HYPOTHÈSES + PAPER TRADES')+'</span>'+
+      '<span class="v5-warn">'+(frozen?'MOTEUR V5 ARRÊTÉ / ANCIENNE LECTURE':'ORDRES RÉELS DÉSACTIVÉS')+
+      '</span></div>'+
+      (frozen?'<div class="v5-row v5-warn">Dernière hypothèse du '+time(o.sourceAt||d.lastPaperAt)+
+        ' (heure de Stockholm). Ces preuves sont HISTORIQUES et ne décrivent PAS le marché actuel.</div>':'')+
       '<div class="v5-row">MCB15 '+escTrade(d.confirmedE15||'—').toUpperCase()+
       ' · Live '+escTrade(d.liveE15||'—').toUpperCase()+
       ' · '+Number(m.segments||0)+' segments E15 · '+Number(m.unresolvedLinks||0)+
       ' relations à étudier</div>'+
-      '<div class="v5-row"><b>HYPOTHÈSE '+escTrade((o.direction||'INDECISE').toUpperCase())+
+      '<div class="v5-row"><b>'+(frozen?'ANCIENNE HYPOTHÈSE ':'HYPOTHÈSE ')+
+        escTrade((o.direction||'INDECISE').toUpperCase())+
       '</b> · '+escTrade(o.phase||'INITIALISATION')+
       '<div>'+escTrade(o.hypothesis||'Premières observations…')+'</div></div>'+
       '<div class="v5-row">'+evidence+contrary+'</div>'+
-      '<div class="v5-row">PM Live '+signed(v.pmLive)+' $ · QUALITÉ '+escTrade(v.quality||'—')+
-      ' · <b>4×15m</b> ('+Math.round((Number(m.qualityCoverage)||0)*100)+'% observations)</div>'+
+      '<div class="v5-row">'+(frozen?'PM historique ':'PM Live ')+signed(v.pmLive)+
+      ' $ · '+(frozen?'QUALITÉ historique ':'QUALITÉ ')+escTrade(v.quality||'—')+
+      ' · <b>4×15m HISTORIQUE</b> ('+Math.round((Number(m.qualityCoverage)||0)*100)+'% observations)</div>'+
       '<div class="v5-quality-grid">'+bar+'</div>'+
       '<div class="v5-row"><b>PAPER</b> · '+Number(p.completed||0)+' trade(s) clôturé(s)'+
       ' · '+Number(p.wins||0)+' gagnant(s) · PNL net '+signed(p.realizedUsd)+
       ' $ · Equity '+fmt(p.equityUsd)+' $ · frais inclus</div>'+
       posHtml+trades+
-      '<div class="v5-muted">V5 distinct de V4.10.10 · dernière observation '+time(d.updatedAt)+
-      ' · frais taker modélisés, slippage et funding non modélisés.</div>';
+      '<div class="v5-muted">V5 distinct de V4.10.10 · '+(frozen?'DERNIÈRE observation figée ':'observation ')+
+      time(d.lastPaperAt||d.updatedAt)+
+      ' · heures des preuves converties depuis UTC vers Stockholm. Frais taker modélisés, slippage et funding non modélisés.</div>';
   }catch(err){
     const elNow=document.getElementById('v5-paper-live');
     if(elNow)elNow.textContent='V5 paper indisponible : '+err.message;
