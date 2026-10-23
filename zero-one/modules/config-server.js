@@ -426,6 +426,37 @@ app.get('/api/v5',requireAuth,(req,res)=>{
     sendUiJson(req,res,payload);
   }catch(err){res.status(503).json({error:'V5 paper observer unavailable',detail:err.message});}
 });
+// V5 research story is READ-ONLY and has no dependency on V4 trade decisions.
+app.get('/api/v5-structure',requireAuth,(req,res)=>{
+  try{
+    const file=path.join(__dirname,'../data/v5-structural-story-state.json');
+    const state=JSON.parse(fs.readFileSync(file,'utf8'));
+    const h=state.lastHypothesis;
+    if(!h)return res.status(503).json({error:'story not yet available'});
+    const subset={version:h.version,ts:h.ts,price:h.price,
+      phase:h.phase,structure:{
+        direction:h.structure.direction,state:h.structure.state,
+        pivot:h.structure.pivot&&{type:h.structure.pivot.type,
+          lbw:h.structure.pivot.lbw,extremeTs:h.structure.pivot.extremeTs},
+        context1h:h.structure.context1h&&h.structure.context1h.direction,
+        context4h:h.structure.context4h&&h.structure.context4h.direction,
+        childDirection:h.structure.childDirection},
+      enjeu:{valueArea:h.enjeu.valueArea,
+        profile:h.enjeu.profile,profileFrontier:h.enjeu.profileFrontier,
+        nearest:h.enjeu.nearest,provenance:h.enjeu.provenance},
+      boundary:h.boundary,attempts:{
+        e15Up3h:h.attempts.e15Up3h,e15Down3h:h.attempts.e15Down3h,
+        e3Up90m:h.attempts.e3Up90m,e3Down90m:h.attempts.e3Down90m,
+        recent:h.attempts.recent.slice(-5)},
+      horizon:h.horizon,conversion:h.conversion,
+      evidence:h.supporting,contradictions:h.contesting,
+      cautions:h.uncertainties,scenarios:h.proposedScenarios,
+      integrity:h.evidenceAsOf,
+      decisionImpact:false,tradingEnabled:false};
+    res.set('Cache-Control','private,no-store');
+    sendUiJson(req,res,subset);
+  }catch(err){res.status(503).json({error:'V5 structural observer unavailable',detail:err.message});}
+});
 // Elastic renders Waves 3m OHLC behind a centered buy/sell duel; no PM3 line.
 // Read-only endpoint; no reuse of trading state or admission authority.
 app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
@@ -3017,6 +3048,14 @@ app.get('/', requireAuth, (req, res) => {
 .wave-info-body b{color:#222;}
 .wave-info-body .wave-info-row{margin:0 0 4px;}
 .wave-info-body .wave-info-row:last-child{margin-bottom:0;}
+.wave-structural-story{border:1px solid #cbdbe5;border-left:3px solid #627a9a;
+ background:#f8fbfd;border-radius:5px;padding:7px 9px;margin:0 0 8px;
+ font:10px/1.5 'SF Mono',Menlo,Consolas,monospace;color:#334;}
+.wave-structural-story .heading{font-weight:800;color:#234;letter-spacing:.03em;
+ display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.wave-structural-story .line{margin-top:3px}
+.wave-structural-story .alert{color:#9b3545;font-weight:800}
+.wave-structural-story .note{color:#63717d;font-size:9px}
 .wave-price-canvas{height:300px;}
 .wave-price-axis{position:absolute;left:0;right:auto;top:0;z-index:7;width:36px;height:300px;pointer-events:none;background:#fff;}
 
@@ -3062,6 +3101,7 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
+  <div id="waveV5StructureStory" class="wave-structural-story">V5 STRUCTURE · Lecture causale en préparation…</div>
   <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
@@ -4108,6 +4148,7 @@ function waveApplyData(data, mode, targetTs) {
   } else waveReplayIndex=Math.max(0,Math.min(data.frames.length-1,waveReplayIndex));
   if(slider)slider.value=String(waveReplayIndex);
   waveSetModeButtons(); waveDescribePeriod(); waveSetTrackScale(); renderWaveReplay();
+  if(mode==='live')loadWaveV5StructureStory();
   requestAnimationFrame(function(){
     waveBindScrollSync();
     if(mode==='live'&&waveLiveFollow)waveScrollToTimestamp(data.frames[data.frames.length-1].ts);
@@ -4139,6 +4180,48 @@ async function loadWaveReplay() {
   }catch(e){
     document.getElementById('waveReplayState').innerHTML='<div class="placeholder-note">Replay indisponible : '+e.message+'</div>';
   }
+}
+let waveV5StoryLoading=false;
+async function loadWaveV5StructureStory(){
+  const el=document.getElementById('waveV5StructureStory');
+  if(!el||waveV5StoryLoading||document.hidden)return;
+  waveV5StoryLoading=true;
+  try{
+    const r=await fetch('/api/v5-structure',{cache:'no-store',
+      signal:AbortSignal.timeout(12000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const a=await r.json(),s=a.structure||{},j=a.enjeu||{},m=a.horizon||{};
+    const z=a.integrity||{},t=(a.attempts||{}),p=(a.scenarios||[]);
+    const signed=n=>n===null||n===undefined?'—':
+      (Number(n)>0?'+':'')+Number(n).toFixed(1);
+    const dir=x=>x?String(x).toUpperCase():'—';
+    const safe=x=>escTrade(String(x===undefined||x===null?'—':x));
+    const stale=z.dataIntegrity!=='ASOF_OK';
+    const elasticStale=z.elasticEventStatus!=='EVENT_STREAM_OBSERVED';
+    const blocks=[
+      '<div class="heading"><span>V5 · ENJEU STRUCTUREL (RECHERCHE)</span>'+
+        '<span>TRADING V5 : ARRÊTÉ</span></div>',
+      stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
+      elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
+      '<div class="line"><b>Trajet E15→E15 '+safe(dir(s.direction))+'</b>'+
+        ' · contexte 1h '+safe(dir(s.context1h))+' / 4h '+safe(dir(s.context4h))+
+        ' · E3 '+safe(dir(s.childDirection))+'</div>',
+      '<div class="line"><b>POSITION</b> '+safe(j.valueArea)+
+        ' · frontière '+safe(j.profileFrontier&&j.profileFrontier.key||j.nearest&&j.nearest.key)+
+        ' '+safe(j.profileFrontier&&j.profileFrontier.price||j.nearest&&j.nearest.price)+'$</div>',
+      '<div class="line"><b>PHÉNOMÈNE</b> '+safe(a.phase)+
+        ' · E15 UP '+Number(t.e15Up3h||0)+'/3h · E3 UP '+Number(t.e3Up90m||0)+'/90m</div>',
+      '<div class="line"><b>EFFETS</b> Prix 1h '+signed(m.priceNet1h)+'$ · MF15 Δ1h '+
+        signed(m.mf15Delta1h)+' · conversion '+safe(a.conversion&&a.conversion.quality)+
+        ' (descriptive)</div>',
+      '<div class="line"><b>HYPOTHÈSES</b> '+p.slice(0,2).map(x=>safe(x.kind)).join(' / ')+'</div>',
+      '<div class="note">Observé '+waveParis(a.ts)+
+        ' · horodatages réels, pas de prédiction ni ordre V5</div>'
+    ];
+    el.innerHTML=blocks.join('');
+  }catch(err){
+    el.textContent='V5 STRUCTURE · Observation indisponible : '+err.message;
+  }finally{waveV5StoryLoading=false;}
 }
 function waveMergePriceSeries(a,b){
   const m=new Map();
