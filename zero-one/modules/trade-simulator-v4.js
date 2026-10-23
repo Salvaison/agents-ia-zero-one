@@ -39,6 +39,7 @@ const EVAL_PATH=path.join(DATA,'trade-sim-v4-evaluations.ndjson');
 const V3_SHADOW_PATH=path.join(DATA,'trade-sim-v3-shadow-v4.ndjson');
 const TP_SHADOW_PATH=path.join(DATA,'trade-sim-v4-tp-shadow.ndjson');
 const ELASTIC_EVENTS_PATH=path.join(DATA,'elastic-observer-events.ndjson');
+const EXIT_RECOVERY_PATH=path.join(DATA,'trade-sim-v4-exit-recovery.ndjson');
 const ROT={maxBytes:32*1024*1024,maxSegments:16};
 const SIZING={
   capitalUsd:1000,
@@ -96,8 +97,16 @@ const liveTracks=new Map();
 const nowIso=()=>new Date().toISOString();
 
 function readJson(p,f){try{return JSON.parse(fs.readFileSync(p,'utf8'));}catch(_){return f;}}
-function writeJson(p,v){const tmp=p+'.tmp-'+process.pid;fs.writeFileSync(tmp,JSON.stringify(v,null,2));fs.renameSync(tmp,p);}
-function appendCapped(p,rec,max=3000){const a=readJson(p,[]);const x=Array.isArray(a)?a:[];x.push(rec);while(x.length>max)x.shift();writeJson(p,x);}
+function writeJson(p,v){const tmp=p+'.tmp-'+process.pid;fs.writeFileSync(tmp,p===HISTORY_PATH?JSON.stringify(v):JSON.stringify(v,null,2));fs.renameSync(tmp,p);}
+function appendCapped(p,rec,max=3000){
+  const a=readJson(p,[]),x=Array.isArray(a)?a:[];
+  if(p===HISTORY_PATH&&rec&&rec.entryTimestamp){
+    const existing=x.find(r=>r.module===rec.module&&r.entryTimestamp===rec.entryTimestamp);
+    if(existing)return existing; // idempotent retry if previous state persist failed
+  }
+  x.push(rec);while(x.length>max)x.shift();writeJson(p,x);
+  return rec;
+}
 function initialV3ShadowPosition(){
   const old=readJson(path.join(DATA,'trade-sim-v3lab-state.json'),null);
   const p=old&&old.modules&&old.modules.day;
@@ -223,8 +232,21 @@ function ensureTrack(module,pos){
   }return t;
 }
 function finalizePositionExit(module,state,pos,result){
-  const exitRec=recordExit(module,pos,result);
-  recordDecision(state,module,result);
+  let exitRec=null;
+  try{exitRec=recordExit(module,pos,result);}
+  catch(err){
+    // An archive write must NEVER leave a paper position alive after the
+    // risk engine has ordered an exit. Save a small recovery record first.
+    const recovery={ts:nowIso(),version:VERSION,module,direction:pos.direction,
+      entryTimestamp:pos.entryTimestamp,entryPrice:pos.entryPrice,
+      exitPrice:result.price,exitKind:result.action&&result.action.type,
+      exitReason:result.action&&result.action.reason,
+      pnlUsd:pnlUsdFor(pos,result.price),
+      note:'PRIMARY_HISTORY_WRITE_FAILED_POSITION_EXIT_PROCEEDED',
+      archiveError:String(err&&err.message||err).slice(0,160)};
+    appendRotatingNdjson(EXIT_RECOVERY_PATH,recovery,{maxBytes:4*1024*1024,maxSegments:24});
+    console.error('[V4][EXIT_HISTORY_RECOVERED]',recovery.archiveError);
+  }
   state.lastExitByModule=state.lastExitByModule||{};
   const exitPnlUsd=exitRec&&Number.isFinite(Number(exitRec.pnlUsd))
     ?Number(exitRec.pnlUsd):pnlUsdFor(pos,result.price);
@@ -245,6 +267,10 @@ function finalizePositionExit(module,state,pos,result){
   state.modules[module]=null;
   liveTracks.delete(module);
   saveState(state);
+  // The decision audit is best effort after state settlement, not a gate to
+  // writing the exit/clearing the position.
+  try{recordDecision(state,module,result);}
+  catch(err){console.error('[V4][EXIT_DECISION_LOG_ERROR]',err&&err.message||err);}
   return '[V4] '+module.toUpperCase()+' '+result.action.type+' '+pos.direction+
     ' @ '+result.price+' -- '+result.action.reason;
 }
@@ -395,6 +421,28 @@ function recordEval(module,result,pos){
     ...compactV4(result)},ROT);
   appendRotatingNdjson(V3_SHADOW_PATH,{ts:nowIso(),module,price:result.price,v3:result.v3Shadow},ROT);
 }
+// Historical trade reports must be bounded: Elastic's completed memory was
+// copied into BOTH contexts and made the JSON array >500MB, blocking exits.
+// Full unmodified pre-repair history is archived independently on Amsterdam.
+function compactV4TradeHistoryContext(x){
+  if(!x||typeof x!=='object')return x||null;
+  const {elasticSyncShadow,elasticDualChainShadow,admissionCounterfactualShadow,
+    continuationReentryShadow,live15AcceptanceShadow,structuralHandoff,...c}=x;
+  if(elasticSyncShadow){
+    const v=elasticSyncShadow,ep=v.activeEpisode||{};
+    c.elasticSyncShadow={version:v.version,state:v.state,decisionImpact:v.decisionImpact,
+      completedCount:Array.isArray(v.completed)?v.completed.length:0,
+      activeEpisode:Object.fromEntries(['id','direction','startedAt','startedPrice',
+        'maxFavorableUsd','maxAdverseUsd'].filter(k=>ep[k]!==undefined).map(k=>[k,ep[k]]))};
+  }
+  if(elasticDualChainShadow){
+    c.elasticDualChainShadow={version:elasticDualChainShadow.version,
+      structuralDirection:elasticDualChainShadow.structuralDirection,
+      mcbAuthority:elasticDualChainShadow.mcbAuthority,
+      decisionImpact:elasticDualChainShadow.decisionImpact};
+  }
+  return c;
+}
 function recordExit(module,pos,result){
   const price=result.price,pnl=pnlPct(pos,price),m=pos.metrics||{};
   applySizing(pos);
@@ -434,7 +482,8 @@ function recordExit(module,pos,result){
     maeLossUsd:(Number(m.maeUsd)||0)/Number(pos.entryPrice)*initialNotional,
     mfeCapturedPct:mfePnl>0?netTotalPnl/mfePnl*100:null,
     mfeCapturedPctGross:mfePnl>0?grossTotalPnl/mfePnl*100:null,
-    entryContext:pos.context,exitContext:compactV4(result)};
+    entryContext:compactV4TradeHistoryContext(pos.context),
+    exitContext:compactV4TradeHistoryContext(compactV4(result))};
   const tpShadowFull=tpMultiFractionShadow.fullResult(pos.tpOptimizationShadow||null);
   if(tpShadowFull&&tpShadowFull.finalized){
     rec.tpOptimizationShadow=tpMultiFractionShadow.compact(tpShadowFull);
@@ -445,8 +494,7 @@ function recordExit(module,pos,result){
       shadow:tpShadowFull
     },ROT);
   }
-  appendCapped(HISTORY_PATH,rec,3000);
-  return rec;
+  return appendCapped(HISTORY_PATH,rec,3000);
 }
 
 function simulateModule(module,primaryVol,divRaw,config,volByTf){

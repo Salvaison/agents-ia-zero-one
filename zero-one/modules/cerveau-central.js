@@ -338,14 +338,17 @@ async function main() {
   log(`warmup ${WARMUP_MS / 1000}s`);
   await new Promise(r => setTimeout(r, WARMUP_MS));
 
-  tick();
+  // An evaluation failure must not silently cancel every future 30s cycle.
+  // This wrapper does not change admission, action or risk semantics.
+  const safeTick=()=>{try{tick();}catch(err){console.error('[cerveau][EVALUATION_ERROR]',err&&err.stack||err);}};
+  safeTick();
 
   if (ONCE) {
     priceStream.stop();
     return;
   }
 
-  setInterval(tick, EVAL_INTERVAL_MS);
+  setInterval(safeTick, EVAL_INTERVAL_MS);
   log(`boucle active -- evaluation toutes les ${EVAL_INTERVAL_MS / 1000}s`);
 }
 

@@ -71,3 +71,52 @@ test('hard tick stop does not activate before MFE arm or on stale timestamps',()
   assert.ok(readState().modules.day);
   assert.equal(history().length,0);
 });
+
+test('trade report compacts enormous Elastic memory while retaining accounting and structural thesis',()=>{
+ const pos=init('long',82800);
+ const st=readState();
+ st.modules.day.context={
+   version:sim.VERSION,price:82800,marketTimestamp:Date.now(),
+   mcb:{structuralDirection:'long',currentLobe:{type:'CREUX'}},
+   thesis:{state:'LONG_FORMING'},action:{type:'ENTER_LONG'},
+   elasticSyncShadow:{version:'elasticSync-test',state:'TRACKING_ELASTIC_HANDOFF',
+     completed:Array.from({length:1500},(_,i)=>({id:i,veryLargeString:'x'.repeat(3000)})),
+     activeEpisode:{id:'abc',direction:'long',startedAt:Date.now()}},
+   elasticDualChainShadow:{version:'dual-test',structuralDirection:'long',
+     chains:{long:Array.from({length:4000},()=>({text:'z'.repeat(100)}))}},
+   admissionCounterfactualShadow:{samples:Array.from({length:5000},()=>42)},
+   continuationReentryShadow:{reason:'redacted'}
+ };
+ fs.writeFileSync(statePath,JSON.stringify(st));
+ tick(82920);tick(82889);
+ const rows=history();
+ assert.equal(rows.length,1);
+ const entry=rows[0].entryContext;
+ assert.equal(entry.elasticSyncShadow.completedCount,1500);
+ assert.ok(!('completed' in entry.elasticSyncShadow));
+ assert.equal(entry.mcb.currentLobe.type,'CREUX');
+ assert.equal(entry.elasticDualChainShadow.structuralDirection,'long');
+ assert.equal(entry.admissionCounterfactualShadow,undefined);
+ assert.equal(rows[0].entryPrice,82800);
+ assert.ok(fs.statSync(histPath).size<150000,
+   'history must stay small despite multi-megabyte historical observer');
+ assert.equal(readState().modules.day,null);
+});
+test('if history write fails, hard risk exit persists state and recovery journal instead of retrying forever',()=>{
+ init('long',82800);
+ fs.unlinkSync(histPath);
+ fs.mkdirSync(histPath);
+ tick(82920);tick(82885);
+ const s=readState();
+ assert.equal(s.modules.day,null,'paper position settled even if main historical archive unavailable');
+ assert.equal(s.lastExitByModule.day.exitKind,'EXIT_ECONOMIC_PROFIT_FLOOR');
+ const recoverPath=path.join(dir,'trade-sim-v4-exit-recovery.ndjson');
+ const rows=fs.readFileSync(recoverPath,'utf8').trim().split('\n').map(JSON.parse);
+ assert.equal(rows.length,1);
+ assert.equal(rows[0].entryPrice,82800);
+ assert.equal(rows[0].exitPrice,82885);
+ assert.ok(Number.isFinite(rows[0].pnlUsd));
+ assert.equal(rows[0].note,'PRIMARY_HISTORY_WRITE_FAILED_POSITION_EXIT_PROCEEDED');
+ fs.rmSync(histPath,{recursive:true,force:true});
+ fs.writeFileSync(histPath,'[]');
+});
