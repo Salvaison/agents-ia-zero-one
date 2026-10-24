@@ -183,11 +183,25 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  const central=[...svg.innerHTML.matchAll(/<line class="el-duel-zero-axis" x1="([\d.]+)"/g)];
  assert.equal(central.length,1);
  assert.ok(Math.abs(Number(central[0][1])-center)<1,'dashed zero axis remains centered');
+ const liveLabel=[...svg.innerHTML.matchAll(/<text class="el-pmlive-center" x="([\d.]+)" y="([\d.]+)"/g)];
+ assert.equal(liveLabel.length,1,'PM Live appears once, inside the chart SVG');
+ assert.ok(Math.abs(Number(liveLabel[0][1])-center)<.5,
+   'PM Live must align exactly with the fixed dashed axis, not the container center');
+ assert.ok(Number(liveLabel[0][2])>optsCaptured[0].opts.padding.top,
+   'label is inside upper plot, not in a separate design row');
+ assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#bf4149">-21.0 $</tspan>'),
+   'negative Audit PM Live has correct color and value');
+ const html=ctx.window.renderElasticObserverV05({elasticObserverShadow:x});
+ const metrics=html.split('class="el-duel-metrics">')[1].split('class="el-duel-volumes"')[0];
+ assert.ok(!metrics.includes('PM Live'),'PM Live has moved out of the upper metrics row');
+ assert.ok(metrics.includes('PM3 ')&&metrics.includes('PM5 '));
+ assert.ok(html.includes('Δ PRIX BTC +30.0 $ · 3m'),'bottom label means a displacement');
+ assert.ok(html.includes('pas le cours actuel'),'displacement is not the actual BTC quotation');
  assert.ok(right[1]>center+10,'positive BTC displacement moves both squares right');
  assert.ok(left[3]>90&&right[3]>125,'squares are still large');
  assert.ok(left[3]+right[3]>220,'combined duel occupies substantial chart width');
  assert.ok(svg.innerHTML.includes('class="el-duel-movement"'));
- assert.equal(priceEl.textContent,'PRIX +30.0 $ · 3m');
+ assert.equal(priceEl.textContent,'Δ PRIX BTC +30.0 $ · 3m');
  assert.ok(!svg.innerHTML.includes('el-pm3-trace'),'blue PM3 path removed');
  assert.ok(!svg.innerHTML.includes('el-pm3-scale'),'right-hand PM3 axis removed');
  assert.ok(!svg.innerHTML.includes('PM3 $'),'no PM3 caption in chart');
@@ -203,8 +217,20 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  assert.ok(Number(reversed[1][1])<center-10,'negative BTC displacement shifts both left');
  assert.equal(reversed[0][2],boxes[0][2],'direction reversal does not alter box heights');
  assert.equal(reversed[0][3],boxes[0][3],'direction reversal does not alter effort sizes');
- assert.equal(priceEl.textContent,'PRIX -30.0 $ · 3m');
+ assert.equal(priceEl.textContent,'Δ PRIX BTC -30.0 $ · 3m');
  assert.ok(priceEl.className.includes('el-down'));
+ // PM Live varies independently of the BTC tick displacement and does not move cubes.
+ x.conversion.pmLive=37.5;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
+ assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#16804b">+37.5 $</tspan>'));
+ const liveRelabeled=[...svg.innerHTML.matchAll(/<text class="el-pmlive-center" x="([\d.]+)"/g)];
+ assert.equal(liveRelabeled.length,1);
+ assert.ok(Math.abs(Number(liveRelabeled[0][1])-center)<.5);
+ const nowRect=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+ assert.equal(nowRect[0][1],reversed[0][1],'PM Live alone never translates cubes');
+ x.conversion.pmLive=null;
+ await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
+ assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#53616e">—</tspan>'));
  assert.equal(loading.style.display,'none');
  assert.equal(svg.attributes.viewBox,'0 0 420 268');
 });
@@ -367,7 +393,7 @@ test('BTC volumes appear INSIDE both semi-transparent moving squares, including 
  }
  assert.ok(svg.innerHTML.includes('el-duel-zero-axis'));
  assert.ok(svg.innerHTML.includes('el-duel-movement'));
- assert.equal(priceEl.textContent,'PRIX +73.2 $ · 3m');
+ assert.equal(priceEl.textContent,'Δ PRIX BTC +73.2 $ · 3m');
  snap.effort.buyBtc=.004;
  snap.effort.sellBtc=100;
  await ctx.window.loadElasticChart3m({elasticObserverShadow:snap});

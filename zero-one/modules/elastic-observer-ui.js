@@ -36,7 +36,7 @@ function effort(x){
  const q=x&&x.effort||{},cv=x&&x.conversion||{};
  const conv='<div class="el-duel-metrics"><div>PM3 '+cnum(cv.pm3,1,fromDelta(0,cv.pm3))+
    ' $ · PM5 '+cnum(cv.pm5,1,fromDelta(0,cv.pm5))+
-   ' $ · PM Live '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $</div>'+
+   ' $</div>'+
    '<div>eff3 '+(n(cv.efficiency3m)!==null?Math.round(cv.efficiency3m*100)+' %':'—')+
    ' · yield/P75 '+(n(cv.yieldVsP75)!==null?Number(cv.yieldVsP75).toFixed(2)+'×':'—')+
    ' · effort/P75 '+(n(cv.effortVsP75)!==null?Number(cv.effortVsP75).toFixed(2)+'×':'—')+'</div>'+
@@ -52,7 +52,8 @@ function effort(x){
    '<div id="elastic-price-axis" class="el-price-axis" aria-hidden="true"></div>'+
    '<div id="elastic-chart-loading" class="el-chart-loading">Bougies 3m · chargement…</div></div>'+
    '<div id="elastic-duel-price" class="el-duel-price-value '+tone(fromDelta(0,q.priceNetUsd))+
-   '">PRIX '+(n(q.priceNetUsd)===null?'—':fmt(q.priceNetUsd,1)+' $')+' · 3m</div>'+
+   '" title="Variation du prix BTC-USDT-SWAP du premier au dernier tick OKX observés sur 3 minutes ; pas le cours actuel.">'+
+   'Δ PRIX BTC '+(n(q.priceNetUsd)===null?'—':fmt(q.priceNetUsd,1)+' $')+' · 3m</div>'+
    '<div class="el-duel-legend"><span>PRIX BTC · axe gauche</span><span>Surfaces · volume acheteurs / vendeurs</span><span>Temps · bas</span></div></div>';
 }
 function display(x){
@@ -277,12 +278,25 @@ window.loadElasticChart3m=async function(snapshot){
       '" x2="'+contact.toFixed(1)+'" y2="'+(cy+maxSide/2+5).toFixed(1)+
       '" stroke="#283f4d" stroke-opacity=".84" stroke-width="1.4"/>'+movement;
   }
+  // PM Live is an AUDIT/Bâton price displacement, NOT the 3m tick displacement
+  // that moves the two volume squares. Put it INSIDE the existing SVG, with its
+  // center exactly on the fixed dashed axis (cx), no extra row or container.
+  const pmLive=n(cv.conversion&&cv.conversion.pmLive);
+  const pmLiveColor=pmLive===null||pmLive===0?'#53616e':
+    pmLive>0?'#16804b':'#bf4149';
+  const pmLiveCaption='<text class="el-pmlive-center" x="'+cx.toFixed(1)+
+    '" y="'+(pad.top+18).toFixed(1)+
+    '" text-anchor="middle" font-family="SF Mono,Menlo,monospace"'+
+    ' font-size="12" font-weight="800" fill="#384e5a"'+
+    ' stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"'+
+    ' paint-order="stroke">PM Live <tspan fill="'+pmLiveColor+'">'+
+    (pmLive===null?'—':fmt(pmLive,1)+' $')+'</tspan></text>';
   svg.setAttribute('viewBox','0 0 '+w+' '+h);
   svg.setAttribute('preserveAspectRatio','none');
-  svg.innerHTML=baseline+duel;
+  svg.innerHTML=baseline+duel+pmLiveCaption;
   const priceEl=document.getElementById('elastic-duel-price');
   if(priceEl){
-    priceEl.textContent='PRIX '+(priceShift===null?'—':fmt(priceShift,1)+' $')+' · 3m';
+    priceEl.textContent='Δ PRIX BTC '+(priceShift===null?'—':fmt(priceShift,1)+' $')+' · 3m';
     priceEl.className='el-duel-price-value '+tone(fromDelta(0,priceShift));
   }
   if(axis){
