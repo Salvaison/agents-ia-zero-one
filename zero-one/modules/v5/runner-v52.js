@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v52'),paper=require('./paper-v52');
+const decision=require('./decision-v522'),paper=require('./paper-v52');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
@@ -63,8 +63,11 @@ function main(){
   console.log(JSON.stringify({mode:'READ_ONLY_TEST',decision:d},null,2));return;
  }
  let s=json(STATE,null);
- if(!s||s.version!==paper.VERSION)s=paper.initial(Date.now());
- // A fresh activation never retroactively opens on an older crossing.
+ // Versioned migration is explicit. Incompatible/corrupt state HALTS; never
+ // reset the ledger or overwrite a position simply because policy changed.
+ s=paper.migrate(s,Date.now());
+ // Keep the original startedAt so only genuinely new causally observed crossings
+ // can trigger; keys are matched across both policy generations.
  writeAtomic(STATE,s);
  let busy=false,priorKey=null,lastSave=0,errors=0;
  function tick(){
@@ -74,7 +77,8 @@ function main(){
    if(!tickTs||!Number.isFinite(price)||tickTs<=0)return;
    const received=Date.now(),age=received-tickTs;
    const auditAge=tickTs-x.last.ts;
-   const d=decision.evaluate({...x,now:tickTs,price,startedAt:s.startedAt,
+   const d=decision.evaluate({...x,now:tickTs,price,
+    startedAt:s.policyActivatedAt||s.startedAt,
     position:s.position,sourceAgeMs:auditAge,tickAgeMs:age});
    if(!x.health){d.quality='DATA_DEGRADED';if(!s.position){
      d.action='WAIT';d.reason='MCB_COLLECTOR_STALE';
@@ -87,19 +91,21 @@ function main(){
     append(CHANGES,{ts:tickTs,price,action:d.action,reason:d.reason,phase:d.phase,
      candidate:d.candidate,decisionOutcome:result.reason,tradeEvent:result.event||null,
      conversion:d.readings.conversion,place:d.readings.place,geometry:d.readings.geometry,
-     quality:d.quality,origin:'V5.2_PAPER',brokerOrdersEnabled:false});
+     maturity:d.readings.maturity,causalChain:d.readings.causalChain,
+     invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
+     quality:d.quality,origin:'V5.2.2_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);
    if(result.event||received-lastSave>=30000){writeAtomic(STATE,s);lastSave=received;}
-   if(result.event)console.log('[V52 PAPER] '+JSON.stringify(result.event));
+   if(result.event)console.log('[V522 PAPER] '+JSON.stringify(result.event));
    errors=0;
   }catch(e){if(++errors<=4||errors%20===0)console.error('[V52 PAPER] '+e.stack);}
   finally{busy=false;}
  }
  stream.on('error',e=>console.error('[V52 PRICE] '+e.message));
  stream.start();
- console.log('[V52 PAPER] '+JSON.stringify({mode:'PAPER_ONLY',brokerOrdersEnabled:false,
+ console.log('[V522 PAPER] '+JSON.stringify({policy:decision.VERSION,mode:'PAPER_ONLY',brokerOrdersEnabled:false,
   startAt:s.startedAt,priorTrades:s.completed,position:s.position?.direction||null}));
  setInterval(tick,INTERVAL_MS);
 }

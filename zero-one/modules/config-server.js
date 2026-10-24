@@ -472,15 +472,15 @@ function v52PaperSummary(filename, tag) {
   wins:s.wins,losses:s.losses,equityUsd:s.equityUsd,realizedUsd:s.realizedUsd,
   feesUsd:s.feesUsd,position:s.position||null,
   latestAction:s.lastAction||null,decision:s.latestDecision||s.decision||null,
-  analysis:tag==='V5.2'?s.latestAnalysis||null:null,
+  analysis:tag==='V5.2.2'?s.latestAnalysis||null:null,
   latestTrades:(s.history||[]).slice(-5).reverse(),
   engineVersion:s.engine||null,gitRef:s.gitRef||null,
   source:'ISOLATED_SIMULATION_ONLY_NO_FUNDED_ORDERS'};
 }
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
-  sendUiJson(req,res,v52PaperSummary('v52-paper-state.json','V5.2'));}
- catch(e){res.status(503).json({error:'V5.2 PAPER indisponible',detail:e.message});}
+  sendUiJson(req,res,v52PaperSummary('v52-paper-state.json','V5.2.2'));}
+ catch(e){res.status(503).json({error:'V5.2.2 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
@@ -508,6 +508,8 @@ function compactPaperTrade(t,engine){
   feesUsd:Number(t.feesUsd),mfePriceUsd:Number(t.mfePriceUsd),
   maePriceUsd:Number(t.maePriceUsd),exitReason:String(t.exitReason||'PAPER_EXIT'),
   entryHypothesis:t.entryContext&&t.entryContext.phase||t.entryReason||null,
+  entryPolicyVersion:engine==='v52'?
+    t.entryPolicyVersion||'v5.2-structural-decision-paper-v0.1':null,
   status:'CLOSED'};
 }
 function paperHistoryView(kind){
@@ -517,6 +519,7 @@ function paperHistoryView(kind){
  const open=p?{engine:kind,status:'OPEN',tradeNo:Number(s.completed||0)+1,
   direction:p.direction,entryAt:Number(p.entryAt),entryPrice:Number(p.entryPrice),
   lastPrice:Number(p.lastPrice),lastNetPnlUsd:Number(p.lastNetPnlUsd),
+  entryPolicyVersion:p.entryPolicyVersion||null,
   invalidationPrice:p.invalidationPrice||null,
   mfePriceUsd:p.metrics&&p.metrics.mfeUsd||p.mfePriceUsd||0,
   maePriceUsd:p.metrics&&p.metrics.maeUsd||p.maePriceUsd||0}:null;
@@ -607,6 +610,7 @@ function waveUiComparePaperTrades(startTs,endTs) {
    if(!Number.isFinite(entryTs)||!Number.isFinite(exitTs)||entryTs>endTs||exitTs<startTs)continue;
    out.push({source,trade:Number(t.tradeNo),entryTs,exitTs,
      entryPrice:Number(t.entryPrice),exitPrice:Number(t.exitPrice),
+     policyVersion:source==='V52_PAPER'?t.entryPolicyVersion||null:null,
      direction:t.direction,netPnlUsd:Number(t.netPnlUsd),
      exitReason:String(t.exitReason||'PAPER_EXIT').slice(0,120),open:false});
   }
@@ -617,6 +621,7 @@ function waveUiComparePaperTrades(startTs,endTs) {
    if(Number.isFinite(entryTs)&&entryTs<=endTs)
     out.push({source,trade:Number(s.completed||0)+1,entryTs,exitTs:null,
       entryPrice:Number(t.entryPrice),exitPrice:null,direction:t.direction,
+      policyVersion:source==='V52_PAPER'?t.entryPolicyVersion||null:null,
       netPnlUsd:Number(t.lastNetPnlUsd)||0,exitReason:null,open:true});
   }
  }
@@ -3156,7 +3161,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.2 PAPER — connexion au moteur décisionnel…</div>
+<div id="v52-live" class="v5-observer v52-main">V5.2.2 PAPER — connexion au moteur décisionnel…</div>
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
@@ -3682,7 +3687,7 @@ function waveV5TradeSpans(trades,endTs){
  .map(t=>({source:t.source,trade:Number(t.trade),entryTs:Number(t.entryTs),
    drawEndTs:t.exitTs===null||t.exitTs===undefined?Number(endTs):Number(t.exitTs),
    exitTs:t.exitTs===null||t.exitTs===undefined?null:Number(t.exitTs),
-   entryPrice:Number(t.entryPrice),
+   entryPrice:Number(t.entryPrice),policyVersion:t.policyVersion||null,
    exitPrice:t.exitPrice===null||t.exitPrice===undefined?null:Number(t.exitPrice),
    netPnlUsd:t.netPnlUsd===null||t.netPnlUsd===undefined?null:Number(t.netPnlUsd),
    exitReason:t.exitReason||null,direction:t.direction,open:!!t.open}));
@@ -3739,7 +3744,7 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.2</b>. Toucher une plage pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.2.2 / V5.2</b>. Toucher une plage pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
@@ -3747,7 +3752,7 @@ function waveRenderTradePanel() {
       'POSITION OUVERTE · plage prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
-      (t.source==='V52_PAPER'?'V5.2':'V4.9.3')+' PAPER #'+
+      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
       escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
       'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
       ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
@@ -3772,14 +3777,17 @@ function waveCloseTradeReport() {
 }
 // Dedicated PAPER reports: no false V4 report for V5.2 / V4.9.3.
 function renderPaperTradeReport(data){
- const t=data.trade||{},v52=data.engine==='v52',engine=v52?'V5.2':'V4.9.3';
+ const t=data.trade||{},v52=data.engine==='v52',
+  policy=String(t.entryPolicyVersion||''),
+  engine=v52?(policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
  const n=(x,d=1)=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(d);
  const signed=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
     (Number(x)>0?'+':'')+Number(x).toFixed(2);
  const safe=x=>escTrade(String(x===null||x===undefined?'—':x));
  const date=x=>x?waveParis(Number(x)):'—';
  const ec=t.entryContext||{},m=ec.mcb15||{},g=ec.geometry||{},cv=ec.conversion||{},
-  place=ec.place||{},economy=ec.economics||{};
+  place=ec.place||{},economy=ec.economics||{},mat=ec.maturity||{},
+  lineage=ec.causalChain||{};
  const open=data.status==='OPEN',last=open?t.lastPrice:t.exitPrice;
  const mfe=open?(t.mfePriceUsd??t.metrics?.mfeUsd):t.mfePriceUsd;
  const mae=open?(t.maePriceUsd??t.metrics?.maeUsd):t.maePriceUsd;
@@ -3817,6 +3825,21 @@ function renderPaperTradeReport(data){
     ' '+n(place.nearest?.price)+' $'+
     ' · invalidation initiale '+n(t.entryInvalidation||t.invalidationPrice)+
     ' $'+(economy.spaceVsStop?' · espace/risque '+n(economy.spaceVsStop)+'×':''));
+  if(Object.keys(mat).length)html+=value('MATURITÉ CAUSALE ·',
+    safe(mat.phase)+' · '+safe(mat.maturity)+' · croisement '+n(mat.cross3AgeMin)+' min'+
+    ' · déplacement '+n(mat.priceAdvanceSinceCrossUsd)+' $ / '+
+    n(mat.progressInTypical3mRanges)+'× range 3m'+
+    (mat.incrementalRateSlowing?' · conversion marginale ralentie':''));
+  if(Object.keys(lineage).length)html+=value('CHAÎNE CAUSALE ·','Campagne '+safe(lineage.campaignId)+
+    ' · BW/LBW3 '+date(lineage.cross3?.observedAt)+' / E3 natif lié '+
+    (lineage.e3Native?.relatedToCross?'oui':'non')+
+    ' · terrain '+safe(lineage.locationAnchor?.key||'non reconnu')+
+    ' connu '+date(lineage.locationAnchor?.availableAt));
+  if(ec.invalidation)html+=value('PREUVE DE L’INVALIDATION ·',
+    safe(ec.invalidation.kind)+' · '+safe(ec.invalidation.reference)+
+    ' · niveau '+n(ec.invalidation.underlyingLevel)+' $'+
+    ' · stop '+n(ec.invalidation.price)+' $'+
+    ' · connaissable à '+date(ec.invalidation.confirmedAvailableAt));
   html+=value('CONVERSION MESURÉE À L’ENTRÉE ·','PM Bâton '+n(cv.pmLastBaton)+
     ' $ · depuis Bâton '+n(cv.pmSinceBaton)+' $ · PM3 '+n(cv.pm3)+
     ' $ · PM5 '+n(cv.pm5)+' $ · ΔMF3 '+n(cv.mf3Delta3m));
@@ -3879,7 +3902,8 @@ async function waveOpenTradeReport(tradeNo) {
       const res=await fetch('/api/paper-trade-report/'+kind+'/'+number,{cache:'no-store'});
       if(!res.ok)throw Error('HTTP '+res.status);
       const report=await res.json();
-      title.textContent=(kind==='v52'?'V5.2':'V4.9.3')+' PAPER #'+number+
+      const pl=String(report.trade?.entryPolicyVersion||'');
+      title.textContent=(kind==='v52'?(pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
         ' · '+String(report.trade?.direction||'').toUpperCase()+
         (report.status==='OPEN'?' · EN POSITION':' · RAPPORT COMPLET');
       body.innerHTML=renderPaperTradeReport(report);
@@ -6154,7 +6178,8 @@ let v52Pending=false,v493Pending=false;
 function renderV52Living(data){
  const el=document.getElementById('v52-live');if(!el)return;
  const a=data.analysis||{},r=a.readings||{},m=r.mcb15||{},g=r.geometry||{},
-  c=r.conversion||{},pl=r.place||{},eco=r.economics||{},p=data.position||null;
+  c=r.conversion||{},pl=r.place||{},eco=r.economics||{},
+  mat=r.maturity||{},chain=r.causalChain||{},p=data.position||null;
  const n=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(1);
  const f=x=>escTrade(String(x===null||x===undefined?'—':x));
  const pos=x=>x==='long'?'long':x==='short'?'short':'';
@@ -6175,35 +6200,47 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.2 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>BOONO V5.2.2 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b>BTC '+n(data.position?.lastPrice||a.price)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
   (stale?'<div class="v52-warn">Vérifier la fraîcheur des sources ; aucune entrée nouvelle autorisée.</div>':'')+
   '<div class="v52-grid">'+
    cell('mcb','1 · PHASE MCB','LBW15 '+n(m.lbw)+' · '+f(m.trajectory),
-    f(a.phase)+' · extrême 45m '+n(m.extreme45m)+
+    f(a.phase)+' · maturité '+f(mat.maturity)+
+    ' · extrême 45m '+n(m.extreme45m)+
     '<div class="v52-muted">Trajectoire 15m confirmée '+f(m.trajectory)+
     ' · disponible '+v5Time(m.structuralAvailableAt)+
     ' · E3 '+f(r.mcb3?.trajectory)+
     ' · 1h '+f(m.context1h)+' · 4h '+f(m.context4h)+'</div>')+
    cell('geom','2 · TRANSITION GÉOMÉTRIQUE','BW/LBW3 '+f(cross3.direction||'—'),
-    c3Txt+'<div class="v52-muted">BW/LBW15 '+c15Txt+' · oscillations3 '+n(g.flips3)+'/45m</div>')+
+    c3Txt+'<div class="v52-muted">Âge '+n(mat.cross3AgeMin)+' min'+
+    ' · déplacement '+n(mat.progressInTypical3mRanges)+'× range 3m'+
+    ' · BW/LBW15 '+c15Txt+' · E3 natif lié '+(g.causalNativeRelation?'OUI':'non')+
+    ' · oscillations3 '+n(g.flips3)+'/45m</div>')+
    cell('place','3 · LIEU',''+f(pl.nearest?.key||'frontière inconnue')+
     ' '+n(pl.nearest?.price)+' $',
-    'Espace suivant '+n(pl.spaceUsd)+' $ · proximité support '+(pl.nearSupport?'OUI':'non')+
-    ' · résistance '+(pl.nearResistance?'OUI':'non'))+
+    'Espace suivant '+n(pl.spaceUsd)+' $ · contexte'+
+    '<div class="v52-muted">Ancre causale '+f(pl.anchor?.key||'NON VALIDÉE')+
+    ' '+n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+
+    ' · distance mini vol. '+n(pl.minVolatilityDistance)+' $</div>')+
    cell('conv','4 · CONVERSION · PM LIVE',
     'Bâton '+sn(c.pmLastBaton)+' $ · depuis '+sn(c.pmSinceBaton)+' $',
     'PM3 '+sn(c.pm3)+' $ · PM5 '+sn(c.pm5)+' $'+
+    '<div class="v52-muted">Vitesse 3m '+sn(mat.recent3mRateUsdPerMin)+
+    ' $/min · 2m précédentes '+sn(mat.previousNonoverlapping2mRateUsdPerMin)+
+    ' $/min'+(mat.incrementalRateSlowing?' · RALENTISSEMENT':'')+'</div>'+
     '<div class="v52-muted">ΔMF3 '+sn(c.mf3Delta3m)+
     ' · ΔMF15 '+sn(c.mf15Delta10m)+' · '+n(c.intervalSeconds)+'s après Bâton</div>')+
    cell('prognosis','5 · PRONOSTIC',f(a.candidate||'NEUTRE').toUpperCase(),
     f(a.prognosis||'—'))+
    cell('decision','6 · DÉCISION + INVALIDATION',f(act),
     f(a.reason||'—')+'<div class="v52-muted">Invalidation '+n(inv.price)+
-    ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+' $</div>')+
+    ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+
+    ' $ · ancre connue '+v5Time(inv.confirmedAvailableAt)+'</div>')+
   '</div>'+
+  '<div class="v52-strip"><span><b>CHAÎNE</b> campagne '+f(chain.campaignId)+
+    ' · E3/cross une famille · terrain '+f(chain.locationAnchor?.key||'non qualifié')+'</span></div>'+
   '<div class="v52-strip"><span><b>RISQUE</b> prix max −500$ · floor +120/90 et +220/180</span>'+
    '<span>Espace/risque '+n(eco.spaceVsStop)+'× · seuil frais '+n(eco.feeRoundTripMoveUsd)+' $ BTC</span></div>'+
   (p?'<div class="v52-ledger"><b class="'+(p.direction==='long'?'v52-green':'v52-red')+'">POSITION '+f(p.direction).toUpperCase()+'</b>'+
@@ -6212,7 +6249,7 @@ function renderV52Living(data){
    '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
    ' $ · plancher '+n(p.gainFloorUsd)+' $ · invalidation '+n(p.invalidationPrice)+' $</div></div>':
    '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
-  '<div class="v52-muted">PAPER V5.2 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
+  '<div class="v52-muted">PAPER V5.2.2 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
    ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
  el.innerHTML=card;
@@ -6229,7 +6266,7 @@ async function loadV52PaperPanel(){
   if(data.brokerOrdersEnabled!==false)throw Error('PAPER_AUTHORITY_NOT_VERIFIED');
   data.lastReason=data.analysis?.reason||data.decision?.reason||null;
   renderV52Living(data);
- }catch(e){if(el)el.textContent='V5.2 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.2.2 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 async function loadV493Panel(){
@@ -6337,7 +6374,7 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.2':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
+ const name=isV52?'V5.2.2':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
  const prefix=isV52?'V52:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
@@ -6347,7 +6384,8 @@ function renderPaperHistoryGroup(x,kind){
  if(data.open){
   const p=data.open;
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
-   '<b>'+name+' #'+f(p.tradeNo)+' · '+f(String(p.direction||'').toUpperCase())+
+   '<b>'+(isV52&&!String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2':name)+
+   ' #'+f(p.tradeNo)+' · '+f(String(p.direction||'').toUpperCase())+
    ' · EN POSITION</b><div>Entrée '+time(p.entryAt)+' à '+n(p.entryPrice)+' $ BTC'+
    ' · prix '+n(p.lastPrice)+' $ · net estimé '+signed(p.lastNetPnlUsd)+' $</div>'+
    '<button type="button" class="wave-trade-report-btn" data-paper-report="'+prefix+
@@ -6359,7 +6397,8 @@ function renderPaperHistoryGroup(x,kind){
   const statusColor=Number(t.netPnlUsd)>=0?'#087245':'#b52b39';
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">'+
-    '<b>'+name+' #'+f(t.tradeNo)+' · '+f(String(t.direction||'').toUpperCase())+'</b>'+
+    '<b>'+(isV52&&!String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2':name)+
+    ' #'+f(t.tradeNo)+' · '+f(String(t.direction||'').toUpperCase())+'</b>'+
     '<b style="color:'+statusColor+'">'+signed(t.netPnlUsd)+' $ net</b></div>'+
    '<div>Entrée '+time(t.entryAt)+' · '+n(t.entryPrice)+' $ BTC → sortie '+
     time(t.exitAt)+' · '+n(t.exitPrice)+' $ BTC · '+duration+'</div>'+
@@ -6448,9 +6487,9 @@ async function loadTrades() {
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.2 PAPER · lecture de la décision en cours…</div>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.2.2 PAPER · lecture de la décision en cours…</div>'+
       '<div class="v52-strip"><b>ELASTIC · MÉMOIRE COMMUNE / CONVERSION</b>'+
-        '<span>Sources partagées · graphe Elastic descriptif, sans autorité V5.2</span></div>'+
+        '<span>Sources partagées · graphe Elastic descriptif, sans autorité V5.2.2</span></div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="v493-details" class="v5-observer" '+(baselineWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V4.9.3 · COMPARATEUR PAPER EN ARRIÈRE-PLAN</summary>'+
@@ -6507,7 +6546,7 @@ async function loadTrades() {
     // or reset the history scroll on a routine V4 30-second refresh.
     if(!historyEl.classList.contains('active')||!historyEl.querySelector('#paperHistoryPanel')){
       historyEl.innerHTML =
-       '<div id="paperHistoryPanel">Chargement des trades PAPER V5.2 et V4.9.3…</div>'+
+       '<div id="paperHistoryPanel">Chargement des trades PAPER V5.2.2 / V5.2 et V4.9.3…</div>'+
        '<details id="v4LegacyHistory" style="margin-top:12px;">'+
         '<summary style="cursor:pointer;font-weight:800;">V4.10.10 · ARCHIVE HISTORIQUE · '+
           executed.length+' trades (ancien moteur)</summary>'+

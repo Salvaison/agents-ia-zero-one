@@ -90,7 +90,7 @@ test('no reentry on same crossing, no preregistration hindsight and no stale ent
  assert.equal(exit.event.type,'EXIT_LONG');
  const denied=paper.step(s,d,{price:79490,ts:start+7000,sourceAgeMs:100,tickAgeMs:100});
  assert.equal(denied.event,null);
- assert.equal(denied.reason,'USED_CROSS_KEY');
+ assert.equal(denied.reason,'CROSS_3M_ALREADY_CONSUMED');
  const prior=paper.initial(start+9000);
  const pre=paper.step(prior,candidate(start+8500,'long',79800,'pre'),{
   price:80000,ts:start+10000,sourceAgeMs:100,tickAgeMs:100});
