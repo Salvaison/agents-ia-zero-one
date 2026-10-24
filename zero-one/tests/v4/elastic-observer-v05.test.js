@@ -150,8 +150,10 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  const svg={innerHTML:'',attributes:{},setAttribute(k,v){this.attributes[k]=v;}};
  const axis={innerHTML:''},loading={style:{},textContent:''};
  const priceEl={textContent:'',className:''};
+ const btcLabel={textContent:''};
  const nodes={'elastic-price-candles':canvas,'elastic-conversion-overlay':svg,
-  'elastic-price-axis':axis,'elastic-chart-loading':loading,'elastic-duel-price':priceEl};
+  'elastic-price-axis':axis,'elastic-chart-loading':loading,
+  'elastic-duel-price':priceEl,'elastic-current-btc-value':btcLabel};
  const optsCaptured=[];
  const ctx={window:{BoonoCharts:{
     drawPrice:(can,rows,opts)=>{optsCaptured.push({can,rows,opts});
@@ -169,6 +171,7 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  const x=ev(f());x.effort={available:true,buyBtc:3,sellBtc:6,sampleCount:30,
    priceNetUsd:30,priceRangeUsd:50};
  x.conversion.pm3=45;
+ ctx.window.updateElasticCurrentPrice(82531.3,T,'OKX live');
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
  assert.equal(optsCaptured.length,1);
  assert.equal(optsCaptured[0].opts.theme,'interface');
@@ -183,18 +186,21 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  const central=[...svg.innerHTML.matchAll(/<line class="el-duel-zero-axis" x1="([\d.]+)"/g)];
  assert.equal(central.length,1);
  assert.ok(Math.abs(Number(central[0][1])-center)<1,'dashed zero axis remains centered');
- const liveLabel=[...svg.innerHTML.matchAll(/<text class="el-pmlive-center" x="([\d.]+)" y="([\d.]+)"/g)];
- assert.equal(liveLabel.length,1,'PM Live appears once, inside the chart SVG');
- assert.ok(Math.abs(Number(liveLabel[0][1])-center)<.5,
-   'PM Live must align exactly with the fixed dashed axis, not the container center');
- assert.ok(Number(liveLabel[0][2])>optsCaptured[0].opts.padding.top,
-   'label is inside upper plot, not in a separate design row');
- assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#bf4149">-21.0 $</tspan>'),
-   'negative Audit PM Live has correct color and value');
+ const currentLabel=[...svg.innerHTML.matchAll(/<text class="el-btc-current-center" x="([\d.]+)" y="([\d.]+)"/g)];
+ assert.equal(currentLabel.length,1,'current BTC price appears once, inside chart SVG');
+ assert.ok(Math.abs(Number(currentLabel[0][1])-center)<.5,
+   'BTC price must align exactly with fixed dashed axis, not the whole container');
+ assert.ok(Number(currentLabel[0][2])>optsCaptured[0].opts.padding.top,
+   'BTC label is inside upper plot, not a new row');
+ const shown=82531.3.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' $';
+ assert.ok(svg.innerHTML.includes('BTC <tspan id="elastic-current-btc-value">'+shown+'</tspan>'),
+   'absolute price is sourced from the separate current OKX feed, not 3m delta');
  const html=ctx.window.renderElasticObserverV05({elasticObserverShadow:x});
  const metrics=html.split('class="el-duel-metrics">')[1].split('class="el-duel-volumes"')[0];
- assert.ok(!metrics.includes('PM Live'),'PM Live has moved out of the upper metrics row');
+ assert.ok(metrics.includes('PM Live'),'PM Live remains in original conversion metrics');
  assert.ok(metrics.includes('PM3 ')&&metrics.includes('PM5 '));
+ assert.ok(!svg.innerHTML.includes('PM Live '),
+   'PM Live is no longer incorrectly labeled as current BTC quote');
  assert.ok(html.includes('Δ PRIX BTC +30.0 $ · 3m'),'bottom label means a displacement');
  assert.ok(html.includes('pas le cours actuel'),'displacement is not the actual BTC quotation');
  assert.ok(right[1]>center+10,'positive BTC displacement moves both squares right');
@@ -219,20 +225,38 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  assert.equal(reversed[0][3],boxes[0][3],'direction reversal does not alter effort sizes');
  assert.equal(priceEl.textContent,'Δ PRIX BTC -30.0 $ · 3m');
  assert.ok(priceEl.className.includes('el-down'));
- // PM Live varies independently of the BTC tick displacement and does not move cubes.
+ // A new quote updates only the text, not the candle graph / duel geometry.
+ const beforeQuoteUpdate=svg.innerHTML;
+ ctx.window.updateElasticCurrentPrice(82670.1,T+500,'OKX live');
+ const second=82670.1.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' $';
+ assert.equal(btcLabel.textContent,second,'same OKX live trade feed updates quote');
+ assert.equal(svg.innerHTML,beforeQuoteUpdate,'price update must not rerender squares');
+ const quoteSource=82531.3.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' $';
+ assert.ok(beforeQuoteUpdate.includes(quoteSource));
  x.conversion.pmLive=37.5;
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
- assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#16804b">+37.5 $</tspan>'));
- const liveRelabeled=[...svg.innerHTML.matchAll(/<text class="el-pmlive-center" x="([\d.]+)"/g)];
- assert.equal(liveRelabeled.length,1);
- assert.ok(Math.abs(Number(liveRelabeled[0][1])-center)<.5);
  const nowRect=[...svg.innerHTML.matchAll(/<rect class="el-conversion-square" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
- assert.equal(nowRect[0][1],reversed[0][1],'PM Live alone never translates cubes');
- x.conversion.pmLive=null;
- await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
- assert.ok(svg.innerHTML.includes('PM Live <tspan fill="#53616e">—</tspan>'));
+ assert.equal(nowRect[0][1],reversed[0][1],'PM Live never translates cubes');
+ assert.ok(svg.innerHTML.includes('BTC <tspan id="elastic-current-btc-value">'+second+'</tspan>'));
+ ctx.window.updateElasticCurrentPrice(82670.1,T-20000,'OKX live');
+ assert.equal(btcLabel.textContent,'—','stale last traded price must not masquerade as live');
+ ctx.window.updateElasticCurrentPrice(82670.1,T,'OKX reconnect...');
+ assert.equal(btcLabel.textContent,'—','disconnected source must not display a live quote');
+ ctx.window.updateElasticCurrentPrice(82679.9,T+500,'OKX live');
+ assert.ok(btcLabel.textContent.includes('82679'.slice(0,2)));
+ assert.equal(svg.innerHTML.includes('el-pm3-trace'),false);
  assert.equal(loading.style.display,'none');
  assert.equal(svg.attributes.viewBox,'0 0 420 268');
+});
+test('current BTC quote reuses the existing WebSocket and never creates a parallel feed',()=>{
+ const ui=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
+ const app=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
+ assert.ok(ui.includes('window.updateElasticCurrentPrice=function(price,ts,status)'));
+ assert.ok(app.includes('window.updateElasticCurrentPrice(v3UiPrice.price,v3UiPrice.ts,v3UiPrice.status)'));
+ assert.equal((ui.match(/new WebSocket\(/g)||[]).length,0,
+   'Elastic shares the existing BTC-USDT-SWAP WebSocket');
+ assert.ok(ui.includes('CURRENT_QUOTE_MAX_AGE_MS=15000'));
+ assert.ok(app.includes("channel: 'trades', instId: 'BTC-USDT-SWAP'"));
 });
 test('chronology stays collapsed without fetching and fetches paginated events when opened',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');

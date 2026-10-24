@@ -3457,6 +3457,9 @@ function updateV3LivePriceDom() {
     const age = v3UiPrice.ts ? Math.max(0, (Date.now() - v3UiPrice.ts) / 1000) : null;
     metaEl.textContent = v3UiPrice.status + (age !== null ? ' · ' + age.toFixed(age < 10 ? 1 : 0) + 's' : '');
   }
+  // One shared public OKX trade feed for both live-price displays: no new socket.
+  if(window.updateElasticCurrentPrice)
+    window.updateElasticCurrentPrice(v3UiPrice.price,v3UiPrice.ts,v3UiPrice.status);
 }
 function connectV3LivePrice() {
   if (v3UiWs && (v3UiWs.readyState === WebSocket.OPEN || v3UiWs.readyState === WebSocket.CONNECTING)) return;

@@ -10,6 +10,26 @@ const mins=x=>n(x)===null?'—':Math.max(0,Number(x)).toFixed(1)+'m';
 const tone=d=>d==='long'?'el-up':d==='short'?'el-down':'el-neutral';
 const cnum=(v,d=1,dir=null)=>'<b class="'+tone(dir)+'">'+fmt(v,d)+'</b>';
 const fromDelta=(a,b)=>n(a)!==null&&n(b)!==null?(b>a?'long':b<a?'short':null):null;
+// Reuse the price WebSocket already opened by the main Amsterdam interface.
+// Never confuse an old MCB/30s Bâton snapshot with the latest OKX trade price.
+let currentBtcQuote={price:null,ts:null,status:'NO_SOURCE'};
+const CURRENT_QUOTE_MAX_AGE_MS=15000;
+function currentBtcText(){
+ const p=n(currentBtcQuote.price),ts=n(currentBtcQuote.ts);
+ const age=ts===null?Infinity:Date.now()-ts;
+ const ok=p!==null&&p>0&&ts!==null&&age>=-3000&&
+  age<=CURRENT_QUOTE_MAX_AGE_MS&&currentBtcQuote.status==='OKX live';
+ return ok?p.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' $':'—';
+}
+function refreshCurrentBtcLabel(){
+ const label=document.getElementById('elastic-current-btc-value');
+ if(label)label.textContent=currentBtcText();
+}
+window.updateElasticCurrentPrice=function(price,ts,status){
+ const p=n(price),t=n(ts);
+ currentBtcQuote={price:p!==null&&p>0?p:null,ts:t,status:String(status||'NO_SOURCE')};
+ refreshCurrentBtcLabel();
+};
 const pair=(p,d=1)=>{
  const a=p&&p.confirmed,b=p&&p.live;
  return '<span class="el-old">'+fmt(a,d)+'</span> / '+cnum(b,d,fromDelta(a,b));
@@ -36,7 +56,7 @@ function effort(x){
  const q=x&&x.effort||{},cv=x&&x.conversion||{};
  const conv='<div class="el-duel-metrics"><div>PM3 '+cnum(cv.pm3,1,fromDelta(0,cv.pm3))+
    ' $ · PM5 '+cnum(cv.pm5,1,fromDelta(0,cv.pm5))+
-   ' $</div>'+
+   ' $ · PM Live '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $</div>'+
    '<div>eff3 '+(n(cv.efficiency3m)!==null?Math.round(cv.efficiency3m*100)+' %':'—')+
    ' · yield/P75 '+(n(cv.yieldVsP75)!==null?Number(cv.yieldVsP75).toFixed(2)+'×':'—')+
    ' · effort/P75 '+(n(cv.effortVsP75)!==null?Number(cv.effortVsP75).toFixed(2)+'×':'—')+'</div>'+
@@ -278,22 +298,21 @@ window.loadElasticChart3m=async function(snapshot){
       '" x2="'+contact.toFixed(1)+'" y2="'+(cy+maxSide/2+5).toFixed(1)+
       '" stroke="#283f4d" stroke-opacity=".84" stroke-width="1.4"/>'+movement;
   }
-  // PM Live is an AUDIT/Bâton price displacement, NOT the 3m tick displacement
-  // that moves the two volume squares. Put it INSIDE the existing SVG, with its
-  // center exactly on the fixed dashed axis (cx), no extra row or container.
-  const pmLive=n(cv.conversion&&cv.conversion.pmLive);
-  const pmLiveColor=pmLive===null||pmLive===0?'#53616e':
-    pmLive>0?'#16804b':'#bf4149';
-  const pmLiveCaption='<text class="el-pmlive-center" x="'+cx.toFixed(1)+
+  // Absolute BTC-USDT-SWAP latest OKX trade, from the existing UI WebSocket.
+  // The BTC quote is not PM Live, the 3m delta, or the candle's last CLOSE.
+  // Its label lives at the top INSIDE this SVG, exactly above the central axis.
+  // Price-only updates replace the tspan text (never reflow/redraw the squares).
+  const currentPriceCaption='<text class="el-btc-current-center" x="'+cx.toFixed(1)+
     '" y="'+(pad.top+18).toFixed(1)+
     '" text-anchor="middle" font-family="SF Mono,Menlo,monospace"'+
     ' font-size="12" font-weight="800" fill="#384e5a"'+
     ' stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round"'+
-    ' paint-order="stroke">PM Live <tspan fill="'+pmLiveColor+'">'+
-    (pmLive===null?'—':fmt(pmLive,1)+' $')+'</tspan></text>';
+    ' paint-order="stroke">BTC <tspan id="elastic-current-btc-value">'+
+    currentBtcText()+'</tspan></text>';
   svg.setAttribute('viewBox','0 0 '+w+' '+h);
   svg.setAttribute('preserveAspectRatio','none');
-  svg.innerHTML=baseline+duel+pmLiveCaption;
+  svg.innerHTML=baseline+duel+currentPriceCaption;
+  refreshCurrentBtcLabel();
   const priceEl=document.getElementById('elastic-duel-price');
   if(priceEl){
     priceEl.textContent='Δ PRIX BTC '+(priceShift===null?'—':fmt(priceShift,1)+' $')+' · 3m';
