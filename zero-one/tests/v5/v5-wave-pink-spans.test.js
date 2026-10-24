@@ -41,40 +41,40 @@ test('V5 spans are derived from independent paper positions, not V4 transactions
  state.brokerOrdersEnabled=true;
  assert.equal(ctx.waveUiV5PaperTrades(T-3600000,T).length,0,'never accept real order mode');
 });
-test('V5 rose bands align with UTC trade durations and preserve open-vs-closed stroke',()=>{
+test('comparison spans have distinct colors and independent UTC trade identities',()=>{
  const {waveV5TradeSpans,wavePaintV5Bands}=browserTools();
  const spans=waveV5TradeSpans([
-  {source:'V5_PAPER',trade:1,entryTs:T-300000,exitTs:T-120000,entryPrice:81800,
+  {source:'V52_PAPER',trade:1,entryTs:T-300000,exitTs:T-120000,entryPrice:81800,
    exitPrice:81900,netPnlUsd:.34,direction:'long',open:false},
-  {source:'V5_PAPER',trade:2,entryTs:T-60000,exitTs:null,entryPrice:81920,
+  {source:'V493_PAPER',trade:1,entryTs:T-60000,exitTs:null,entryPrice:81920,
    exitPrice:null,netPnlUsd:-1.19,direction:'short',open:true}
  ],T);
  assert.equal(spans.length,2);
+ assert.equal(spans[0].source,'V52_PAPER');
+ assert.equal(spans[1].source,'V493_PAPER');
  assert.equal(spans[0].drawEndTs,T-120000);
  assert.equal(spans[1].drawEndTs,T);
- let fills=[],strokes=0;
+ const fills=[];let strokes=0;
  const ctx={save(){},restore(){},setTransform(){},beginPath(){},rect(){},clip(){},
-  fillRect(...a){fills.push({color:this.fillStyle,rect:a});},moveTo(){},lineTo(){},
+  fillRect(...r){fills.push({color:this.fillStyle,rect:r});},moveTo(){},lineTo(){},
   stroke(){strokes++}};
  const canvas={width:840,getBoundingClientRect:()=>({width:420,height:200}),getContext:()=>ctx};
  const hit=wavePaintV5Bands(canvas,spans,T-600000,T,{left:36,right:9,top:12,bottom:18});
  assert.equal(hit.length,2);assert.equal(fills.length,2);
- assert.ok(fills.every(v=>v.color==='rgba(224,72,151,.15)'));
- const x0=36+(300000/600000)*(420-36-9);
- assert.ok(Math.abs(hit[0].x1-x0)<.01,'entry precisely mapped to price time axis');
- assert.ok(hit[1].x2>hit[0].x2);
- assert.equal(strokes,2);
- assert.equal(hit[0].trade.source,'V5_PAPER');
- assert.equal(hit[1].trade.open,true);
+ assert.notEqual(fills[0].color,fills[1].color,'blue baseline vs magenta V5.2');
+ const expected=36+(300000/600000)*(420-36-9);
+ assert.ok(Math.abs(hit[0].x1-expected)<.01);
+ assert.ok(hit[1].x2>hit[0].x2);assert.equal(strokes,2);
+ assert.equal(hit[1].source,'V493_PAPER');
 });
-test('V5 is rendered on Waves 3m and 15m, with distinct source and pink V5 panel',()=>{
- assert.ok(src.includes('waveV5TradeSpans(waveReplayData.v5PaperTrades||[],t1).forEach'));
+test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 remain archived',()=>{
+ assert.ok(src.includes('waveUiComparePaperTrades(now-48*3600000,now)'));
+ assert.ok(src.includes('waveUiComparePaperTrades(startTs,endTs)'));
+ assert.ok(src.includes('V52_PAPER'));assert.ok(src.includes('V493_PAPER'));
  assert.ok(src.includes('wavePaintV5Bands(canvas,v5Spans,t0,t1,'));
- assert.ok(src.includes("ctx.fillStyle='rgba(135,206,235,.18)'"),'V4 blue remains unchanged');
- assert.ok(src.includes("ctx.fillStyle='rgba(224,72,151,.15)'"));
- assert.ok(src.includes("if(t.source==='V5_PAPER')"));
- assert.ok(src.includes('v5PaperTrades:waveUiV5PaperTrades(now-48*3600000,now)'));
+ assert.ok(src.includes('wavePaperPaintColor(z)'));
+ assert.ok(src.includes('waveReplayData.showLegacyV4?waveTradeSpans'));
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
- assert.ok(src.includes('rose V5 PAPER'),'pink legend even before first V5 trade');
+ assert.ok(src.includes('bleu V4.9.3'));assert.ok(src.includes('rose V5.2'));
 });

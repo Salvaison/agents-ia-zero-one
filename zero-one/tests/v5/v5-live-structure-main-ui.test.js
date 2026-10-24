@@ -36,14 +36,19 @@ test('live V5 structure renders current market separately from frozen paper arch
  assert.ok(!html.includes('POSITION PAPER FIGÉE'));
  assert.ok(!html.includes('HYPOTHÈSE SHORT observé'));
 });
-test('DOM includes live container before V4 state loads and keeps PAPER behind details',()=>{
- const first=s.indexOf('<div id="v5-structure-live" class="v5-observer">');
+test('V5.2 PAPER is primary, shared Elastic is visible and older observers are collapsed',()=>{
+ const first=s.indexOf('<div id="v52-live" class="v5-observer v52-main">');
  const archive=s.indexOf('<details id="v5-paper-archive"');
- assert(first>0&&archive>first);
+ const baseline=s.indexOf('<details id="v493-details"');
+ const structure=s.indexOf('<details id="v5-structure-details"');
+ assert.ok(first>0&&baseline>first&&structure>baseline&&archive>structure);
+ assert.ok(s.includes('renderElasticObserverV05(current)'));
+ assert.ok(s.includes('setInterval(loadV52PaperPanel,10000)'));
  assert.ok(s.includes('setInterval(loadV5StructureLive,30000)'));
+ assert.ok(s.includes("fetch('/api/v52'"));
+ assert.ok(s.includes("fetch('/api/v493'"));
  assert.ok(s.includes("fetch('/api/v5-structure'"));
  assert.ok(s.includes('if(archiveWasOpen)loadV5PaperPanel()'));
- assert.ok(s.includes('if(!el||!archive||!archive.open||v5PanelLoading||document.hidden)return;'));
  assert.ok(s.includes('recentChanges:(state.summaries||[]).slice(-7)'));
 });
 test('a stale structural model warns and never passes through as trading permission',()=>{
