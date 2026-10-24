@@ -54,3 +54,23 @@ Ordre conceptuel : **PHASE MCB → TRANSITION GÉOMÉTRIQUE → LIEU → CONVERS
 ## Étape après démarrage
 
 Accumuler des **trades** puis revue 3-trades/daily : pertinence de l'entrée sur phase/lieu/cross/PM, risques de stop trop proche vs volatilité 3m, invalidations de campagne, maintien à travers respirations, MFE/MAE et rendement net. Comparer les mêmes plages de marché V5.2 vs V4.9.3 PAPER, sans prétendre à des preuves de rentabilité sur une courte séquence.
+
+## Retour utilisateur — Vagues et trading du 24 octobre, 18h18 Stockholm
+
+Le créateur constate : bonne entrée V5.2 LONG, sortie rapide, ligne rose antérieure, absence de liste Historique V5.2 et du bouton RAPPORT. Lecture croisée avec les journaux :
+
+- V5.2 #1 : LONG 80 799,4 → 80 765,9 $ BTC, 14h38:57–14h40:20 Stockholm ; net −2,1216 $, invalidation structurelle 27,4 $ sous l'entrée. La première ligne magenta étroite représente ce trade réel du simulateur.
+- V5.2 #2 : LONG 79 467,8 → 79 639,9 $ BTC, 17h33:08–18h02:27 Stockholm ; MFE +332,1 $ BTC, MAE −148,7 $ ; net +1,7469 $. Sortie par plancher économique 220→180, exécutée à +172,1 $ BTC sur le prochain prix réellement disponible, sans fill fictif.
+- Au moment de cette sortie, la couche de décision structurelle renvoyait HOLD/CAMPAGNE_TENUE, tandis que le module de protection économique avait autorité de clôturer. PM3 ≈−133,4 $ BTC, PM5 ≈−17,4 $ BTC. Ne pas qualifier cela de sortie par retournement E3.
+- À +15 min du #2 : prix ≈79 835,2 $ BTC (+195,3 $ depuis la sortie). À +30 min : prix ≈79 560 $ BTC (−79,9 $ depuis la sortie). Ces observations rétrospectives ne prouvent pas qu'un autre stop aurait été meilleur.
+- Le LONG #2 est entré à 17h33, avant le E15 UP Live aperçu 17h45:36, puis confirmé vers 18h00. La trajectoire 15m passe LONG vers 18h15 parce que le pivot LBW exige deux barres 15m ultérieures confirmées. Il faut distinguer phase de retournement prospectif et trajectoire structurelle confirmée.
+
+### Réparation fonctionnelle
+
+- Deux API privées en lecture seule : /api/paper-history et /api/paper-trade-report/:engine/:tradeNo. Historique compact des deux simulateurs, rapport détaillé à la demande avec entrée, phase, géométrie, lieu, conversion disponible, sortie, preuves de protection, frais, excursions MFE/MAE, observations après sortie +5/+15/+30 min lorsque disponibles.
+- Onglet Historique : V5.2 en premier, V4.9.3 comparateur repliable, anciens historiques V4/V3 repliables. Bouton RAPPORT par trade.
+- Vagues : RAPPORT rétabli sur les plages V5.2 magenta et V4.9.3 bleues. Une plage de quelques pixels garde son dessin exact mais obtient une zone tactile de 12 px. Priorité de sélection à V5.2, avec rapport propre au bon simulateur ; la fenêtre de rapport est visible depuis Historique aussi.
+- Panneau V5.2 : différencie le candidat de retournement et l'instant de disponibilité de la trajectoire confirmée 15m. Les scripts HTML et JavaScript sont transmis sans cache pour faciliter la mise à jour de l'affichage mobile.
+- Aucune règle de trading ou protection financière modifiée dans cette intervention ; mise au point d'interface et provenance uniquement. Le nettoyage des anciens shadows demeure différé.
+
+**Vérification :** 104/104 tests V4+V5 réussis le 24 octobre après l’intégration de l’historique et des rapports ; parsing du JavaScript client OK, endpoints protégés, routes de rapports / retours après sortie testés avec les véritables journaux. Contrôle visuel d’une session navigateur authentifiée à confirmer par utilisateur.

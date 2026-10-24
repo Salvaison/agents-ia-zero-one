@@ -188,7 +188,12 @@ function evaluate(input){
     distanceUsd:rr(invDistance)}:null,
   levels:loc,readings:{
    mcb15:{lbw:rr(lbw15),bw:rr(bw15),mf:rr(mf15),extreme45m:rr(absPeak15),
-    trajectory:phase15.structuralDirection,context1h:phase1.structuralDirection,
+    trajectory:phase15.structuralDirection,
+    structuralPivotAt:phase15.lastStructuralPivot?.extremeTs||null,
+    structuralConfirmationBarTs:phase15.structuralConfirmedAt||null,
+    structuralAvailableAt:phase15.structuralConfirmedAt?
+     phase15.structuralConfirmedAt+15*min:null,
+    context1h:phase1.structuralDirection,
     context4h:phase4.structuralDirection,phase},
    mcb3:{lbw:rr(lbw3),bw:rr(bw3),mf:rr(mf3),trajectory:phase3.structuralDirection},
    geometry:{cross3:cross,cross15:g15.last,flips3:g3.flips45m,
