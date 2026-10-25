@@ -11,7 +11,8 @@ function atOrBefore(rows,ts){
 function mcb15Posture(input,base){
  const now=input.now,series=c.bars(input.bars15,now,FIFTEEN);
  const native=c.native15(input.samples,series,now),r=base.readings||{},
-  memory=r.mcb15?.trajectory||null,liveSide=native.crossDirection;
+  memory=r.mcb15?.trajectory||null;
+ let liveSide=native.crossDirection;
  const official=(input.native15Events||[]).filter(e=>e.observedAt<=now&&
    e.observedAt>0).sort((a,b)=>a.observedAt-b.observedAt);
  const lastOfficialConfirmed=official.filter(e=>e.type==='CONFIRMED').at(-1)||null;

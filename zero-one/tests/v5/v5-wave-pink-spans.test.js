@@ -76,5 +76,5 @@ test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 re
  assert.ok(src.includes('waveReplayData.showLegacyV4?waveTradeSpans'));
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
- assert.ok(src.includes('bleu V4.9.3'));assert.ok(src.includes('rose V5.3 / archives V5.2'));
+ assert.ok(src.includes('bleu V4.9.3'));assert.ok(src.includes('rose V5.3.1 / archives V5.2–5.3'));
 });

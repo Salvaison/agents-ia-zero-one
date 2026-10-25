@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v53'),paper=require('./paper-v52');
+const decision=require('./decision-v531'),paper=require('./paper-v52');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
@@ -46,6 +46,19 @@ function latest(){
  const samples=audit.slice(-450).filter(x=>finite(x.ts)&&finite(x.lastPrice));
  const tf=t=>cached(path.join(MCB,'mcb_'+t+'.csv'),()=>csv(t));
  const levels=cached(path.join(DATA,'levels.json'),()=>json(path.join(DATA,'levels.json'),[]));
+ // Only the latest actual TradingView MA200 Live observation is admitted;
+ // barStartTs is NOT observedAt. Older historical replays reject future mtime.
+ const liveMa=tf=>{
+  try{
+   const f=path.join(MCB,'mcb_'+tf+'_live.csv');
+   const observedAt=Math.round(fs.statSync(f).mtimeMs);
+   const lines=tail(f,2400),v=lines.at(-1)?.split(',')||[];
+   const barTs=Date.parse(v[0]),value=finite(v[12])?Number(v[12]):null;
+   return value!==null&&value>0&&Number.isFinite(barTs)?
+     {barTs,observedAt,value,source:'MCB_TRADINGVIEW_LIVE_MA200'}:null;
+  }catch(_){return null;}
+ };
+ const liveMa3=liveMa('3m'),liveMa15=liveMa('15m');
  // Reuse the existing Elastic source for REAL observed E15 times, not a new shadow.
  const historyPath=path.join(DATA,'elastic-observer-events.ndjson');
  let native15Events=[];
@@ -64,7 +77,7 @@ function latest(){
   try{return time-fs.statSync(folder).mtimeMs<(t==='3m'?120000:180000);}catch(_){return false;}
  });
  return {samples,bars3:tf('3m'),bars15:tf('15m'),bars1h:tf('1h'),bars4h:tf('4h'),
-  levels,native15Events,last,health};
+  levels,native15Events,liveMa3,liveMa15,last,health};
 }
 function main(){
  const flags=new Set(process.argv.slice(2));
@@ -104,8 +117,9 @@ function main(){
      candidate:d.candidate,decisionOutcome:result.reason,tradeEvent:result.event||null,
      conversion:d.readings.conversion,place:d.readings.place,geometry:d.readings.geometry,
      maturity:d.readings.maturity,causalChain:d.readings.causalChain,
+     maContract:d.readings.maContract,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.3_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.3.1_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);
