@@ -68,7 +68,7 @@ function start({listen=true}={}){
   throw Error('EXECUTION_LAB_NEVER_FUNDED');
  let ws=null,quote=null,saveAt=0,connectTimer=null,ping=null,stopped=false,busy=false;
  function persist(force=false){
-  if(!force&&Date.now()-saveAt<6000)return;
+  if(!force&&Date.now()-saveAt<1500)return;
   s.updatedAt=Date.now();
   s.book={
    status:quote&&model.validQuote(quote,Date.now())?'FRESH':
