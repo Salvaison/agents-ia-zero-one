@@ -44,13 +44,9 @@ FLAT et EN POSITION ont des exigences distinctes. E3 contraire seul ne clôture 
 
 Ces replays sont in-sample. La valeur de V5.3 se vérifiera sur ses propres trades PAPER prospectifs face au comparateur V4.9.3, à frais cohérents. Le slippage et le funding ne sont pas encore modélisés.
 
-## Statut d'installation
-À actualiser à la fin du contrôle post-migration.
+## Installation confirmée sur Amsterdam
 
-
-### Installation confirmée sur Amsterdam
-
-Basculement réalisé vers 10h52 UTC (11h52 Stockholm) le 25 octobre 2026. Snapshot des fichiers de compte et journaux avant mise à jour dans /root/boono-v53-preupgrade-20261025T095204Z. L'ancien service PAPER a été arrêté puis le même service PM2 boono-v52-paper redémarré avec le moteur décision-v53.js.
+Basculement réalisé vers 09h52 UTC (10h52 Stockholm, CET) le 25 octobre 2026. Snapshot des fichiers de compte et journaux avant mise à jour dans /root/boono-v53-preupgrade-20261025T095204Z. L'ancien service PAPER a été arrêté puis le même service PM2 boono-v52-paper redémarré avec le moteur décision-v53.js.
 
 Migration vérifiée : v5.2.2-paper-ledger-v0.2 vers v5.3-paper-ledger-v0.3, **6 clôtures conservées**, réalisé −9,0501 USD, equity 990,9499 USD, frais 9,75 USD au relevé, **7 clés consommées conservées**. Le LONG PAPER en cours (entrée 80 222,5 BTC, politique V5.2.2) est resté ouvert et sous sa politique de sortie initiale. Vérification après connexion du flux public OKX : état vivant sous v5.3-causal-15m-flow-market-phase et réponse HOLD/LEGACY_POSITION_CAMPAGNE_TENUE. Sans ordre financé.
 
