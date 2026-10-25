@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v532'),paper=require('./paper-v52');
+const decision=require('./decision-v533'),paper=require('./paper-v52');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
@@ -131,8 +131,9 @@ function main(){
      maturity:d.readings.maturity,causalChain:d.readings.causalChain,
      maContract:d.readings.maContract,
      e15Requalification:d.readings.e15Requalification,
+     conversionCampaign:d.readings.conversionCampaign,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.3.2_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.3.3_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);

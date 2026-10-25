@@ -473,7 +473,7 @@ function v52PaperSummary(filename, tag) {
   wins:s.wins,losses:s.losses,equityUsd:s.equityUsd,realizedUsd:s.realizedUsd,
   feesUsd:s.feesUsd,position:s.position||null,
   latestAction:s.lastAction||null,decision:s.latestDecision||s.decision||null,
-  analysis:tag==='V5.3.2'?s.latestAnalysis||null:null,
+  analysis:tag==='V5.3.3'?s.latestAnalysis||null:null,
   latestTrades:(s.history||[]).slice(-5).reverse(),
   engineVersion:s.engine||null,gitRef:s.gitRef||null,
   source:'ISOLATED_SIMULATION_ONLY_NO_FUNDED_ORDERS'};
@@ -499,7 +499,7 @@ function v53UiReadEvents(){
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
-  const summary=v52PaperSummary('v52-paper-state.json','V5.3.2');
+  const summary=v52PaperSummary('v52-paper-state.json','V5.3.3');
   try{
    const a=summary.analysis,src=v53UiReadEvents();
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
@@ -510,7 +510,7 @@ app.get('/api/v52',requireAuth,(req,res)=>{
     decisionImpact:false};
   }
   sendUiJson(req,res,summary);
- }catch(e){res.status(503).json({error:'V5.3.2 PAPER indisponible',detail:e.message});}
+ }catch(e){res.status(503).json({error:'V5.3.3 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
@@ -3239,7 +3239,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.3.2 PAPER — connexion au moteur décisionnel…</div>
+<div id="v52-live" class="v5-observer v52-main">V5.3.3 PAPER — connexion au moteur décisionnel…</div>
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
@@ -3825,7 +3825,7 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.3.2 / archives V5.2–5.3.1</b>. Toucher une plage pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.3.3 / archives V5.2–5.3.2</b>. Toucher une plage pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
@@ -3833,7 +3833,7 @@ function waveRenderTradePanel() {
       'POSITION OUVERTE · plage prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
-      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
+      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
       escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
       'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
       ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
@@ -3860,7 +3860,7 @@ function waveCloseTradeReport() {
 function renderPaperTradeReport(data){
  const t=data.trade||{},v52=data.engine==='v52',
   policy=String(t.entryPolicyVersion||''),
-  engine=v52?(policy.includes('v5.3.2')?'V5.3.2':policy.includes('v5.3.1')?'V5.3.1':policy.includes('v5.3')?'V5.3':policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
+  engine=v52?(policy.includes('v5.3.3')?'V5.3.3':policy.includes('v5.3.2')?'V5.3.2':policy.includes('v5.3.1')?'V5.3.1':policy.includes('v5.3')?'V5.3':policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
  const n=(x,d=1)=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(d);
  const signed=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
     (Number(x)>0?'+':'')+Number(x).toFixed(2);
@@ -3984,7 +3984,7 @@ async function waveOpenTradeReport(tradeNo) {
       if(!res.ok)throw Error('HTTP '+res.status);
       const report=await res.json();
       const pl=String(report.trade?.entryPolicyVersion||'');
-      title.textContent=(kind==='v52'?(pl.includes('v5.3.2')?'V5.3.2':pl.includes('v5.3.1')?'V5.3.1':pl.includes('v5.3')?'V5.3':pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
+      title.textContent=(kind==='v52'?(pl.includes('v5.3.3')?'V5.3.3':pl.includes('v5.3.2')?'V5.3.2':pl.includes('v5.3.1')?'V5.3.1':pl.includes('v5.3')?'V5.3':pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
         ' · '+String(report.trade?.direction||'').toUpperCase()+
         (report.status==='OPEN'?' · EN POSITION':' · RAPPORT COMPLET');
       body.innerHTML=renderPaperTradeReport(report);
@@ -6277,7 +6277,8 @@ function renderV52Living(data){
  // Causal chain telemetry is observed by Elastic/Audit and has NO trading authority.
  const observed=data.causalEvents||{},ch15=observed.tf15||{},ch3=observed.tf3||{};
  const ma=r.maContract||{},ma3=ma.ma3||{},ma15=ma.ma15||{},zone=ma.activeZone||{},
-  requal=r.e15Requalification||{},maProof=requal.ma3||{};
+  requal=r.e15Requalification||{},maProof=requal.ma3||{},
+  campaign=r.conversionCampaign||{};
  const three=r.mcb3||{},band=observed.extremeBand||{};
  const eventTone=d=>d==='long'?'v53-up':d==='short'?'v53-down':'v53-neutral';
  const sideName=d=>d==='long'?'UP':d==='short'?'DN':'—';
@@ -6303,7 +6304,7 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.3.2 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>BOONO V5.3.3 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
@@ -6370,7 +6371,12 @@ function renderV52Living(data){
     ' · fenêtre '+f(requal.window||'—')+
     ' · conversion '+f(requal.conversion?.quality||'—')+
     ' · MF '+f(requal.mfQuality||'—')+
-    ' · progression depuis E15 '+n(requal.priceTravelIn15Ranges)+'×15m</div>')+
+    ' · progression depuis E15 '+n(requal.priceTravelIn15Ranges)+'×15m</div>'+
+    (campaign.engaged?'<div class="v52-muted">MCB15 engagé · pic mémorisé '+
+      f(campaign.peakQuality)+' '+v5Time(campaign.lastPowerfulAt||campaign.lastProductiveAt)+
+      ' · conversion actuelle '+f(campaign.currentQuality)+
+      ' · '+f(campaign.moment)+' · timing '+f(campaign.timing)+'</div>':
+      '<div class="v52-muted">Mémoire de conversion : '+f(campaign.thesis||'—')+'</div>'))+
    cell('decision','6 · DÉCISION + INVALIDATION',f(act),
     f(a.reason||'—')+'<div class="v52-muted">Invalidation '+n(inv.price)+
     ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+
@@ -6413,7 +6419,7 @@ async function loadV52PaperPanel(){
   if(data.brokerOrdersEnabled!==false)throw Error('PAPER_AUTHORITY_NOT_VERIFIED');
   data.lastReason=data.analysis?.reason||data.decision?.reason||null;
   renderV52Living(data);
- }catch(e){if(el)el.textContent='V5.3.2 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.3.3 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 // Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
@@ -6576,7 +6582,7 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.3.2':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
+ const name=isV52?'V5.3.3':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
  const prefix=isV52?'V52:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
@@ -6586,7 +6592,7 @@ function renderPaperHistoryGroup(x,kind){
  if(data.open){
   const p=data.open;
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
-   '<b>'+(isV52?(String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+   '<b>'+(isV52?(String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
    ' #'+f(p.tradeNo)+' · '+f(String(p.direction||'').toUpperCase())+
    ' · EN POSITION</b><div>Entrée '+time(p.entryAt)+' à '+n(p.entryPrice)+' $ BTC'+
    ' · prix '+n(p.lastPrice)+' $ · net estimé '+signed(p.lastNetPnlUsd)+' $</div>'+
@@ -6599,7 +6605,7 @@ function renderPaperHistoryGroup(x,kind){
   const statusColor=Number(t.netPnlUsd)>=0?'#087245':'#b52b39';
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">'+
-    '<b>'+(isV52?(String(t.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+    '<b>'+(isV52?(String(t.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
     ' #'+f(t.tradeNo)+' · '+f(String(t.direction||'').toUpperCase())+'</b>'+
     '<b style="color:'+statusColor+'">'+signed(t.netPnlUsd)+' $ net</b></div>'+
    '<div>Entrée '+time(t.entryAt)+' · '+n(t.entryPrice)+' $ BTC → sortie '+
@@ -6691,7 +6697,7 @@ async function loadTrades() {
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.3.2 PAPER · lecture de la décision en cours…</div>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.3.3 PAPER · lecture de la décision en cours…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
