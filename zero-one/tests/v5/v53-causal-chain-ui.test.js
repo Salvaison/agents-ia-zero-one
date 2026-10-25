@@ -110,3 +110,76 @@ test('Conversion remains directly under Etat vivant before the Elastic memory li
  assert.ok(!server.slice(i,j).includes('ELASTIC · MÉMOIRE COMMUNE / CONVERSION'),
   'no added row between V5.3 and the graphic');
 });
+test('MCB15 keeps last cross/E15 observed facts beyond three hours without treating them as live',()=>{
+ const now=BASE+5*3600000,old=BASE+3600000;
+ const events=[
+  ev('MCB15','BW_LBW_CROSS','OBSERVED','short',old+7000,old,80470,null),
+  ev('MCB15','E15','OBSERVED','short',old+12000,old,80445,-50),
+  ev('MCB15','E15','CONFIRMED','short',old+15*60000+6000,old,80400,-52),
+  ev('MCB3','BW_LBW_CROSS','OBSERVED','long',now-22000,now-24000,80510,null)];
+ const result=chain.build({now,price:80509,events,audit:[],
+  mcb15:{lbw:-51,bw:-47,currentOffensive:null,trajectory:'short'},
+  mcb3:{lbw:31,bw:35,tacticalDirection:'long'}});
+ assert.equal(result.version,'v53-causal-chain-ui-v0.2');
+ assert.equal(result.tf15.cross.observedAt,old+7000);
+ assert.equal(result.tf15.live.observedAt,old+12000);
+ assert.equal(result.tf15.confirmed.observedAt,old+15*60000+6000);
+ assert.ok(result.tf15.cross.historyOnly);
+ assert.ok(result.tf15.confirmed.ageMinutes>180);
+ assert.equal(result.tf15.geometryDirection,null,
+  'a historical cross is not automatically a current 15m direction');
+ assert.equal(result.alignment,'UNRESOLVED');
+ assert.equal(result.tf15.confirmed.pmQuality,'PM_AT_EVENT_UNKNOWN');
+ assert.equal(result.decisionImpact,false);
+});
+test('MCB15 gets latest official E15 from engine memory after Elastic journal rotates',()=>{
+ const now=BASE+8*3600000,confirmedAt=BASE+3600000;
+ const r=chain.build({now,price:80500,events:[],audit:[],
+  mcb15:{lbw:-44,bw:-31,confirmedE15:{
+   family:'MCB15',key:'E15',type:'CONFIRMED',direction:'short',
+   observedAt:confirmedAt,sourceTs:BASE,price:80612.5}},
+  mcb3:{lbw:22,bw:30}});
+ assert.equal(r.tf15.confirmed.observedAt,confirmedAt);
+ assert.equal(r.tf15.confirmed.direction,'short');
+ assert.equal(r.tf15.confirmed.historyOnly,true);
+ assert.equal(r.tf15.cross,null,'never fabricate an unobserved BW/LBW cross');
+ assert.equal(r.tf15.live,null,'never fabricate an unobserved E15 Live');
+});
+test('future E15 confirmation must not leak into a prior as-of UI view',()=>{
+ const now=BASE+3600000;
+ const r=chain.build({now,price:80000,
+  events:[ev('MCB15','E15','CONFIRMED','short',now+30000,BASE,80450,-39)],
+  audit:[],mcb15:{lbw:-48,bw:-42,
+   confirmedE15:{direction:'short',observedAt:now+30000,sourceTs:BASE}},
+  mcb3:{}});
+ assert.equal(r.tf15.confirmed,null);
+});
+test('historical E15 is visibly marked as memory, while current LBW/BW remain readable',()=>{
+ const tick=String.fromCharCode(96);
+ const source=server.indexOf("app.get('/app.js', requireAuth"),
+  a=server.indexOf('send('+tick,source),
+  b=server.indexOf(tick+');\n});',a);
+ const js=vm.runInNewContext(tick+server.slice(a+6,b)+tick);
+ const start=js.indexOf('function renderV52Living(data){'),
+  end=js.indexOf('async function loadV52PaperPanel(){',start);
+ const element={innerHTML:''},context={document:{getElementById:id=>id==='v52-live'?element:null},
+  Date,Math,Number,String,escTrade:String,
+  v5Time:x=>x?new Date(x).toISOString():'—'};
+ vm.createContext(context);
+ vm.runInContext(js.slice(start,end),context);
+ const now=BASE+5*3600000;
+ const audit=[];
+ const events=[ev('MCB15','E15','CONFIRMED','short',BASE+3600000,BASE,80410,-52)];
+ const state={updatedAt:now,analysis:{asOf:now,price:80439.4,
+  action:'WAIT',quality:'DATA_OK',readings:{
+   mcb15:{lbw:-51.2,bw:-47.5,trajectory:'short',
+    currentOffensive:null,mf15:-.7},
+   mcb3:{lbw:-31,bw:-30}}},causalEvents:chain.build({now,
+   price:80439.4,events,audit,mcb15:{lbw:-51.2,bw:-47.5},mcb3:{}})};
+ context.renderV52Living(state);
+ assert.ok(element.innerHTML.includes('LBW15 -51.2 / BW15 -47.5'));
+ assert.ok(element.innerHTML.includes('E15 confirmé'));
+ assert.ok(element.innerHTML.includes('mémoire 4h00'));
+ assert.ok(element.innerHTML.includes('>DN</b>'),
+  'confirmed E15 direction is displayed as DN, not invented as live SHORT');
+});

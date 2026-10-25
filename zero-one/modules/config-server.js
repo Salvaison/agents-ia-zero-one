@@ -6307,9 +6307,15 @@ function renderV52Living(data){
   const usable=!!(e&&Number.isFinite(Number(e.observedAt)));
   const pm=usable&&e.pmQuality==='BATON_PLUS_EVENT_PRICE'?
    'PM Live '+sn(e.pmLive)+' $':'PM Live —';
+  const oldMinutes=usable&&Number.isFinite(Number(e.ageMinutes))?
+    Math.max(0,Math.floor(e.ageMinutes)):null;
+  const historic=usable&&e.historyOnly&&oldMinutes!==null?
+    ' · mémoire '+(oldMinutes>=60?
+      Math.floor(oldMinutes/60)+'h'+String(oldMinutes%60).padStart(2,'0'):
+      oldMinutes+'min'):'';
   return '<div class="v53-proof-row"><span class="v53-proof-key">'+label+'</span>'+
     '<b class="'+eventTone(e?.direction)+'">'+sideName(e?.direction)+'</b>'+
-    '<span class="v53-proof-hour">'+(usable?v5Time(e.observedAt):'—')+'</span>'+
+    '<span class="v53-proof-hour">'+(usable?v5Time(e.observedAt)+historic:'—')+'</span>'+
     '<span class="v53-proof-pm">'+pm+'</span></div>';
  };
  const alignment=observed.alignment==='ALIGNED'?'3m et 15m alignés':

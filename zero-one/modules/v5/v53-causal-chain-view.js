@@ -10,10 +10,12 @@ function build({events=[],audit=[],now,price,mcb15=null,mcb3=null}){
  if(t===null)return null;
  const rows=(audit||[]).filter(x=>n(x.ts)!==null&&x.ts<=t)
    .sort((a,b)=>a.ts-b.ts).slice(-500);
- const recent=(events||[]).filter(e=>e&&
+ // Evidence is valid as HISTORY until a new causal event supersedes it:
+ // do not arbitrarily hide MCB15 because its last E15 was >3h ago.
+ // The server already supplies a bounded set of recent persisted events.
+ const history=(events||[]).filter(e=>e&&
    ['MCB15','MCB3'].includes(e.family)&&
-   n(e.observedAt)!==null&&e.observedAt<=t&&
-   e.observedAt>=t-3*3600000)
+   n(e.observedAt)!==null&&e.observedAt<=t)
    .sort((a,b)=>a.observedAt-b.observedAt||Number(a.id||0)-Number(b.id||0));
  function priceAtTime(eventTime){
   const x=[...rows].reverse().find(r=>r.ts<=eventTime&&eventTime-r.ts<=70000);
@@ -33,6 +35,8 @@ function build({events=[],audit=[],now,price,mcb15=null,mcb3=null}){
   return {
    type:e.key==='BW_LBW_CROSS'?'CROSS':e.type,
    direction:e.direction||null,observedAt:ts,
+   ageMinutes:round((t-ts)/60000),
+   historyOnly:t-ts>(e.family==='MCB15'?15*60000:3*60000),
    sourceTs:n(e.sourceTs),barTs:n(e.current?.sourceTs),
    value:round(n(e.current?.value)),
    price:round(actualPrice??n(auditRow?.lastPrice)),
@@ -45,20 +49,29 @@ function build({events=[],audit=[],now,price,mcb15=null,mcb3=null}){
   };
  }
  function chain(family,live,wave){
-  const familyEvents=recent.filter(e=>e.family===family&&
+  const familyEvents=history.filter(e=>e.family===family&&
     ['BW_LBW_CROSS',family==='MCB15'?'E15':'E3'].includes(e.key));
   const sig=family==='MCB15'?'E15':'E3';
   const last=(key,type)=>familyEvents.filter(e=>e.key===key&&e.type===type).at(-1)||null;
   const cross=point(last('BW_LBW_CROSS','OBSERVED'));
-  const liveEvent=last(sig,'OBSERVED');
+  // The engine also retains its last official E15 events if the Elastic
+  // rotating file no longer contains them. Never infer missing event times.
+  const fallback=(name,type)=>family==='MCB15'&&
+   wave?.[name]&&n(wave[name].observedAt)!==null&&
+   wave[name].observedAt<=t?
+    {...wave[name],family,key:sig,type}:null;
+  const liveEvent=last(sig,'OBSERVED')||fallback('liveE15','OBSERVED');
   const livePoint=point(liveEvent);
-  const confirmation=point(last(sig,'CONFIRMED'));
+  const confirmation=point(last(sig,'CONFIRMED')||
+   fallback('confirmedE15','CONFIRMED'));
   const interruption=last(sig,'INTERRUPTED');
   const interrupted=!!(liveEvent&&interruption&&
    interruption.observedAt>liveEvent.observedAt&&
    (!confirmation||confirmation.observedAt<interruption.observedAt));
   const geometryDir=live?.direction||null;
-  const liveNow=geometryDir||cross?.direction||null;
+  // Last CROSS is a historical observation, never equivalent to current
+  // strategic authority. Keep active direction strictly from living MCB.
+  const liveNow=geometryDir;
   const signalAligned=!!(liveNow&&livePoint?.direction===liveNow);
   const nativeConfirmedForLatest=!!(confirmation&&livePoint&&
    confirmation.direction===livePoint.direction&&
@@ -86,7 +99,7 @@ function build({events=[],audit=[],now,price,mcb15=null,mcb3=null}){
    'UNRESOLVED';
  const upper=n(mcb15?.lbw),lower=n(mcb15?.bw);
  return {
-  version:'v53-causal-chain-ui-v0.1',asOf:t,price:value,
+  version:'v53-causal-chain-ui-v0.2',asOf:t,price:value,
   tf15,tf3,alignment:aligned,
   extremeBand:{
    highLBW60:upper!==null&&upper>=60,
