@@ -142,6 +142,9 @@ test('observed trade #1/#2/#3 replay: reject late setup, preserve early reversal
  const all=runner.latest();
  const list=(paper.history||[]).filter(x=>x.tradeNo<=3);
  if(list.length!==3){t.skip('Initial paper archive incomplete');return;}
+ if(!audits.length||audits[0].ts>list[0].entryAt){
+  t.skip('Rolling Audit no longer retains first V5.2 trades; never invent historical replay rows');return;
+ }
  const expected=[['WAIT','3M_EXTREME_SANS_RETEST_DEFENDU'],
   ['ENTER_LONG','CONVERSION_CAUSALE_EXPLOITABLE'],
   ['WAIT','IMPULSION_DEJA_MATURE_ATTENDRE_REQUALIFICATION']];

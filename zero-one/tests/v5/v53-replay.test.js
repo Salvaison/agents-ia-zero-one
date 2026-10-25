@@ -13,6 +13,9 @@ function fixture(){
 test('replay historical V5.2/522 entry decisions without reading future Audit rows',t=>{
  const fx=fixture();
  if(!fx||fx.history.length<6){t.skip('Amsterdam mounted replay missing');return;}
+ if(!fx.rows.length||fx.rows[0].ts>fx.history[0].entryAt){
+  t.skip('Rolling Audit advanced beyond initial entry; no backdated observations available');return;
+ }
  const started=fx.history[0].entryAt-15*60000;
  const targets=[...fx.history.slice(0,6)].map(tr=>tr.entryAt);
  for(let i=0;i<targets.length;i++){

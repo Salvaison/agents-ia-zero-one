@@ -517,6 +517,44 @@ app.get('/api/v493',requireAuth,(req,res)=>{
   sendUiJson(req,res,v52PaperSummary('v493-baseline-state.json','V4.9.3'));}
  catch(e){res.status(503).json({error:'V4.9.3 baseline indisponible',detail:e.message});}
 });
+// Separate observational execution lab. Never an order route or command.
+app.get('/api/execution-lab',requireAuth,(req,res)=>{
+ try{
+  const file=path.join(__dirname,'../data/v53-execution-lab-state.json');
+  const x=JSON.parse(fs.readFileSync(file,'utf8'));
+  if(x.brokerOrdersEnabled!==false||x.fundedOrders!==false)
+   throw Error('Execution lab must remain non-funded');
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,{
+   version:x.version,mode:x.mode,fundedOrders:false,
+   sourceInstrument:x.analyticInstId,instrument:x.instId,
+   startedAt:x.startedAt,updatedAt:x.updatedAt,
+   book:x.book,bootstrapStatus:x.bootstrapStatus,
+   statistics:x.statistics,active:x.active?{
+    direction:x.active.signalDirection,signalTs:x.active.signalTs,
+    signalPrice:x.active.signalPrice,
+    signalLatencyMs:x.active.signalLatencyMs,
+    offsetUsd:x.active.limits?.offsetUsd,
+    triggerUsd:x.active.limits?.triggerUsd,
+    BStatus:x.active.modeB?.entry?.status,
+    CStatus:x.active.modeC?.status,
+    CFillPx:x.active.modeC?.entry?.avgPx,
+    BFillPx:x.active.modeB?.entry?.avgPx
+   }:null,
+   latest:(x.records||[]).slice(-5).reverse().map(row=>({
+    signalTs:row.signalTs,direction:row.signalDirection,
+    tradeNo:row.exitEvent?.tradeNo,
+    result:row.comparisonResult,baselineNetUsd:row.referenceNetUsd,
+    bNetUsd:row.modeB?.pnl?.netUsd??null,
+    cNetUsd:row.modeC?.pnl?.netUsd??null,
+    bEntry:row.modeB?.entry?.status,
+    cEntry:row.modeC?.status
+   })),
+   caveat:'Public books5 snapshots: estimated IOC, not actual fills; no private API'
+  });
+ }catch(e){res.status(503).json({error:'LAB_EXECUTION_PAPER_INDISPONIBLE',
+   detail:e.message});}
+});
 // Read-only per-engine PAPER history and full reports, always behind Amsterdam session.
 // Read only the selected historical report, not the complete position contexts on refresh.
 const PAPER_LEDGER_PATHS=Object.freeze({
@@ -6370,6 +6408,60 @@ async function loadV52PaperPanel(){
  }catch(e){if(el)el.textContent='V5.3.1 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
+// Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
+let executionLabPending=false;
+async function loadExecutionLabPanel(){
+ const el=document.getElementById('execution-lab-live');
+ const tab=document.getElementById('tab2-statev2');
+ if(!el||!tab?.classList.contains('active')||document.hidden||executionLabPending)return;
+ executionLabPending=true;
+ try{
+  const res=await fetch('/api/execution-lab',{cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const x=await res.json(),s=x.statistics||{},book=x.book||{},a=x.active||{};
+  if(x.fundedOrders!==false)throw Error('LAB_AUTHORITY_NOT_VERIFIED');
+  const fmt=z=>z===null||z===undefined||!Number.isFinite(Number(z))?'—':Number(z).toFixed(2);
+  const name=z=>escTrade(String(z===null||z===undefined?'—':z));
+  const fresh=book.status==='FRESH'&&Date.now()-Number(book.lastReceivedAt||0)<3500;
+  const comparisons=Number(s.matched3||0);
+  el.innerHTML='<div class="v52-strip"><b>BTC X-PERP · CARNET PUBLIC</b>'+
+    '<span>'+name(fresh?'BOOK5 FRESH':book.status||'NO BOOK')+
+    ' · bid '+fmt(book.bid)+' / ask '+fmt(book.ask)+
+    ' · spread '+fmt(book.spread)+' $</span></div>'+
+    '<div class="v5-row"><b>MODE A · PAPER initial</b> · signal au dernier prix BTC-USDT-SWAP'+
+    ' · '+Number(s.closed||0)+' clôtures observées</div>'+
+    '<div class="v5-row"><b>MODE B · TAKER IOC estimé</b> · '+
+    Number(s.modeBFull||0)+' remplissages complets'+
+    ' · '+Number(s.modeBPartial||0)+' partiels'+
+    ' · '+Number(s.noQuoteB||0)+' sans carnet frais</div>'+
+    '<div class="v5-row"><b>MODE C · DÉCLENCHEMENT + IOC</b> · '+
+    Number(s.modeCTriggered||0)+' déclenchements'+
+    ' · '+Number(s.modeCFull||0)+' complets'+
+    ' · '+Number(s.expiredC||0)+' expirés</div>'+
+    '<div class="v5-row"><b>COMPARAISON TRIPLE</b> '+comparisons+
+    ' campagnes entièrement comparables · net A '+fmt(s.matchedSumA)+
+    ' $ · B '+fmt(s.matchedSumB)+' $ · C '+fmt(s.matchedSumC)+' $</div>'+
+    (a.signalTs?'<div class="v5-row">EN COURS · '+name(a.direction)+
+       ' · signal '+v5Time(a.signalTs)+
+       ' · B '+name(a.BStatus)+' @ '+fmt(a.BFillPx)+
+       ' · C '+name(a.CStatus)+' @ '+fmt(a.CFillPx)+
+       ' · tolérance '+fmt(a.offsetUsd)+' $'+
+       ' · déclencheur '+fmt(a.triggerUsd)+' $</div>':
+      '<div class="v5-row">FLAT · prochain signal observé</div>')+
+    ((x.latest||[]).length?'<div class="v5-row"><b>DERNIÈRE CLÔTURE</b> #'+
+      name(x.latest[0].tradeNo)+' '+name(x.latest[0].direction)+
+      ' · A '+fmt(x.latest[0].baselineNetUsd)+' $'+
+      ' · B '+fmt(x.latest[0].bNetUsd)+' $'+
+      ' · C '+fmt(x.latest[0].cNetUsd)+' $'+
+      ' · '+name(x.latest[0].result)+'</div>':'')+
+    '<div class="v52-muted">Observations prospectives seulement : aucun ordre OKX.'+
+    ' Estimations IOC à partir des 5 meilleurs niveaux publics,'+
+    ' pas des exécutions garanties. Frais taker 0,05 %/côté modélisés.'+
+    ' Le PNL A (contrat analyse) et les PNL B/C (X-Perp) ne sont'+
+    ' directement comparables que pour les campagnes réellement remplies.</div>';
+ }catch(e){el.textContent='LAB EXÉCUTION PAPER · en attente : '+e.message;}
+ finally{executionLabPending=false;}
+}
 async function loadV493Panel(){
  const el=document.getElementById('v493-live'),tab=document.getElementById('tab2-statev2');
  if(!el||!tab?.classList.contains('active')||document.hidden||v493Pending)return;
@@ -6394,6 +6486,7 @@ async function loadV493Panel(){
  finally{v493Pending=false;}
 }
 setInterval(loadV52PaperPanel,10000);
+setInterval(loadExecutionLabPanel,15000);
 setInterval(loadV493Panel,30000);
 
 let v5StructuralLivePending=false;
@@ -6585,11 +6678,16 @@ async function loadTrades() {
     const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
     const archiveWasOpen=!!stateEl.querySelector('#v5-paper-archive[open]');
     const baselineWasOpen=!!stateEl.querySelector('#v493-details[open]');
+    const labWasOpen=!stateEl.querySelector('#execution-lab-details')||
+      !!stateEl.querySelector('#execution-lab-details[open]');
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
       '<div id="v52-live" class="v5-observer v52-main">V5.3.1 PAPER · lecture de la décision en cours…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
+      '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
+        '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
+        '<div id="execution-lab-live">Données du carnet en attente…</div></details>'+
       '<details id="v493-details" class="v5-observer" '+(baselineWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V4.9.3 · COMPARATEUR PAPER EN ARRIÈRE-PLAN</summary>'+
         '<div id="v493-live">Version historique chargement…</div></details>'+
@@ -6603,6 +6701,7 @@ async function loadTrades() {
         '<summary style="cursor:pointer;font-weight:800;">V4.10.10 · ANCIEN ÉTAT ACTIF / CONTRÔLE TECHNIQUE</summary>'+
         liveCard+living+posHtml+'</details>';
     loadV52PaperPanel();
+    loadExecutionLabPanel();
     loadV493Panel();
     loadV5StructureLive();
     if(archiveWasOpen)loadV5PaperPanel();
