@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v531'),paper=require('./paper-v52');
+const decision=require('./decision-v532'),paper=require('./paper-v52');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
@@ -59,16 +59,28 @@ function latest(){
   }catch(_){return null;}
  };
  const liveMa3=liveMa('3m'),liveMa15=liveMa('15m');
- // Reuse the existing Elastic source for REAL observed E15 times, not a new shadow.
+ // One bounded existing Elastic source: causal E3 / E15 / PM history.
+ // LIVE means observed time; sourceTs is only the TradingView bar start.
  const historyPath=path.join(DATA,'elastic-observer-events.ndjson');
- let native15Events=[];
+ let native15Events=[],causalEvents=[];
  try{
-  native15Events=cached(historyPath,()=>tail(historyPath,350000).map(line=>{
+  causalEvents=cached(historyPath,()=>tail(historyPath,1600000).map(line=>{
    try{return JSON.parse(line);}catch(_){return null;}
-  }).filter(e=>e&&e.family==='MCB15'&&e.key==='E15'&&
-   ['OBSERVED','CONFIRMED'].includes(e.type)&&Number.isFinite(e.observedAt))
-   .map(e=>({type:e.type,direction:e.direction,sourceTs:e.sourceTs,
-     observedAt:e.observedAt,value:e.current?.value||null})));
+  }).filter(e=>e&&Number.isFinite(e.observedAt)&&
+   ((e.family==='MCB15'&&e.key==='E15')||
+    (e.family==='MCB3'&&e.key==='E3')||
+    (e.family==='CONVERSION'&&e.key==='CONVERSION')||
+    ((e.family==='MCB15'||e.family==='MCB3')&&e.key==='BW_LBW_CROSS')))
+   .map(e=>({family:e.family,key:e.key,type:e.type,
+    direction:e.direction||e.current?.direction||null,
+    sourceTs:e.sourceTs,observedAt:e.observedAt,price:e.price,
+    quality:e.current?.quality||null,previous:e.previous||null,
+    value:e.current?.value??null,
+    detail:e.detail&&{pm3:e.detail.pm3,pm5:e.detail.pm5,
+      pmLive:e.detail.pmLive,effortVsP75:e.detail.effortVsP75,
+      yieldVsP75:e.detail.yieldVsP75}})));
+  native15Events=causalEvents.filter(e=>e.family==='MCB15'&&
+    e.key==='E15'&&['OBSERVED','CONFIRMED'].includes(e.type));
  }catch(_){}
 
  const last=samples.at(-1),time=Date.now();
@@ -77,7 +89,7 @@ function latest(){
   try{return time-fs.statSync(folder).mtimeMs<(t==='3m'?120000:180000);}catch(_){return false;}
  });
  return {samples,bars3:tf('3m'),bars15:tf('15m'),bars1h:tf('1h'),bars4h:tf('4h'),
-  levels,native15Events,liveMa3,liveMa15,last,health};
+  levels,native15Events,causalEvents,liveMa3,liveMa15,last,health};
 }
 function main(){
  const flags=new Set(process.argv.slice(2));
@@ -118,8 +130,9 @@ function main(){
      conversion:d.readings.conversion,place:d.readings.place,geometry:d.readings.geometry,
      maturity:d.readings.maturity,causalChain:d.readings.causalChain,
      maContract:d.readings.maContract,
+     e15Requalification:d.readings.e15Requalification,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.3.1_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.3.2_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);

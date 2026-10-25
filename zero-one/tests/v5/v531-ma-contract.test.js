@@ -95,6 +95,9 @@ test('as-of replay trade #5: price crossing MA before confirmation => WAIT; earl
  const audits=JSON.parse(fs.readFileSync(auditFile,'utf8'));
  const h=JSON.parse(fs.readFileSync(stateFile,'utf8')).history;
  if(h.length<5){t.skip('Trades 2/5 unavailable');return;}
+ if(!audits.length||audits[0].ts>h[1].entryAt){
+  t.skip('Rolling Audit no longer retains trade #2; preserve causal replay integrity');return;
+ }
  const sources=require('../../modules/v5/runner-v52').latest();
  for(const index of [1,4,8,9]){
   if(!h[index])continue;
