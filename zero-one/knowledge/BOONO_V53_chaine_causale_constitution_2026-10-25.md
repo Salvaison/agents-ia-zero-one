@@ -53,3 +53,28 @@ Migration vérifiée : v5.2.2-paper-ledger-v0.2 vers v5.3-paper-ledger-v0.3, **6
 Interface config-server redémarrée, routes privées sans session HTTP 302 ; PM2 boono-v52-paper, boono-v493-baseline, cerveau-central, config-server tous online. V5.1 arrêté et BOONO-TV non modifiés. Mise à jour PM2 sauvegardée.
 
 Tests avant mise en service : 123/123 réussis (suite V4 + V5). Replays de calibration in-sample montrent #1 WAIT, #2 ENTER_LONG précoce, #3 WAIT, #4 ENTER_LONG, #5 WAIT (retest ancien invalide), #6 WAIT (offensive E15 vendeur). Il ne s'agit pas d'une performance prospective prouvée. La prochaine étape d'analyse porte sur les nouvelles entrées, absences d'entrées, sorties et résultats réels du PAPER V5.3 à comparer au V4.9.3.
+
+## Ajout d'observation du 25 octobre vers 12h20 CET — double chaîne MCB3/15 et Conversion
+
+### Réflexion utilisateur et distinction des mesures
+
+Les repères de bandes MC sont précisés comme LBW15 ≥ +60 (région haute) et BW15 ≤ −60 (région basse). Ce sont deux courbes et deux seuils distincts, pas un unique E15 ±60 ; ils désignent, dans la réflexion utilisateur, une zone de bandes de qualité moyenne/basse. Ils sont affichés à titre informatif, sans changer les admissions PAPER.
+
+MCB15 dirige le contexte, MCB3 est tactique. Les deux doivent montrer BW/LBWcross, E Live natif, E confirmé, source et horodatage de première observation, et PM Live concomitant. Le schéma théorique PM Live → E3 Live → E3 confirmé → E15 Live → E15 confirmé est une chaîne de phénomènes, non un ordre obligatoire : les sources et latences font parfois apparaître l'événement confirmé à une date connue ultérieurement, les Live sont intermittents, et les croisements et signaux natifs ne sont pas des votes indépendants.
+
+### Premières opérations, résultats constatés
+
+Au relevé de 12h19 CET : 9 trades V5 clos et #10 LONG ouvert, net global −15,2605 USD, equity 984,7395 USD, 3 gagnants/6 perdants. #8 V5.3 SHORT 11h46–12h00 : −3,4073 USD. #9 V5.3 LONG 12h00–12h07 : −2,9757 USD, 25 secondes après la clôture #8. #10 LONG ouvert vers 12h11 à 80 334 USD BTC. La productivité n'est pas encore la rentabilité.
+
+- #8 : cross3 SHORT mais dernier E3 Live LONG dans le contexte mémorisé ; offensive MCB15 SHORT contre trajectoire 15m LONG ; MF3 pente −3,2, MF15 pente −0,9 ; PM3 −114,3. Sortie sur défaillance du niveau.
+- #9 : cross3 LONG et E3 Live LONG, E15 UP Live, mais MF15 pente −0,5 ; PM3 +140,1, PM Live +102,4, déjà beaucoup d'impulsion en cours. La pente MF15 légèrement opposée est considérée compatible par l'ancien seuil.
+- #10 : cross3 LONG et dernier E3 Live mémorisé SHORT avant son interruption, MF15 −0,2 ; choix de la direction candidate d'abord fondé sur le cross3. Ce cas illustre le pouvoir de dernière instance potentiellement excessif du 3m. Constat à mesurer, pas une loi de trading modifiée dans cette intervention.
+
+### Implémentation d'affichage sans autorité d'admission
+
+- Nouveau module pur modules/v5/v53-causal-chain-view.js : observateur read-only des événements Elastic existants (cross, E Live, E confirmé, interruption), et lien au dernier relevé Bâton et prix de l'événement. PM Live reconstitué à l'événement = prixMove du dernier Bâton + déplacement prix entre ce Bâton et l'événement. Cette somme concerne des intervalles successifs, pas les fenêtres PM3/PM5 chevauchantes. Si donnée manquante, valeur inconnue.
+- modules/config-server.js : ajout de causalEvents sur la réponse authentifiée API V5.3 (/api/v52), calcul borné/caché, horodatages d'observation distincts de sourceTs. Blocs 1 et 2 deviennent MCB15 DIRECTEUR et MCB3 TACTIQUE complets avec codes couleur, chaînes Cross/Live/Confirmé, PM Live observé et discordance lorsque les familles ne sont pas synchronisées. L'entête BTC passe de 10 à 22 px.
+- modules/elastic-observer-ui.js : graphique Conversion avec cubes présenté directement sous Etat vivant ; liste de mémoire Elastic ensuite, sans ajout de bande décorative ni perte de chronologie.
+- tests/v5/v53-causal-chain-ui.test.js : provenances, PM lié au Bâton, absence de fuite future, interruption, seuils distincts LBW/BW, rendu avec deux colonnes et conversion en premier.
+
+**Gouvernance** : cette intervention ne change pas la direction ou la protection des trades, le moteur actif V5.3, les historiques, les autres simulateurs, le broker ou BOONO-TV. Toute modification de l'autorité du 3m doit être jugée sur une cohorte de trades, en distinguant l'offensive du 15m, la maturation MCB3 et les divergences MF.

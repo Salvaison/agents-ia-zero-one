@@ -129,7 +129,15 @@ function display(x){
    '<div id="elastic-history" class="el-history-list">Ouvre la chronologie pour charger les événements.</div>'+
    '<button type="button" id="elastic-history-more" class="el-more" hidden>Afficher les événements plus anciens</button></details>'+
    '</section></div>';
- return markup;
+ // The price/conversion chart belongs immediately beneath V5.3 Etat vivant.
+ // Reorder the two EXISTING bubbles: duel first, shared-memory list second.
+ // Keep identical IDs, chronology and content; no additional graphic or row.
+ const root='<div class="el-stack">',separator='</section><section class="el-wrap el-duel-bubble">';
+ const cut=markup.indexOf(separator);
+ if(cut<0)return markup;
+ const list=markup.slice(root.length,cut+'</section>'.length);
+ const duel=markup.slice(cut+'</section>'.length,-'</div>'.length);
+ return root+duel+list+'</div>';
 }
 function date(ts){return n(ts)===null?'—':new Date(Number(ts)).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 function shortVal(v){

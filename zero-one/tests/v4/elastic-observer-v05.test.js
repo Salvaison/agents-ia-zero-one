@@ -328,7 +328,8 @@ test('mobile width at desktop, two distinct bubbles and graduated plot',()=>{
  assert.equal((html.match(/class="el-wrap /g)||[]).length,2);
  assert.ok(html.includes('el-list-bubble'));
  assert.ok(html.includes('el-duel-bubble'));
- assert.ok(html.indexOf('el-list-bubble')<html.indexOf('el-duel-bubble'));
+ assert.ok(html.indexOf('el-duel-bubble')<html.indexOf('el-list-bubble'),
+  'Conversion chart immediately follows V5.3 and precedes the Elastic evidence list');
  assert.ok(html.includes('el-duel-metrics'));
  assert.ok(html.includes('eff3'));
  assert.ok(html.includes('id="elastic-price-candles"'));

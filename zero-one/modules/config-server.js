@@ -41,6 +41,7 @@ const fs = require('fs');
 const zlib = require('zlib');
 const path = require('path');
 const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
+const v53CausalChainUi=require('./v5/v53-causal-chain-view');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
 
@@ -477,10 +478,39 @@ function v52PaperSummary(filename, tag) {
   engineVersion:s.engine||null,gitRef:s.gitRef||null,
   source:'ISOLATED_SIMULATION_ONLY_NO_FUNDED_ORDERS'};
 }
+// Event chronology belongs to the visual diagnostic layer, never the admission engine.
+// Cached disk sources avoid heavy re-reads with the 10-second phone UI polling.
+const v53UiSources={eventsMtime:null,auditMtime:null,events:[],audit:[]};
+function v53UiReadEvents(){
+ const es=fs.statSync(ELASTIC_OBSERVER_EVENTS_PATH);
+ if(v53UiSources.eventsMtime!==es.mtimeMs){
+  v53UiSources.events=readRecentNdjson(ELASTIC_OBSERVER_EVENTS_PATH,1200)
+   .filter(e=>e&&['MCB3','MCB15'].includes(e.family)&&
+    ['E3','E15','BW_LBW_CROSS'].includes(e.key));
+  v53UiSources.eventsMtime=es.mtimeMs;
+ }
+ const as=fs.statSync(AUDIT_HISTORY_PATH);
+ if(v53UiSources.auditMtime!==as.mtimeMs){
+  v53UiSources.audit=JSON.parse(fs.readFileSync(AUDIT_HISTORY_PATH,'utf8')).slice(-500);
+  v53UiSources.auditMtime=as.mtimeMs;
+ }
+ return v53UiSources;
+}
 app.get('/api/v52',requireAuth,(req,res)=>{
- try{res.set('Cache-Control','no-store');
-  sendUiJson(req,res,v52PaperSummary('v52-paper-state.json','V5.3'));}
- catch(e){res.status(503).json({error:'V5.2.2 PAPER indisponible',detail:e.message});}
+ try{
+  res.set('Cache-Control','no-store');
+  const summary=v52PaperSummary('v52-paper-state.json','V5.3');
+  try{
+   const a=summary.analysis,src=v53UiReadEvents();
+   summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
+    audit:src.audit,now:a.asOf,price:a.price,
+    mcb15:a.readings?.mcb15,mcb3:a.readings?.mcb3}):null;
+  }catch(err){
+   summary.causalEvents={unavailable:true,message:'Provenance Elastic/Audit momentanément indisponible',
+    decisionImpact:false};
+  }
+  sendUiJson(req,res,summary);
+ }catch(e){res.status(503).json({error:'V5.3 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
@@ -2783,6 +2813,16 @@ app.get('/', requireAuth, (req, res) => {
       /* V5.2 PAPER primary decision panel: Elastic shared-memory color grammar. */
       .v52-main{border-top:4px solid #8246a5;background:#f7f9fb;font:10px/1.5 'SF Mono',Menlo,monospace;}
       .v52-primary{font-size:14px;font-weight:900;letter-spacing:.04em;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+      .v53-btc-price{font-size:22px;line-height:1.1;letter-spacing:-.025em;font-weight:900;white-space:nowrap;}
+      .v53-proof-row{display:flex;align-items:center;gap:4px;padding:3px 0;border-bottom:1px solid #eef1f4;font-size:9px;flex-wrap:wrap;}
+      .v53-proof-row:last-child{border-bottom:0;}
+      .v53-proof-key{min-width:67px;color:#62707f;font-weight:700;}
+      .v53-proof-hour{font-variant-numeric:tabular-nums;}
+      .v53-proof-pm{margin-left:auto;color:#576775;}
+      .v53-up{color:#16804b;font-weight:850;}.v53-down{color:#bb3e42;font-weight:850;}
+      .v53-neutral{color:#657482;font-weight:750;}
+      .v53-phase-caption{margin:3px 0 4px;color:#536777;font-size:9px;}
+      .v53-cross-note{padding-top:4px;font-size:9px;color:#7c5c36;}
       .v52-pill{font-weight:850;font-size:10px;border-radius:15px;padding:4px 8px;border:1px solid #c7d1de;background:#e8eef3;color:#46545f;}
       .v52-pill.long{background:#d7f0e1;color:#107c44;border-color:#85c9a2;}
       .v52-pill.short{background:#fbe4e5;color:#a32834;border-color:#e7a2a7;}
@@ -6196,6 +6236,26 @@ function renderV52Living(data){
  const cell=(css,title,v,detail)=>
   '<div class="v52-cell '+css+'"><div class="title">'+title+'</div>'+
   '<div class="value">'+v+'</div><div>'+detail+'</div></div>';
+ // Causal chain telemetry is observed by Elastic/Audit and has NO trading authority.
+ const observed=data.causalEvents||{},ch15=observed.tf15||{},ch3=observed.tf3||{};
+ const three=r.mcb3||{},band=observed.extremeBand||{};
+ const eventTone=d=>d==='long'?'v53-up':d==='short'?'v53-down':'v53-neutral';
+ const sideName=d=>d==='long'?'UP':d==='short'?'DN':'—';
+ const proofRow=(label,e)=>{
+  const usable=!!(e&&Number.isFinite(Number(e.observedAt)));
+  const pm=usable&&e.pmQuality==='BATON_PLUS_EVENT_PRICE'?
+   'PM Live '+sn(e.pmLive)+' $':'PM Live —';
+  return '<div class="v53-proof-row"><span class="v53-proof-key">'+label+'</span>'+
+    '<b class="'+eventTone(e?.direction)+'">'+sideName(e?.direction)+'</b>'+
+    '<span class="v53-proof-hour">'+(usable?v5Time(e.observedAt):'—')+'</span>'+
+    '<span class="v53-proof-pm">'+pm+'</span></div>';
+ };
+ const alignment=observed.alignment==='ALIGNED'?'3m et 15m alignés':
+   observed.alignment==='TACTICAL_OPPOSES_15M'?'3m opposé au 15m':'Alignement indéterminé';
+ const state15=ch15.interrupted?' · Live interrompu':'';
+ const state3=ch3.interrupted?' · Live interrompu':'';
+ const  discrepancy15=ch15.cross&&ch15.live&&ch15.cross.direction!==ch15.live.direction;
+ const discrepancy3=ch3.cross&&ch3.live&&ch3.cross.direction!==ch3.live.direction;
  const c3Txt=cross3.ts?v5Time(cross3.ts)+' '+f(cross3.direction)+' · pente '+n(cross3.slopePerMinute):'non daté';
  const c15Txt=cross15.ts?v5Time(cross15.ts)+' '+f(cross15.direction)+' · pente '+n(cross15.slopePerMinute):'non daté';
  const event=data.latestAction&&data.latestAction.ts?
@@ -6205,27 +6265,41 @@ function renderV52Living(data){
  const card=
   '<div class="v52-primary"><span>BOONO V5.3 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
-  '<div class="v52-strip"><b>BTC '+n(data.position?.lastPrice||a.price)+' $</b>'+
+  '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
   (stale?'<div class="v52-warn">Vérifier la fraîcheur des sources ; aucune entrée nouvelle autorisée.</div>':'')+
   '<div class="v52-grid">'+
-   cell('mcb','1 · PHASE MCB15','LBW15 '+n(m.lbw)+' / BW15 '+n(m.bw),
-    'Offensive '+f(m.offensive||m.currentOffensive||'—')+
-    ' · mémoire '+f(m.trajectory)+
-    '<div class="v52-muted">'+f(m.wavePosition)+
-    ' · MF15 '+sn(m.mf15??m.mf)+
-    ' · ΔMF15/10m '+sn(m.mf15Delta10m)+
-    ' · maturité E3 '+f(mat.maturity)+'</div>'+
-    '<div class="v52-muted">Pivot 15m '+v5Time(m.structuralPivotAt)+
-    ' · exploitable '+v5Time(m.structuralAvailableAt)+
-    ' · 1h '+f(m.context1h)+' · 4h '+f(m.context4h)+'</div>')+
-   cell('geom','2 · TRANSITION GÉOMÉTRIQUE','Cross15 '+f(cross15.direction||'—')+
-    ' · '+v5Time(m.currentCross15||cross15.ts),
-    'E15 Live '+f(m.liveE15?.direction||'—')+' '+v5Time(m.liveE15?.observedAt||m.liveE15?.firstObservedAt)+
-    ' · Confirmé '+f(m.confirmedE15?.direction||'—')+' '+v5Time(m.confirmedE15?.observedAt||m.confirmedE15?.availableAt)+
-    '<div class="v52-muted">Cross3 '+f(cross3.direction||'—')+' '+c3Txt+
-    ' · écart BW/LBW15 '+n(m.bwLbwSpread)+
-    ' · déplacement depuis cross3 '+n(r.conversion?.sinceCross)+' $ BTC</div>')+
+   cell('mcb','1 · MCB15 · DIRECTEUR','LBW15 '+n(m.lbw)+' / BW15 '+n(m.bw),
+    '<div class="v53-phase-caption">Offensive <b class="'+eventTone(m.currentOffensive)+'">'+
+    sideName(m.currentOffensive)+'</b> · trajectoire mémorisée '+f(m.trajectory)+
+    ' · MF15 '+sn(m.mf15??m.mf)+' / Δ10m '+sn(m.mf15Delta10m)+'</div>'+
+    '<div class="v53-phase-caption">Bande haute : LBW15 ≥ +60 '+
+     (band.highLBW60?'<b class="v53-up">ATTEINTE</b>':'non')+
+     ' · bande basse : BW15 ≤ −60 '+(band.lowBWMinus60?'<b class="v53-down">ATTEINTE</b>':'non')+
+     ' · simple repère, pas un veto</div>'+
+    proofRow('Cross15',ch15.cross)+
+    proofRow('E15 Live',ch15.live)+
+    proofRow('E15 confirmé',ch15.confirmed)+
+    ((state15||discrepancy15)?'<div class="v53-cross-note">'+
+      (discrepancy15?'Croisement et dernier E15 Live de sens différent. ':'')+
+      state15+'</div>':'')+
+    '<div class="v52-muted">LBW/BW spread15 '+n(m.bwLbwSpread)+
+     ' · pivot confirmé '+v5Time(m.structuralPivotAt)+
+     ' · 1h '+f(m.context1h)+' / 4h '+f(m.context4h)+'</div>')+
+   cell('geom','2 · MCB3 · TACTIQUE','LBW3 '+n(three.lbw)+' / BW3 '+n(three.bw),
+    '<div class="v53-phase-caption">Tactique '+f(mat.maturity)+
+      ' · MF3 '+sn(three.mf)+' / Δ3m '+sn(c.mf3Delta3m)+'</div>'+
+    proofRow('Cross3',ch3.cross)+
+    proofRow('E3 Live',ch3.live)+
+    proofRow('E3 confirmé',ch3.confirmed)+
+    ((state3||discrepancy3)?'<div class="v53-cross-note">'+
+      (discrepancy3?'Croisement et dernier E3 Live de sens différent. ':'')+
+      state3+'</div>':'')+
+    '<div class="v52-muted">'+f(alignment)+
+     ' · déplacement depuis cross3 '+n(c.sinceCross)+' $ BTC'+
+     ' · âge '+n(mat.cross3AgeMin)+' min (informatif)</div>'+
+    '<div class="v52-muted">PM Live à chaque événement = Bâton + prix observé ensuite ;'+
+     ' E3 et Cross3 appartiennent à une seule famille, sans ordre de validation imposé.</div>')+
    cell('place','3 · LIEU',''+f(pl.nearest?.key||'frontière inconnue')+
     ' '+n(pl.nearest?.price)+' $',
     'Frontière cartographiée (contexte, sans veto)'+
@@ -6249,8 +6323,15 @@ function renderV52Living(data){
     ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+
     ' $ · ancre connue '+v5Time(inv.confirmedAvailableAt)+'</div>')+
   '</div>'+
-  '<div class="v52-strip"><span><b>CHAÎNE</b> campagne '+f(chain.campaignId)+
-    ' · E3/cross une famille · terrain '+f(chain.locationAnchor?.key||'non qualifié')+'</span></div>'+
+  '<div class="v52-strip"><span><b>CHAÎNE CAUSALE · observation</b> PM Live '+
+    sn(c.pmCombined)+' $ · Cross3 '+v5Time(ch3.cross?.observedAt)+
+    ' → E3 Live '+v5Time(ch3.live?.observedAt)+
+    ' → E3 confirmé '+v5Time(ch3.confirmed?.observedAt)+
+    ' → Cross15 '+v5Time(ch15.cross?.observedAt)+
+    ' → E15 Live '+v5Time(ch15.live?.observedAt)+
+    ' → E15 confirmé '+v5Time(ch15.confirmed?.observedAt)+
+    '<span class="v52-muted"> · jalons observés, ordre réel non imposé ; chaque PM est daté dans sa colonne</span>'+
+    '</span></div>'+
   '<div class="v52-strip"><span><b>RISQUE</b> plafond −500$ BTC · floors +120/90 et +220/180</span>'+
    '<span>Frais A/R estimés '+n(eco.expectedFeesUsd)+' $ · mobilité observée '+
      n(eco.empiricalMobilityUsd)+' $ BTC · niveau proche non-veto</span></div>'+
@@ -6499,8 +6580,6 @@ async function loadTrades() {
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
       '<div id="v52-live" class="v5-observer v52-main">V5.3 PAPER · lecture de la décision en cours…</div>'+
-      '<div class="v52-strip"><b>ELASTIC · MÉMOIRE COMMUNE / CONVERSION</b>'+
-        '<span>Sources partagées · graphe Elastic descriptif, sans autorité V5.2.2</span></div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="v493-details" class="v5-observer" '+(baselineWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V4.9.3 · COMPARATEUR PAPER EN ARRIÈRE-PLAN</summary>'+
