@@ -1,6 +1,7 @@
 'use strict';
 // BOONO V5.2 PAPER only. One independent accounting ledger; zero funded orders.
-const VERSION='v5.2.2-paper-ledger-v0.2';
+const VERSION='v5.3-paper-ledger-v0.3';
+const V522_VERSION='v5.2.2-paper-ledger-v0.2';
 const LEGACY_VERSION='v5.2-paper-ledger-v0.1';
 const PREVIOUS_POLICY='v5.2-structural-decision-paper-v0.1';
 const NOTIONAL=1500,INIT=1000,TAKER=.0005,RISK_PRICE=500;
@@ -14,8 +15,9 @@ function initial(now=Date.now()){return {version:VERSION,mode:'PAPER_ONLY',broke
 function migrate(state,now=Date.now()){
  if(!state)return initial(now);
  if(state.version===VERSION)return state;
- if(state.version!==LEGACY_VERSION||state.brokerOrdersEnabled!==false)
-   throw Error('V522_LEDGER_MIGRATION_REFUSED: '+String(state.version||'NO_VERSION'));
+ if(![LEGACY_VERSION,V522_VERSION].includes(state.version)||
+   state.brokerOrdersEnabled!==false)
+   throw Error('V53_LEDGER_MIGRATION_REFUSED: '+String(state.version||'NO_VERSION'));
  // Preserve every trade, entry key, fee, equity and ongoing position.
  const copy={...state,version:VERSION,policyActivatedAt:now,
   history:(state.history||[]).map(t=>({...t,
@@ -31,7 +33,8 @@ function exit(s,ts,price,reason){
  const p=s.position;if(!p)return null;
  const q=pnl(p,price);
  const row={tradeNo:s.completed+1,
-  engine:p.entryPolicyVersion===PREVIOUS_POLICY?'V5.2':'V5.2.2',
+  engine:String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':
+   p.entryPolicyVersion===PREVIOUS_POLICY?'V5.2':'V5.2.2',
   entryPolicyVersion:p.entryPolicyVersion||PREVIOUS_POLICY,direction:p.direction,
   entryAt:p.entryAt,exitAt:ts,entryPrice:p.entryPrice,exitPrice:price,
   notionalUsd:NOTIONAL,grossPnlUsd:q.gross,feesUsd:round(p.entryFeeUsd+q.exitFee),
@@ -44,12 +47,13 @@ function exit(s,ts,price,reason){
  if(q.net>0)s.wins++;else s.losses++;
  s.history.push(row);if(s.history.length>200)s.history=s.history.slice(-200);
  s.lastAction={type:'EXIT_'+p.direction.toUpperCase(),ts,price,reason,tradeNo:row.tradeNo,
-  netPnlUsd:q.net,source:'V5.2_PAPER_ONLY'};
+  netPnlUsd:q.net,source:String(p.entryPolicyVersion||'').includes('v5.3')?
+   'V5.3_PAPER_ONLY':'V5.2_PAPER_ONLY'};
  return {event:s.lastAction,trade:row};
 }
 function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
  s=migrate(s,ts);
- if(s.brokerOrdersEnabled!==false)throw Error('V522_NEVER_BROKER');
+ if(s.brokerOrdersEnabled!==false)throw Error('V53_NEVER_BROKER');
  if(!Number.isFinite(n(ts))||!Number.isFinite(n(price))||price<=0||ts<=s.lastObservationAt)
   return {state:s,event:null,reason:'DUPLICATE_OR_INVALID'};
  s.lastObservationAt=ts;
@@ -78,6 +82,7 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
    reason='STALE_SOURCE_NO_ENTRY';
   else if(!crossTs||
     (crossTs<(s.policyActivatedAt||s.startedAt)&&
+     !decision.readings?.evidenceSincePolicy?.qualified&&
      !(decision.readings?.maturity?.requalified&&
        Number(decision.readings.maturity.requalifiedAt)>=(s.policyActivatedAt||s.startedAt))))
    reason='NO_FRESH_POST_START_CROSS';
@@ -108,6 +113,9 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
     entryKey:decision.entryKey,entryFeeUsd:fee,notionalUsd:NOTIONAL,
     invalidationPrice:inv,invalidationReference:decision.invalidation.reference,
     entryContext:{phase:decision.phase,prognosis:decision.prognosis,
+     flow15:decision.readings?.flow15||null,
+     marketStage:decision.readings?.marketStage||null,
+     evidenceSincePolicy:decision.readings?.evidenceSincePolicy||null,
      version:decision.version||VERSION,
      causalChain:decision.readings?.causalChain||null,
      maturity:decision.readings?.maturity||null,
@@ -120,11 +128,13 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
    s.feesUsd=round(s.feesUsd+fee);
    s.usedKeys=[...s.usedKeys,decision.entryKey].slice(-350);
    s.lastAction={type:'ENTER_'+dir.toUpperCase(),ts,price,reason:decision.reason,
-    direction:dir,entryKey:decision.entryKey,feeUsd:fee,source:'V5.2_PAPER_ONLY'};
+    direction:dir,entryKey:decision.entryKey,feeUsd:fee,
+    source:decision.version==='v5.3-causal-15m-flow-market-phase'?
+      'V5.3_PAPER_ONLY':'V5.2_PAPER_ONLY'};
    result={event:s.lastAction};reason='ENTER_PAPER';
   }
  }
  s.lastReason=reason;
  return {state:s,event:result&&result.event||null,trade:result&&result.trade||null,reason};
 }
-module.exports={VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};
+module.exports={VERSION,V522_VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};

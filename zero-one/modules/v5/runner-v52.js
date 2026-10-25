@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v522'),paper=require('./paper-v52');
+const decision=require('./decision-v53'),paper=require('./paper-v52');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
@@ -46,13 +46,25 @@ function latest(){
  const samples=audit.slice(-450).filter(x=>finite(x.ts)&&finite(x.lastPrice));
  const tf=t=>cached(path.join(MCB,'mcb_'+t+'.csv'),()=>csv(t));
  const levels=cached(path.join(DATA,'levels.json'),()=>json(path.join(DATA,'levels.json'),[]));
+ // Reuse the existing Elastic source for REAL observed E15 times, not a new shadow.
+ const historyPath=path.join(DATA,'elastic-observer-events.ndjson');
+ let native15Events=[];
+ try{
+  native15Events=cached(historyPath,()=>tail(historyPath,350000).map(line=>{
+   try{return JSON.parse(line);}catch(_){return null;}
+  }).filter(e=>e&&e.family==='MCB15'&&e.key==='E15'&&
+   ['OBSERVED','CONFIRMED'].includes(e.type)&&Number.isFinite(e.observedAt))
+   .map(e=>({type:e.type,direction:e.direction,sourceTs:e.sourceTs,
+     observedAt:e.observedAt,value:e.current?.value||null})));
+ }catch(_){}
+
  const last=samples.at(-1),time=Date.now();
  const health=['3m','15m'].every(t=>{
   const folder=path.join(MCB,'mcb_'+t+'_live.csv');
   try{return time-fs.statSync(folder).mtimeMs<(t==='3m'?120000:180000);}catch(_){return false;}
  });
  return {samples,bars3:tf('3m'),bars15:tf('15m'),bars1h:tf('1h'),bars4h:tf('4h'),
-  levels,last,health};
+  levels,native15Events,last,health};
 }
 function main(){
  const flags=new Set(process.argv.slice(2));
@@ -93,7 +105,7 @@ function main(){
      conversion:d.readings.conversion,place:d.readings.place,geometry:d.readings.geometry,
      maturity:d.readings.maturity,causalChain:d.readings.causalChain,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.2.2_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.3_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);
