@@ -61,11 +61,19 @@ test('comparison spans have distinct colors and independent UTC trade identities
  const canvas={width:840,getBoundingClientRect:()=>({width:420,height:200}),getContext:()=>ctx};
  const hit=wavePaintV5Bands(canvas,spans,T-600000,T,{left:36,right:9,top:12,bottom:18});
  assert.equal(hit.length,2);assert.equal(fills.length,2);
- assert.notEqual(fills[0].color,fills[1].color,'blue baseline vs magenta V5.2');
+ assert.notEqual(fills[0].color,fills[1].color,'sky blue V4.9.3 versus pink V5');
+ assert.equal(fills[0].color,'#e98bc2');
+ assert.equal(fills[1].color,'#87cde9');
+ assert.equal(fills[0].rect[1],172,'V5 bottom 10px lane in 170px plot');
+ assert.equal(fills[1].rect[1],12,'V4.9.3 top 10px lane');
+ assert.deepEqual(fills.map(f=>f.rect[3]),[10,10],
+  'never use full-height transparent colored zones');
  const expected=36+(300000/600000)*(420-36-9);
  assert.ok(Math.abs(hit[0].x1-expected)<.01);
  assert.ok(hit[1].x2>hit[0].x2);assert.equal(strokes,2);
  assert.equal(hit[1].source,'V493_PAPER');
+ assert.equal(hit[0].source,'V52_PAPER');
+ assert.ok(hit[0].y1>hit[1].y2,'tapping pink cannot select overlapping blue trade');
 });
 test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 remain archived',()=>{
  assert.ok(src.includes('waveUiComparePaperTrades(now-48*3600000,now)'));
@@ -77,4 +85,72 @@ test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 re
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
  assert.ok(src.includes('bleu V4.9.3'));assert.ok(src.includes('rose V5.3.3 / archives V5.2–5.3.2'));
+});
+test('overlapping positions keep their own 10px lane and preserve true entry/exit vertical markers',()=>{
+ const {wavePaintV5Bands}=browserTools(),ctxLines=[],fills=[];
+ let commands=[];
+ const ctx={save(){},restore(){},setTransform(){},rect(){},clip(){},
+  beginPath(){commands=[]},moveTo(x,y){commands.push(['M',x,y])},
+  lineTo(x,y){commands.push(['L',x,y])},
+  stroke(){if(commands.length)ctxLines.push(commands.slice())},
+  fillRect(x,y,w,h){fills.push([this.fillStyle,x,y,w,h])}};
+ const canvas={width:840,getBoundingClientRect:()=>({width:420,height:200}),getContext:()=>ctx};
+ const spans=[
+  {source:'V493_PAPER',trade:7,entryTs:T-400000,exitTs:null,
+   drawEndTs:T,open:true},
+  {source:'V52_PAPER',trade:15,entryTs:T-400000,exitTs:T-100000,
+   drawEndTs:T-100000,open:false}
+ ];
+ const hit=wavePaintV5Bands(canvas,spans,T-600000,T,
+  {left:36,right:9,top:12,bottom:18});
+ assert.deepEqual(fills.map(f=>f[2]),[12,172]);
+ assert.deepEqual(fills.map(f=>f[4]),[10,10]);
+ assert.equal(hit.length,2);
+ const x=hit[0].x1+4;
+ assert.ok(x>hit[1].x1&&x<hit[1].x2);
+ assert.equal(hit.filter(z=>x>=z.hitX1&&x<=z.hitX2&&13>=z.y1&&13<=z.y2)[0].source,
+  'V493_PAPER','tap top lane selects blue V4.9.3 only');
+ assert.equal(hit.filter(z=>x>=z.hitX1&&x<=z.hitX2&&175>=z.y1&&175<=z.y2)[0].source,
+  'V52_PAPER','tap bottom lane selects pink V5 only');
+ assert.equal(ctxLines.length,2);
+ assert.equal(ctxLines[0].length,2,'open V4 has a real entry marker but no invented exit');
+ assert.equal(ctxLines[1].length,4,'closed V5 has entry and exit thin verticals');
+ assert.ok(ctxLines.every(cs=>cs.every(a=>a[2]===12||a[2]===182)),
+  'all boundary markers span plot height only');
+});
+test('clipped active trade displays lane but never invents an entry at viewport boundary',()=>{
+ const {wavePaintV5Bands,wavePaintLegacyTradeLines}=browserTools();
+ const fills=[],lines=[];
+ let points=[];
+ const ctx={save(){},restore(){},setTransform(){},beginPath(){points=[]},
+  rect(){},clip(){},fillRect(...a){fills.push(a)},
+  moveTo(x,y){points.push([x,y])},lineTo(x,y){points.push([x,y])},
+  stroke(){if(points.length)lines.push(points.slice())}};
+ const canvas={width:840,getBoundingClientRect:()=>({width:420,height:200}),getContext:()=>ctx};
+ const zone={source:'V52_PAPER',trade:11,entryTs:T-720000,exitTs:null,
+  drawEndTs:T,open:true};
+ const hits=wavePaintV5Bands(canvas,[zone],T-600000,T,
+  {left:36,right:9,top:12,bottom:18});
+ assert.equal(fills.length,1);assert.equal(fills[0][3],10);
+ assert.equal(hits.length,1);assert.equal(hits[0].x1,36);
+ assert.equal(lines.length,0,'no vertical line at false clipped start or current live endpoint');
+ const leg=wavePaintLegacyTradeLines(canvas,
+  [{trade:99,entryTs:T-120000,exitTs:T-60000}],T-600000,T,
+  {left:36,right:9,top:12,bottom:18});
+ assert.equal(fills.length,1,'old V4 draws no filled third lane');
+ assert.equal(leg.length,2);assert.equal(lines.length,2);
+});
+test('price, Wave15 and Wave3 all use lanes, not shaded chart-height positions',()=>{
+ const price=extract('function drawWavePrice(canvas,idx) {','function waveSetPriceTf(tf){');
+ const wave=extract('function drawWaveBand(canvas, key, idx) {','function renderWaveReplay() {');
+ assert.ok(price.includes('tradeSpans:[]'),'shared BTC renderer receives no shading spans');
+ assert.ok(price.includes('canvas._waveTradeZones=wavePaintV5Bands(canvas,v5Spans'));
+ assert.ok(price.includes('wavePaintLegacyTradeLines(canvas,spans'));
+ assert.ok(wave.includes('canvas._waveTradeZones=wavePaintV5Bands(canvas'));
+ assert.ok(wave.includes('wavePaintLegacyTradeLines(canvas'));
+ assert.ok(!wave.includes('ctx.fillRect(x1,T,width,h)'));
+ assert.ok(!wave.includes('ctx.fillRect(x1,T,zoneW,h)'));
+ assert.ok(!price.includes('tradeSpans:spans'));
+ assert.ok(src.includes('Toucher la bande bleue en haut'));
+ assert.ok(src.includes('bande supérieure V4.9.3 ou inférieure V5'));
 });

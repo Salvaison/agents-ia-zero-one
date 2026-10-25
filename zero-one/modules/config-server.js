@@ -3438,7 +3438,7 @@ app.get('/', requireAuth, (req, res) => {
     </div>
     <div class="wave-scroll-shell"><div id="wavePriceScroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wavePriceCanvas" class="wave-canvas wave-price-canvas"></canvas></div></div><div id="wavePriceYAxis" class="wave-price-axis" aria-hidden="true"></div></div>
   </div>
-  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Cliquer une plage bleue V4 ou rose V5 PAPER pour afficher le résumé du trade.</span></div>
+  <div id="waveTradePanel" class="wave-trade-panel"><span class="muted">Toucher la bande bleue en haut (V4.9.3) ou rose en bas (V5) pour choisir un trade.</span></div>
   <div class="wave-band">
     <div class="wave-band-head wave15-head"><div class="wave-band-headline"><span class="wave-module-title-wrap"><span class="wave-band-title">VAGUE 15m — LIVE intra-bougie</span><button class="wave-info-btn" type="button" data-wave-info="wave15" aria-label="Informations Vague 15m">i</button></span></div></div>
     <div class="wave-scroll-shell"><div id="wave15Scroll" class="wave-scroll top"><div class="wave-canvas-track"><canvas id="wave15Canvas" class="wave-canvas"></canvas></div></div><div id="wave15YAxis" class="wave-y-axis" aria-hidden="true"></div></div>
@@ -3774,40 +3774,79 @@ function waveV5TradeSpans(trades,endTs){
    exitReason:t.exitReason||null,direction:t.direction,open:!!t.open}));
 }
 function wavePaperPaintColor(z){
+ // Reserved, non-overlapping 10px track per PAPER engine on all three graphs.
  return z.source==='V493_PAPER'?
-   {fill:'rgba(39,139,185,.19)',line:'rgba(25,105,160,.84)'}:
-   {fill:'rgba(192,59,141,.18)',line:'rgba(156,31,111,.86)'};
+   {fill:'#87cde9',line:'rgba(25,105,160,.83)',lane:'top'}:
+   {fill:'#e98bc2',line:'rgba(156,31,111,.86)',lane:'bottom'};
 }
 function wavePaintV5Bands(canvas,zones,t0,t1,padding){
-  // Overlay on the returned BoonoCharts price canvas without changing the
-  // shared chart renderer. Fit in the exact same plot interval / box.
-  if(!canvas||!zones||!zones.length)return[];
-  const box=canvas.getBoundingClientRect();
-  if(!box.width||!box.height)return[];
-  const ratio=canvas.width/box.width,ctx=canvas.getContext('2d');
-  const L=padding.left,W=box.width-padding.left-padding.right;
-  const top=padding.top,h=box.height-padding.top-padding.bottom;
-  const map=ts=>L+(ts-t0)/Math.max(1,t1-t0)*W;
-  const hit=[];
-  ctx.save();ctx.setTransform(ratio,0,0,ratio,0,0);
-  ctx.beginPath();ctx.rect(L,top,W,h);ctx.clip();
-  zones.forEach(function(z){
-    const left=Math.max(t0,z.entryTs),right=Math.min(t1,z.drawEndTs);
-    if(right<=left||z.entryTs>t1||z.drawEndTs<t0)return;
-    const x1=map(left),x2=map(right),width=Math.max(1,x2-x1);
-    const c=wavePaperPaintColor(z);
-    ctx.fillStyle=c.fill;
-    ctx.fillRect(x1,top,width,h);
-    ctx.strokeStyle=c.line;ctx.lineWidth=1;
-    ctx.beginPath();
-    ctx.moveTo(x1+.5,top);ctx.lineTo(x1+.5,top+h);
-    if(!z.open){ctx.moveTo(x2-.5,top);ctx.lineTo(x2-.5,top+h);}
-    ctx.stroke();
-    const pad=Math.max(0,(12-width)/2);
-    hit.push({x1,x2,hitX1:x1-pad,hitX2:x2+pad,y1:top,y2:top+h,trade:z,source:z.source});
-  });
-  ctx.restore();
-  return hit;
+ // Price and both MCB Waves: two 10px tracks, NEVER full-height shading.
+ // Uses the rendered canvas' CSS coordinate box, independent from its DPR.
+ if(!canvas||!zones||!zones.length)return[];
+ const box=canvas.getBoundingClientRect();
+ if(!box.width||!box.height)return[];
+ const ratio=canvas.width/box.width,ctx=canvas.getContext('2d');
+ const L=padding.left,W=box.width-padding.left-padding.right;
+ const top=padding.top,h=box.height-padding.top-padding.bottom;
+ if(W<=0||h<=0)return[];
+ const laneH=Math.min(10,h/2),map=ts=>L+(ts-t0)/Math.max(1,t1-t0)*W;
+ const hit=[];
+ ctx.save();ctx.setTransform(ratio,0,0,ratio,0,0);
+ ctx.beginPath();ctx.rect(L,top,W,h);ctx.clip();
+ zones.forEach(function(z){
+   const left=Math.max(t0,z.entryTs),right=Math.min(t1,z.drawEndTs);
+   if(right<=left||z.entryTs>t1||z.drawEndTs<t0)return;
+   const x1=map(left),x2=map(right),width=Math.max(1,x2-x1);
+   const color=wavePaperPaintColor(z);
+   const y=color.lane==='top'?top:top+h-laneH;
+   ctx.fillStyle=color.fill;
+   ctx.fillRect(x1,y,width,laneH);
+   // Only the REAL entry/exit times get a thin full-height marker:
+   // a trade continuing into the viewport must not invent an entry line.
+   ctx.strokeStyle=color.line;ctx.lineWidth=.65;
+   ctx.beginPath();
+   if(z.entryTs>=t0&&z.entryTs<=t1){
+     const xx=map(z.entryTs)+.35;
+     ctx.moveTo(xx,top);ctx.lineTo(xx,top+h);
+   }
+   if(z.exitTs!==null&&z.exitTs!==undefined&&z.exitTs>=t0&&z.exitTs<=t1){
+     const xx=map(z.exitTs)-.35;
+     ctx.moveTo(xx,top);ctx.lineTo(xx,top+h);
+   }
+   ctx.stroke();
+   // Tapping the upper/lower track uniquely selects V4.9.3/V5, even
+   // when their time intervals overlap. Visual height stays exactly 10px.
+   const pad=Math.max(0,(12-width)/2);
+   hit.push({x1,x2,hitX1:x1-pad,hitX2:x2+pad,
+     y1:Math.max(top,y-4),y2:Math.min(top+h,y+laneH+4),
+     laneY:y,laneHeight:laneH,trade:z,source:z.source});
+ });
+ ctx.restore();
+ return hit;
+}
+function wavePaintLegacyTradeLines(canvas,zones,t0,t1,padding){
+ // Optional archived V4 entries/exits: neutral markers only, no third band.
+ if(!canvas||!zones||!zones.length)return[];
+ const box=canvas.getBoundingClientRect();
+ if(!box.width||!box.height)return[];
+ const ratio=canvas.width/box.width,ctx=canvas.getContext('2d');
+ const L=padding.left,W=box.width-padding.left-padding.right;
+ const top=padding.top,h=box.height-padding.top-padding.bottom;
+ const map=ts=>L+(ts-t0)/Math.max(1,t1-t0)*W,hits=[];
+ ctx.save();ctx.setTransform(ratio,0,0,ratio,0,0);
+ ctx.beginPath();ctx.rect(L,top,W,h);ctx.clip();
+ ctx.strokeStyle='rgba(110,124,136,.62)';ctx.lineWidth=.6;
+ zones.forEach(function(z){
+   for(const ts of [z.entryTs,z.exitTs]){
+     if(ts===null||ts===undefined||ts<t0||ts>t1)continue;
+     const x=map(ts);
+     ctx.beginPath();ctx.moveTo(x+.3,top);ctx.lineTo(x+.3,top+h);ctx.stroke();
+     hits.push({x1:x,x2:x,hitX1:x-3,hitX2:x+3,
+       y1:top,y2:top+h,trade:z});
+   }
+ });
+ ctx.restore();
+ return hits;
 }
 function waveSelectedTradeSpan() {
   if(waveSelectedTradeId===null||!waveReplayData||!waveReplayData.frames||!waveReplayData.frames.length)return null;
@@ -3825,12 +3864,12 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.3.3 / archives V5.2–5.3.2</b>. Toucher une plage pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.3.3 / archives V5.2–5.3.2</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
     const end=t.exitTs?'Sortie '+waveParis(t.exitTs)+' @ '+waveNum(t.exitPrice,1):
-      'POSITION OUVERTE · plage prolongée jusqu’au LIVE';
+      'POSITION OUVERTE · bande prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
       (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
@@ -4077,15 +4116,17 @@ function drawWavePrice(canvas,idx) {
   }
   const result=window.BoonoCharts.drawPrice(canvas,series,{
     theme:'interface',t0,t1,boundsT0,boundsT1,candleMs:wavePriceTf==='3m'?180000:900000,
-    cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:spans,
+    cursorTs:frames[idx]&&frames[idx].ts,tradeSpans:[],
     padding:{left:36,right:9,top:12,bottom:18},maxBodyWidth:wavePriceTf==='3m'?8:14,
     pricePadPct:.035,minPriceSpan:500,priceSnap:50,
     priceGridMinor:100,priceGridMajor:200,hourGrid:true,
     maAbove:'#1f9d55',maBelow:'#d33'
   });
-  canvas._waveTradeZones=(result&&result.tradeZones||[]).concat(
-    wavePaintV5Bands(canvas,v5Spans,t0,t1,
-      result&&result.padding||{left:36,right:9,top:12,bottom:18}));
+  // Do not ask the shared candle renderer for tinted full-height trade
+  // zones; paint the two engine tracks afterward, keeping original candles.
+  const pricePadding=result&&result.padding||{left:36,right:9,top:12,bottom:18};
+  canvas._waveTradeZones=wavePaintV5Bands(canvas,v5Spans,t0,t1,pricePadding)
+    .concat(wavePaintLegacyTradeLines(canvas,spans,t0,t1,pricePadding));
 
   const latestSeriesRow=series.length?series[series.length-1]:null;
   const liveStatePrice=waveReplayData&&waveReplayData.liveState&&waveReplayData.liveState.price;
@@ -4190,37 +4231,8 @@ function drawWaveBand(canvas, key, idx) {
     ctx.textAlign='right';ctx.fillText(String(v),L-5,yy+3);
   });
 
+  // No full-height position shading: trade lanes are drawn after MCB lines.
   canvas._waveTradeZones=[];
-  (waveReplayData.showLegacyV4?waveTradeSpans(waveReplayData.events||[],t1):[]).forEach(function(z){
-    const sx=Math.max(t0,Number(z.entryTs)),ex=Math.min(t1,Number(z.drawEndTs));
-    if(ex<=t0||sx>=t1||ex<=sx)return;
-    const x1=tx(sx),x2=tx(ex);
-    const zoneW=Math.max(1,x2-x1);
-    ctx.fillStyle='rgba(135,206,235,.18)';
-    ctx.fillRect(x1,T,zoneW,h);
-    ctx.strokeStyle='#8abbd3';ctx.lineWidth=.7;
-    ctx.beginPath();
-    ctx.moveTo(x1+.4,T);ctx.lineTo(x1+.4,T+h);
-    ctx.moveTo(x2-.4,T);ctx.lineTo(x2-.4,T+h);
-    ctx.stroke();
-    canvas._waveTradeZones.push({x1:x1,x2:x2,y1:T,y2:T+h,trade:z});
-  });
-  waveV5TradeSpans(waveReplayData.v5PaperTrades||[],t1).forEach(function(z){
-    const start=Math.max(t0,z.entryTs),end=Math.min(t1,z.drawEndTs);
-    if(end<=start||start>=t1||end<=t0)return;
-    const x1=tx(start),x2=tx(end),width=Math.max(1,x2-x1);
-    const c=wavePaperPaintColor(z);
-    ctx.fillStyle=c.fill;
-    ctx.fillRect(x1,T,width,h);
-    ctx.strokeStyle=c.line;ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(x1+.4,T);ctx.lineTo(x1+.4,T+h);
-    if(!z.open){ctx.moveTo(x2-.4,T);ctx.lineTo(x2-.4,T+h);}
-    ctx.stroke();
-    const pad=Math.max(0,(12-width)/2);
-    canvas._waveTradeZones.push({x1,x2,hitX1:x1-pad,hitX2:x2+pad,
-      y1:T,y2:T+h,trade:z,source:z.source});
-  });
-
   let lastHour = null;
   for (let i=0;i<frames.length;i++) {
     const dt = new Date(frames[i].ts);
@@ -4358,6 +4370,15 @@ function drawWaveBand(canvas, key, idx) {
 
   const cx=tx(frames[idx].ts);
   ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='#555';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,T);ctx.lineTo(cx,T+h);ctx.stroke();ctx.restore();
+
+  // Fixed 10px PAPER tracks (V4.9.3 at top / V5 at bottom) and genuine
+  // entry/exit markers. Paint LAST so neither MCB curves nor MF obscure them.
+  const lanePadding={left:L,right:R,top:T,bottom:B};
+  canvas._waveTradeZones=wavePaintV5Bands(canvas,
+    waveV5TradeSpans(waveReplayData.v5PaperTrades||[],t1),t0,t1,lanePadding)
+    .concat(wavePaintLegacyTradeLines(canvas,
+      waveReplayData.showLegacyV4?waveTradeSpans(waveReplayData.events||[],t1):[],
+      t0,t1,lanePadding));
 }
 function renderWaveReplay() {
   if (!waveReplayData || !waveReplayData.frames.length) return;
