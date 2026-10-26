@@ -255,3 +255,49 @@ Sur les **28 entrées V5.3.3**, 13 gagnantes et 15 perdantes :
 MCB15 propose une campagne dont la vague n'a pas épuisé sa viabilité, éventuellement à partir d'une région extrême ; MCB3 offre une nouvelle tentative causale ; MF3 progresse avec MF15 en vraie récupération (ou inversement phase tactique explicitement limitée) ; PM3/PM5/PM Live montrent un *déplacement productif* sans que le trade soit lancé sur le pic final d'effort ; les MA et niveaux apportent une **épreuve de prix**, pas un veto hypothétique ; le prix gagne rapidement du terrain et conserve mieux ce terrain après la première poussée. Une entrée réussie doit produire un déplacement suffisamment supérieur aux frais et à l'excursion adverse, idéalement une campagne pouvant dépasser le palier +220 USD BTC.
 
 Sur de nouvelles données PAPER, noter séparément la qualité **avant** admission (maturité normalisée, direction MF, position BW/LBW, conversion et défense MA), la réponse **après** admission (conversion effort/rendement et terrain conservé), et la valeur **après frais** (PNL avec floors existants et alternatives shadow). Ne pas tirer un veto fixe « PM Live >40 », « MF15 un peu adverse » ou « E3 déjà +40 » de cet échantillon.
+
+## Complément du 26 octobre — Les neuf réussites significatives, géométrie causale et hypothèse d'entrée sur combat improductif
+
+Au même périmètre **figé des 43 clôtures**, neuf trades ont MFE≥220 USD BTC et un PNL net supérieur à +1 USD : #2, #4, #10, #15, #18, #22, #25, #31, #38. Ensemble **+15,4639 USD net** ; les neuf petits gagnants restants totalisent seulement +1,1013 USD net. Les neuf fortes réussites sont définies par les floors du simulateur, donc ne constituent **pas** un groupe prédictif indépendant.
+
+### Localisation MCB au moment réel de l'admission
+
+| ID | Sens | LBW15/BW15 | Cross3, niveau | Phase / causalité pertinente |
+|---|---|---|---|---|
+| #2 | LONG | −84,2 / −78,5 | E3 UP −88,2 | E3 UP Live puis confirmé 17h24, MCB15 encore SHORT, pression vendeuse POWERFUL→INEFFICIENT/CONTESTED, conversion LONG SILENT vers 17h32 |
+| #4 | LONG | +12,4 / +3,9 | UP +48,1 | MCB15 LONG confirmé plus tôt, E3 SHORT confirmé 20h06 puis nouveau Cross3/E3UP Live 20h10, précédent conflit SILENT/CONTESTED, entrée au premier POWERFUL LONG |
+| #10 | LONG | −41,8 / −46,9 | UP +0,1 | E15 UP Live/cross15 vers 12h00, contre E3 SHORT Live 12h09 interrompu 12h10, nouveau Cross3UP 12h10, conversion short POWERFUL→INEFFICIENT puis LONG EASY→INEFFICIENT |
+| #15 | LONG | +42,2 / +41,9 | UP −17,4 | E3 UP confirmé et MA3 HELD vers 17h45, CONTESTED/SILENT puis EASY, E15 UP Live + Cross15 UP 17h51, POWERFUL LONG à l'entrée, MF15 encore adverse |
+| #18 | SHORT | +60,8 / +64,3 | DN +23,5 | LONG EXCEPTIONAL→INEFFICIENT 18h57, E15 DN Live/cross15 18h58, SHORT POWERFUL→INEFFICIENT→EASY 19h00, E3 DN Live, MF3 et MF15 vendeurs |
+| #22 | LONG | −73,7 / −66,5 | UP −83,4 | MCB15 structurel SHORT ; SHORT POWERFUL→INEFFICIENT→EXCEPTIONAL puis CONTESTED 22h59, E3 UP Live/cross3 23h00 ; contre-campagne tactique (environ 40 s en position) |
+| #25 | SHORT | −27,5 / −26,2 | DN +21,8 | E3 DN confirmé 23h48 ; vendeur EASY→POWERFUL→INEFFICIENT→CONTESTED ; nouveau E15 DN Live / Cross15 DN vers 00h02, POWERFUL vendeur 00h02min41 |
+| #31 | SHORT | −71,2 / −62,9 | DN −23,4 | E15 DN confirmé 02h15, E15 UP Live adverse interrompu 02h28 ; E3 DN confirmé 02h33 ; INEFFICIENT vendeur 02h37–41 puis CONTESTED puis POWERFUL 02h42 |
+| #38 | LONG | −50,3 / −55,9 | UP −52,3 | SHORT INEFFICIENT 04h53, CONTESTED 04h54, E3 UP Live 04h57 et confirmé 05h00 ; E15 UP Live/cross15 05h00 ; LONG POWERFUL 04h58 puis SILENT/INEFFICIENT/CONTESTED ; entrée 05h03 en INEFFICIENT LONG malgré MF3/MF15 positifs |
+
+**Précaution de provenance :** les heures ci-dessus sont les observedAt Elastic (ou les heures à quelques secondes près de l'entrée enregistrées dans entryContext) ; les barTs sont des débuts de bougies et ne sont pas des horodatages de disponibilité. E15 Live, cross et confirmé peuvent arriver dans un ordre différent, voire se contredire sur deux bougies.
+
+### L'expérience « entrer sur l'inefficacité du camp adverse »
+
+Le classificateur `elastic-observer-shadow.js` est formel :
+- `INEFFICIENT` = effort relatif `effortVsP75 >= 1` et rendement `yieldVsP75 < 1`, si PM3/PM5 cohérents.
+- `SILENT` = effort relatif <1 ET rendement relatif <1. Ce n'est pas le même événement qu'un combat intense et improductif.
+- `EASY` = rendement ≥P75 avec effort <P75 ; `POWERFUL` = rendement ≥P75 et effort ≥P75 ; `EXCEPTIONAL` = rendement ≥P95.
+- `CONTESTED` signifie PM3 et PM5 de signes contradictoires ; ce n'est PAS automatiquement absorption, résistance ou capitulation.
+
+Test exploratoire sur les **28 trades V5.3.3** : présence d'une conversion `INEFFICIENT` de direction opposée dans les cinq minutes avant l'entrée : **5 gagnants sur 11** ; absence de cette occurrence : **8 gagnants sur 17**. **Aucun avantage brut visible de cette seule étiquette**. Et la direction de ce label provient des fenêtres de déplacement prix PM3/PM5 ; elle ne mesure pas seule un effort acheteur/vendeur individuel. Il faut mesurer séparément les quantités BTC agressives acheteuses et vendeuses et leur rendement spécifique face au prix.
+
+Hypothèse plus précise et causale : **STRUCTURE_READY → ADVERSE_ATTACK_WITH_HIGH_EFFORT_BUT_LOW_PROGRESS → PRICE_HOLDS/RECLAIMS_DEFENDED_GROUND → E3_LIVE / MF3 RECOVERS / MF15 SUPPORTS → EARLY_PM_CONVERSION_OR_EASY_TRAVEL → ENTER if structural invalidation/risk viable.**
+
+Une inefficacité **dans le sens de la thèse** peut simplement être une respiration productive, mais peut aussi signaler un effort acheteur/vendeur qui échoue. Conserver la thèse MCB n'est pas synonyme d'entrée automatique. Une inefficacité **du camp adverse** n'est intéressante que si le prix cesse de céder du terrain et que le rendement opposé augmente effectivement.
+
+`POWERFUL` n'implique pas intrinsèquement « trop tard » : #4, #15, #25, #31 sont de vrais contre-exemples gagnants à ce niveau de conversion. La notion de tardiveté doit être fondée sur la **position et l'avancement de la vague, le prix déjà consommé, le terrain disponible et le rétrécissement marginal du rendement**.
+
+### Fee model du laboratoire taker X-Perp, correction de compréhension
+
+Les deux modules actifs `paper-v52.js` et `execution-lab-model.js` calculent le taker avec le même taux : **0,0005 = 0,05% par jambe**, soit ~1,50 USD aller-retour sur 1 500 USD. Le mode B, IOC marketable passant immédiatement sur l'autre côté du carnet, est **taker** ; un prix limite quelques dollars plus favorable pour le fill *ne devient pas maker*. Le maker X-Perp Lv1 annoncé par OKX Europe est **0,02% par jambe**, soit ~0,60 USD aller-retour à 1 500 USD, mais seulement pour une limite qui repose dans le carnet (par exemple post-only) et se fait exécuter **sans retirer la liquidité**. Une jambe maker + une jambe taker coûterait ~1,05 USD au même notionnel.
+
+Au relevé 26/10 vers 09h39 CET, le laboratoire compte **13 campagnes A/B/C totalement comparables** : A −24,6545 USD ; B −23,8419 USD ; C −26,7464 USD. B vs A +0,8126 USD est un résultat combinant prix du contrat X-Perp, basis vs BTC-USDT-SWAP, moments d'échantillonnage du carnet et glissement, **PAS une remise maker**. Les 13 B FULL paient ~19,4375 USD de frais taker selon leur notionnel réellement arrondi. Une simple réévaluation comptable à maker/maker sur les MÊMES fills (impossibles à garantir avec des ordres passifs) ferait passer B de −23,8419 à environ **−12,1794 USD** ; cela démontre l'impact théorique des frais, **pas un backtest exécutable**.
+
+À 43 clôtures, le scénario contre-factuel strictement arithmétique 0,02% maker aller ET retour et mêmes cours économiserait environ 38,70 USD de frais et laisserait encore un cumul d'environ **−16,86 USD net**. Les fills, l'attente, le risque d'adverse selection et les trades manqués changeraient nécessairement en mode maker ; ne pas annoncer ces économies comme réalisables sans le tester.
+
+**Prochaine hypothèse à mesurer** : côté vendeur/acheteur adverse précis, niveau de prix défendu, ratio d'effort aux extrema, conversion opposée émergente, puis qualité et prix de fill d'un ordre maker/post-only avec non-remplissages correctement journalisés ; ne pas toucher à V5.3.3 ou au Lab B sans validation distincte.
