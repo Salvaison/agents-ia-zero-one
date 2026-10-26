@@ -29,7 +29,7 @@ test('live V5 structure renders current market separately from frozen paper arch
  vm.createContext(ctx);vm.runInContext(renderer,ctx);
  vm.runInContext('renderV5StructuralLive(input)',Object.assign(ctx,{input:mockStory()}));
  const html=el.innerHTML;
- for(const word of ['LECTURE VIVANTE','BTC 81686.4 $','Stockholm',
+ for(const word of ['STRUCTURE VIVANTE','BTC 81686.4 $','Stockholm',
     'VAGUES','E15','ÉVOLUTION OBSERVÉE','SCÉNARIOS CONDITIONNELS',
     'Trajectoire E15','Prix 1h opposé','VAL','OBSERVATION SEULE'])assert.ok(html.includes(word),word);
  assert.ok(html.includes('Elastic non récents'),'stale subsource clearly distinguished');
@@ -49,7 +49,9 @@ test('V5.2 PAPER is primary, shared Elastic is visible and older observers are c
  assert.ok(s.includes("fetch('/api/v493'"));
  assert.ok(s.includes("fetch('/api/v5-structure'"));
  assert.ok(s.includes('if(archiveWasOpen)loadV5PaperPanel()'));
- assert.ok(s.includes('recentChanges:(state.summaries||[]).slice(-7)'));
+ assert.ok(s.includes("source:'SAME_V54_ENGINE_NOT_AN_INDEPENDENT_SHADOW'"));
+ assert.ok(s.includes('a.readings?.structural54'));
+ assert.ok(!s.includes('recentChanges:(state.summaries||[]).slice(-7)'));
 });
 test('a stale structural model warns and never passes through as trading permission',()=>{
  const ctx={document:{getElementById:()=>({innerHTML:''})},

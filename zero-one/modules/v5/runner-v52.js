@@ -1,18 +1,21 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v533'),paper=require('./paper-v52');
+const decision=require('./decision-v54'),paper=require('./paper-v52'),
+  nativeFeed=require('./causal-event-feed-v54');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
 const STATE=path.join(DATA,'v52-paper-state.json');
 const TRADES=path.join(DATA,'v52-paper-trades.ndjson');
 const CHANGES=path.join(DATA,'v52-paper-decisions.ndjson');
+const NATIVE_FEED_STATE=path.join(DATA,'v54-native-event-feed-state.json');
+const ELASTIC_EVENTS=path.join(DATA,'elastic-observer-events.ndjson');
 const INTERVAL_MS=5000;
 const json=(p,f)=>{try{return JSON.parse(fs.readFileSync(p,'utf8'));}catch(_){return f;}};
 function writeAtomic(p,x){
  const tmp=p+'.tmp-'+process.pid;fs.writeFileSync(tmp,JSON.stringify(x));fs.renameSync(tmp,p);
 }
-const {appendRotatingNdjson}=require('../v3lab/storage/rotating-ndjson');
+const {appendRotatingNdjson,readRecentNdjson}=require('../v3lab/storage/rotating-ndjson');
 function append(p,x){appendRotatingNdjson(p,x,{maxBytes:4*1024*1024,maxSegments:10});}
 const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
 function tail(p,n=350000){
@@ -106,6 +109,22 @@ function main(){
  // Keep the original startedAt so only genuinely new causally observed crossings
  // can trigger; keys are matched across both policy generations.
  writeAtomic(STATE,s);
+ // V4.10.10 used to WRITE native Elastic observations as an unintended
+ // side effect of its old trading simulator. V5.4 is the sole strategy, so
+ // source collection is now a PURE native-data writer inside this runner.
+ // The gap while old writer was stopped is not falsely backdated.
+ const feedBootstrap=latest();
+ const lastObserved=readRecentNdjson(ELASTIC_EVENTS,1).at(-1);
+ let feedState=json(NATIVE_FEED_STATE,null);
+ if(!feedState||feedState.version!==nativeFeed.VERSION){
+  feedState=nativeFeed.initial(feedBootstrap.last,feedBootstrap.bars3,
+    feedBootstrap.bars15,lastObserved?.id||0);
+  writeAtomic(NATIVE_FEED_STATE,feedState);
+ }
+ if(Number(lastObserved?.id)>feedState.lastId)feedState.lastId=lastObserved.id;
+ console.log('[V54 NATIVE EVENT DATA] '+JSON.stringify({
+  latestAuditAt:feedBootstrap.last.ts,lastElasticObservedAt:lastObserved?.observedAt||null,
+  lastEventId:feedState.lastId,role:'TELEMETRY_ONLY_NO_EXTRA_TRADING_ENGINE'}));
  let busy=false,priorKey=null,lastSave=0,errors=0;
  function tick(){
   if(busy)return;busy=true;
@@ -114,7 +133,21 @@ function main(){
    if(!tickTs||!Number.isFinite(price)||tickTs<=0)return;
    const received=Date.now(),age=received-tickTs;
    const auditAge=tickTs-x.last.ts;
-   const d=decision.evaluate({...x,now:tickTs,price,
+   let nativeAdded=[];
+   // Do not let telemetry or an old event-file failure interrupt position risk.
+   if(x.health&&tickTs-x.last.ts>=0&&tickTs-x.last.ts<=65000){
+    try{
+     const r=nativeFeed.step(feedState,x.last,x.bars3,x.bars15);
+     if(r.changed){
+      for(const e of r.events)appendRotatingNdjson(ELASTIC_EVENTS,e,
+       {maxBytes:8*1024*1024,maxSegments:32});
+      feedState=r.state;writeAtomic(NATIVE_FEED_STATE,feedState);
+      nativeAdded=r.events;
+     }
+    }catch(err){console.error('[V54 NATIVE EVENT DATA] '+err.message);}
+   }
+   const d=decision.evaluate({...x,causalEvents:[...x.causalEvents,...nativeAdded],
+    now:tickTs,price,
     startedAt:s.policyActivatedAt||s.startedAt,
     position:s.position,sourceAgeMs:auditAge,tickAgeMs:age});
    if(!x.health){d.quality='DATA_DEGRADED';if(!s.position){
@@ -132,8 +165,9 @@ function main(){
      maContract:d.readings.maContract,
      e15Requalification:d.readings.e15Requalification,
      conversionCampaign:d.readings.conversionCampaign,
+     structural54:d.readings.structural54,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.3.3_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.4_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);

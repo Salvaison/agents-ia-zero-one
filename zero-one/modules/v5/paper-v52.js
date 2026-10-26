@@ -1,6 +1,7 @@
 'use strict';
 // BOONO V5.2 PAPER only. One independent accounting ledger; zero funded orders.
-const VERSION='v5.3.3-paper-ledger-v0.6';
+const VERSION='v5.4-paper-ledger-v0.7';
+const V533_VERSION='v5.3.3-paper-ledger-v0.6';
 const V532_VERSION='v5.3.2-paper-ledger-v0.5';
 const V531_VERSION='v5.3.1-paper-ledger-v0.4';
 const V53_VERSION='v5.3-paper-ledger-v0.3';
@@ -18,9 +19,9 @@ function initial(now=Date.now()){return {version:VERSION,mode:'PAPER_ONLY',broke
 function migrate(state,now=Date.now()){
  if(!state)return initial(now);
  if(state.version===VERSION)return state;
- if(![LEGACY_VERSION,V522_VERSION,V53_VERSION,V531_VERSION,V532_VERSION].includes(state.version)||
+ if(![LEGACY_VERSION,V522_VERSION,V53_VERSION,V531_VERSION,V532_VERSION,V533_VERSION].includes(state.version)||
    state.brokerOrdersEnabled!==false)
-   throw Error('V533_LEDGER_MIGRATION_REFUSED: '+String(state.version||'NO_VERSION'));
+   throw Error('V54_LEDGER_MIGRATION_REFUSED: '+String(state.version||'NO_VERSION'));
  // Preserve every trade, entry key, fee, equity and ongoing position.
  const copy={...state,version:VERSION,policyActivatedAt:now,
   history:(state.history||[]).map(t=>({...t,
@@ -36,7 +37,8 @@ function exit(s,ts,price,reason){
  const p=s.position;if(!p)return null;
  const q=pnl(p,price);
  const row={tradeNo:s.completed+1,
-  engine:String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':
+  engine:String(p.entryPolicyVersion||'').includes('v5.4')?'V5.4':
+   String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':
    String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':
    String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':
    String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':
@@ -53,7 +55,9 @@ function exit(s,ts,price,reason){
  if(q.net>0)s.wins++;else s.losses++;
  s.history.push(row);if(s.history.length>200)s.history=s.history.slice(-200);
  s.lastAction={type:'EXIT_'+p.direction.toUpperCase(),ts,price,reason,tradeNo:row.tradeNo,
-  netPnlUsd:q.net,source:String(p.entryPolicyVersion||'').includes('v5.3.3')?
+  netPnlUsd:q.net,campaignId:p.campaignId||null,direction:p.direction,
+  source:String(p.entryPolicyVersion||'').includes('v5.4')?
+   'V5.4_PAPER_ONLY':String(p.entryPolicyVersion||'').includes('v5.3.3')?
    'V5.3.3_PAPER_ONLY':String(p.entryPolicyVersion||'').includes('v5.3.2')?
    'V5.3.2_PAPER_ONLY':String(p.entryPolicyVersion||'').includes('v5.3.1')?
    'V5.3.1_PAPER_ONLY':String(p.entryPolicyVersion||'').includes('v5.3')?
@@ -62,7 +66,7 @@ function exit(s,ts,price,reason){
 }
 function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
  s=migrate(s,ts);
- if(s.brokerOrdersEnabled!==false)throw Error('V533_NEVER_BROKER');
+ if(s.brokerOrdersEnabled!==false)throw Error('V54_NEVER_BROKER');
  if(!Number.isFinite(n(ts))||!Number.isFinite(n(price))||price<=0||ts<=s.lastObservationAt)
   return {state:s,event:null,reason:'DUPLICATE_OR_INVALID'};
  s.lastObservationAt=ts;
@@ -95,6 +99,15 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
      !(decision.readings?.maturity?.requalified&&
        Number(decision.readings.maturity.requalifiedAt)>=(s.policyActivatedAt||s.startedAt))))
    reason='NO_FRESH_POST_START_CROSS';
+  else if(decision.version==='v5.4-structural-campaign-paper-v1'&&
+    String(s.lastAction?.type||'')==='EXIT_'+dir.toUpperCase()&&
+    s.lastAction?.campaignId&&
+    s.lastAction.campaignId===decision.readings?.structural54?.campaignId&&
+    !(crossTs>s.lastAction.ts&&(
+      Number(decision.readings?.structural54?.mcb3?.latestPivot?.availableAt)>s.lastAction.ts||
+      (decision.readings?.structural54?.localPriceDefence?.held&&
+       Number(decision.readings?.structural54?.localPriceDefence?.sourceAt)>s.lastAction.ts))))
+   reason='V54_SAME_CAMPAIGN_AWAIT_NEW_E3_OR_DEFENDED_TERRITORY';
   else if(!decision.entryKey||s.usedKeys.some(k=>{
        if(k===decision.entryKey)return true;
        const sameCross=String(k).split('|').slice(0,2).join('|')===
@@ -136,6 +149,7 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
      maContract:decision.readings?.maContract||null,
      e15Requalification:decision.readings?.e15Requalification||null,
      conversionCampaign:decision.readings?.conversionCampaign||null,
+     structural54:decision.readings?.structural54||null,
      marketStage:decision.readings?.marketStage||null,
      evidenceSincePolicy:decision.readings?.evidenceSincePolicy||null,
      version:decision.version||VERSION,
@@ -151,7 +165,8 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
    s.usedKeys=[...s.usedKeys,decision.entryKey].slice(-350);
    s.lastAction={type:'ENTER_'+dir.toUpperCase(),ts,price,reason:decision.reason,
     direction:dir,entryKey:decision.entryKey,feeUsd:fee,
-    source:decision.version==='v5.3.3-conversion-memory-no-instant-veto'?
+    source:decision.version==='v5.4-structural-campaign-paper-v1'?
+      'V5.4_PAPER_ONLY':decision.version==='v5.3.3-conversion-memory-no-instant-veto'?
       'V5.3.3_PAPER_ONLY':decision.version==='v5.3.2-e15-live-productive-ma-proof'?
       'V5.3.2_PAPER_ONLY':decision.version==='v5.3.1-ma-maturity-mf-quality'?
       'V5.3.1_PAPER_ONLY':decision.version==='v5.3-causal-15m-flow-market-phase'?
@@ -162,4 +177,4 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
  s.lastReason=reason;
  return {state:s,event:result&&result.event||null,trade:result&&result.trade||null,reason};
 }
-module.exports={VERSION,V532_VERSION,V531_VERSION,V53_VERSION,V522_VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};
+module.exports={VERSION,V533_VERSION,V532_VERSION,V531_VERSION,V53_VERSION,V522_VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};

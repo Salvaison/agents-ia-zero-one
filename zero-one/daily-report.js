@@ -29,7 +29,9 @@ const https = require('https');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const CSV_DIR = '/root/agents-ia-zero-one/data/mcb-live';
-const TRADES_PATH = path.join(__dirname, 'data/trade-sim-history.json');
+// Daily figures follow the sole V5.4 PAPER + V4.9.3 comparator.
+const V54_LEDGER_PATH = path.join(__dirname, 'data/v52-paper-state.json');
+const V493_LEDGER_PATH = path.join(__dirname, 'data/v493-baseline-state.json');
 const BATON_PATH = path.join(__dirname, 'data/baton-state.json');
 const TRENDLINES_PATH = path.join(__dirname, 'data/trendlines.json');
 
@@ -98,45 +100,39 @@ function sectionCollecte() {
 
 /** Trades des dernieres 24h, regroupes par position puis par mecanisme. */
 function sectionTrades() {
-  let trades;
-  try {
-    trades = JSON.parse(fs.readFileSync(TRADES_PATH, 'utf8'));
-  } catch (e) {
-    return '  historique illisible';
-  }
-  const cutoff = Date.now() - 24 * 3600 * 1000;
-  const recents = trades.filter(t => Date.parse(t.exitTimestamp) >= cutoff);
-  if (!recents.length) return '  aucun trade sur 24h';
-
-  /* Une position produit une ligne de sortie par tranche : on regroupe pour
-   * ne pas compter trois fois le meme trade. */
-  const pos = {};
-  for (const t of recents) {
-    const k = `${t.entryTimestamp}|${t.entryPrice}|${t.direction}|${t.module}`;
-    (pos[k] = pos[k] || []).push(t);
-  }
-  const lignes = [];
-  let total = 0, gagnants = 0;
-  const parRaison = {};
-  for (const exits of Object.values(pos)) {
-    exits.sort((a, b) => Date.parse(a.exitTimestamp) - Date.parse(b.exitTimestamp));
-    const pnl = exits.reduce((s, e) => s + (e.fraction || 100) / 100 * e.pnlPercent, 0);
-    total += pnl;
-    if (pnl > 0) gagnants++;
-    const raison = String(exits[exits.length - 1].exitReason || '').split(' -- ')[0].slice(0, 30);
-    if (!parRaison[raison]) parRaison[raison] = { n: 0, pnl: 0 };
-    parRaison[raison].n++;
-    parRaison[raison].pnl += pnl;
-  }
-  const n = Object.keys(pos).length;
-  lignes.push(`  ${n} position(s), ${gagnants} gagnante(s) (${Math.round(100 * gagnants / n)}%)`);
-  lignes.push(`  PNL cumule ${total >= 0 ? '+' : ''}${total.toFixed(2)}%`);
-  for (const [r, v] of Object.entries(parRaison).sort((a, b) => a[1].pnl - b[1].pnl)) {
-    lignes.push(`    ${r} : ${v.n}x, ${v.pnl >= 0 ? '+' : ''}${v.pnl.toFixed(2)}%`);
-  }
-  return lignes.join('\n');
+  // Historical V4.10.10/ZeroOne trades are frozen: only current V5.4 and
+  // independent V4.9.3 PAPER positions belong in an operational daily report.
+  const cutoff=Date.now()-24*3600*1000;
+  const report=(file,name)=>{
+    try{
+      const s=JSON.parse(fs.readFileSync(file,'utf8'));
+      if(s.brokerOrdersEnabled!==false)
+        return '  '+name+' : AUTORITÉ PAPER NON VÉRIFIÉE';
+      const recent=(s.history||[]).filter(t=>Number.isFinite(Number(t.exitAt))&&t.exitAt>=cutoff);
+      const sum=k=>recent.reduce((a,t)=>a+Number(t[k]||0),0);
+      const net=sum('netPnlUsd'),fees=sum('feesUsd'),wins=recent.filter(t=>t.netPnlUsd>0).length;
+      const currentV54=recent.filter(t=>String(t.entryPolicyVersion||'').startsWith('v5.4')).length;
+      const provenance=name==='V5.4 PRINCIPAL'?
+        ' (dont '+currentV54+' entrées V5.4, '+(recent.length-currentV54)+' anciennes versions)':'';
+      const result=['  '+name+' : '+recent.length+' clôture(s) / 24h'+provenance+', '+wins+' gagnante(s)'+
+        ', net '+(net>=0?'+':'')+net.toFixed(2)+' USD, frais '+fees.toFixed(2)+' USD'];
+      result.push('    equity PAPER '+Number(s.equityUsd).toFixed(2)+' USD'+
+        ' · cumul '+s.completed+' · position '+(s.position?.direction||'FLAT')+
+        ' · aucun ordre financé');
+      const types={};
+      for(const t of recent){
+        const k=String(t.exitReason||'UNKNOWN').slice(0,36);
+        types[k]=types[k]||{count:0,net:0};
+        types[k].count++;types[k].net+=Number(t.netPnlUsd||0);
+      }
+      for(const [why,stat] of Object.entries(types).sort((a,b)=>a[1].net-b[1].net).slice(0,6))
+        result.push('    '+why+' : '+stat.count+'x, '+(stat.net>=0?'+':'')+stat.net.toFixed(2)+' USD');
+      return result.join('\n');
+    }catch(e){return '  '+name+' : LEDGER INDISPONIBLE ('+e.message+')';}
+  };
+  return report(V54_LEDGER_PATH,'V5.4 PRINCIPAL')+'\n'+
+    report(V493_LEDGER_PATH,'V4.9.3 COMPARATEUR');
 }
-
 function sectionPm2() {
   try {
     const procs = JSON.parse(execSync('pm2 jlist').toString());
@@ -188,7 +184,7 @@ function sectionLignes() {
 function buildReport() {
   const now = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
   return [
-    `ZeroOne — rapport du ${now}`,
+    `BOONO Systems — rapport PAPER du ${now}`,
     '',
     'COLLECTE (24h)',
     sectionCollecte(),
