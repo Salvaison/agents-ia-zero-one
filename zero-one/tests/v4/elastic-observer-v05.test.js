@@ -244,6 +244,10 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  assert.equal(btcLabel.textContent,'—','disconnected source must not display a live quote');
  ctx.window.updateElasticCurrentPrice(82679.9,T+500,'OKX live');
  assert.ok(btcLabel.textContent.includes('82679'.slice(0,2)));
+ ctx.window.updateElasticCurrentPrice(82680.1,T-19000,'V5.4 live serveur');
+ assert.ok(btcLabel.textContent.includes('82'),'fresh V5.4 fallback is a real quote');
+ ctx.window.updateElasticCurrentPrice(82680.1,T-29000,'V5.4 live serveur');
+ assert.equal(btcLabel.textContent,'—','server fallback beyond 25 seconds must expire');
  assert.equal(svg.innerHTML.includes('el-pm3-trace'),false);
  assert.equal(loading.style.display,'none');
  assert.equal(svg.attributes.viewBox,'0 0 420 268');
@@ -252,11 +256,13 @@ test('current BTC quote reuses the existing WebSocket and never creates a parall
  const ui=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');
  const app=fs.readFileSync(require.resolve('../../modules/config-server.js'),'utf8');
  assert.ok(ui.includes('window.updateElasticCurrentPrice=function(price,ts,status)'));
- assert.ok(app.includes('window.updateElasticCurrentPrice(v3UiPrice.price,v3UiPrice.ts,v3UiPrice.status)'));
+ assert.ok(app.includes('window.updateElasticCurrentPrice(good?v3UiPrice.price:null,'));
+ assert.ok(app.includes("good?(v3UiPrice.source==='OKX_WS'?'OKX live':'V5.4 live serveur')"),
+   'Elastic must receive only verified recent prices, including current V5.4 server fallback');
  assert.equal((ui.match(/new WebSocket\(/g)||[]).length,0,
    'Elastic shares the existing BTC-USDT-SWAP WebSocket');
  assert.ok(ui.includes('CURRENT_QUOTE_MAX_AGE_MS=15000'));
- assert.ok(app.includes("channel: 'trades', instId: 'BTC-USDT-SWAP'"));
+ assert.ok(app.includes("channel:'trades',instId:'BTC-USDT-SWAP'"));
 });
 test('chronology stays collapsed without fetching and fetches paginated events when opened',async()=>{
  const src=fs.readFileSync(require.resolve('../../modules/elastic-observer-ui.js'),'utf8');

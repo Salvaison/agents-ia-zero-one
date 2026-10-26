@@ -1940,6 +1940,63 @@ app.get('/api/wave-snapshot', requireAuth, (req,res)=>{
   }
 });
 
+// The wave LIVE state belongs to the only ACTIVE V5.4 PAPER engine.
+// V4.10.10 is stopped and its historical file MUST never be called LIVE.
+function waveUiV54LiveState(paper,auditLatest,now){
+ const a=paper?.latestAnalysis||{},rd=a.readings||{},
+  story=rd.structural54||{},conversion=rd.conversion||{};
+ const ts=Number(a.asOf),p=Number(a.price);
+ const validV54=paper?.brokerOrdersEnabled===false&&
+  String(a.version||'').startsWith('v5.4-')&&
+  Number.isFinite(ts)&&ts>0&&now>=ts&&now-ts<=25000&&
+  Number.isFinite(p)&&p>0;
+ const at=Number(auditLatest?.ts),ap=Number(auditLatest?.lastPrice);
+ const validAudit=Number.isFinite(at)&&at>0&&now>=at&&now-at<=65000&&
+  Number.isFinite(ap)&&ap>0;
+ const price=validV54?p:validAudit?ap:null;
+ const observedAt=validV54?ts:validAudit?at:null;
+ const pos=validV54&&paper.position?paper.position:null;
+ return {
+  version:validV54?'V5.4-PAPER':validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
+  source:validV54?'V54_PAPER_PRICE':validAudit?'MCB_AUDIT_PRICE':'NO_FRESH_PRICE',
+  ts:observedAt,price,priceAgeMs:observedAt===null?null:now-observedAt,
+  position:pos?{direction:pos.direction,entryPrice:pos.entryPrice,
+    entryTimestamp:pos.entryAt,metrics:{
+      mfeUsd:pos.mfePriceUsd??null,maeUsd:pos.maePriceUsd??null,
+      currentPnlUsd:pos.lastNetPnlUsd??null}}:null,
+  thesis:{state:story.phase||a.phase||null,
+    direction:story.director||null,candidateDirection:a.candidate||null},
+  background:{primaryRelation:story.strategicState||null,
+    oneHour:story.context1h?{direction:story.context1h,phase:'CONTEXT_ONLY'}:null,
+    macroShadow:story.context4h||null},
+  setup:{status:a.action||null,direction:a.candidate||null,reason:a.reason||null},
+  structuralRoom:{state:story.phase||null,roomToBoundaryUsd:rd.place?.spaceUsd??null},
+  marketQuality:{state:a.quality||null},
+  mfTemporal:{state:story.mfQuality||null,memoryDirection:story.director||null,
+    memoryHorizon:'E15_TO_E15',tacticalDirection:story.mcb3?.direction||null},
+  mcb15:{maturity:story.phase||null,currentLbw:rd.mcb15?.lbw??null,
+    extremeLbw:story.structuralOrigin?.lbw??null},
+  mcb3:{currentLbw:rd.mcb3?.lbw??null,turningDirection:story.mcb3?.direction||null},
+  pm:{status:story.conversion?.role||'EXECUTION_ONLY',
+    net3m:conversion.pm3??null,gross3m:null,eff3m:null,
+    move:conversion.pmCombined??null},
+  ticker:{status:'NOT_DECISION_AUTHORITY'},
+  action:{type:a.action||null,reason:a.reason||null,stage:story.phase||null},
+  sourceContract:'V5.4/OKX price only; never a frozen V4.10.10 state'
+ };
+}
+app.get('/api/btc-live-price',requireAuth,(req,res)=>{
+ try{
+  const s=JSON.parse(fs.readFileSync(path.join(__dirname,
+    '../data/v52-paper-state.json'),'utf8'));
+  const v=waveUiV54LiveState(s,null,Date.now());
+  if(v.source!=='V54_PAPER_PRICE')
+   return res.status(503).json({error:'NO_FRESH_V54_PRICE'});
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,{price:v.price,ts:v.ts,ageMs:v.priceAgeMs,
+    source:v.source,brokerOrdersEnabled:false});
+ }catch(e){res.status(503).json({error:'V54_PRICE_UNAVAILABLE'});}
+});
 app.get('/api/wave-live', requireAuth, (req, res) => {
   try {
     const hours=Math.max(1,Math.min(24,Number(req.query.hours)||12));
@@ -1959,7 +2016,12 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
     try { state=JSON.parse(fs.readFileSync(TRADES_V2_STATE_PATH,'utf8')); } catch(_){}
     const openPosition=state.modules&&state.modules.day||null;
     const livingEval=state.lastEvaluation?Object.assign({},state.lastEvaluation,{position:openPosition}):null;
-    const liveState=waveUiCompactEval(livingEval);
+    let activePaper=null;
+    try {
+      activePaper=JSON.parse(fs.readFileSync(path.join(__dirname,
+        '../data/v52-paper-state.json'),'utf8'));
+    } catch(_){}
+    const liveState=waveUiV54LiveState(activePaper,auditAll.at(-1)||null,now);
     const events=[];
     history.forEach(function(t,i){
       const n=i+1,en=Date.parse(t.entryTimestamp),ex=Date.parse(t.exitTimestamp);
@@ -1979,7 +2041,7 @@ app.get('/api/wave-live', requireAuth, (req, res) => {
       version:'wave-live-0.1',live:true,generatedAt:new Date().toISOString(),
       period:{start:frames.length?new Date(frames[0].ts).toISOString():new Date(cut).toISOString(),end:frames.length?new Date(frames[frames.length-1].ts).toISOString():new Date(now).toISOString(),label:'LIVE Amsterdam · '+hours+'h glissantes'},
       sampling:{auditSeconds:30,frames:frames.length},
-      sourceContract:{tradingImpact:false,state:'V4 living state only; historical Wave scrolling does not reconstruct old decision states',wave3:'audit live intra-bougie',wave15:'audit 15m live raw + confirme',ma200:'MCB CSV MA200; tests diagnostic only',signals:'MCB natif wt1_cross_up/down confirmés + signal live provisoire',divergences:'causal divergence shadow cached 60s; diagnostic only'},
+      sourceContract:{tradingImpact:false,state:'V5.4 PRIMARY PAPER price, fallback fresh AUDIT; historical frames remain audit-only',wave3:'audit live intra-bougie',wave15:'audit 15m live raw + confirme',ma200:'MCB CSV MA200; tests diagnostic only',signals:'MCB natif wt1_cross_up/down confirmés + signal live provisoire',divergences:'causal divergence shadow cached 60s; diagnostic only'},
       signalEvents:{
         wave3:waveUiSignalRows('3m',frames.length?Number(frames[0].ts):cut,frames.length?Number(frames[frames.length-1].ts):now,auditAll),
         wave15:waveUiSignalRows('15m',frames.length?Number(frames[0].ts):cut,frames.length?Number(frames[frames.length-1].ts):now,auditAll)
@@ -3524,63 +3586,144 @@ let diagAutoRefresh = null;
 let tradesAutoRefresh = null;
 let auditAutoRefresh = null;
 
-/* Prix OKX direct navigateur — affichage uniquement, aucun impact moteur. */
-let v3UiPrice = { price: null, ts: null, status: 'connexion...' };
-let v3UiWs = null;
-let v3UiPing = null;
-let v3UiReconnect = null;
-function updateV3LivePriceDom() {
-  const priceEl = document.getElementById('v3LivePrice');
-  const metaEl = document.getElementById('v3LivePriceMeta');
-  if (priceEl && v3UiPrice.price !== null) {
-    priceEl.textContent = Number(v3UiPrice.price).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  }
-  if (metaEl) {
-    const age = v3UiPrice.ts ? Math.max(0, (Date.now() - v3UiPrice.ts) / 1000) : null;
-    metaEl.textContent = v3UiPrice.status + (age !== null ? ' · ' + age.toFixed(age < 10 ? 1 : 0) + 's' : '');
-  }
-  // One shared public OKX trade feed for both live-price displays: no new socket.
-  if(window.updateElasticCurrentPrice)
-    window.updateElasticCurrentPrice(v3UiPrice.price,v3UiPrice.ts,v3UiPrice.status);
+/* Prix BTC OKX : un WS navigateur avec watchdog + repli V5.4 serveur.
+   Tous ces chemins sont LECTURE SEULE, aucun impact moteur. */
+let v3UiPrice={price:null,ts:null,status:'connexion...',source:'NONE'};
+let v3UiWs=null,v3UiPing=null,v3UiReconnect=null;
+let v3UiWsOpenedAt=0,v3UiLastWsTradeAt=0;
+let v3UiFallbackAt=0,v3UiFallbackBusy=false;
+const V3_WS_STALE_MS=15000,V3_SERVER_STALE_MS=25000;
+function v3UiFreshQuote(q){
+ // A quote from a socket that has already errored/closed is not advertised
+ // as a LIVE websocket trade, even during the 15s freshness window.
+ if(q?.source==='OKX_WS'&&q.status!=='OKX live')return false;
+ const max=q?.source==='V54_SERVER'?V3_SERVER_STALE_MS:V3_WS_STALE_MS;
+ const age=Date.now()-Number(q?.ts);
+ return q&&q.price!==null&&Number.isFinite(Number(q.price))&&Number(q.price)>0&&
+   q.ts!==null&&Number.isFinite(Number(q.ts))&&Number(q.ts)>0&&
+   age>=-3000&&age<=max;
 }
-function connectV3LivePrice() {
-  if (v3UiWs && (v3UiWs.readyState === WebSocket.OPEN || v3UiWs.readyState === WebSocket.CONNECTING)) return;
-  clearTimeout(v3UiReconnect);
-  try {
-    v3UiPrice.status = 'connexion OKX...'; updateV3LivePriceDom();
-    v3UiWs = new WebSocket('wss://ws.okx.com:8443/ws/v5/public');
-    v3UiWs.onopen = function() {
-      v3UiPrice.status = 'OKX live';
-      v3UiWs.send(JSON.stringify({ op: 'subscribe', args: [{ channel: 'trades', instId: 'BTC-USDT-SWAP' }] }));
-      clearInterval(v3UiPing);
-      v3UiPing = setInterval(function() {
-        try { if (v3UiWs && v3UiWs.readyState === WebSocket.OPEN) v3UiWs.send('ping'); } catch (_) {}
-      }, 20000);
-      updateV3LivePriceDom();
-    };
-    v3UiWs.onmessage = function(ev) {
-      if (ev.data === 'pong') return;
-      let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
-      if (!m || !m.arg || m.arg.channel !== 'trades' || !Array.isArray(m.data) || !m.data.length) return;
-      const d = m.data[m.data.length - 1], px = Number(d.px);
-      if (!isFinite(px)) return;
-      v3UiPrice.price = px;
-      v3UiPrice.ts = d.ts ? Number(d.ts) : Date.now();
-      v3UiPrice.status = 'OKX live';
-      updateV3LivePriceDom();
-    };
-    v3UiWs.onerror = function() { v3UiPrice.status = 'OKX WS erreur'; updateV3LivePriceDom(); };
-    v3UiWs.onclose = function() {
-      clearInterval(v3UiPing);
-      v3UiPrice.status = 'OKX reconnect...'; updateV3LivePriceDom();
-      v3UiReconnect = setTimeout(connectV3LivePrice, 3000);
-    };
-  } catch (_) {
-    v3UiPrice.status = 'OKX indisponible'; updateV3LivePriceDom();
-    v3UiReconnect = setTimeout(connectV3LivePrice, 3000);
-  }
+function updateV3LivePriceDom(){
+ const good=v3UiFreshQuote(v3UiPrice);
+ const priceEl=document.getElementById('v3LivePrice');
+ const metaEl=document.getElementById('v3LivePriceMeta');
+ if(priceEl)priceEl.textContent=good?
+   Number(v3UiPrice.price).toLocaleString('fr-FR',{
+     minimumFractionDigits:1,maximumFractionDigits:1}):'—';
+ if(metaEl){
+   const age=v3UiPrice.ts?Math.max(0,(Date.now()-v3UiPrice.ts)/1000):null;
+   metaEl.textContent=(good?v3UiPrice.status:'Prix Live indisponible')+
+     (age!==null?' · '+age.toFixed(age<10?1:0)+'s':'');
+ }
+ if(window.updateElasticCurrentPrice)
+   window.updateElasticCurrentPrice(good?v3UiPrice.price:null,
+     good?v3UiPrice.ts:null,
+     good?(v3UiPrice.source==='OKX_WS'?'OKX live':'V5.4 live serveur'):'STALE');
 }
-setInterval(updateV3LivePriceDom, 1000);
+async function v3UiPollServerPrice(){
+ if(v3UiFallbackBusy||Date.now()<v3UiFallbackAt||document.hidden)return;
+ if(v3UiLastWsTradeAt&&Date.now()-v3UiLastWsTradeAt<=V3_WS_STALE_MS)return;
+ v3UiFallbackAt=Date.now()+5000;
+ v3UiFallbackBusy=true;
+ try{
+   const r=await fetch('/api/btc-live-price',{cache:'no-store',
+     signal:AbortSignal.timeout(4000)});
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const q=await r.json();
+   if(v3UiLastWsTradeAt&&Date.now()-v3UiLastWsTradeAt<=V3_WS_STALE_MS)return;
+   const candidate={price:Number(q.price),ts:Number(q.ts),
+     status:'V5.4 live serveur',source:'V54_SERVER'};
+   if(q.source!=='V54_PAPER_PRICE'||!v3UiFreshQuote(candidate))return;
+   if(!v3UiFreshQuote(v3UiPrice)||Number(candidate.ts)>=Number(v3UiPrice.ts)){
+     v3UiPrice=candidate;
+     updateV3LivePriceDom();
+     if(typeof waveSchedulePriceRedraw==='function')waveSchedulePriceRedraw();
+   }
+ }catch(_){
+   if(!v3UiFreshQuote(v3UiPrice)){
+     v3UiPrice.status='prix temporairement indisponible';
+     updateV3LivePriceDom();
+     if(typeof waveSchedulePriceRedraw==='function')waveSchedulePriceRedraw();
+   }
+ }finally{v3UiFallbackBusy=false;}
+}
+function connectV3LivePrice(){
+ if(v3UiWs&&(v3UiWs.readyState===WebSocket.OPEN||
+              v3UiWs.readyState===WebSocket.CONNECTING))return;
+ clearTimeout(v3UiReconnect);
+ try{
+   v3UiPrice.status='connexion OKX...';updateV3LivePriceDom();
+   const ws=new WebSocket('wss://ws.okx.com:8443/ws/v5/public');
+   v3UiWs=ws;
+   ws.onopen=function(){
+     if(v3UiWs!==ws)return;
+     v3UiWsOpenedAt=Date.now();
+     ws.send(JSON.stringify({op:'subscribe',args:[
+       {channel:'trades',instId:'BTC-USDT-SWAP'}]}));
+     clearInterval(v3UiPing);
+     v3UiPing=setInterval(function(){
+       try{if(v3UiWs===ws&&ws.readyState===WebSocket.OPEN)ws.send('ping');}
+       catch(_){}
+     },20000);
+   };
+   ws.onmessage=function(ev){
+     if(v3UiWs!==ws||ev.data==='pong')return;
+     let msg;try{msg=JSON.parse(ev.data);}catch(_){return;}
+     if(!msg||msg.arg?.channel!=='trades'||!Array.isArray(msg.data)||
+       !msg.data.length)return;
+     const d=msg.data[msg.data.length-1];
+     const px=Number(d.px),ts=d.ts?Number(d.ts):Date.now();
+     const next={price:px,ts,status:'OKX live',source:'OKX_WS'};
+     if(!v3UiFreshQuote(next))return;
+     v3UiLastWsTradeAt=Date.now();
+     v3UiPrice=next;updateV3LivePriceDom();
+     if(typeof waveSchedulePriceRedraw==='function')waveSchedulePriceRedraw();
+   };
+   ws.onerror=function(){
+     if(v3UiWs!==ws)return;
+     v3UiPrice.status='OKX WS erreur';
+     try{ws.close();}catch(_){}
+     updateV3LivePriceDom();
+   };
+   ws.onclose=function(){
+     if(v3UiWs!==ws)return;
+     v3UiWs=null;clearInterval(v3UiPing);v3UiPing=null;
+     v3UiWsOpenedAt=0;v3UiLastWsTradeAt=0;
+     if(v3UiPrice.source==='OKX_WS')v3UiPrice.status='OKX reconnect...';
+     updateV3LivePriceDom();
+     clearTimeout(v3UiReconnect);
+     v3UiReconnect=setTimeout(connectV3LivePrice,3000);
+   };
+ }catch(_){
+   v3UiWs=null;
+   v3UiPrice.status='OKX WS indisponible';
+   updateV3LivePriceDom();
+   v3UiReconnect=setTimeout(connectV3LivePrice,3000);
+ }
+}
+function v3UiPriceWatchdog(){
+ const now=Date.now();
+ if(v3UiWs&&v3UiWs.readyState===WebSocket.OPEN&&
+    now-(v3UiLastWsTradeAt||v3UiWsOpenedAt||now)>V3_WS_STALE_MS){
+   // An OPEN socket with no ticks is a zombie. Close, reconnect and
+   // use V5.4 server quote meanwhile; NEVER leave a frozen price as LIVE.
+   v3UiPrice.status='OKX WS silencieux · reconnexion';
+   try{v3UiWs.close();}catch(_){}
+ }
+ if(!v3UiFreshQuote(v3UiPrice)){
+   updateV3LivePriceDom();
+   if(typeof waveSchedulePriceRedraw==='function')waveSchedulePriceRedraw();
+ }
+ if(!v3UiLastWsTradeAt||now-v3UiLastWsTradeAt>V3_WS_STALE_MS)
+   v3UiPollServerPrice();
+}
+setInterval(v3UiPriceWatchdog,1000);
+document.addEventListener('visibilitychange',function(){
+ if(!document.hidden){
+   if(!v3UiWs||v3UiWs.readyState>=WebSocket.CLOSING)connectV3LivePrice();
+   v3UiFallbackAt=0;v3UiPriceWatchdog();
+ }
+});
 document.querySelectorAll('.main-nav-item').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.main-nav-item').forEach(t => t.classList.remove('active'));
@@ -4099,6 +4242,40 @@ function waveDrawPriceYAxis(result,H) {
   }
   axis.innerHTML=out.join('');
 }
+// A LIVE quote is never derived from the archived V4.10.10 snapshot or
+// a candle's historical close. Browser OKX WS wins; current V5.4 follows.
+function waveCurrentMarketQuote(){
+ if(waveReplayMode!=='live')return null;
+ if(v3UiFreshQuote(v3UiPrice))
+   return {price:Number(v3UiPrice.price),ts:Number(v3UiPrice.ts),
+     source:v3UiPrice.source==='OKX_WS'?'OKX trade WS':'V5.4 server',
+     status:'LIVE'};
+ const q=waveReplayData?.liveState||{};
+ const ts=Number(q.ts),price=Number(q.price),age=Date.now()-ts;
+ if(q.price!==null&&Number.isFinite(price)&&price>0&&
+    q.ts!==null&&Number.isFinite(ts)&&ts>0&&
+    age>=-3000&&age<=(q.source==='V54_PAPER_PRICE'?25000:65000)&&
+    ['V54_PAPER_PRICE','MCB_AUDIT_PRICE'].includes(q.source)){
+   return {price,ts,source:q.source==='V54_PAPER_PRICE'?
+     'V5.4 server':'MCB Audit ~30s',
+     status:q.source==='V54_PAPER_PRICE'?'LIVE':'RELEVÉ'};
+ }
+ return null;
+}
+let wavePriceRedrawTimer=null;
+function waveSchedulePriceRedraw(){
+ if(wavePriceRedrawTimer||document.hidden||waveReplayMode!=='live'||
+    !waveReplayData?.frames?.length)return;
+ const panel=document.getElementById('tab2-waves');
+ if(!panel||!panel.classList.contains('active'))return;
+ wavePriceRedrawTimer=setTimeout(function(){
+   wavePriceRedrawTimer=null;
+   if(waveReplayMode!=='live'||document.hidden||!waveReplayData?.frames?.length)return;
+   const quote=waveCurrentMarketQuote(),el=document.getElementById('waveReplayPriceLiveValue');
+   if(el)el.textContent=quote?'BTC '+waveNum(quote.price,1):'BTC —';
+   drawWavePrice(document.getElementById('wavePriceCanvas'),waveReplayIndex);
+ },350); // redraw price layer only, not both oscillator canvases
+}
 function drawWavePrice(canvas,idx) {
   if(!canvas||!waveReplayData||!waveReplayData.frames||!waveReplayData.frames.length||!window.BoonoCharts)return;
   const frames=waveReplayData.frames,t0=Number(frames[0].ts),t1=Number(frames[frames.length-1].ts);
@@ -4132,11 +4309,8 @@ function drawWavePrice(canvas,idx) {
   canvas._waveTradeZones=wavePaintV5Bands(canvas,v5Spans,t0,t1,pricePadding)
     .concat(wavePaintLegacyTradeLines(canvas,spans,t0,t1,pricePadding));
 
-  const latestSeriesRow=series.length?series[series.length-1]:null;
-  const liveStatePrice=waveReplayData&&waveReplayData.liveState&&waveReplayData.liveState.price;
-  const livePrice=Number.isFinite(Number(liveStatePrice))
-    ?Number(liveStatePrice)
-    :(latestSeriesRow&&Number.isFinite(Number(latestSeriesRow.close))?Number(latestSeriesRow.close):null);
+  const quote=waveCurrentMarketQuote();
+  const livePrice=quote?.price??null;
 
   if(result&&Number.isFinite(livePrice)){
     const box=canvas.getBoundingClientRect();
@@ -4144,18 +4318,23 @@ function drawWavePrice(canvas,idx) {
     const ctx=canvas.getContext('2d');
     const b=result.bounds,p=result.padding;
     const y=p.top+(b.hi-livePrice)/Math.max(1e-9,b.hi-b.lo)*result.plotHeight;
-    if(y>=p.top-1&&y<=p.top+result.plotHeight+1){
+    {
+      // Show an edge arrow when a fresh quote temporarily exceeds the
+      // current candle range. Do not leave an old line stranded mid-chart.
+      const outsideHigh=y<p.top,outsideLow=y>p.top+result.plotHeight;
+      const plotY=Math.max(p.top+1,Math.min(p.top+result.plotHeight-1,y));
       ctx.save();
       ctx.setTransform(ratio,0,0,ratio,0,0);
       ctx.strokeStyle='#2f80ed';
       ctx.lineWidth=.8;
       ctx.setLineDash([4,4]);
       ctx.beginPath();
-      ctx.moveTo(p.left,y);
-      ctx.lineTo(p.left+result.plotWidth,y);
+      ctx.moveTo(p.left,plotY);
+      ctx.lineTo(p.left+result.plotWidth,plotY);
       ctx.stroke();
       ctx.setLineDash([]);
-      const label='LIVE '+waveNum(livePrice,1);
+      const label=(outsideHigh?'↑ ':outsideLow?'↓ ':'')+
+        (quote?.status||'LIVE')+' '+waveNum(livePrice,1);
       const visibleCenter=sc&&sc.clientWidth
         ?Math.max(p.left+45,Math.min(p.left+result.plotWidth-45,sc.scrollLeft+sc.clientWidth/2))
         :p.left+result.plotWidth/2;
@@ -4165,9 +4344,9 @@ function drawWavePrice(canvas,idx) {
       ctx.lineJoin='round';
       ctx.strokeStyle='rgba(255,255,255,.96)';
       ctx.lineWidth=4;
-      ctx.strokeText(label,visibleCenter,y);
+      ctx.strokeText(label,visibleCenter,plotY);
       ctx.fillStyle='#2f80ed';
-      ctx.fillText(label,visibleCenter,y);
+      ctx.fillText(label,visibleCenter,plotY);
       ctx.restore();
     }
   }
@@ -4175,7 +4354,14 @@ function drawWavePrice(canvas,idx) {
   const title=document.getElementById('wavePriceTitle');
   if(title)title.textContent='PRIX BTCUSDT · '+wavePriceTf;
   const liveHead=document.getElementById('wavePriceLiveHead');
-  if(liveHead)liveHead.textContent=Number.isFinite(livePrice)?'LIVE '+waveNum(livePrice,1):'LIVE —';
+  if(liveHead){
+    liveHead.textContent=livePrice!==null?
+      (quote?.status||'LIVE')+' '+waveNum(livePrice,1):
+      'LIVE — · prix indisponible';
+    liveHead.title=quote?
+      quote.source+' · relevé '+waveParis(quote.ts):
+      'Aucun prix suffisamment récent ; aucune ancienne cotation présentée comme LIVE';
+  }
   const b3=document.getElementById('wavePrice3m'),b15=document.getElementById('wavePrice15m');
   if(b3)b3.classList.toggle('active',wavePriceTf==='3m');
   if(b15)b15.classList.toggle('active',wavePriceTf==='15m');
@@ -4397,12 +4583,16 @@ function renderWaveReplay() {
   const engineShort=s.version ? String(s.version).split('-')[0].toUpperCase() : 'V4.5';
 
   let liveLeft='',liveRight='';
-  const displayTs=(waveReplayMode==='live'&&s.ts!==null&&s.ts!==undefined)?s.ts:f.ts;
-  const displayPrice=(waveReplayMode==='live'&&s.price!==null&&s.price!==undefined)?s.price:f.price;
+  const quote=waveReplayMode==='live'?waveCurrentMarketQuote():null;
+  const displayTs=waveReplayMode==='live'?(quote?.ts??s.ts??f.ts):f.ts;
+  const displayPrice=waveReplayMode==='live'?(quote?.price??null):f.price;
   liveLeft+=waveRow('HEURE',waveParis(displayTs),(waveReplayMode==='live'?'LIVE':'REPLAY')+' · frame '+(waveReplayIndex+1)+' / '+waveReplayData.frames.length);
   liveLeft+=waveRow('POSITION',posMain,posSub);
   liveLeft+=waveRow('SETUP',setup.status||'—',setup.direction||setup.candidateDirection||'');
-  liveRight+=waveRow('PRIX','BTC '+waveNum(displayPrice,1),'BTC-USDT-SWAP');
+  liveRight+=waveRow('PRIX','<span id="waveReplayPriceLiveValue">BTC '+
+    (displayPrice===null?'—':waveNum(displayPrice,1))+'</span>',
+    waveReplayMode==='live'?(quote?quote.source:'Flux Live indisponible'):
+      'BTC-USDT-SWAP · REPLAY');
   liveRight+=waveRow('ACTION',ac.type||'—',ac.stage||'');
   liveRight+=waveRow('ENGINE',engineShort,'paper / simulation');
   const live='<div class="wave-live-grid"><div class="wave-live-col">'+liveLeft+'</div><div class="wave-live-col">'+liveRight+'</div></div>';
@@ -4695,10 +4885,10 @@ async function loadWaveV5StructureStory(){
     const dir=x=>x?String(x).toUpperCase():'—';
     const safe=x=>escTrade(String(x===undefined||x===null?'—':x));
     const stale=z.dataIntegrity!=='ASOF_OK';
-    const elasticStale=z.elasticEventStatus!=='EVENT_STREAM_OBSERVED';
+    const elasticStale=!['EVENT_STREAM_OBSERVED','SAME_ACTIVE_ENGINE'].includes(z.elasticEventStatus);
     const blocks=[
-      '<div class="heading"><span>V5 · ENJEU STRUCTUREL (RECHERCHE)</span>'+
-        '<span>TRADING V5 : ARRÊTÉ</span></div>',
+      '<div class="heading"><span>V5.4 · STRUCTURE DIRECTRICE</span>'+
+        '<span>V5.4 PAPER · ACTIF</span></div>',
       stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
       elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
       '<div class="line"><b>Trajet E15→E15 '+safe(dir(s.direction))+'</b>'+
@@ -4714,11 +4904,11 @@ async function loadWaveV5StructureStory(){
         ' (descriptive)</div>',
       '<div class="line"><b>HYPOTHÈSES</b> '+p.slice(0,2).map(x=>safe(x.kind)).join(' / ')+'</div>',
       '<div class="note">Observé '+waveParis(a.ts)+
-        ' · horodatages réels, pas de prédiction ni ordre V5</div>'
+        ' · horodatages réels, aucune exécution financée</div>'
     ];
     el.innerHTML=blocks.join('');
   }catch(err){
-    el.textContent='V5 STRUCTURE · Observation indisponible : '+err.message;
+    el.textContent='V5.4 STRUCTURE · Observation indisponible : '+err.message;
   }finally{waveV5StoryLoading=false;}
 }
 function waveMergePriceSeries(a,b){

@@ -17,8 +17,10 @@ const CURRENT_QUOTE_MAX_AGE_MS=15000;
 function currentBtcText(){
  const p=n(currentBtcQuote.price),ts=n(currentBtcQuote.ts);
  const age=ts===null?Infinity:Date.now()-ts;
+ const serverSource=currentBtcQuote.status==='V5.4 live serveur';
+ const maxAge=serverSource?25000:CURRENT_QUOTE_MAX_AGE_MS;
  const ok=p!==null&&p>0&&ts!==null&&age>=-3000&&
-  age<=CURRENT_QUOTE_MAX_AGE_MS&&currentBtcQuote.status==='OKX live';
+  age<=maxAge&&(currentBtcQuote.status==='OKX live'||serverSource);
  return ok?p.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' $':'—';
 }
 function refreshCurrentBtcLabel(){
