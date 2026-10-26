@@ -439,7 +439,7 @@ app.get('/api/v5-structure',requireAuth,(req,res)=>{
  try{
   const state=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/v52-paper-state.json'),'utf8'));
   const a=state.latestAnalysis||{},h=a.readings?.structural54||{};
-  if(a.version!=='v5.4-structural-campaign-paper-v1'||!h.available)
+  if(!String(a.version||'').startsWith('v5.4')||!h.available)
    return res.status(503).json({error:'V5.4 structure not yet available'});
   const o=h.origins||{},f=h.activeFrontier||null;
   const payload={version:h.version,ts:a.asOf,price:a.price,
@@ -477,7 +477,7 @@ function v52PaperSummary(filename, tag) {
   wins:s.wins,losses:s.losses,equityUsd:s.equityUsd,realizedUsd:s.realizedUsd,
   feesUsd:s.feesUsd,position:s.position||null,
   latestAction:s.lastAction||null,decision:s.latestDecision||s.decision||null,
-  analysis:tag==='V5.4'?s.latestAnalysis||null:null,
+  analysis:tag==='V5.4.1'?s.latestAnalysis||null:null,
   latestTrades:(s.history||[]).slice(-5).reverse(),
   engineVersion:s.engine||null,gitRef:s.gitRef||null,
   source:'ISOLATED_SIMULATION_ONLY_NO_FUNDED_ORDERS'};
@@ -503,7 +503,7 @@ function v53UiReadEvents(){
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
-  const summary=v52PaperSummary('v52-paper-state.json','V5.4');
+  const summary=v52PaperSummary('v52-paper-state.json','V5.4.1');
   try{
    const a=summary.analysis,src=v53UiReadEvents();
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
@@ -514,7 +514,7 @@ app.get('/api/v52',requireAuth,(req,res)=>{
     decisionImpact:false};
   }
   sendUiJson(req,res,summary);
- }catch(e){res.status(503).json({error:'V5.4 PAPER indisponible',detail:e.message});}
+ }catch(e){res.status(503).json({error:'V5.4.1 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
@@ -1947,7 +1947,7 @@ function waveUiV54LiveState(paper,auditLatest,now){
   story=rd.structural54||{},conversion=rd.conversion||{};
  const ts=Number(a.asOf),p=Number(a.price);
  const validV54=paper?.brokerOrdersEnabled===false&&
-  String(a.version||'').startsWith('v5.4-')&&
+  String(a.version||'').startsWith('v5.4')&&
   Number.isFinite(ts)&&ts>0&&now>=ts&&now-ts<=25000&&
   Number.isFinite(p)&&p>0;
  const at=Number(auditLatest?.ts),ap=Number(auditLatest?.lastPrice);
@@ -1957,7 +1957,7 @@ function waveUiV54LiveState(paper,auditLatest,now){
  const observedAt=validV54?ts:validAudit?at:null;
  const pos=validV54&&paper.position?paper.position:null;
  return {
-  version:validV54?'V5.4-PAPER':validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
+  version:validV54?(String(a.version||'').startsWith('v5.4.1')?'V5.4.1-PAPER':'V5.4-PAPER'):validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
   source:validV54?'V54_PAPER_PRICE':validAudit?'MCB_AUDIT_PRICE':'NO_FRESH_PRICE',
   ts:observedAt,price,priceAgeMs:observedAt===null?null:now-observedAt,
   position:pos?{direction:pos.direction,entryPrice:pos.entryPrice,
@@ -3305,7 +3305,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.4 PAPER — connexion au moteur décisionnel…</div>
+<div id="v52-live" class="v5-observer v52-main">V5.4.1 PAPER — connexion au moteur décisionnel…</div>
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
@@ -3488,7 +3488,7 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
-  <div id="waveV5StructureStory" class="wave-structural-story">V5.4 · Lecture structurelle…</div>
+  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.1 · Lecture structurelle…</div>
   <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
@@ -3557,6 +3557,7 @@ app.get('/', requireAuth, (req, res) => {
       </div>
 
 <script src="/boono-charts.js"></script>
+<script src="/elastic-live-conversion-v541.js"></script>
 <script src="/elastic-observer-ui.js"></script>
 <script src="/app.js"></script>
     </body>
@@ -3564,7 +3565,14 @@ app.get('/', requireAuth, (req, res) => {
   `);
 });
 
-// Elastic v0.5 shared observation renderer — authenticated and read-only.
+// The conversion graph receives trades from the page's EXISTING OKX WS,
+// not from V4.10.10. This lightweight client never decides or places orders.
+app.get('/elastic-live-conversion-v541.js',requireAuth,(req,res)=>{
+ const file=path.join(__dirname,'elastic-live-conversion-v541.js');
+ res.set('Cache-Control','no-store');
+ res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
+});
+// Elastic v0.5 historical observation renderer — read-only.
 app.get('/elastic-observer-ui.js',requireAuth,(req,res)=>{
   const file=path.join(__dirname,'elastic-observer-ui.js');
   res.set('Cache-Control','no-store');
@@ -3671,6 +3679,10 @@ function connectV3LivePrice(){
      let msg;try{msg=JSON.parse(ev.data);}catch(_){return;}
      if(!msg||msg.arg?.channel!=='trades'||!Array.isArray(msg.data)||
        !msg.data.length)return;
+     // All OKX trades, not just the last of each message: aggressor
+     // volume requires each trade side + size for an accurate 3m duel.
+     if(window.elasticConversionV541)
+       for(const tr of msg.data)window.elasticConversionV541.ingestTrade(tr);
      const d=msg.data[msg.data.length-1];
      const px=Number(d.px),ts=d.ts?Number(d.ts):Date.now();
      const next={price:px,ts,status:'OKX live',source:'OKX_WS'};
@@ -3716,6 +3728,7 @@ function v3UiPriceWatchdog(){
  }
  if(!v3UiLastWsTradeAt||now-v3UiLastWsTradeAt>V3_WS_STALE_MS)
    v3UiPollServerPrice();
+ if(window.elasticConversionV541)window.elasticConversionV541.refreshUi();
 }
 setInterval(v3UiPriceWatchdog,1000);
 document.addEventListener('visibilitychange',function(){
@@ -4011,7 +4024,7 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.4 / archives V5.2–5.3.3</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.4.1 / archives V5.2–V5.4</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
@@ -4019,7 +4032,7 @@ function waveRenderTradePanel() {
       'POSITION OUVERTE · bande prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
-      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.4')?'V5.4':String(t.policyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
+      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.4.1')?'V5.4.1':String(t.policyVersion||'').includes('v5.4')?'V5.4':String(t.policyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
       escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
       'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
       ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
@@ -4046,7 +4059,7 @@ function waveCloseTradeReport() {
 function renderPaperTradeReport(data){
  const t=data.trade||{},v52=data.engine==='v52',
   policy=String(t.entryPolicyVersion||''),
-  engine=v52?(policy.includes('v5.4')?'V5.4':policy.includes('v5.3.3')?'V5.3.3':policy.includes('v5.3.2')?'V5.3.2':policy.includes('v5.3.1')?'V5.3.1':policy.includes('v5.3')?'V5.3':policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
+  engine=v52?(policy.includes('v5.4.1')?'V5.4.1':policy.includes('v5.4')?'V5.4':policy.includes('v5.3.3')?'V5.3.3':policy.includes('v5.3.2')?'V5.3.2':policy.includes('v5.3.1')?'V5.3.1':policy.includes('v5.3')?'V5.3':policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
  const n=(x,d=1)=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(d);
  const signed=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
     (Number(x)>0?'+':'')+Number(x).toFixed(2);
@@ -4170,7 +4183,7 @@ async function waveOpenTradeReport(tradeNo) {
       if(!res.ok)throw Error('HTTP '+res.status);
       const report=await res.json();
       const pl=String(report.trade?.entryPolicyVersion||'');
-      title.textContent=(kind==='v52'?(pl.includes('v5.4')?'V5.4':pl.includes('v5.3.3')?'V5.3.3':pl.includes('v5.3.2')?'V5.3.2':pl.includes('v5.3.1')?'V5.3.1':pl.includes('v5.3')?'V5.3':pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
+      title.textContent=(kind==='v52'?(pl.includes('v5.4.1')?'V5.4.1':pl.includes('v5.4')?'V5.4':pl.includes('v5.3.3')?'V5.3.3':pl.includes('v5.3.2')?'V5.3.2':pl.includes('v5.3.1')?'V5.3.1':pl.includes('v5.3')?'V5.3':pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
         ' · '+String(report.trade?.direction||'').toUpperCase()+
         (report.status==='OPEN'?' · EN POSITION':' · RAPPORT COMPLET');
       body.innerHTML=renderPaperTradeReport(report);
@@ -4887,8 +4900,8 @@ async function loadWaveV5StructureStory(){
     const stale=z.dataIntegrity!=='ASOF_OK';
     const elasticStale=!['EVENT_STREAM_OBSERVED','SAME_ACTIVE_ENGINE'].includes(z.elasticEventStatus);
     const blocks=[
-      '<div class="heading"><span>V5.4 · STRUCTURE DIRECTRICE</span>'+
-        '<span>V5.4 PAPER · ACTIF</span></div>',
+      '<div class="heading"><span>V5.4.1 · STRUCTURE DIRECTRICE</span>'+
+        '<span>V5.4.1 PAPER · ACTIF</span></div>',
       stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
       elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
       '<div class="line"><b>Trajet E15→E15 '+safe(dir(s.direction))+'</b>'+
@@ -4908,7 +4921,7 @@ async function loadWaveV5StructureStory(){
     ];
     el.innerHTML=blocks.join('');
   }catch(err){
-    el.textContent='V5.4 STRUCTURE · Observation indisponible : '+err.message;
+    el.textContent='V5.4.1 STRUCTURE · Observation indisponible : '+err.message;
   }finally{waveV5StoryLoading=false;}
 }
 function waveMergePriceSeries(a,b){
@@ -6526,7 +6539,7 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.4 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>BOONO V5.4.1 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
@@ -6549,10 +6562,14 @@ function renderV52Living(data){
     '<div class="v52-muted">LBW/BW spread15 '+n(m.bwLbwSpread)+
      ' · pivot confirmé '+v5Time(m.structuralPivotAt)+
      ' · 1h '+f(s54.context1h||m.context1h)+' / 4h '+f(s54.context4h||m.context4h)+'</div>'+
-    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4</b> '+f(s54.director)+
+    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.1</b> '+f(s54.director)+
       ' · origine '+v5Time(s54.structuralOrigin?.sourceTs)+
       ' · disponible '+v5Time(s54.structuralOrigin?.availableAt)+
-      ' · '+f(s54.strategicState)+'</div>':'') )+
+      ' · '+f(s54.strategicState)+'</div>'+
+      '<div class="v52-muted">LBW15 géométrique ≠ E15 natif · '+
+       f(s54.nativeE15?.confirmed?.direction||'—')+' source '+
+       v5Time(s54.nativeE15?.confirmed?.sourceTs)+
+       ' · connu '+v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>':'') )+
    cell('geom','2 · MCB3 · TACTIQUE','LBW3 '+n(three.lbw)+' / BW3 '+n(three.bw),
     '<div class="v53-phase-caption">Tactique '+f(mat.maturity)+
       ' · MF3 '+sn(three.mf)+' / Δ3m '+sn(c.mf3Delta3m)+'</div>'+
@@ -6562,11 +6579,17 @@ function renderV52Living(data){
     ((state3||discrepancy3)?'<div class="v53-cross-note">'+
       (discrepancy3?'Croisement et dernier E3 Live de sens différent. ':'')+
       state3+'</div>':'')+
-    '<div class="v52-muted">V5.4 : '+f(s54.phase||'tactique héritée')+
-     ' · enfant E3 '+f(s54.mcb3?.direction||'—')+
+    '<div class="v52-muted">V5.4.1 : '+f(s54.phase||'tactique héritée')+
+     ' · pivot LBW3 (mémoire, sans veto) '+f(s54.mcb3?.direction||'—')+
      (s54.sourceFreshness?.firstNewBarSnapshotPending?
        ' · nouvelle bougie : premier relevé en attente (données précédentes fraîches)':'')+
      '</div>'+
+    (s54.nativeE3?'<div class="v52-muted">E3 natif '+
+      f(s54.nativeE3.confirmed?.direction||'—')+
+      ' · source '+v5Time(s54.nativeE3.confirmed?.sourceTs)+
+      ' · disponible '+v5Time(s54.nativeE3.confirmed?.availableAt)+
+      ' · cross '+v5Time(s54.mcb3?.cross?.ts)+
+      ' · preuve '+f(s54.tacticalAdmission?.reason||'—')+'</div>':'')+
     '<div class="v52-muted">'+f(alignment)+
      ' · déplacement depuis cross3 '+n(c.sinceCross)+' $ BTC'+
      ' · âge '+n(mat.cross3AgeMin)+' min (informatif)</div>'+
@@ -6587,6 +6610,8 @@ function renderV52Living(data){
     '<div class="v52-muted">Zone active '+f(zone.name||'AUCUNE')+
      (zone.name?' ['+n(zone.lower)+' / '+n(zone.upper)+']':'')+
      ' · une seule confrontation · '+f(ma.entryGate?.reason||'MA contexte')+'</div>'+
+    (s54.testedTerritory?'<div class="v52-muted">Territoire '+f(s54.testedTerritory.status)+
+      ' · preuve '+v5Time(s54.testedTerritory.availableAt)+'</div>':'')+
     '<div class="v52-muted">Ancre de risque '+f(pl.anchor?.key||'NON DÉMONTRÉE')+
      ' '+n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+'</div>')+
    cell('conv','4 · CONVERSION · PM LIVE',
@@ -6605,7 +6630,8 @@ function renderV52Living(data){
     (s54.available?'<div class="v52-muted">PHASE STRUCTURELLE '+
       f(s54.phase)+' · campagne '+f(s54.campaignId)+
       ' · maturité rang2h '+n(s54.priceRangeRank)+
-      ' · MF15 sur 2h '+sn(s54.mf15History2h)+'</div>':
+      ' · MF15 sur 2h '+sn(s54.mf15History2h)+
+      ' · maturité extension '+(s54.matureAfterExtension?'AVANCÉE':'mesurée')+'</div>':
     '<div class="v52-muted">Nouvelle preuve E15 '+v5Time(requal.proofAt)+
     ' · fenêtre '+f(requal.window||'—')+
     ' · conversion '+f(requal.conversion?.quality||'—')+
@@ -6641,7 +6667,7 @@ function renderV52Living(data){
    '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
    ' $ · plancher '+n(p.gainFloorUsd)+' $ · invalidation '+n(p.invalidationPrice)+' $</div></div>':
    '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
-  '<div class="v52-muted">PAPER V5.4 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
+  '<div class="v52-muted">PAPER V5.4.1 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
    ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
  el.innerHTML=card;
@@ -6657,8 +6683,10 @@ async function loadV52PaperPanel(){
   const data=await resp.json();
   if(data.brokerOrdersEnabled!==false)throw Error('PAPER_AUTHORITY_NOT_VERIFIED');
   data.lastReason=data.analysis?.reason||data.decision?.reason||null;
+  if(window.elasticConversionV541)
+    window.elasticConversionV541.setAnalysis(data.analysis);
   renderV52Living(data);
- }catch(e){if(el)el.textContent='V5.4 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.4.1 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 // Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
@@ -6768,7 +6796,7 @@ function renderV5StructuralLive(a){
      ' · '+Number(x.materialEvents)+' événement(s)':'')+'</div>').join('');
  const price= n(a.price);
  el.innerHTML=
-   '<div class="v5-head"><span>V5.4 · STRUCTURE VIVANTE</span>'+
+   '<div class="v5-head"><span>V5.4.1 · STRUCTURE VIVANTE</span>'+
      '<span style="color:#08794a;">OBSERVATION SEULE · AUCUN TRADE</span></div>'+
    '<div class="v5-row"><b>BTC '+price+' $</b> · relevé '+v5Time(a.ts)+
      ' (Stockholm) · âge '+Math.round(age/1000)+' s</div>'+
@@ -6821,7 +6849,7 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.4':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
+ const name=isV52?'V5.4.1':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
  const prefix=isV52?'V52:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
@@ -6831,7 +6859,7 @@ function renderPaperHistoryGroup(x,kind){
  if(data.open){
   const p=data.open;
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
-   '<b>'+(isV52?(String(p.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+   '<b>'+(isV52?(String(p.entryPolicyVersion||'').includes('v5.4.1')?'V5.4.1':String(p.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
    ' #'+f(p.tradeNo)+' · '+f(String(p.direction||'').toUpperCase())+
    ' · EN POSITION</b><div>Entrée '+time(p.entryAt)+' à '+n(p.entryPrice)+' $ BTC'+
    ' · prix '+n(p.lastPrice)+' $ · net estimé '+signed(p.lastNetPnlUsd)+' $</div>'+
@@ -6844,7 +6872,7 @@ function renderPaperHistoryGroup(x,kind){
   const statusColor=Number(t.netPnlUsd)>=0?'#087245':'#b52b39';
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">'+
-    '<b>'+(isV52?(String(t.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(t.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+    '<b>'+(isV52?(String(t.entryPolicyVersion||'').includes('v5.4.1')?'V5.4.1':String(t.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(t.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
     ' #'+f(t.tradeNo)+' · '+f(String(t.direction||'').toUpperCase())+'</b>'+
     '<b style="color:'+statusColor+'">'+signed(t.netPnlUsd)+' $ net</b></div>'+
    '<div>Entrée '+time(t.entryAt)+' · '+n(t.entryPrice)+' $ BTC → sortie '+
@@ -6936,7 +6964,7 @@ async function loadTrades() {
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.4 PAPER · lecture de la décision en cours…</div>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.4.1 PAPER · lecture de la décision en cours…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
@@ -6945,8 +6973,8 @@ async function loadTrades() {
         '<summary style="cursor:pointer;font-weight:800;">V4.9.3 · COMPARATEUR PAPER EN ARRIÈRE-PLAN</summary>'+
         '<div id="v493-live">Version historique chargement…</div></details>'+
       '<details id="v5-structure-details" class="v5-observer" '+(structureWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V5.4 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
-        '<div id="v5-structure-live">V5.4 · structure en cours…</div></details>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.4.1 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
+        '<div id="v5-structure-live">V5.4.1 · structure en cours…</div></details>'+
       '<details id="v5-paper-archive" class="v5-observer" '+(archiveWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V5.1 PAPER · ARCHIVE ARRÊTÉE · 22 trades clôturés</summary>'+
         '<div id="v5-paper-live">Historique PAPER sur demande…</div></details>'+

@@ -61,7 +61,7 @@ test('V5.2 history is visible before collapsed baseline and old V4 history',()=>
    exitAt:125000,entryPrice:79467.8,exitPrice:79639.9,
    netPnlUsd:1.75,feesUsd:1.5,mfePriceUsd:332,maePriceUsd:149,
    exitReason:'GAIN_FLOOR'}]},'v52');
- assert.ok(text.includes('V5.4 PAPER'));
+ assert.ok(text.includes('V5.4.1 PAPER'));
  assert.ok(text.includes('V5.2 #2'),'older trades retain original version label');
  assert.ok(text.includes('data-paper-report="V52:2"'));
  assert.ok(text.includes('MFE +332.0'));

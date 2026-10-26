@@ -68,7 +68,7 @@ test('Confirmed E3 and E15 event times reflect FIRST ACTUAL OBSERVATION after cl
 test('Only the V54 runner writes native events; no new funded broker or competing strategy',()=>{
  const src=fs.readFileSync(path.resolve(__dirname,'../../modules/v5/runner-v52.js'),'utf8');
  const evt=fs.readFileSync(path.resolve(__dirname,'../../modules/v5/causal-event-feed-v54.js'),'utf8');
- assert.ok(src.includes("const decision=require('./decision-v54')"));
+ assert.ok(src.includes("const decision=require('./decision-v541')"));
  assert.ok(src.includes('nativeFeed.step(feedState,x.last,x.bars3,x.bars15)'));
  assert.ok(src.includes('appendRotatingNdjson(ELASTIC_EVENTS,e'));
  assert.ok(!evt.includes('decision-v53'));

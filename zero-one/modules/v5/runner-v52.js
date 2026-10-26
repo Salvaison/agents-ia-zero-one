@@ -1,7 +1,7 @@
 'use strict';
 // Dedicated V5.2 decision + execution PAPER service. Never imports real broker clients.
 const fs=require('fs'),path=require('path'),stream=require('../price-stream');
-const decision=require('./decision-v54'),paper=require('./paper-v52'),
+const decision=require('./decision-v541'),paper=require('./paper-v52'),
   nativeFeed=require('./causal-event-feed-v54');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const MCB=path.resolve(ROOT,'../data/mcb-live');
@@ -167,12 +167,12 @@ function main(){
      conversionCampaign:d.readings.conversionCampaign,
      structural54:d.readings.structural54,
      invalidation:d.invalidation,invalidationEvidence:d.readings.invalidationEvidence,
-     quality:d.quality,origin:'V5.4_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
+     quality:d.quality,origin:'V5.4.1_PAPER',policyVersion:d.version,brokerOrdersEnabled:false});
     priorKey=key;
    }
    if(result.trade)append(TRADES,result.trade);
    if(result.event||received-lastSave>=30000){writeAtomic(STATE,s);lastSave=received;}
-   if(result.event)console.log('[V522 PAPER] '+JSON.stringify(result.event));
+   if(result.event)console.log('[V541 PAPER] '+JSON.stringify(result.event));
    errors=0;
   }catch(e){if(++errors<=4||errors%20===0)console.error('[V52 PAPER] '+e.stack);}
   finally{busy=false;}

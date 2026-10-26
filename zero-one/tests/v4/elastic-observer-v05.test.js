@@ -171,6 +171,9 @@ test('duel moves together around fixed axis with BTC 3m displacement and price l
  const x=ev(f());x.effort={available:true,buyBtc:3,sellBtc:6,sampleCount:30,
    priceNetUsd:30,priceRangeUsd:50};
  x.conversion.pm3=45;
+ // The cubes are driven by current OKX telemetry, NEVER the archived V4 evaluation.
+ ctx.window.elasticConversionV541={snapshot:()=>({...x,status:'LIVE_3M',
+  coverageSeconds:180})};
  ctx.window.updateElasticCurrentPrice(82531.3,T,'OKX live');
  await ctx.window.loadElasticChart3m({elasticObserverShadow:x});
  assert.equal(optsCaptured.length,1);
@@ -397,6 +400,8 @@ test('BTC volumes appear INSIDE both semi-transparent moving squares, including 
  vm.runInNewContext(src,ctx);
  const snap=ev(f());snap.effort={available:true,buyBtc:115.4804,
    sellBtc:45.3172,priceNetUsd:73.2,priceRangeUsd:99.1,sampleCount:2000};
+ ctx.window.elasticConversionV541={snapshot:()=>({...snap,status:'LIVE_3M',
+  coverageSeconds:180})};
  await ctx.window.loadElasticChart3m({elasticObserverShadow:snap});
  assert.equal((svg.innerHTML.match(/class="el-volume-amount"/g)||[]).length,2);
  assert.ok(svg.innerHTML.includes('115.480 BTC'));

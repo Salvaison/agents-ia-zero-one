@@ -32,6 +32,15 @@ window.updateElasticCurrentPrice=function(price,ts,status){
  currentBtcQuote={price:p!==null&&p>0?p:null,ts:t,status:String(status||'NO_SOURCE')};
  refreshCurrentBtcLabel();
 };
+// Never display the stopped V4.10.10 aggressor volume snapshot as LIVE.
+ // The contract below comes from the same OKX trades WS as the BTC quote.
+ function liveSnapshot(){
+  return window.elasticConversionV541?
+    window.elasticConversionV541.snapshot():{
+      version:'LIVE_CONVERSION_NOT_CONNECTED',status:'OKX_TRADES_UNAVAILABLE',
+      coverageSeconds:0,effort:{available:false},conversion:{}
+    };
+ }
 const pair=(p,d=1)=>{
  const a=p&&p.confirmed,b=p&&p.live;
  return '<span class="el-old">'+fmt(a,d)+'</span> / '+cnum(b,d,fromDelta(a,b));
@@ -56,6 +65,10 @@ const tfRow=(name,w)=>{
 };
 function effort(x){
  const q=x&&x.effort||{},cv=x&&x.conversion||{};
+ const live=x&&x.status==='LIVE_3M',warm=x&&x.status==='WARMING_3M';
+ const freshness=live?'OKX LIVE · 3m complets':
+   warm?'OKX LIVE · fenêtre partielle '+Number(x.coverageSeconds||0)+'s/180s':
+    'FLUX OKX NON REÇU · volumes indisponibles';
  const conv='<div class="el-duel-metrics"><div>PM3 '+cnum(cv.pm3,1,fromDelta(0,cv.pm3))+
    ' $ · PM5 '+cnum(cv.pm5,1,fromDelta(0,cv.pm5))+
    ' $ · PM Live '+cnum(cv.pmLive,1,fromDelta(0,cv.pmLive))+' $</div>'+
@@ -65,7 +78,7 @@ function effort(x){
    '<div>Qualité <b>'+esc(cv.quality||'UNCLASSIFIED')+'</b> · direction <b class="'+tone(cv.direction)+'">'+
    esc(cv.direction||'—').toUpperCase()+'</b></div></div>';
  const buy=Math.max(0,n(q.buyBtc)||0),sell=Math.max(0,n(q.sellBtc)||0);
- return '<div class="el-duel"><div class="el-section-title">PRIX BTC · BOUGIES 3m + CONVERSION</div>'+
+ return '<div class="el-duel"><div class="el-section-title">PRIX BTC · BOUGIES 3m + CONVERSION · '+esc(freshness)+'</div>'+
    conv+'<div class="el-duel-volumes"><span class="el-up">ACHAT '+(q.available?buy.toFixed(3)+' BTC':'—')+'</span>'+
    '<span class="el-down">VENTE '+(q.available?sell.toFixed(3)+' BTC':'—')+'</span></div>'+
    '<div class="el-overlay-chart" role="group" aria-label="Bougies BTC 3 minutes derrière la conversion PM3 et volumes des deux camps">'+
@@ -79,16 +92,17 @@ function effort(x){
    '<div class="el-duel-legend"><span>PRIX BTC · axe gauche</span><span>Surfaces · volume acheteurs / vendeurs</span><span>Temps · bas</span></div></div>';
 }
 function display(x){
- const h=x&&x.elasticObserverShadow||null;
- if(!h)return '<div class="el-wrap"><b>ELASTIC v0.5</b> · attente de la première évaluation</div>';
+ // The seven-family V4 Elastic detail is now historical; the duel BELOW is
+ // sourced independently from actual OKX trades and V5.4.1 PM observations.
+ const h=x&&x.elasticObserverShadow||{};
  const cv=h.conversion||{},ma=h.ma||{},fl=h.flow||{},b=h.boundary||{},ctx=h.context||{};
  const dir=h.mcbProposal||null,chain=h.thesisChain||{};
  const chainRows=(chain.supports||[]).map(a=>
    '<span class="el-chain-proof '+tone(a.direction)+'">'+esc(a.label)+
    (n(a.value)!==null?' '+fmt(a.value,1):'')+'</span>').join(' → ');
  const mfpart=p=>pair(p);
- const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.8 · MÉMOIRE COMMUNE</b>'+
-  '<span>SHADOW / aucune autorité de trading</span></div>'+
+ const markup='<div class="el-stack"><section class="el-wrap el-list-bubble"><div class="el-head"><b>ELASTIC v0.5.8 · ARCHIVE V4.10.10</b>'+
+  '<span>ARCHIVE FIGÉE · aucune autorité de trading</span></div>'+
   '<div class="el-overview">MCB propose <b class="'+tone(dir)+'">'+esc((dir||'indécis').toUpperCase())+'</b>'+
   ' · trajectoire 15m <b class="'+tone(h.mcbStructural)+'">'+esc((h.mcbStructural||'—').toUpperCase())+'</b>'+
   ' · prix <b class="'+tone(h.priceDirection)+'">'+esc((h.priceDirection||'—').toUpperCase())+'</b></div>'+
@@ -123,7 +137,7 @@ function display(x){
    ' · Daily '+esc(ctx.daily&&ctx.daily.structuralDirection||'—')+
    ' · Weekly '+esc(ctx.weekly&&ctx.weekly.structuralDirection||'—')+'</div></div>'+
    '</div></section><section class="el-wrap el-duel-bubble">'+
-   effort(h)+
+   '<div id="elastic-live-duel">'+effort(liveSnapshot())+'</div>'+
    '<details id="elastic-chronology" class="el-chronology"'+(window.elasticHistoryState&&window.elasticHistoryState.open?' open':'')+'>'+
    '<summary>CHRONOLOGIE · mémoire persistante <span class="el-old">(cliquer pour ouvrir / refermer)</span></summary>'+
    '<div class="el-history-head"><label>Fenêtre <select id="elastic-history-hours"><option value="6">6 h</option><option value="24">24 h</option><option value="48">48 h</option></select></label>'+
@@ -221,10 +235,19 @@ window.loadElasticObserverHistory=function(){
    if(!st.events.length&&!st.loading)fetchHistoryPage(false);
  }
 };
+// Fast refresh in the SAME conversion slot: no added rows or independent
+// chart/market connections. The living 3m cubes are never the old V4 state.
+window.paintElasticLiveConversion=function(snapshot){
+ const slot=document.getElementById('elastic-live-duel');
+ if(!slot||document.hidden)return;
+ slot.innerHTML=effort(snapshot||liveSnapshot());
+ if(window.loadElasticChart3m)window.loadElasticChart3m();
+};
 // Candle renderer is intentionally reused from Waves through BoonoCharts.
 // Both overlays share TIME on x, not value on y: BTC left, PM3 right.
 window.loadElasticChart3m=async function(snapshot){
- const cv=snapshot&&snapshot.elasticObserverShadow||null;
+ // The argument may still be the frozen V4 state. Intentionally ignore it.
+ const cv=liveSnapshot();
  const canvas=document.getElementById('elastic-price-candles');
  const svg=document.getElementById('elastic-conversion-overlay');
  const axis=document.getElementById('elastic-price-axis');

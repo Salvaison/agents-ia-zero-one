@@ -111,9 +111,9 @@ function sectionTrades() {
       const recent=(s.history||[]).filter(t=>Number.isFinite(Number(t.exitAt))&&t.exitAt>=cutoff);
       const sum=k=>recent.reduce((a,t)=>a+Number(t[k]||0),0);
       const net=sum('netPnlUsd'),fees=sum('feesUsd'),wins=recent.filter(t=>t.netPnlUsd>0).length;
-      const currentV54=recent.filter(t=>String(t.entryPolicyVersion||'').startsWith('v5.4')).length;
-      const provenance=name==='V5.4 PRINCIPAL'?
-        ' (dont '+currentV54+' entrées V5.4, '+(recent.length-currentV54)+' anciennes versions)':'';
+      const currentV54=recent.filter(t=>String(t.entryPolicyVersion||'').startsWith('v5.4.1')).length;
+      const provenance=name==='V5.4.1 PRINCIPAL'?
+        ' (dont '+currentV54+' entrées V5.4.1, '+(recent.length-currentV54)+' anciennes versions)':'';
       const result=['  '+name+' : '+recent.length+' clôture(s) / 24h'+provenance+', '+wins+' gagnante(s)'+
         ', net '+(net>=0?'+':'')+net.toFixed(2)+' USD, frais '+fees.toFixed(2)+' USD'];
       result.push('    equity PAPER '+Number(s.equityUsd).toFixed(2)+' USD'+
@@ -130,7 +130,7 @@ function sectionTrades() {
       return result.join('\n');
     }catch(e){return '  '+name+' : LEDGER INDISPONIBLE ('+e.message+')';}
   };
-  return report(V54_LEDGER_PATH,'V5.4 PRINCIPAL')+'\n'+
+  return report(V54_LEDGER_PATH,'V5.4.1 PRINCIPAL')+'\n'+
     report(V493_LEDGER_PATH,'V4.9.3 COMPARATEUR');
 }
 function sectionPm2() {
