@@ -219,3 +219,39 @@ Codes : **O** offensive MCB15 courante, **M** dernière trajectoire mémorisée,
 **Contre l’offensive courante (critère explicite et non déduit de l’ancienne mémoire) : #16, #22, #26, #27, #32.**
 
 Toute continuation post-sortie est une observation rétrospective du marché ; elle ne dit pas si le stop, la MA, la conversion et les frais auraient autorisé un maintien réel. Les trade IDs et PNL de cette annexe sont figés à 43 clôtures ; les nouveaux trades qui suivent ne modifient pas cette archive.
+
+## Complément de l'audit — 26 octobre : caractéristiques des trades réussis
+
+Demande du propriétaire : analyser ce que BOONO sait déjà réussir, pas seulement pourquoi les perdants échouent. Cohorte identique, **43 premières clôtures V5, 18 gagnants / 25 perdants**. Les 28 trades de V5.3.3 (13 gagnants / 15 perdants) sont analysés à part pour réduire le mélange de constitutions.
+
+### Succès économique réel vs profit nominal
+
+Sur les 43 trades, 20 sont sortis sur `GAIN_FLOOR_120_90_OR_220_180`, dont 18 gagnants et deux perdants minimes. **Les 18 gagnants sortent tous par profit floor**, ce qui crée un biais de sélection mécanique : on ne peut pas découvrir un « signal de succès » simplement en constatant que les gagnants ont franchi MFE +120.
+
+- **9 gagnants substantiels**, #2, #4, #10, #15, #18, #22, #25, #31, #38 : chacun MFE≥220 USD BTC, net collectif **+15,4639 USD** (MFE médian +294,3 USD BTC, MAE médian 30,6 USD BTC).
+- **9 gagnants symboliques**, #7, #19, #21, #27, #30, #34, #39, #40, #43 : net collectif **+1,1013 USD**, MFE entre 120 et 220, très largement consommé par frais 1,50 USD/ticket. Deux floors supplémentaires légèrement déficitaires donnent le total des 20 sorties floor **+16,3032 USD**.
+- Réussite médiane 18 gagnants : MFE **194,85 USD BTC**, MAE **34,8 USD BTC**. Pertes : MFE médian **34 USD BTC**, MAE médian **84,9 USD BTC**. Attention : les maxima MFE sont rétrospectifs et les floor exits définissent une partie de cette séparation.
+
+### Qualité prospective et vélocité vérifiables
+
+Sur les **28 entrées V5.3.3**, 13 gagnantes et 15 perdantes :
+- Progression prix 3m déjà consommée au moment de l'entrée, normalisée par le range confirmé 3m : **0,1× médian gagnants vs 0,6× perdants**. C'est une mesure de maturité pré-entrée, pas un seuil universel.
+- Pente MF15 directionnelle médiane : **+1,0 gagnants vs +0,4 perdants** ; pente MF3 directionnelle : +1,4 vs +0,9. Les cas `REINFORCING` font **11 gagnants/19**, contre **1/6** pour `TACTICAL_LEADING`. Ce n'est pas un test statistique causal et les sous-échantillons sont petits. Les divergences du type #22 ne doivent pas devenir interdites par règle automatique.
+- PM Live directionnel **10 à 40 USD** à l'entrée : **8 gagnants/11** ; PM Live directionnel >40 USD : **1 gagnant/8**, alors que le marché peut parfois continuer fortement malgré un PM très élevé (#31). Ces bandes sont des catégories exploratoires choisies sur les données **in-sample**, pas des seuils calibrés d'admission. Le PM instantané très fort peut signaler un mouvement déjà consommé, non nécessairement une nouvelle capacité productive.
+- MA3 ACCEPTED ne garantit rien : **4/11 gagnants V5.3.3** avec ce statut ; MA3 OPPOSITE_SIDE compte **6/11 gagnants**, notamment #38. Seule la *réaction réelle du prix* peut conférer autorité de résistance/défense à MA ; une MA située en travers n'est pas automatiquement un veto.
+- 11/13 gagnants V5.3.3 sont alignés avec l'offensive MCB15 actuelle, mais deux gagnants #22 et #27 sont des respirations tactiques contre offensive MCB15 SHORT. **L'ancienne mémoire E15→E15 opposée ne suffit pas à disqualifier une nouvelle offensive.**
+- Indice comportemental indépendant du label de sortie : sur les observations Audit toutes les 30 s **dans les 3 min suivant l'entrée, même si le trade s'est clôturé entre-temps**, les 13 gagnants V5.3.3 avaient un meilleur déplacement directionnel médian +59,9 USD BTC, contre +20,1 pour les 15 perdants. À l'horizon fixe 3m, variation du prix médiane **+13,1 BTC USD pour gagnants**, contre **−39,6 BTC USD pour perdants**. En 3 minutes, le marché avait atteint au moins +50 BTC USD pour 8/13 gagnants et 1/15 perdants. Mesure **rétrospective de la réaction du prix**, pas un filtre prévisible avant entrée, et n'implique jamais que chaque trade gagnant soit immédiatement sans respiration.
+
+### Exemples de bonnes chaînes de preuve
+
+- **#18 SHORT** : E3 cross vers +23,5, LBW15 +60,8/BW15 +64,3 région haute, MCB15 offensive SHORT, pentes MF3 −5 et MF15 −1,4, PM3 −76,6/PM5 −69,2/PM Live −10,2. MFE +230,6, MAE 49,2, net +1,75. Transition vendeuse précoce depuis région haute avec conversion cohérente.
+- **#25 SHORT** : MCB15 SHORT, MF3/MF15 baissiers, PM3 −25,6/PM5 −69,3/PM Live −36,1, MFE +567,6 et MAE seulement 22,5, net +1,63. Excellente admission et continuation potentielle, mais profit floor ne capture qu'une fraction de la campagne.
+- **#38 LONG** : Cross E3 UP LBW3 −52,3, LBW15 −50,3/BW15 −55,9 dans reprise depuis région basse, MF15 +1,6 et MF3 +1,4, PM3 +128,1/PM5 +129,3/PM Live +26,0. MFE +324,8, MAE +30,6, net +1,80. MA3 OPPOSITE_SIDE n'a pas empêché la reprise : la MA doit être jugée par réaction du prix.
+- **#22 LONG** : respiration acheteuse sur E3 −83,4 contre MCB15 SHORT : PM3 +121,1, PM5 +21,6, PM Live +31,1, MFE +224,2, MAE zéro, net +1,64. Exception tactique valide ; montre pourquoi il ne faut pas interdire automatiquement toute entrée contre offensive.
+- **#39/#40 LONG** : continuations haussières avec MF15 favorable et effet positif du prix, mais microprofits +0,04/+0,10 USD net. Qualité directionnelle correcte, économie inefficiente en plusieurs tickets.
+
+### Hypothèse synthétique à tester, pas nouvelle loi de seuils
+
+MCB15 propose une campagne dont la vague n'a pas épuisé sa viabilité, éventuellement à partir d'une région extrême ; MCB3 offre une nouvelle tentative causale ; MF3 progresse avec MF15 en vraie récupération (ou inversement phase tactique explicitement limitée) ; PM3/PM5/PM Live montrent un *déplacement productif* sans que le trade soit lancé sur le pic final d'effort ; les MA et niveaux apportent une **épreuve de prix**, pas un veto hypothétique ; le prix gagne rapidement du terrain et conserve mieux ce terrain après la première poussée. Une entrée réussie doit produire un déplacement suffisamment supérieur aux frais et à l'excursion adverse, idéalement une campagne pouvant dépasser le palier +220 USD BTC.
+
+Sur de nouvelles données PAPER, noter séparément la qualité **avant** admission (maturité normalisée, direction MF, position BW/LBW, conversion et défense MA), la réponse **après** admission (conversion effort/rendement et terrain conservé), et la valeur **après frais** (PNL avec floors existants et alternatives shadow). Ne pas tirer un veto fixe « PM Live >40 », « MF15 un peu adverse » ou « E3 déjà +40 » de cet échantillon.
