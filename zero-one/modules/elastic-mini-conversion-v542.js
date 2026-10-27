@@ -9,6 +9,8 @@ const clamp=(v,low,high)=>Math.max(low,Math.min(high,v));
 const format=(v,d=1)=>num(v)===null?'—':Number(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const signed=(v,d=1)=>num(v)===null?'—':(Number(v)>0?'+':'')+format(v,d);
 const btc=v=>num(v)===null?'—':Number(v).toFixed(Math.abs(Number(v))<.01?4:3);
+const clock=t=>Number.isFinite(Number(t))?new Date(t).toLocaleTimeString('fr-FR',{
+ timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let candles=[],period=null,quote={price:null,ts:null,status:'NO_SOURCE'},lastSnapshot=null;
 function quotePrice(now){
@@ -20,7 +22,8 @@ function quotePrice(now){
 function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   width=290,height=200,now=Date.now(),quoteValue=quotePrice(now)}={}){
  const w=clamp(Math.round(width),155,720),h=clamp(Math.round(height),145,320);
- const plot={l:w<240?39:43,r:7,t:22,b:19},pw=w-plot.l-plot.r,ph=h-plot.t-plot.b;
+ // Top/bottom captions are now separate DOM rows; fill the SVG with PRICE.
+ const plot={l:w<240?39:43,r:7,t:3,b:3},pw=w-plot.l-plot.r,ph=h-plot.t-plot.b;
  const svgParts=[];
  svgParts.push('<rect width="'+w+'" height="'+h+'" fill="#fff"/>');
  const valid=(data||[]).filter(x=>num(x.ts)!==null&&
@@ -33,19 +36,21 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  const end=Math.max(latestTs+180000,periodEnd!==null&&periodEnd<now+10000?periodEnd:latestTs);
  const start=end-90*60000;
  const bars=valid.filter(x=>Number(x.ts)>=start-180000&&Number(x.ts)<=end);
+ // Use the observed BTC candle excursion, not distant MA levels, to avoid
+ // empty price bands. 1600 USD remains the MAX view window. Distant MA values
+ // may be clipped; they must not invent excess vertical whitespace.
  const values=[];
- for(const c of bars){values.push(Number(c.high),Number(c.low));
-  if(num(c.ma200)!==null&&num(c.ma200)>0)values.push(Number(c.ma200));}
- // Constant 1 600 USD BTC price window. Tightens only the PRICE zoom:
- // cube dimensions and movement remain in screen pixels, exactly as before.
- // Keep the latest genuine quote centered when available so it never drifts
- // out of view; without a fresh quote, center on the latest visible close.
- const PRICE_SPAN_USD=1600;
+ for(const c of bars)values.push(Number(c.high),Number(c.low));
+ const actualQuote=num(quoteValue);
+ if(actualQuote!==null&&actualQuote>0)values.push(actualQuote);
  const first=Math.min(...values),last=Math.max(...values);
+ const movement=Math.max(0,last-first),padding=Math.max(18,movement*.035);
+ const span=clamp(movement+padding*2,500,1600);
  const recentClose=num(bars.at(-1)?.close);
- const mid=num(quoteValue)!==null&&quoteValue>0?Number(quoteValue):
-   recentClose!==null?recentClose:(first+last)/2;
- const lo=mid-PRICE_SPAN_USD/2,hi=mid+PRICE_SPAN_USD/2;
+ const mid=movement+2*padding>1600?
+   (actualQuote!==null&&actualQuote>0?actualQuote:recentClose??(first+last)/2):
+   (first+last)/2;
+ const lo=mid-span/2,hi=mid+span/2;
  const tx=ts=>plot.l+(Number(ts)-start)/Math.max(1,end-start)*pw;
  const ty=val=>plot.t+(hi-Number(val))/(hi-lo)*ph;
  const clip='v52-mini-plot-clip';
@@ -59,18 +64,13 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
    ' font-family="SF Mono,Menlo,monospace" font-size="7.8" fill="#657789">'+
    Math.round(p).toLocaleString('fr-FR')+'</text>');
  }
- // Light hourly time lines and readable first/last time marks.
+ // Hourly lines remain in the chart; captions have their own row below it.
  for(let t=Math.ceil(start/3600000)*3600000;t<=end;t+=3600000){
   const x=tx(t);
   if(x>=plot.l&&x<=w-plot.r)
    svgParts.push('<line x1="'+x.toFixed(1)+'" y1="'+plot.t+'" x2="'+x.toFixed(1)+
     '" y2="'+(h-plot.b)+'" stroke="#edf1f3" stroke-width=".55"/>');
  }
- const clock=t=>new Date(t).toLocaleTimeString('fr-FR',{
-  timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
- svgParts.push('<text x="'+plot.l+'" y="'+(h-4)+'" font-size="8" fill="#72818e">'+clock(start)+'</text>');
- svgParts.push('<text x="'+(w-plot.r)+'" y="'+(h-4)+
-  '" text-anchor="end" font-size="8" fill="#72818e">'+clock(end)+'</text>');
  svgParts.push('<g clip-path="url(#'+clip+')">');
  const bw=clamp(pw/Math.max(12,bars.length)*.65,1.1,4.8);
  for(const c of bars){
@@ -112,7 +112,8 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  if(available){
   // For legibility at small widths squares are RELATIVELY larger than the
   // full-size graph, still sqrt-proportional in area to aggressor BTC volume.
-  const maxSide=Math.min(pw*.41,ph*.61,110),max=Math.max(buy,sell,.00001);
+  // Keep the OLD cube scale despite removing top/bottom SVG text bands.
+  const maxSide=Math.min(pw*.41,151*.61,110),max=Math.max(buy,sell,.00001);
   const size=v=>v<=0?Math.min(14,maxSide*.25):
     clamp(Math.sqrt(v/max)*maxSide,18,maxSide);
   const sa=size(buy),sb=size(sell);
@@ -141,29 +142,20 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
    '" y1="'+(cy-maxSide/2-3).toFixed(1)+'" y2="'+(cy+maxSide/2+3).toFixed(1)+
    '" stroke="#2f4453" stroke-width=".65" opacity=".86"/>');
  }
- // Signed 3m BTC displacement belongs to the lower line OF THE GRAPH,
- // distinct from the current absolute BTC quote at the top. No old values
- // are displayed after the OKX trade feed becomes stale.
- const delta=available?num(e.priceNetUsd):null;
- const deltaLabel='Δ BTC 3m '+(delta===null?'—':signed(delta,1)+' $');
- const deltaColor=delta===null?'#697b88':delta>0?'#117a4b':delta<0?'#b93946':'#506675';
- svgParts.push('<text class="v52-mini-price-gap" x="'+cx.toFixed(1)+
-  '" y="'+(h-4)+'" text-anchor="middle"'+
-  ' font-family="SF Mono,Menlo,monospace" font-size="8" font-weight="800"'+
-  ' fill="'+deltaColor+'" stroke="#fff" stroke-width="1.7"'+
-  ' paint-order="stroke">'+esc(deltaLabel)+'</text>');
- const priceLabel=num(quoteValue)!==null?'BTC '+format(quoteValue,1)+' $':'BTC —';
- svgParts.push('<text x="'+cx.toFixed(1)+'" y="13" text-anchor="middle"'+
-  ' font-family="SF Mono,Menlo,monospace" font-size="10" font-weight="800"'+
-  ' fill="#395666" stroke="#fff" stroke-width="2.3" paint-order="stroke">'+
-  esc(priceLabel)+'</text>');
+ // Live BTC quote, 3m signed price move, and start/end time are rendered in
+ // independent, bigger rows OUTSIDE this SVG. No text masks the candles.
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
-  ' data-price-span-usd="1600"'+
-  ' role="img" aria-label="Prix BTC 3m sur 1600 dollars, MA200, graduations 500 dollars, ecart BTC sur 3 minutes, duel achat vente en volume BTC">'+
+  ' data-price-span-usd="'+span.toFixed(1)+'" data-price-span-max-usd="1600"'+
+  ' role="img" aria-label="Prix BTC 3m cadré sur les bougies, amplitude maximale 1600 dollars, MA200, graduations 500 dollars, duel acheteurs vendeurs en volume BTC">'+
   svgParts.join('')+'</svg>';
 }
 function setQuote(price,ts,status){
  quote={price:num(price),ts:num(ts),status:String(status||'NO_SOURCE')};
+ if(typeof document!=='undefined'){
+  const el=document.getElementById('v52-mini-btc-price');
+  const p=quotePrice(Date.now());
+  if(el)el.textContent=p===null?'BTC —':'BTC '+format(p,1)+' $';
+ }
 }
 function setCandles(data){
  if(!data||!Array.isArray(data.candles)||data.candles.length<2)return false;
@@ -192,6 +184,20 @@ function refresh(snapshot){
  set('v52-mini-conversion-status',status);
  set('v52-mini-buy',ok?btc(e.buyBtc)+' BTC':'—');
  set('v52-mini-sell',ok?btc(e.sellBtc)+' BTC':'—');
+ const quoteNow=quotePrice(Date.now());
+ set('v52-mini-btc-price',quoteNow===null?'BTC —':'BTC '+format(quoteNow,1)+' $');
+ const delta=ok?num(e.priceNetUsd):null;
+ set('v52-mini-delta',delta===null?'Δ BTC 3m —':'Δ BTC 3m '+signed(delta,1)+' $');
+ const deltaRow=document.getElementById('v52-mini-delta');
+ if(deltaRow)deltaRow.className='v52-mini-delta'+(
+  delta===null?'':delta>0?' up':delta<0?' down':'');
+ if(candles.length>=2){
+  const latest=candles.at(-1).ts,availableTo=num(period?.to);
+  const end=Math.max(latest+180000,
+    availableTo!==null&&availableTo<Date.now()+10000?availableTo:latest);
+  set('v52-mini-begin',clock(end-90*60000));
+  set('v52-mini-end',clock(end));
+ }else{set('v52-mini-begin','—');set('v52-mini-end','—');}
  set('v52-mini-pm','PM3 '+signed(cv.pm3)+' · PM5 '+signed(cv.pm5)+
    ' · Live '+signed(cv.pmLive));
  set('v52-mini-eff','eff3 '+(num(cv.efficiency3m)===null?'—':format(cv.efficiency3m*100,1)+'%')+

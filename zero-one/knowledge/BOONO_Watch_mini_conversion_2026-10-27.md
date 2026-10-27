@@ -46,3 +46,17 @@ Occuper la zone vide du **module 4 « CONVERSION · PM LIVE »** dans `État viv
 - Tests ciblés renforcés : **7/7**, y compris zoom 1600, espacements de prix dans l'écran, invariance géométrique des deux carrés, valeurs signées positives/négatives et invalidation sur flux OKX périmé.
 - Suite complète V4/V5/attention : **274 tests**, dont **262 réussis**, **0 échec**, **12 cas historiques sautés**.
 - Seul `config-server` requiert un rechargement ; les moteurs V4.9.4/V5.4.2 PAPER et leurs contrats de protection restent inchangés.
+
+## Rectification demandée : occupation intégrale du graphe, chiffres et horaires en rangées distinctes
+
+**Cette rectification remplace le cadrage vertical fixe à 1 600 $ et la position du Δ 3m dans le SVG décrits dans la section précédente.** Elle reste purement graphique et n'impose aucune nouvelle version de BOONO.
+
+- Les espaces libres artificiels **au-dessus et au-dessous des chandeliers** sont supprimés : le graphe utilise presque toute sa hauteur (`padding top/bottom = 3 pixels`) et son axe s'adapte à l'excursion réellement observée sur les bougies affichées avec une petite marge. La plage verticale varie entre **500 et 1 600 USD**, 1 600 $ restant la borne haute, et les graduations de prix demeurent espacées de 500 $. La MA3 distante ne doit plus créer de vide.
+- Les **cubes** gardent leurs proportions et **leurs dimensions d'avant l'ajustement** : le facteur de taille reste calculé avec la hauteur de référence de 151 px, même si la surface graphique s'étend maintenant de haut en bas.
+- La cotation absolue `BTC XX XXX,X $` est isolée et agrandie (14px) **au-dessus** du graphique, plutôt que d'être dessinée dans le SVG.
+- Les libellés visibles **ACHAT** et **VENTE** sont supprimés ; les chiffres de volumes BTC apparaissent maintenant en **11,5px**, vert et rouge, avec les noms conservés seulement pour le titre/infobulle et l'accessibilité.
+- Le déplacement `Δ BTC 3m ±XX,X $` est placé dans sa **propre rangée** de 13px, sous les volumes, et devient `—` si la mesure OKX n'est plus fraîche. Ce chiffre provient des trades agressseurs sur **3 minutes**, jamais de PM3 ni de la différence entre le premier et le dernier chandelier du graphique.
+- Une **rangée supplémentaire** immédiatement dessous affiche `Début HH:MM` et `Fin HH:MM` du **graphique visible d'environ 90 minutes** (timeframe bougies 3m), fuseau `Europe/Stockholm`. Ces bornes temporelles étaient auparavant inscrites dans le SVG ; elles ne sont pas les limites de la mesure glissante de 3 minutes.
+- Les données PM3, PM5, PM Live, eff3, P75, qualité, direction et statut sont conservées. Aucune nouvelle requête API et aucun WebSocket additionnel.
+- Nouveau rendu compact statique sous Chromium (colonne 230px, graphique 208px), avec chandeliers réels et volumes de démonstration explicitement fictifs. Les deux nouveaux rangs et le cadrage resserré sont visuellement vérifiés.
+- Tests ciblés adaptés aux nouvelles proportions, au cadrage adaptatif plafonné et à l'ordre des rangées ; contrôles des moteurs PAPER, des processus et des ressources d'interface avant déploiement.

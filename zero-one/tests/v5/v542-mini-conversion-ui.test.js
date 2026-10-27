@@ -41,53 +41,69 @@ test('compact graph contains OHLC, MA200, thin price lines every 500 USD and a f
  assert.ok(svg.includes('stroke-width=".92"'),'MA line thinner than full chart');
  assert.ok(svg.includes('stroke-width=".68"'),'candle wicks thin');
  const marked=[...svg.matchAll(/stroke="#dee5e9" stroke-width=".65"/g)].length;
- assert.ok(marked>=2,'visible 500-dollar horizontal levels');
+ assert.ok(marked>=1,'price grid is drawn at the available 500-dollar levels');
  const priceTicks=[...svg.matchAll(/font-size="7.8" fill="#657789">([^<]+)<\/text>/g)];
- assert.ok(priceTicks.length>=2);
+ assert.ok(priceTicks.length>=1);
  const nums=priceTicks.map(x=>Number(x[1].replace(/[^0-9]/g,'')));
  assert.ok(nums.every((v,i)=>i===0||v-nums[i-1]===500));
  assert.ok(svg.includes('stroke="#3577b9"'),'fresh BTC price line');
- assert.ok(svg.includes('BTC '));
+ assert.ok(!svg.includes('class="v52-mini-price-gap"'),
+  'price delta moves into its own HTML row');
+ assert.ok(!svg.includes('class="v52-mini-btc-price"'),
+  'absolute price moves outside the chart too');
  assert.ok(svg.includes('data-camp="ACHAT"')&&svg.includes('data-camp="VENTE"'));
  assert.ok(!svg.includes('PM3 35'),'PM should not relocate effort squares');
 });
-test('BTC price zoom is exactly 1 600 dollars; cube proportions are unchanged',()=>{
+test('price window removes vertical empty bands, caps at 1600 USD, preserves cube dimensions',()=>{
  const {mini}=create();
  const opts={data:candles(),periodData:{to:NOW},snapshot:example(),
   width:220,height:192,now:NOW};
  const a=mini.miniSvg({...opts,quoteValue:79880});
- const b=mini.miniSvg({...opts,quoteValue:80380});
- assert.ok(a.includes('data-price-span-usd="1600"'));
- assert.ok(b.includes('data-price-span-usd="1600"'));
+ const b=mini.miniSvg({...opts,quoteValue:81680});
+ const span=s=>Number((s.match(/data-price-span-usd="([\d.]+)"/)||[])[1]);
+ assert.ok(span(a)>=500&&span(a)<900,
+  'tight price excursion should not retain 1600 dollars of blank space');
+ assert.equal(span(b),1600,'an extreme price excursion stays capped at 1600');
+ assert.ok(a.includes('data-price-span-max-usd="1600"'));
  const lines=s=>[...s.matchAll(/<line x1="39" x2="213" y1="([\d.]+)" y2="[\d.]+" stroke="#dee5e9" stroke-width=".65"/g)]
   .map(x=>Number(x[1]));
- const ys=lines(a);
- assert.ok(ys.length>=2,'500-dollar grid on exactly 1600 price range');
- const expected500px=(192-22-19)*500/1600;
+ const ys=lines(b);
+ assert.ok(ys.length>=2);
+ const expected500px=(192-3-3)*500/1600;
  for(let i=1;i<ys.length;i++)
-  assert.ok(Math.abs((ys[i-1]-ys[i])-expected500px)<.15,
-   'spacing corresponds to 500/1600 of unchanged plot pixel height');
+  assert.ok(Math.abs(Math.abs(ys[i-1]-ys[i])-expected500px)<.15,
+   '500-dollar grid expands into the recovered top/bottom plot area');
  const boxes=s=>[...s.matchAll(/<g class="v52-mini-camp" data-camp="(?:ACHAT|VENTE)">[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)]
   .map(x=>({width:x[3],height:x[4]}));
  assert.deepEqual(boxes(a),boxes(b),
-  'changing price center must not change the geometry of the volume cubes');
+  'price zoom cannot change the buyer/seller cube proportions');
 });
-test('3m signed PRICE displacement is visible at bottom of chart and expires with OKX feed',()=>{
- const {mini}=create();
- const cfg={data:candles(),periodData:{to:NOW},width:220,height:192,
-  now:NOW,quoteValue:79880};
- const neg=mini.miniSvg({...cfg,snapshot:example({priceShift:-57})});
- assert.ok(neg.includes('class="v52-mini-price-gap"'));
- assert.ok(neg.includes('Δ BTC 3m -57,0 $'));
- assert.ok(neg.includes('y="188"'),'3m price gap is at bottom of SVG');
- assert.ok(neg.includes('fill="#b93946"'),'negative price delta red');
- const pos=mini.miniSvg({...cfg,snapshot:example({priceShift:57})});
- assert.ok(pos.includes('Δ BTC 3m +57,0 $'));
- assert.ok(pos.includes('fill="#117a4b"'),'positive price delta green');
- const stale=mini.miniSvg({...cfg,snapshot:example({status:'OKX_TRADES_UNAVAILABLE'})});
- assert.ok(stale.includes('Δ BTC 3m —'));
- assert.ok(!stale.includes('Δ BTC 3m -57,0 $'),
-  'do not present stale 3m displacement as live');
+test('signed 3m price delta has its own enlarged row, followed by start/end times',()=>{
+ const {mini,dom}=create();
+ const node=()=>({textContent:'',innerHTML:'',className:'',
+  getBoundingClientRect:()=>({width:220,height:192})});
+ for(const name of ['v52-mini-conversion','v52-mini-conversion-svg',
+  'v52-mini-delta','v52-mini-begin','v52-mini-end','v52-mini-btc-price'])
+  dom[name]=node();
+ mini.setQuote(79880,NOW,'OKX live');
+ assert.equal(mini.setCandles({candles:candles(),period:{to:NOW}}),true);
+ assert.equal(mini.refresh(example({priceShift:-57})),true);
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m -57,0 $');
+ assert.ok(dom['v52-mini-delta'].className.includes('down'));
+ assert.ok(dom['v52-mini-btc-price'].textContent.includes('BTC 79'));
+ assert.notEqual(dom['v52-mini-begin'].textContent,'—');
+ assert.notEqual(dom['v52-mini-end'].textContent,'—');
+ const chart=dom['v52-mini-conversion-svg'].innerHTML;
+ assert.ok(!chart.includes('v52-mini-price-gap'),
+  'delta text must never cover bottom candles');
+ assert.ok(!chart.includes('font-size="8" fill="#72818e"'),
+  'start/end times are outside the price plot');
+ assert.equal(mini.refresh(example({priceShift:57})),true);
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m +57,0 $');
+ assert.ok(dom['v52-mini-delta'].className.includes('up'));
+ assert.equal(mini.refresh(example({status:'OKX_TRADES_UNAVAILABLE'})),true);
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m —',
+  'expired OKX trade prices cannot masquerade as live');
 });
 test('smaller chart grants proportionally generous size to squares and shares contact axis',()=>{
  const {mini}=create();
@@ -134,9 +150,20 @@ test('mini shares existing OKX WS and identical candle fetch; integrated into li
  assert.ok(config.includes("app.get('/elastic-mini-conversion-v542.js'"));
  assert.ok(config.includes('id="v52-mini-conversion"'));
  assert.ok(config.includes('id="v52-mini-conversion-svg"'));
- assert.ok(config.includes('Axe BTC / 500 $ · MA200 3m'));
- assert.ok(!config.includes('id="v52-mini-delta"'),
-  '3m displacement is shown once inside the SVG, not redundantly in the footer');
+ assert.ok(config.includes('id="v52-mini-btc-price"'));
+ assert.ok(config.includes('id="v52-mini-delta"'));
+ assert.ok(config.includes('class="v52-mini-hours"'));
+ assert.ok(config.includes('id="v52-mini-begin"'));
+ assert.ok(config.includes('id="v52-mini-end"'));
+ assert.ok(config.indexOf('id="v52-mini-btc-price"')<
+  config.indexOf('id="v52-mini-conversion-svg"'));
+ assert.ok(config.indexOf('id="v52-mini-delta"')<
+  config.indexOf('class="v52-mini-hours"'),
+  'delta must have its own row immediately above start/end times');
+ assert.ok(!config.includes('<span class="buy">ACHAT'),
+  'remove buy word to leave room for the numerical volume');
+ assert.ok(!config.includes('<span class="sell">VENTE'),
+  'remove sell word to leave room for the numerical volume');
  assert.ok(config.includes('window.BoonoMiniConversion.refresh();'));
  assert.ok(observer.includes('window.BoonoMiniConversion.setCandles(data)'));
  assert.ok(observer.includes('window.BoonoMiniConversion.setQuote(price,ts,status)'));
@@ -151,7 +178,10 @@ test('live painter carries all existing measurements, preserves null P75 not fab
   'v52-mini-conversion-status':node(),
   'v52-mini-buy':node(),
   'v52-mini-sell':node(),
+  'v52-mini-btc-price':node(),
   'v52-mini-delta':node(),
+  'v52-mini-begin':node(),
+  'v52-mini-end':node(),
   'v52-mini-pm':node(),
   'v52-mini-eff':node(),
   'v52-mini-quality':node()
@@ -162,6 +192,10 @@ test('live painter carries all existing measurements, preserves null P75 not fab
  assert.ok(dom['v52-mini-conversion-svg'].innerHTML.includes('data-camp="ACHAT"'));
  assert.ok(dom['v52-mini-buy'].textContent.includes('3.310 BTC'));
  assert.ok(dom['v52-mini-sell'].textContent.includes('55.838 BTC'));
+ assert.ok(dom['v52-mini-btc-price'].textContent.includes('79'));
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m -57,0 $');
+ assert.notEqual(dom['v52-mini-begin'].textContent,'—');
+ assert.notEqual(dom['v52-mini-end'].textContent,'—');
  assert.ok(dom['v52-mini-pm'].textContent.includes('PM3 -58,2'));
  assert.ok(dom['v52-mini-pm'].textContent.includes('Live -19,0'));
  assert.ok(dom['v52-mini-eff'].textContent.includes('eff3 —'));
