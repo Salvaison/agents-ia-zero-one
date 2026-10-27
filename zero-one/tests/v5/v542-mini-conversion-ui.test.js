@@ -249,14 +249,24 @@ test('Conversion information is ordered below the graph with subtle separators a
  assert.equal(slot.split('Vitesse 3m').length-1,1,'speed only once');
  assert.equal(slot.split('id="v52-mini-pm"').length-1,1,
   'PM3 PM5 Live are dynamically shown once at the bottom');
- for(const selector of ['.v52-mini-price-row','.v52-mini-delta',
-  '.v52-mini-price-deport','.v52-mini-hours']){
+ for(const selector of ['.v52-mini-volume','.v52-mini-price-deport',
+  '.v52-mini-hours']){
   const start=config.indexOf(selector+'{');
   assert.ok(start>0);
   const css=config.slice(start,config.indexOf('}',start));
   assert.ok(css.includes('border-bottom:1px solid #aebac3'),
    selector+' should separate sections with a thin dark-grey rule');
  }
+ // The requested divider is under buyer/seller VOLUMES. Price and Delta
+ // have no horizontal divider below them; Delta and Deport stay connected.
+ for(const selector of ['.v52-mini-price-row','.v52-mini-delta']){
+  const start=config.indexOf(selector+'{');
+  assert.ok(start>0);
+  const css=config.slice(start,config.indexOf('}',start));
+  assert.ok(!css.includes('border-bottom'),selector+' must have no divider');
+ }
+ assert.ok(slot.indexOf('class="v52-mini-volume"')<
+  slot.indexOf('id="v52-mini-delta"'), 'volume values precede price Delta');
  assert.ok(config.includes('padding:4px;background:#f3f5f7;'),
   'outer frame is light grey, not the previously too-dark shade');
  assert.ok(config.includes('.v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;'),

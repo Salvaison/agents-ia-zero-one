@@ -2950,12 +2950,12 @@ app.get('/', requireAuth, (req, res) => {
        .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;}
       .v52-mini-conversion{flex:1;min-width:0;margin-top:6px;border:1px solid #d7e0e7;border-radius:5px;padding:4px;background:#f3f5f7;}
       .v52-mini-head{display:flex;justify-content:space-between;align-items:center;gap:5px;font:700 8.5px/1.45 'SF Mono',Menlo,monospace;color:#617684;}
-      .v52-mini-price-row{text-align:center;padding:2px 0 5px;margin-bottom:3px;border-bottom:1px solid #aebac3;}
+      .v52-mini-price-row{text-align:center;padding:2px 0 3px;margin-bottom:1px;}
       .v52-mini-btc-price{font:850 14px/1.15 'SF Mono',Menlo,monospace;letter-spacing:-.04em;color:#304e60;font-variant-numeric:tabular-nums;}
       .v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;border:1px solid #d7e0e7;border-radius:3px;}
       .v52-mini-chart svg{display:block;width:100%;height:192px;}
-      .v52-mini-volume{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:4px 1px 2px;font:850 11.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
-      .v52-mini-delta{text-align:center;border-bottom:1px solid #aebac3;padding:4px 0 5px;margin-bottom:3px;font:850 13px/1.2 'SF Mono',Menlo,monospace;color:#526b78;font-variant-numeric:tabular-nums;white-space:nowrap;}
+      .v52-mini-volume{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:4px 1px 5px;margin-bottom:3px;border-bottom:1px solid #aebac3;font:850 11.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
+      .v52-mini-delta{text-align:center;padding:3px 0 2px;margin-bottom:0;font:850 13px/1.2 'SF Mono',Menlo,monospace;color:#526b78;font-variant-numeric:tabular-nums;white-space:nowrap;}
       .v52-mini-delta.up{color:#117a4b;}.v52-mini-delta.down{color:#b93946;}
       .v52-mini-price-deport{text-align:center;color:#4387bd;font:750 9px/1.35 'SF Mono',Menlo,monospace;padding:2px 0 5px;margin-bottom:3px;border-bottom:1px solid #aebac3;white-space:nowrap;font-variant-numeric:tabular-nums;}
       .v52-mini-hours{display:flex;justify-content:space-between;gap:5px;border-bottom:1px solid #aebac3;padding:1px 0 5px;margin-bottom:3px;color:#697f8c;font:750 9.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;}

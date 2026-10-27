@@ -113,3 +113,15 @@ Le propriétaire demande la simplification de `4 · CONVERSION · PM LIVE`, sans
 Vérification réelle du rendu : exécution du vrai `renderV52Living` dans un contexte de démonstration avec valeurs explicitement fictives issues de l'exemple utilisateur, puis insertion du SVG compact avec bougies historiques réelles. Rendu Chrome sans session authentifiée sur colonne de 234 px : aucune collision, lignes de séparation et hiérarchie vérifiées visuellement. La validation finale dans la session propriétaire reste possible après `Ctrl+Maj+R`. Cette intervention concerne **uniquement BOONO Watch** ; les moteurs V4.9.4/V5.4.2 et leur PAPER ne sont pas modifiés.
 
 **Déploiement typographique vérifié (27/10/2026) :** tests complets **281 au total, 269 réussis, 0 échec, 12 cas historiques sautés**. Contrôle Chromium sur véritable HTML de la carte Conversion en 234 px. Sauvegarde préalable du serveur d'interface et des deux ledgers PAPER, empreintes SHA256 conservées dans `/root/boono-watch-conversion-hierarchy-before-20261027/`. Seul `config-server` redémarré. Les PID V4.9.4 `962864` et V5.4.2 `962826` sont restés identiques. Au contrôle de bascule, V5.4.2 était FLAT, V4.9.4 détenait un SHORT PAPER ; aucune entrée/sortie n'a été forcée et aucun ordre financé n'était autorisé. Route authentifiée BOONO Watch en service.
+
+## Correctif des trois séparateurs du mini-graphe — 27 octobre 2026
+
+Après la réorganisation du module 4, le propriétaire précise la position voulue des traits fins :
+- **Aucun trait séparateur sous le prix absolu BTC**, immédiatement avant la fenêtre blanche de chandeliers.
+- **Un seul trait gris fin entre les deux volumes acheteur/vendeur affichés en BTC et la valeur \`Δ BTC 3m\`** (bordure basse de \`.v52-mini-volume\`).
+- **Aucun trait entre \`Δ BTC 3m\` et \`Déport prix\`**, ces deux grandeurs devant se lire ensemble.
+- Conserver les traits fins **après \`Déport prix\`** et **après les horaires Début/Fin** pour isoler les petites informations MF/PM/efficacité/vitesse/qualité.
+
+Correction CSS isolée dans \`modules/config-server.js\` ; aucune modification du graphe, des valeurs OKX, de la fenêtre 150 minutes, de l'axe bleu, des cubes ou des moteurs de trading. Un test dédié vérifie les bordures présentes/absentes. Un rendu Chromium de la véritable composition mobile à largeur 234 px a confirmé la nouvelle hiérarchie.
+
+**Contrôle déploiement :** suite V4/V5/attention 281 tests, 269 réussis, 0 échec, 12 historiques sautés. Sauvegardes du serveur d'interface et des deux ledgers dans /root/boono-conversion-separators-before-20261027/. Seul config-server redémarré ; PID PAPER V4.9.4 962864 et V5.4.2 962826 inchangés. Aucun changement de décision ni sortie forcée ; ancien SHORT V4.9.4 conservé pendant la mise en service.
