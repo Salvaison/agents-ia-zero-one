@@ -215,6 +215,93 @@ test('Conversion title keeps the primary Bâton and secondary grey depuis on a s
   'the slow-down tag also depended on removed 2m comparison');
  assert.ok(config.includes('.v52-cell.conv .v52-conv-speed{white-space:nowrap;}'));
 });
+test('Conversion information is ordered below the graph with subtle separators and lighter frame',()=>{
+ const begin=config.indexOf("cell('conv','4 · CONVERSION · PM LIVE'");
+ const end=config.indexOf("cell('prognosis'",begin);
+ assert.ok(begin>0&&end>begin);
+ const slot=config.slice(begin,end);
+ const miniStart=slot.indexOf('id="v52-mini-conversion"');
+ assert.ok(miniStart>0);
+ const top=slot.slice(0,miniStart);
+ assert.ok(top.includes('v52-baton-since'),'Bâton stays above chart');
+ assert.ok(!top.includes("'PM3 '+sn(c.pm3)"),'redundant top PM3/PM5 removed');
+ assert.ok(!top.includes('Vitesse 3m'),'speed removed from the top');
+ assert.ok(!top.includes('MF3 Δ3m'),'MF history removed from the top');
+ const order=[
+  'id="v52-mini-btc-price"',
+  'id="v52-mini-conversion-svg"',
+  'id="v52-mini-delta"',
+  'id="v52-mini-price-deport"',
+  'id="v52-mini-begin"',
+  'class="v52-mini-mf"',
+  'id="v52-mini-pm"',
+  'id="v52-mini-eff"',
+  'v52-mini-speed v52-conv-speed',
+  'id="v52-mini-quality"'
+ ];
+ let offset=-1;
+ for(const item of order){
+  const next=slot.indexOf(item);
+  assert.ok(next>offset,item+' must follow the preceding data');
+  offset=next;
+ }
+ assert.equal(slot.split('MF3 Δ3m').length-1,1,'MF data only once');
+ assert.equal(slot.split('Vitesse 3m').length-1,1,'speed only once');
+ assert.equal(slot.split('id="v52-mini-pm"').length-1,1,
+  'PM3 PM5 Live are dynamically shown once at the bottom');
+ for(const selector of ['.v52-mini-price-row','.v52-mini-delta',
+  '.v52-mini-price-deport','.v52-mini-hours']){
+  const start=config.indexOf(selector+'{');
+  assert.ok(start>0);
+  const css=config.slice(start,config.indexOf('}',start));
+  assert.ok(css.includes('border-bottom:1px solid #aebac3'),
+   selector+' should separate sections with a thin dark-grey rule');
+ }
+ assert.ok(config.includes('padding:4px;background:#f3f5f7;'),
+  'outer frame is light grey, not the previously too-dark shade');
+ assert.ok(config.includes('.v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;'),
+  'candle viewport remains pure white');
+ assert.ok(config.includes('.v52-mini-pm{color:#18222b;font-size:9px;'),
+  'PM3/PM5/Live row is black and same size as other small info');
+});
+test('live Etat vivant renders moved MF and speed only after the two time labels',()=>{
+ const tick=String.fromCharCode(96);
+ const source=config.indexOf("app.get('/app.js', requireAuth"),
+  a=config.indexOf('send('+tick,source),
+  b=config.indexOf(tick+');\n});',a);
+ assert.ok(source>0&&a>0&&b>a);
+ const js=vm.runInNewContext(tick+config.slice(a+6,b)+tick);
+ const start=js.indexOf('function renderV52Living(data){');
+ const finish=js.indexOf('async function loadV52PaperPanel(){',start);
+ assert.ok(start>0&&finish>start);
+ const element={innerHTML:''};
+ const context={document:{getElementById:id=>id==='v52-live'?element:null},
+  window:{},Date,Math,Number,String,escTrade:String,
+  v5Time:v=>v?new Date(v).toISOString():'—'};
+ vm.createContext(context);
+ vm.runInContext(js.slice(start,finish),context);
+ context.renderV52Living({updatedAt:NOW,analysis:{asOf:NOW,price:80440,
+  action:'WAIT',quality:'DATA_OK',readings:{
+   conversion:{pmLastBaton:14.6,pmSinceBaton:-21.4,pm3:-61.3,
+    pm5:-119.8,mf3Delta3m:-2.0,intervalSeconds:15.6},
+   mcb15:{mf15Delta10m:null},maturity:{recent3mRateUsdPerMin:null},
+   flow15:{qualityGrade:'CONTESTED',mf15Role:null}}}});
+ const html=element.innerHTML;
+ const startCell=html.indexOf('class="v52-cell conv"');
+ const nextCell=html.indexOf('class="v52-cell prognosis"',startCell);
+ assert.ok(startCell>0&&nextCell>startCell);
+ const conv=html.slice(startCell,nextCell),preChart=conv.slice(0,conv.indexOf('id="v52-mini-conversion"'));
+ assert.ok(preChart.includes('Bâton +14.6 $'));
+ assert.ok(preChart.includes('· depuis -21.4 $'));
+ assert.ok(!preChart.includes('PM3 -61.3'));
+ assert.ok(!preChart.includes('MF3 Δ3m'));
+ assert.ok(!preChart.includes('Vitesse 3m'));
+ assert.ok(conv.includes('MF3 Δ3m -2.0 · MF15 Δ10m — · cohérence CONTESTED'));
+ assert.ok(conv.includes('· 15.6s après Bâton'));
+ assert.ok(conv.indexOf('id="v52-mini-end"')<conv.indexOf('MF3 Δ3m -2.0'));
+ assert.ok(conv.indexOf('id="v52-mini-eff"')<conv.indexOf('Vitesse 3m — $/min'));
+ assert.ok(conv.indexOf('Vitesse 3m — $/min')<conv.indexOf('id="v52-mini-quality"'));
+});
 test('the CURRENT full Conversion window AND mini use 150 minutes of actual 3m candles',()=>{
  assert.ok(config.includes("const now=Date.now(),minutes=150,t0=now-minutes*60000;"));
  assert.ok(config.includes("waveUiPriceSeries('3m',t0-180000,now).slice(-53)"));
@@ -247,14 +334,14 @@ test('the CURRENT full Conversion window AND mini use 150 minutes of actual 3m c
  assert.equal(dom['v52-mini-end'].textContent,end);
  assert.equal((src.match(/fetch\(/g)||[]).length,0);
 });
-test('only the outer frame is 10% darker: actual candle window remains white',()=>{
+test('lightened outer frame remains separate from the white candle window',()=>{
  const {mini}=create();
  const svg=mini.miniSvg({data:candles(),periodData:{to:NOW},
   snapshot:example(),width:222,height:192,now:NOW,quoteValue:79880});
  assert.ok(svg.includes('<rect width="222" height="192" fill="#fff"/>'),
   'SVG candle plotting surface is unconditionally pure white');
- assert.ok(config.includes('padding:4px;background:#e6ebf0;'),
-  'grey shading belongs only to the enclosing frame and its 4px padding');
+ assert.ok(config.includes('padding:4px;background:#f3f5f7;'),
+  'only the enclosing frame uses a subtle light-grey background');
  assert.ok(config.includes('overflow:hidden;background:#fff;border:1px solid #d7e0e7'),
   'the chart window must also be explicitly white in CSS');
  assert.ok(!svg.includes('fill="#e6ebf0"'),

@@ -98,3 +98,18 @@ L'utilisateur a précisé que **la fenêtre actuelle de chandeliers** devait aff
 Rendu compact Chromium vérifié en 230 px (2 h 30, cadre gris / chandeliers blancs). Tests spécifiques au chargement 150 min et à la séparation cadre/blanc exécutés ; tests complets V4/V5/attention et publication ensuite.
 
 **Finalisation corrective 150 min / cadre gris / chandeliers blancs :** suite complète 279 tests, **267 réussis, zéro échec, 12 anciens cas sautés**. Test spécifique assurant une seule requête de bougies, 150 minutes réellement visibles sur les deux graphiques, et rectangle SVG blanc avec gris réservé au cadre extérieur. Rendu vérifié dans Chromium sur une colonne étroite. Rechargement de `config-server` seul, sans modification des PID des moteurs PAPER.
+
+## Hiérarchie visuelle du module 4 — 27 octobre 2026 (retouche typographique)
+
+Le propriétaire demande la simplification de `4 · CONVERSION · PM LIVE`, sans changement de logique BOONO, d'indicateur, de flux ou de version.
+
+- En tête, ne garder que **`Bâton ±XX,X $`**, accompagné de `· depuis ±XX,X $` plus petit et gris. La ligne `PM3 … · PM5 …` figurant auparavant au-dessus du graphe est **supprimée comme doublon** : la ligne live `PM3 … · PM5 … · Live …` existe déjà en bas.
+- **Retirer `Vitesse 3m … $/min` du haut**, puis la replacer entre la ligne efficacité/P75 et la ligne Qualité/direction, dans la typographie petite de l'interface. La source et les calculs de vitesse restent intacts.
+- **Transférer la chronologie `MF3 Δ3m … · MF15 Δ10m … · cohérence … · MF15 … · XX,Xs après Bâton` juste après les horaires Début/Fin**, en petit caractère et avec les mêmes données qu'auparavant.
+- Ajouter un trait horizontal **gris foncé, fin (1 px `#aebac3`)** sous le prix absolu BTC, sous `Δ BTC 3m`, sous `Déport prix` et sous les horaires `Début / Fin`. Les volumes et le Δ restent ensemble, sans séparateur intermédiaire.
+- **PM3 / PM5 / Live en noir `#18222b` et 9 px**, avant `eff3 / yield/P75 / effort/P75`, puis `Vitesse 3m`, puis `Qualité / direction`.
+- **Éclaircir uniquement le cadre externe** de `#e6ebf0` à `#f3f5f7`, les bougies elles-mêmes restant sur **blanc pur `#fff`**. Les cubes, le repère vertical bleu ciel, l'échelle BTC, la fenêtre de 150 minutes et la donnée de déport du prix restent inchangés.
+
+Vérification réelle du rendu : exécution du vrai `renderV52Living` dans un contexte de démonstration avec valeurs explicitement fictives issues de l'exemple utilisateur, puis insertion du SVG compact avec bougies historiques réelles. Rendu Chrome sans session authentifiée sur colonne de 234 px : aucune collision, lignes de séparation et hiérarchie vérifiées visuellement. La validation finale dans la session propriétaire reste possible après `Ctrl+Maj+R`. Cette intervention concerne **uniquement BOONO Watch** ; les moteurs V4.9.4/V5.4.2 et leur PAPER ne sont pas modifiés.
+
+**Déploiement typographique vérifié (27/10/2026) :** tests complets **281 au total, 269 réussis, 0 échec, 12 cas historiques sautés**. Contrôle Chromium sur véritable HTML de la carte Conversion en 234 px. Sauvegarde préalable du serveur d'interface et des deux ledgers PAPER, empreintes SHA256 conservées dans `/root/boono-watch-conversion-hierarchy-before-20261027/`. Seul `config-server` redémarré. Les PID V4.9.4 `962864` et V5.4.2 `962826` sont restés identiques. Au contrôle de bascule, V5.4.2 était FLAT, V4.9.4 détenait un SHORT PAPER ; aucune entrée/sortie n'a été forcée et aucun ordre financé n'était autorisé. Route authentifiée BOONO Watch en service.
