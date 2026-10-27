@@ -3342,7 +3342,7 @@ app.get('/', requireAuth, (req, res) => {
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
-<div class="placeholder-note">Aucun trade V4 cloture pour l'instant.</div>
+<div id="paperHistoryPanel">Chargement de l’historique PAPER…</div>
 </div>
 <div class="tab-panel" id="tab2-reportsv2">
 <div class="placeholder-note">Les comptes rendus V4 apparaissent apres chaque trade cloture. Archive V3 conservee plus bas.</div>
@@ -3793,11 +3793,15 @@ document.querySelectorAll('.main-nav-item').forEach(el => {
     if (el.dataset.main === 'trades') {
       const shadowsTab=document.querySelector('.tab[data-tab2="shadows"]');
       const reportsTab=document.querySelector('.tab[data-tab2="reportsv2"]');
+      const historyTab=document.querySelector('.tab[data-tab2="historyv2"]');
       const wavesTab=document.querySelector('.tab[data-tab2="waves"]');
       if(reportsTab&&reportsTab.classList.contains('active')){
         loadV4Reports(); // no 30-second reports download
       }else if(wavesTab&&wavesTab.classList.contains('active')){
         waveLiveFollow=true;loadWaveLive(false);
+      }else if(historyTab&&historyTab.classList.contains('active')){
+        // Opening TRADES with Historique already selected must load it NOW.
+        loadPaperHistoryPanel();
       }else if(shadowsTab&&shadowsTab.classList.contains('active')){
         loadShadows();
         tradesAutoRefresh=setInterval(loadShadows,30000);
@@ -3826,6 +3830,12 @@ document.querySelectorAll('.tab[data-tab2]').forEach(el => {
       if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
       if (el.dataset.tab2 === 'waves') { waveLiveFollow=true; loadWaveLive(false); }
       else {stopWaveLiveRefresh();loadV4Reports();}
+    } else if (el.dataset.tab2 === 'historyv2') {
+      stopWaveLiveRefresh();
+      // History is a separate PAPER API, not a side-effect of loadTrades().
+      // Entering the tab must not wait for the 30-second periodic timer.
+      if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
+      loadPaperHistoryPanel();
     } else if (el.dataset.tab2 === 'shadows') {
       stopWaveLiveRefresh();
       if (tradesAutoRefresh) { clearInterval(tradesAutoRefresh); tradesAutoRefresh = null; }
@@ -4064,7 +4074,7 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.3</b> · <b style="color:#9c1f6f">rose V5.4.1 / archives V5.2–V5.4</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.4</b> · <b style="color:#9c1f6f">rose V5.4.2 / archives V5.2–V5.4.1</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
@@ -4072,7 +4082,7 @@ function waveRenderTradePanel() {
       'POSITION OUVERTE · bande prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
-      (t.source==='V52_PAPER'?(String(t.policyVersion||'').includes('v5.4.1')?'V5.4.1':String(t.policyVersion||'').includes('v5.4')?'V5.4':String(t.policyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.policyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.policyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.policyVersion||'').includes('v5.3')?'V5.3':String(t.policyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+
+      paperTradeVersion(t.source==='V52_PAPER'?'v52':'v493',t)+' PAPER #'+
       escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
       'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
       ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
@@ -4095,11 +4105,19 @@ function waveCloseTradeReport() {
   ov.classList.remove('open');
   ov.setAttribute('aria-hidden','true');
 }
+// Resolve the policy that ACTUALLY opened a trade, not the current ledger
+// version. Old V5/V493 trades keep their historical names in every report.
+function paperTradeVersion(kind,trade){
+ const policy=String(trade?.entryPolicyVersion||trade?.policyVersion||
+   trade?.engine||'').toLowerCase();
+ const found=policy.match(/v([0-9]+(?:[.][0-9]+){1,2})/);
+ if(kind==='v493')return found?'V'+found[1]:'V4.9.4';
+ return found?'V'+found[1]:'V5.2';
+}
 // Dedicated PAPER reports: no false V4 report for V5.2 / V4.9.3.
 function renderPaperTradeReport(data){
  const t=data.trade||{},v52=data.engine==='v52',
-  policy=String(t.entryPolicyVersion||''),
-  engine=v52?(policy.includes('v5.4.1')?'V5.4.1':policy.includes('v5.4')?'V5.4':policy.includes('v5.3.3')?'V5.3.3':policy.includes('v5.3.2')?'V5.3.2':policy.includes('v5.3.1')?'V5.3.1':policy.includes('v5.3')?'V5.3':policy.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3';
+  engine=paperTradeVersion(data.engine,t);
  const n=(x,d=1)=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(d);
  const signed=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
     (Number(x)>0?'+':'')+Number(x).toFixed(2);
@@ -4216,14 +4234,13 @@ async function waveOpenTradeReport(tradeNo) {
   title.textContent='#'+tradeNo+' · chargement du rapport…';
   body.innerHTML='<div class="wave-report-loading">Chargement du rapport complet depuis Amsterdam…</div>';
   try{
-    const paper=String(tradeNo).match(/^(V52|V493):(\d+)$/);
+    const paper=String(tradeNo).match(/^(V52|V493):(\\d+)$/);
     if(paper){
       const kind=paper[1]==='V52'?'v52':'v493',number=Number(paper[2]);
       const res=await fetch('/api/paper-trade-report/'+kind+'/'+number,{cache:'no-store'});
       if(!res.ok)throw Error('HTTP '+res.status);
       const report=await res.json();
-      const pl=String(report.trade?.entryPolicyVersion||'');
-      title.textContent=(kind==='v52'?(pl.includes('v5.4.1')?'V5.4.1':pl.includes('v5.4')?'V5.4':pl.includes('v5.3.3')?'V5.3.3':pl.includes('v5.3.2')?'V5.3.2':pl.includes('v5.3.1')?'V5.3.1':pl.includes('v5.3')?'V5.3':pl.includes('v5.2.2')?'V5.2.2':'V5.2'):'V4.9.3')+' PAPER #'+number+
+      title.textContent=paperTradeVersion(kind,report.trade)+' PAPER #'+number+
         ' · '+String(report.trade?.direction||'').toUpperCase()+
         (report.status==='OPEN'?' · EN POSITION':' · RAPPORT COMPLET');
       body.innerHTML=renderPaperTradeReport(report);
@@ -5168,7 +5185,7 @@ document.addEventListener('click',function(e){
  const b=e.target&&e.target.closest?e.target.closest('[data-paper-report]'):null;
  if(!b)return;
  const key=String(b.getAttribute('data-paper-report')||'');
- if(/^(V52|V493):[1-9]\d*$/.test(key))waveOpenTradeReport(key);
+ if(/^(V52|V493):[1-9]\\d*$/.test(key))waveOpenTradeReport(key);
 });
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'){waveCloseTradeReport();waveCloseInfo();}});
 
@@ -6984,7 +7001,7 @@ function renderPaperHistoryGroup(x,kind){
  if(data.open){
   const p=data.open;
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
-   '<b>'+(isV52?(String(p.entryPolicyVersion||'').includes('v5.4.1')?'V5.4.1':String(p.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(p.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(p.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(p.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(p.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(p.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+   '<b>'+paperTradeVersion(kind,p)+
    ' #'+f(p.tradeNo)+' · '+f(String(p.direction||'').toUpperCase())+
    ' · EN POSITION</b><div>Entrée '+time(p.entryAt)+' à '+n(p.entryPrice)+' $ BTC'+
    ' · prix '+n(p.lastPrice)+' $ · net estimé '+signed(p.lastNetPnlUsd)+' $</div>'+
@@ -6997,7 +7014,7 @@ function renderPaperHistoryGroup(x,kind){
   const statusColor=Number(t.netPnlUsd)>=0?'#087245':'#b52b39';
   cards.push('<div class="v52-ledger" style="border-left:3px solid '+color+'">'+
    '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">'+
-    '<b>'+(isV52?(String(t.entryPolicyVersion||'').includes('v5.4.1')?'V5.4.1':String(t.entryPolicyVersion||'').includes('v5.4')?'V5.4':String(t.entryPolicyVersion||'').includes('v5.3.3')?'V5.3.3':String(t.entryPolicyVersion||'').includes('v5.3.2')?'V5.3.2':String(t.entryPolicyVersion||'').includes('v5.3.1')?'V5.3.1':String(t.entryPolicyVersion||'').includes('v5.3')?'V5.3':String(t.entryPolicyVersion||'').includes('v5.2.2')?'V5.2.2':'V5.2'):name)+
+    '<b>'+paperTradeVersion(kind,t)+
     ' #'+f(t.tradeNo)+' · '+f(String(t.direction||'').toUpperCase())+'</b>'+
     '<b style="color:'+statusColor+'">'+signed(t.netPnlUsd)+' $ net</b></div>'+
    '<div>Entrée '+time(t.entryAt)+' · '+n(t.entryPrice)+' $ BTC → sortie '+
@@ -7035,7 +7052,8 @@ async function loadPaperHistoryPanel(){
  }catch(e){panel.textContent='Historique PAPER indisponible : '+e.message;}
  finally{paperHistoryPending=false;}
 }
-setInterval(loadPaperHistoryPanel,30000);
+// PAPER histories are read ONLY when a user opens Historique.
+// Never poll this endpoint while the tab remains open.
 let tradesLoadInProgress=false;
 async function loadTrades() {
   // Avoid overlapping network transfers on slow/mobile connections.
@@ -7163,7 +7181,8 @@ async function loadTrades() {
         archiveSummary+
         (archivedV3.length?archivedV3.map(renderV2HistoryRow).join(''):'')+'</details>';
     }
-    loadPaperHistoryPanel();
+    // History is loaded only by explicit Historique navigation, not by this
+    // automatic 30-second live-state refresh.
     const reportTotal=Number(data.reportMeta&&data.reportMeta.totalCount)||0;
     if(v4ExpectedReportsCount!==reportTotal){
       v4ExpectedReportsCount=reportTotal;
@@ -7177,7 +7196,7 @@ async function loadTrades() {
       '<div class="ledger-empty">V4 indisponible : '+escTrade(e.message)+'</div>';
     if(historyEl&&!historyEl.querySelector('#paperHistoryPanel'))
       historyEl.innerHTML='<div id="paperHistoryPanel">Chargement de l’historique PAPER…</div>';
-    loadPaperHistoryPanel();
+    // Do not turn a failed legacy V4 refresh into a PAPER history request.
   } finally {
     tradesLoadInProgress=false;
   }

@@ -75,7 +75,7 @@ test('comparison spans have distinct colors and independent UTC trade identities
  assert.equal(hit[0].source,'V52_PAPER');
  assert.ok(hit[0].y1>hit[1].y2,'tapping pink cannot select overlapping blue trade');
 });
-test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 remain archived',()=>{
+test('Vagues overlays current V4.9.4 and V5.4.2 ledgers; older trades retain their archived policy versions',()=>{
  assert.ok(src.includes('waveUiComparePaperTrades(now-48*3600000,now)'));
  assert.ok(src.includes('waveUiComparePaperTrades(startTs,endTs)'));
  assert.ok(src.includes('V52_PAPER'));assert.ok(src.includes('V493_PAPER'));
@@ -84,7 +84,7 @@ test('Vagues overlays only V4.9.3 and V5.2 active ledgers; legacy V4 and V5.1 re
  assert.ok(src.includes('waveReplayData.showLegacyV4?waveTradeSpans'));
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
- assert.ok(src.includes('bleu V4.9.3'));assert.ok(src.includes('rose V5.4.1 / archives V5.2–V5.4'));
+ assert.ok(src.includes('bleu V4.9.4'));assert.ok(src.includes('rose V5.4.2 / archives V5.2–V5.4.1'));
 });
 test('overlapping positions keep their own 10px lane and preserve true entry/exit vertical markers',()=>{
  const {wavePaintV5Bands}=browserTools(),ctxLines=[],fills=[];
