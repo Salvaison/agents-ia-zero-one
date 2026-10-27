@@ -16,6 +16,15 @@ function relativePriceDeport(e){
  const net=num(e.priceNetUsd),range=num(e.priceRangeUsd);
  return net!==null&&range!==null&&range>0?clamp(net/range,-1,1):null;
 }
+const VISIBLE_MINUTES=150; // 2 h 30, same viewport as the full Conversion graph
+function visibleEnd(lastCandleTs,periodData,now){
+ const bound=num(periodData?.to);
+ // The last LIVE candle is stamped at its OPEN, not at its end. The HTTP
+ // period.to is the actual observation time, which must take priority so
+ // that a newly opened candle cannot shift the 150m window 3m into future.
+ if(bound!==null&&bound>=lastCandleTs&&bound<=now+10000)return Math.min(now,bound);
+ return Math.min(now,lastCandleTs+180000);
+}
 const clock=t=>Number.isFinite(Number(t))?new Date(t).toLocaleTimeString('fr-FR',{
  timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -32,16 +41,16 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  // Top/bottom captions are now separate DOM rows; fill the SVG with PRICE.
  const plot={l:w<240?39:43,r:7,t:3,b:3},pw=w-plot.l-plot.r,ph=h-plot.t-plot.b;
  const svgParts=[];
+ // Keep the price CANDLE window pure white; only its OUTER frame is grey.
  svgParts.push('<rect width="'+w+'" height="'+h+'" fill="#fff"/>');
  const valid=(data||[]).filter(x=>num(x.ts)!==null&&
   [x.open,x.high,x.low,x.close].every(v=>num(v)!==null)&&
-  Number(x.ts)<=now+3000).slice(-45);
+  Number(x.ts)<=now+3000).slice(-53);
  if(valid.length<2)return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bougies 3 minutes indisponibles">'+
   svgParts.join('')+'<text x="'+(w/2)+'" y="'+(h/2)+'" text-anchor="middle" font-size="9" fill="#748493">Bougies 3m en attente</text></svg>';
  const latestTs=valid.at(-1).ts;
- const periodEnd=num(periodData?.to);
- const end=Math.max(latestTs+180000,periodEnd!==null&&periodEnd<now+10000?periodEnd:latestTs);
- const start=end-90*60000;
+ const end=visibleEnd(latestTs,periodData,now);
+ const start=end-VISIBLE_MINUTES*60000;
  const bars=valid.filter(x=>Number(x.ts)>=start-180000&&Number(x.ts)<=end);
  // Use the observed BTC candle excursion, not distant MA levels, to avoid
  // empty price bands. 1600 USD remains the MAX view window. Distant MA values
@@ -172,6 +181,7 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  // Live BTC quote, 3m signed price move, and start/end time are rendered in
  // independent, bigger rows OUTSIDE this SVG. No text masks the candles.
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
+  ' data-window-minutes="'+VISIBLE_MINUTES+'"'+
   ' data-price-span-usd="'+span.toFixed(1)+'" data-price-span-max-usd="1600"'+
   ' role="img" aria-label="Prix BTC 3m, graduations 500 dollars, ligne bleue ciel de référence Δ prix zéro, écart du contact des cubes proportionnel au déport prix 3m normalisé, duel en volumes BTC">'+
   svgParts.join('')+'</svg>';
@@ -186,7 +196,7 @@ function setQuote(price,ts,status){
 }
 function setCandles(data){
  if(!data||!Array.isArray(data.candles)||data.candles.length<2)return false;
- candles=data.candles.slice(-45);period=data.period||null;
+ candles=data.candles.slice(-53);period=data.period||null;
  return refresh();
 }
 function refresh(snapshot){
@@ -222,10 +232,9 @@ function refresh(snapshot){
  if(deltaRow)deltaRow.className='v52-mini-delta'+(
   delta===null?'':delta>0?' up':delta<0?' down':'');
  if(candles.length>=2){
-  const latest=candles.at(-1).ts,availableTo=num(period?.to);
-  const end=Math.max(latest+180000,
-    availableTo!==null&&availableTo<Date.now()+10000?availableTo:latest);
-  set('v52-mini-begin',clock(end-90*60000));
+  const latest=candles.at(-1).ts;
+  const end=visibleEnd(latest,period,Date.now());
+  set('v52-mini-begin',clock(end-VISIBLE_MINUTES*60000));
   set('v52-mini-end',clock(end));
  }else{set('v52-mini-begin','—');set('v52-mini-end','—');}
  set('v52-mini-pm','PM3 '+signed(cv.pm3)+' · PM5 '+signed(cv.pm5)+

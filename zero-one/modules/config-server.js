@@ -713,13 +713,15 @@ function waveUiComparePaperTrades(startTs,endTs) {
 // Read-only endpoint; no reuse of trading state or admission authority.
 app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
   try{
-    const now=Date.now(),minutes=90,t0=now-minutes*60000;
-    const candles=waveUiPriceSeries('3m',t0-180000,now).slice(-45);
+    // One shared HTTP response with 150m of true 3m candles for BOTH
+    // the compact and the full-size Conversion charts; no additional fetch.
+    const now=Date.now(),minutes=150,t0=now-minutes*60000;
+    const candles=waveUiPriceSeries('3m',t0-180000,now).slice(-53);
     res.set('Cache-Control','no-store');
     res.json({version:'elastic-wave-3m-overlay-v0.2',source:'Waves/mcb_3m.csv + mcb_3m_live.csv',
       timeframe:'3m',period:{from:t0,to:now},candles,
       priceAxis:'BTC_USD',
-      note:'Price candles are the identical Waves 3m OHLC source. The central translucent buy/sell duel is rendered independently, without a PM3 line or right-hand price-level anchor. Read only.'});
+      note:'Same Waves 3m OHLC source and same 150m viewport for mini and full Conversion charts. Buy/sell duel remains on its independent rolling 3m trades window, without trade authority.'});
   }catch(err){res.status(500).json({error:'Elastic 3m price chart unavailable',detail:err.message});}
 });
 app.get('/api/elastic-history',requireAuth,(req,res)=>{
@@ -2946,11 +2948,11 @@ app.get('/', requireAuth, (req, res) => {
       .v52-cell{min-width:0;border:1px solid #d9e1e8;border-left:3px solid #89a0b3;background:#fff;padding:6px;border-radius:6px;}
       .v52-cell.mcb{border-left-color:#6075b9;}.v52-cell.geom{border-left-color:#5f80ac;}
        .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;}
-      .v52-mini-conversion{flex:1;min-width:0;margin-top:6px;border:1px solid #e1e7eb;border-radius:5px;padding:4px;background:#fcfdfe;}
+      .v52-mini-conversion{flex:1;min-width:0;margin-top:6px;border:1px solid #d7e0e7;border-radius:5px;padding:4px;background:#e6ebf0;}
       .v52-mini-head{display:flex;justify-content:space-between;align-items:center;gap:5px;font:700 8.5px/1.45 'SF Mono',Menlo,monospace;color:#617684;}
       .v52-mini-price-row{text-align:center;padding:2px 0 3px;}
       .v52-mini-btc-price{font:850 14px/1.15 'SF Mono',Menlo,monospace;letter-spacing:-.04em;color:#304e60;font-variant-numeric:tabular-nums;}
-      .v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;border:1px solid #edf0f3;border-radius:3px;}
+      .v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;border:1px solid #d7e0e7;border-radius:3px;}
       .v52-mini-chart svg{display:block;width:100%;height:192px;}
       .v52-mini-volume{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:4px 1px 2px;font:850 11.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
       .v52-mini-delta{text-align:center;border-top:1px solid #e8edf1;padding:4px 0 2px;font:850 13px/1.2 'SF Mono',Menlo,monospace;color:#526b78;font-variant-numeric:tabular-nums;white-space:nowrap;}

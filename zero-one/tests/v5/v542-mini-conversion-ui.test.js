@@ -215,6 +215,51 @@ test('Conversion title keeps the primary Bâton and secondary grey depuis on a s
   'the slow-down tag also depended on removed 2m comparison');
  assert.ok(config.includes('.v52-cell.conv .v52-conv-speed{white-space:nowrap;}'));
 });
+test('the CURRENT full Conversion window AND mini use 150 minutes of actual 3m candles',()=>{
+ assert.ok(config.includes("const now=Date.now(),minutes=150,t0=now-minutes*60000;"));
+ assert.ok(config.includes("waveUiPriceSeries('3m',t0-180000,now).slice(-53)"));
+ assert.ok(observer.includes('const t0=end-150*60000,t1=end+6*60000;'),
+  'the existing larger canvas must no longer be limited to 90 minutes');
+ assert.ok(src.includes('const VISIBLE_MINUTES=150;'));
+ const {mini,dom}=create();
+ const node=()=>({textContent:'',innerHTML:'',className:'',
+  getBoundingClientRect:()=>({width:222,height:192})});
+ for(const id of ['v52-mini-conversion','v52-mini-conversion-svg',
+  'v52-mini-begin','v52-mini-end'])dom[id]=node();
+ const bars=Array.from({length:53},(_,i)=>{
+  const ts=NOW-(52-i)*ms,close=79900+Math.sin(i/5)*42;
+  return {ts,open:close-3,high:close+7,low:close-8,close,ma200:79850};
+ });
+ mini.setCandles({period:{from:NOW-150*60000,to:NOW},candles:bars});
+ assert.equal(mini.getSourceStatus().candles,53,
+  'data source and client must not truncate to old 45 bars');
+ const svg=mini.miniSvg({data:bars,periodData:{to:NOW},
+  snapshot:example(),width:222,height:192,now:NOW,quoteValue:79890});
+ assert.ok(svg.includes('data-window-minutes="150"'));
+ const wickCount=[...svg.matchAll(/stroke-width=".68"/g)].length;
+ assert.ok(wickCount>=45,
+  'at least 120 minutes of 3m candles must be actually drawable');
+ const start=new Date(NOW-150*60000).toLocaleTimeString('fr-FR',{
+  timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
+ const end=new Date(NOW).toLocaleTimeString('fr-FR',{
+  timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
+ assert.equal(dom['v52-mini-begin'].textContent,start);
+ assert.equal(dom['v52-mini-end'].textContent,end);
+ assert.equal((src.match(/fetch\(/g)||[]).length,0);
+});
+test('only the outer frame is 10% darker: actual candle window remains white',()=>{
+ const {mini}=create();
+ const svg=mini.miniSvg({data:candles(),periodData:{to:NOW},
+  snapshot:example(),width:222,height:192,now:NOW,quoteValue:79880});
+ assert.ok(svg.includes('<rect width="222" height="192" fill="#fff"/>'),
+  'SVG candle plotting surface is unconditionally pure white');
+ assert.ok(config.includes('padding:4px;background:#e6ebf0;'),
+  'grey shading belongs only to the enclosing frame and its 4px padding');
+ assert.ok(config.includes('overflow:hidden;background:#fff;border:1px solid #d7e0e7'),
+  'the chart window must also be explicitly white in CSS');
+ assert.ok(!svg.includes('fill="#e6ebf0"'),
+  'dark frame color may not be painted over the candlesticks');
+});
 test('mini shares existing OKX WS and identical candle fetch; integrated into living conversion slot',()=>{
  assert.equal((src.match(/new WebSocket\(/g)||[]).length,0);
  assert.equal((src.match(/fetch\(/g)||[]).length,0);

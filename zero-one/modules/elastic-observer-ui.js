@@ -269,7 +269,8 @@ window.loadElasticChart3m=async function(snapshot){
   const w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height;
   if(!(w>90&&h>100))return;
   const end=n(data.period&&data.period.to)||Date.now();
-  const t0=end-90*60000,t1=end+6*60000;
+  // Same 150m candle viewport as the mini Conversion chart, using this ONE fetch.
+  const t0=end-150*60000,t1=end+6*60000;
   const pad={left:43,right:10,top:11,bottom:20};
   const chart=window.BoonoCharts.drawPrice(canvas,candles,{
    theme:'interface',t0,t1,boundsT0:t0,boundsT1:end,candleMs:180000,
