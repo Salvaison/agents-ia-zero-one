@@ -68,7 +68,7 @@ test('V5.2 history is visible before collapsed baseline and old V4 history',()=>
    exitAt:125000,entryPrice:79467.8,exitPrice:79639.9,
    netPnlUsd:1.75,feesUsd:1.5,mfePriceUsd:332,maePriceUsd:149,
    exitReason:'GAIN_FLOOR'}]},'v52');
- assert.ok(text.includes('V5.4.2 PAPER'));
+ assert.ok(text.includes('V5.4.3 PAPER'));
  assert.ok(text.includes('V5.2 #2'),'older trades retain original version label');
  assert.ok(text.includes('data-paper-report="V52:2"'));
  assert.ok(text.includes('MFE +332.0'));
@@ -128,6 +128,7 @@ test('PAPER report key regexes survive server-side JS template processing',()=>{
 test('real trade policy labels are kept across V5.4.2 and V4.9.4 migrations',()=>{
  const v=labelling.paperTradeVersion;
  assert.equal(v('v52',{entryPolicyVersion:'v5.4.2-selective-attention-paper-v1'}),'V5.4.2');
+ assert.equal(v('v52',{entryPolicyVersion:'v5.4.3-causal-offensive-maturity-paper-v1'}),'V5.4.3');
  assert.equal(v('v52',{entryPolicyVersion:'v5.4.1-structural-e3-territory-paper-v1'}),'V5.4.1');
  assert.equal(v('v493',{engine:'V4.9.4'}),'V4.9.4');
  assert.equal(v('v493',{engine:'V4.9.3'}),'V4.9.3');

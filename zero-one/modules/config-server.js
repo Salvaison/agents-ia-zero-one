@@ -506,7 +506,7 @@ function v53UiReadEvents(){
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
-  const summary=v52PaperSummary('v52-paper-state.json','V5.4.2');
+  const summary=v52PaperSummary('v52-paper-state.json','V5.4.3');
   try{
    const a=summary.analysis,src=v53UiReadEvents();
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
@@ -517,7 +517,7 @@ app.get('/api/v52',requireAuth,(req,res)=>{
     decisionImpact:false};
   }
   sendUiJson(req,res,summary);
- }catch(e){res.status(503).json({error:'V5.4.2 PAPER indisponible',detail:e.message});}
+ }catch(e){res.status(503).json({error:'V5.4.3 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
@@ -1969,7 +1969,8 @@ function waveUiV54LiveState(paper,auditLatest,now){
  const observedAt=validV54?ts:validAudit?at:null;
  const pos=validV54&&paper.position?paper.position:null;
  return {
-  version:validV54?(String(a.version||'').startsWith('v5.4.2')?'V5.4.2-PAPER':
+  version:validV54?(String(a.version||'').startsWith('v5.4.3')?'V5.4.3-PAPER':
+    String(a.version||'').startsWith('v5.4.2')?'V5.4.2-PAPER':
     String(a.version||'').startsWith('v5.4.1')?'V5.4.1-PAPER':'V5.4-PAPER'):validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
   source:validV54?'V54_PAPER_PRICE':validAudit?'MCB_AUDIT_PRICE':'NO_FRESH_PRICE',
   ts:observedAt,price,priceAgeMs:observedAt===null?null:now-observedAt,
@@ -3338,7 +3339,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.4.2 PAPER — connexion au moteur décisionnel…</div>
+<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER — connexion au moteur décisionnel…</div>
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
@@ -3521,7 +3522,7 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
-  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.2 · Lecture structurelle…</div>
+  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.3 · Lecture structurelle…</div>
   <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
@@ -4074,7 +4075,7 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.4</b> · <b style="color:#9c1f6f">rose V5.4.2 / archives V5.2–V5.4.1</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.4</b> · <b style="color:#9c1f6f">rose V5.4.3 / archives V5.2–V5.4.2</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
     return;
   }
   if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
@@ -4975,7 +4976,7 @@ async function loadWaveV5StructureStory(){
     const stale=z.dataIntegrity!=='ASOF_OK';
     const elasticStale=!['EVENT_STREAM_OBSERVED','SAME_ACTIVE_ENGINE'].includes(z.elasticEventStatus);
     const blocks=[
-      '<div class="heading"><span>V5.4.2 · STRUCTURE DIRECTRICE</span>'+
+      '<div class="heading"><span>V5.4.3 · STRUCTURE DIRECTRICE</span>'+
         '<span>V5.4.1 PAPER · ACTIF</span></div>',
       stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
       elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
@@ -6626,7 +6627,7 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.4.2 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>BOONO V5.4.3 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
@@ -6649,7 +6650,7 @@ function renderV52Living(data){
     '<div class="v52-muted">LBW/BW spread15 '+n(m.bwLbwSpread)+
      ' · pivot confirmé '+v5Time(m.structuralPivotAt)+
      ' · 1h '+f(s54.context1h||m.context1h)+' / 4h '+f(s54.context4h||m.context4h)+'</div>'+
-    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.2</b> '+f(s54.director)+
+    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.3</b> '+f(s54.director)+
       ' · origine '+v5Time(s54.structuralOrigin?.sourceTs)+
       ' · disponible '+v5Time(s54.structuralOrigin?.availableAt)+
       ' · '+f(s54.strategicState)+'</div>'+
@@ -6681,7 +6682,7 @@ function renderV52Living(data){
     ((state3||discrepancy3)?'<div class="v53-cross-note">'+
       (discrepancy3?'Croisement et dernier E3 Live de sens différent. ':'')+
       state3+'</div>':'')+
-    '<div class="v52-muted">V5.4.2 : '+f(s54.phase||'tactique héritée')+
+    '<div class="v52-muted">V5.4.3 : '+f(s54.phase||'tactique héritée')+
      ' · pivot LBW3 (mémoire, sans veto) '+f(s54.mcb3?.direction||'—')+
      (s54.sourceFreshness?.firstNewBarSnapshotPending?
        ' · nouvelle bougie : premier relevé en attente (données précédentes fraîches)':'')+
@@ -6788,11 +6789,21 @@ function renderV52Living(data){
     ' → E15 confirmé '+v5Time(ch15.confirmed?.observedAt)+
     '<span class="v52-muted"> · jalons observés, ordre réel non imposé ; chaque PM est daté dans sa colonne</span>'+
     '</span></div>'+
-  '<div class="v52-strip"><span><b>ATTENTION V5.4.2</b> '+
+  '<div class="v52-strip"><span><b>ATTENTION V5.4.3</b> '+
    f(r.attention?.stage||'—')+' · preuves '+Number(r.attention?.events?.length||0)+
    '</span><span>V4.9.3 SHADOW '+f(r.admissionV493Shadow?.action||'EN ATTENTE')+
    ' · âge '+(r.admissionV493Shadow?n(r.admissionV493Shadow.ageMs/1000):'—')+
    ' s · aucune autorité de trade</span></div>'+
+  (r.offensiveMaturity?'<div class="v52-strip"><span><b>MATURITÉ OFFENSIVE</b> '+
+   f(r.offensiveMaturity.classification||'—')+
+   ' · début prix 4h '+v5Time(r.offensiveMaturity.context?.priceOrigin?.origin4h?.availableAt)+
+   ' · progression '+n(r.offensiveMaturity.context?.priceOrigin?.origin4h?.progressUsd)+' $ BTC'+
+   ' · bord 2h '+f(r.offensiveMaturity.context?.priceGeometry?.priceAt2hExtreme?'oui':'non')+
+   '</span><span>LBW15/prix '+f(r.offensiveMaturity.context?.oscillator?.oppositeDivergenceForming?'divergence en formation':'pas de preuve opposée')+
+   ' · PM marginal '+f(r.offensiveMaturity.context?.conversion?.conversionFatigue?'s’essouffle':'non invalidé')+
+   (a.checks?.offensiveMaturityBlocksNewAdmission?
+    ' · entrée DIFFÉRÉE · requalification possible':'')+
+   '</span></div>':'')+
   '<div class="v52-strip"><span><b>RISQUE</b> plafond −500$ BTC · floors +120/90 et +220/180</span>'+
    '<span>Frais A/R estimés '+n(eco.expectedFeesUsd)+' $ · mobilité observée '+
      n(eco.empiricalMobilityUsd)+' $ BTC · niveau proche non-veto</span></div>'+
@@ -6802,7 +6813,7 @@ function renderV52Living(data){
    '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
    ' $ · plancher '+n(p.gainFloorUsd)+' $ · invalidation '+n(p.invalidationPrice)+' $</div></div>':
    '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
-  '<div class="v52-muted">PAPER V5.4.2 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
+  '<div class="v52-muted">PAPER V5.4.3 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
    ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
  el.innerHTML=card;
@@ -6825,7 +6836,7 @@ async function loadV52PaperPanel(){
   if(window.elasticConversionV541)
     window.elasticConversionV541.setAnalysis(data.analysis);
   renderV52Living(data);
- }catch(e){if(el)el.textContent='V5.4.2 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.4.3 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 // Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
@@ -6938,7 +6949,7 @@ function renderV5StructuralLive(a){
      ' · '+Number(x.materialEvents)+' événement(s)':'')+'</div>').join('');
  const price= n(a.price);
  el.innerHTML=
-   '<div class="v5-head"><span>V5.4.2 · STRUCTURE VIVANTE</span>'+
+   '<div class="v5-head"><span>V5.4.3 · STRUCTURE VIVANTE</span>'+
      '<span style="color:#08794a;">OBSERVATION SEULE · AUCUN TRADE</span></div>'+
    '<div class="v5-row"><b>BTC '+price+' $</b> · relevé '+v5Time(a.ts)+
      ' (Stockholm) · âge '+Math.round(age/1000)+' s</div>'+
@@ -6991,7 +7002,7 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.4.2':'V4.9.4',color=isV52?'#9c1f6f':'#1969a0';
+ const name=isV52?'V5.4.3':'V4.9.4',color=isV52?'#9c1f6f':'#1969a0';
  const prefix=isV52?'V52:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
@@ -7107,7 +7118,7 @@ async function loadTrades() {
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.4.2 PAPER · lecture de la décision en cours…</div>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER · lecture de la décision en cours…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
@@ -7116,7 +7127,7 @@ async function loadTrades() {
         '<summary style="cursor:pointer;font-weight:800;">V4.9.4 · ÉCOUTE TEMPORELLE · V4.9.3 FIGÉ EN SOURCE</summary>'+
         '<div id="v493-live">Version historique chargement…</div></details>'+
       '<details id="v5-structure-details" class="v5-observer" '+(structureWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V5.4.2 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.4.3 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
         '<div id="v5-structure-live">V5.4.1 · structure en cours…</div></details>'+
       '<details id="v5-paper-archive" class="v5-observer" '+(archiveWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V5.1 PAPER · ARCHIVE ARRÊTÉE · 22 trades clôturés</summary>'+

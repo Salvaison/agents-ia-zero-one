@@ -84,7 +84,7 @@ test('Vagues overlays current V4.9.4 and V5.4.2 ledgers; older trades retain the
  assert.ok(src.includes('waveReplayData.showLegacyV4?waveTradeSpans'));
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
- assert.ok(src.includes('bleu V4.9.4'));assert.ok(src.includes('rose V5.4.2 / archives V5.2–V5.4.1'));
+ assert.ok(src.includes('bleu V4.9.4'));assert.ok(src.includes('rose V5.4.3 / archives V5.2–V5.4.2'));
 });
 test('overlapping positions keep their own 10px lane and preserve true entry/exit vertical markers',()=>{
  const {wavePaintV5Bands}=browserTools(),ctxLines=[],fills=[];

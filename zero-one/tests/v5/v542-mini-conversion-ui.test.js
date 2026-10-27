@@ -184,6 +184,7 @@ test('V5.4.2 PM values are accepted from current PAPER, legacy V4 and funded sou
  const current=(version,flag=false)=>({version,brokerOrdersEnabled:flag,asOf:now,
   readings:{conversion:{pm3:-12.4,pm5:-4.1,pmCombined:-7.3}}});
  assert.equal(mod.setAnalysis(current('v5.4.2-selective-attention-paper-v1')),true);
+ assert.equal(mod.setAnalysis(current('v5.4.3-causal-offensive-maturity-paper-v1')),true);
  assert.equal(mod.setAnalysis(current('v4.10.10-archived')),false);
  assert.equal(mod.setAnalysis(current('v5.4.2-selective-attention-paper-v1',true)),false);
  mod.ingestTrade({instId:'BTC-USDT-SWAP',tradeId:'aa',ts:String(now),

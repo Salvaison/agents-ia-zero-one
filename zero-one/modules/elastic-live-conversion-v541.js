@@ -43,7 +43,7 @@ function ingestTrade(raw){
 }
 function setAnalysis(a){
  const version=String(a?.version||'');
- if(!a||!(version.startsWith('v5.4.1')||version.startsWith('v5.4.2'))||
+ if(!a||!(version.startsWith('v5.4.1')||version.startsWith('v5.4.2')||version.startsWith('v5.4.3'))||
    a.brokerOrdersEnabled!==false||num(a.asOf)===null)return false;
  if(analysis&&Number(a.asOf)<Number(analysis.asOf))return false;
  const r=a.readings&&a.readings.conversion||{};
