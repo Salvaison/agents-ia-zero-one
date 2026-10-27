@@ -2945,7 +2945,16 @@ app.get('/', requireAuth, (req, res) => {
       .v52-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;}
       .v52-cell{min-width:0;border:1px solid #d9e1e8;border-left:3px solid #89a0b3;background:#fff;padding:6px;border-radius:6px;}
       .v52-cell.mcb{border-left-color:#6075b9;}.v52-cell.geom{border-left-color:#5f80ac;}
-      .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;}
+       .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;}
+      .v52-mini-conversion{flex:1;min-width:0;margin-top:6px;border:1px solid #e1e7eb;border-radius:5px;padding:4px;background:#fcfdfe;}
+      .v52-mini-head{display:flex;justify-content:space-between;align-items:center;gap:5px;font:700 8.5px/1.45 'SF Mono',Menlo,monospace;color:#617684;}
+      .v52-mini-chart{margin:2px 0;min-height:192px;width:100%;overflow:hidden;background:#fff;border:1px solid #edf0f3;border-radius:3px;}
+      .v52-mini-chart svg{display:block;width:100%;height:192px;}
+      .v52-mini-volume{display:flex;justify-content:space-between;align-items:center;gap:4px;font:750 8.5px/1.4 'SF Mono',Menlo,monospace;}
+      .v52-mini-volume .buy{color:#117a4b;}.v52-mini-volume .sell{color:#b93946;}
+      .v52-mini-foot{font:9px/1.4 'SF Mono',Menlo,monospace;color:#647887;word-break:normal;}
+      .v52-mini-foot strong{font-weight:800;color:#4c6574;}
+      @media(max-width:480px){.v52-mini-chart,.v52-mini-chart svg{min-height:192px;height:192px;}}
       .v52-cell.prognosis{border-left-color:#737aa3;}.v52-cell.decision{border-left-color:#40545f;}
       .v52-cell .title{font-size:9px;color:#687684;letter-spacing:.04em;font-weight:850;margin-bottom:3px;}
       .v52-cell .value{font-size:11px;font-weight:800;margin-bottom:2px;}
@@ -3569,6 +3578,7 @@ app.get('/', requireAuth, (req, res) => {
 
 <script src="/boono-charts.js"></script>
 <script src="/elastic-live-conversion-v541.js"></script>
+<script src="/elastic-mini-conversion-v542.js"></script>
 <script src="/elastic-observer-ui.js"></script>
 <script src="/app.js"></script>
     </body>
@@ -3580,6 +3590,12 @@ app.get('/', requireAuth, (req, res) => {
 // not from V4.10.10. This lightweight client never decides or places orders.
 app.get('/elastic-live-conversion-v541.js',requireAuth,(req,res)=>{
  const file=path.join(__dirname,'elastic-live-conversion-v541.js');
+ res.set('Cache-Control','no-store');
+ res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
+});
+// Responsive compact version of the SAME live conversion: display only.
+app.get('/elastic-mini-conversion-v542.js',requireAuth,(req,res)=>{
+ const file=path.join(__dirname,'elastic-mini-conversion-v542.js');
  res.set('Cache-Control','no-store');
  res.type('application/javascript').send(fs.readFileSync(file,'utf8'));
 });
@@ -6688,7 +6704,20 @@ function renderV52Living(data){
     ' · MF15 Δ10m '+sn(m.mf15Delta10m)+
     ' · cohérence '+f(r.flow15?.qualityGrade||r.flow15?.coherence||'—')+
     ' · MF15 '+f(r.flow15?.mf15Role||'—')+
-    ' · '+n(c.intervalSeconds)+'s après Bâton</div>')+
+    ' · '+n(c.intervalSeconds)+'s après Bâton</div>'+
+    '<div id="v52-mini-conversion" class="v52-mini-conversion" role="group"'+
+      ' aria-label="Prix BTC en bougies 3m, duel des acheteurs et vendeurs, conversion live">'+
+     '<div class="v52-mini-head"><span>BTC · 3m + CONVERSION</span>'+
+       '<span id="v52-mini-conversion-status">OKX · en attente</span></div>'+
+     '<div id="v52-mini-conversion-svg" class="v52-mini-chart"></div>'+
+     '<div class="v52-mini-volume"><span class="buy">ACHAT <b id="v52-mini-buy">—</b></span>'+
+      '<span class="sell">VENTE <b id="v52-mini-sell">—</b></span></div>'+
+     '<div class="v52-mini-foot"><strong id="v52-mini-delta">— / 3m</strong>'+
+      ' · axe BTC / 500 $ · MA3</div>'+
+     '<div class="v52-mini-foot" id="v52-mini-pm">PM3 — · PM5 — · Live —</div>'+
+     '<div class="v52-mini-foot" id="v52-mini-eff">eff3 — · yield/P75 — · effort/P75 —</div>'+
+     '<div class="v52-mini-foot" id="v52-mini-quality">Qualité — · direction —</div>'+
+    '</div>')+
    cell('prognosis','5 · PRONOSTIC',f(a.candidate||'NEUTRE').toUpperCase(),
     f(a.prognosis||'—')+
     (s54.available?'<div class="v52-muted">PHASE STRUCTURELLE '+
@@ -6740,6 +6769,10 @@ function renderV52Living(data){
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
    ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
  el.innerHTML=card;
+ // BOONO Watch rebuilds this cell on refresh; restore the cached mini chart
+ // immediately rather than waiting for another OKX trade or chart request.
+ if(typeof window!=='undefined'&&window.BoonoMiniConversion)
+  window.BoonoMiniConversion.refresh();
 }
 async function loadV52PaperPanel(){
  const el=document.getElementById('v52-live');

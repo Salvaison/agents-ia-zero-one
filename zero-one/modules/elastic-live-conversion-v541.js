@@ -42,12 +42,13 @@ function ingestTrade(raw){
  return true;
 }
 function setAnalysis(a){
- if(!a||!String(a.version||'').startsWith('v5.4.1')||
+ const version=String(a?.version||'');
+ if(!a||!(version.startsWith('v5.4.1')||version.startsWith('v5.4.2'))||
    a.brokerOrdersEnabled!==false||num(a.asOf)===null)return false;
  if(analysis&&Number(a.asOf)<Number(analysis.asOf))return false;
  const r=a.readings&&a.readings.conversion||{};
  analysis={asOf:Number(a.asOf),pm3:num(r.pm3),pm5:num(r.pm5),
-  pmLive:num(r.pmCombined),source:'V5.4.1_DECISION_OBSERVATION_ONLY'};
+  pmLive:num(r.pmCombined),source:version+'|PAPER_OBSERVATION_ONLY'};
  return true;
 }
 function snapshot(now=Date.now()){
@@ -87,7 +88,7 @@ function snapshot(now=Date.now()){
    quality:conflict?'CONTESTED':'UNCLASSIFIED',
    classificationSource:conflict?'PM3_PM5_OPPOSITE':
     'P75_P95_NOT_RECALIBRATED',direction:dir},
-  note:'Volume buy/sell initiator by OKX trades; PM from V5.4.1; no frozen V4'}
+  note:'Volume buy/sell initiator by OKX trades; PM from current V5.4.x, never frozen V4'}
 }
 function refreshUi(force=false){
  const now=Date.now();

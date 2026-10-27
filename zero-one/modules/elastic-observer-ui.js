@@ -30,6 +30,7 @@ function refreshCurrentBtcLabel(){
 window.updateElasticCurrentPrice=function(price,ts,status){
  const p=n(price),t=n(ts);
  currentBtcQuote={price:p!==null&&p>0?p:null,ts:t,status:String(status||'NO_SOURCE')};
+ if(window.BoonoMiniConversion)window.BoonoMiniConversion.setQuote(price,ts,status);
  refreshCurrentBtcLabel();
 };
 // Never display the stopped V4.10.10 aggressor volume snapshot as LIVE.
@@ -240,7 +241,9 @@ window.loadElasticObserverHistory=function(){
 window.paintElasticLiveConversion=function(snapshot){
  const slot=document.getElementById('elastic-live-duel');
  if(!slot||document.hidden)return;
- slot.innerHTML=effort(snapshot||liveSnapshot());
+ const active=snapshot||liveSnapshot();
+ slot.innerHTML=effort(active);
+ if(window.BoonoMiniConversion)window.BoonoMiniConversion.refresh(active);
  if(window.loadElasticChart3m)window.loadElasticChart3m();
 };
 // Candle renderer is intentionally reused from Waves through BoonoCharts.
@@ -257,6 +260,8 @@ window.loadElasticChart3m=async function(snapshot){
   const res=await fetch('/api/elastic-chart-3m',{cache:'no-store'});
   if(!res.ok)throw new Error('HTTP '+res.status);
   const data=await res.json();
+  // The compact conversion panel uses THIS same chart response, not a second fetch.
+  if(window.BoonoMiniConversion)window.BoonoMiniConversion.setCandles(data);
   if(document.getElementById('elastic-price-candles')!==canvas)return;
   const candles=(data.candles||[]).filter(c=>n(c.ts)!==null&&
     [c.open,c.high,c.low,c.close].every(v=>n(v)!==null));
