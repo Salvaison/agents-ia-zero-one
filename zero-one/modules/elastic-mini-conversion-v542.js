@@ -36,10 +36,16 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  const values=[];
  for(const c of bars){values.push(Number(c.high),Number(c.low));
   if(num(c.ma200)!==null&&num(c.ma200)>0)values.push(Number(c.ma200));}
+ // Constant 1 600 USD BTC price window. Tightens only the PRICE zoom:
+ // cube dimensions and movement remain in screen pixels, exactly as before.
+ // Keep the latest genuine quote centered when available so it never drifts
+ // out of view; without a fresh quote, center on the latest visible close.
+ const PRICE_SPAN_USD=1600;
  const first=Math.min(...values),last=Math.max(...values);
- const mid=(first+last)/2,range=Math.max(1000,last-first+Math.max(80,(last-first)*.05));
- let lo=Math.floor((mid-range/2)/500)*500,hi=Math.ceil((mid+range/2)/500)*500;
- if(hi-lo<1000){lo=Math.floor((mid-500)/500)*500;hi=lo+1000;}
+ const recentClose=num(bars.at(-1)?.close);
+ const mid=num(quoteValue)!==null&&quoteValue>0?Number(quoteValue):
+   recentClose!==null?recentClose:(first+last)/2;
+ const lo=mid-PRICE_SPAN_USD/2,hi=mid+PRICE_SPAN_USD/2;
  const tx=ts=>plot.l+(Number(ts)-start)/Math.max(1,end-start)*pw;
  const ty=val=>plot.t+(hi-Number(val))/(hi-lo)*ph;
  const clip='v52-mini-plot-clip';
@@ -135,13 +141,25 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
    '" y1="'+(cy-maxSide/2-3).toFixed(1)+'" y2="'+(cy+maxSide/2+3).toFixed(1)+
    '" stroke="#2f4453" stroke-width=".65" opacity=".86"/>');
  }
+ // Signed 3m BTC displacement belongs to the lower line OF THE GRAPH,
+ // distinct from the current absolute BTC quote at the top. No old values
+ // are displayed after the OKX trade feed becomes stale.
+ const delta=available?num(e.priceNetUsd):null;
+ const deltaLabel='Δ BTC 3m '+(delta===null?'—':signed(delta,1)+' $');
+ const deltaColor=delta===null?'#697b88':delta>0?'#117a4b':delta<0?'#b93946':'#506675';
+ svgParts.push('<text class="v52-mini-price-gap" x="'+cx.toFixed(1)+
+  '" y="'+(h-4)+'" text-anchor="middle"'+
+  ' font-family="SF Mono,Menlo,monospace" font-size="8" font-weight="800"'+
+  ' fill="'+deltaColor+'" stroke="#fff" stroke-width="1.7"'+
+  ' paint-order="stroke">'+esc(deltaLabel)+'</text>');
  const priceLabel=num(quoteValue)!==null?'BTC '+format(quoteValue,1)+' $':'BTC —';
  svgParts.push('<text x="'+cx.toFixed(1)+'" y="13" text-anchor="middle"'+
   ' font-family="SF Mono,Menlo,monospace" font-size="10" font-weight="800"'+
   ' fill="#395666" stroke="#fff" stroke-width="2.3" paint-order="stroke">'+
   esc(priceLabel)+'</text>');
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
-  ' role="img" aria-label="Prix BTC 3m, MA200, graduations 500 dollars, duel achat vente en volume BTC">'+
+  ' data-price-span-usd="1600"'+
+  ' role="img" aria-label="Prix BTC 3m sur 1600 dollars, MA200, graduations 500 dollars, ecart BTC sur 3 minutes, duel achat vente en volume BTC">'+
   svgParts.join('')+'</svg>';
 }
 function setQuote(price,ts,status){
@@ -174,8 +192,6 @@ function refresh(snapshot){
  set('v52-mini-conversion-status',status);
  set('v52-mini-buy',ok?btc(e.buyBtc)+' BTC':'—');
  set('v52-mini-sell',ok?btc(e.sellBtc)+' BTC':'—');
- set('v52-mini-delta',num(e.priceNetUsd)!==null?
-   signed(e.priceNetUsd,1)+' $ / 3m':'— / 3m');
  set('v52-mini-pm','PM3 '+signed(cv.pm3)+' · PM5 '+signed(cv.pm5)+
    ' · Live '+signed(cv.pmLive));
  set('v52-mini-eff','eff3 '+(num(cv.efficiency3m)===null?'—':format(cv.efficiency3m*100,1)+'%')+

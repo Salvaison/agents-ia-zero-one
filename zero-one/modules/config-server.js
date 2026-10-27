@@ -6712,8 +6712,7 @@ function renderV52Living(data){
      '<div id="v52-mini-conversion-svg" class="v52-mini-chart"></div>'+
      '<div class="v52-mini-volume"><span class="buy">ACHAT <b id="v52-mini-buy">—</b></span>'+
       '<span class="sell">VENTE <b id="v52-mini-sell">—</b></span></div>'+
-     '<div class="v52-mini-foot"><strong id="v52-mini-delta">— / 3m</strong>'+
-      ' · axe BTC / 500 $ · MA3</div>'+
+     '<div class="v52-mini-foot">Axe BTC / 500 $ · MA200 3m</div>'+
      '<div class="v52-mini-foot" id="v52-mini-pm">PM3 — · PM5 — · Live —</div>'+
      '<div class="v52-mini-foot" id="v52-mini-eff">eff3 — · yield/P75 — · effort/P75 —</div>'+
      '<div class="v52-mini-foot" id="v52-mini-quality">Qualité — · direction —</div>'+

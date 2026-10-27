@@ -34,3 +34,15 @@ Occuper la zone vide du **module 4 « CONVERSION · PM LIVE »** dans `État viv
 - Nouveaux tests ciblés du mini : **5/5**.
 - Tests historiques du graphe Conversion/Elastic : **23/23**.
 - Suite complète V4/V5/attention : **272 tests**, dont **260 réussis**, **0 échec**, **12 anciens sautés**.
+
+## Ajustement ergonomique : fenêtre verticale du prix à 1 600 $ et écart 3m sur le graphe
+
+- **Sans changement de version** du moteur ni du module de conversion. Seule la présentation du mini-graphe évolue.
+- Plage verticale du prix BTC désormais **fixe à 1 600 USD**, centrée sur la dernière cotation BTC réellement fraîche, sinon sur la dernière clôture 3m disponible. Ancien zoom dynamique jusqu'à environ 2 000 USD abandonné ; chandeliers anciens éventuellement hors plage sont masqués au lieu d'élargir l'échelle.
+- Graduations horizontales BTC **tous les 500 USD**, inchangées. Hauteur physique du mini-graphe **192 pixels**, inchangée : aucun redimensionnement des cubes.
+- Carrés ACHAT/VENTE, leur ratio de surface en racine carrée des volumes BTC et leur déplacement horizontal commun continuent à utiliser **strictement les mêmes calculs**, indépendants du zoom de l'axe prix.
+- **Au bas du graphique SVG**, la valeur `Δ BTC 3m ±XX,X $` montre le déplacement net du prix entre premier et dernier trade OKX de la fenêtre glissante de trois minutes. Vert si positif, rouge si négatif, tiret si la source est périmée. Cette valeur est distincte du BTC absolu en haut et du PM3/PM5/PM Live. La duplication textuelle extérieure a été supprimée.
+- Rendu compact Chromium (~214 px) vérifié, graduations 500 USD et texte du bas lisibles avec les horodatages.
+- Tests ciblés renforcés : **7/7**, y compris zoom 1600, espacements de prix dans l'écran, invariance géométrique des deux carrés, valeurs signées positives/négatives et invalidation sur flux OKX périmé.
+- Suite complète V4/V5/attention : **274 tests**, dont **262 réussis**, **0 échec**, **12 cas historiques sautés**.
+- Seul `config-server` requiert un rechargement ; les moteurs V4.9.4/V5.4.2 PAPER et leurs contrats de protection restent inchangés.

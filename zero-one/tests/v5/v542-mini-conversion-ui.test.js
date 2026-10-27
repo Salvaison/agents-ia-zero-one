@@ -51,6 +51,44 @@ test('compact graph contains OHLC, MA200, thin price lines every 500 USD and a f
  assert.ok(svg.includes('data-camp="ACHAT"')&&svg.includes('data-camp="VENTE"'));
  assert.ok(!svg.includes('PM3 35'),'PM should not relocate effort squares');
 });
+test('BTC price zoom is exactly 1 600 dollars; cube proportions are unchanged',()=>{
+ const {mini}=create();
+ const opts={data:candles(),periodData:{to:NOW},snapshot:example(),
+  width:220,height:192,now:NOW};
+ const a=mini.miniSvg({...opts,quoteValue:79880});
+ const b=mini.miniSvg({...opts,quoteValue:80380});
+ assert.ok(a.includes('data-price-span-usd="1600"'));
+ assert.ok(b.includes('data-price-span-usd="1600"'));
+ const lines=s=>[...s.matchAll(/<line x1="39" x2="213" y1="([\d.]+)" y2="[\d.]+" stroke="#dee5e9" stroke-width=".65"/g)]
+  .map(x=>Number(x[1]));
+ const ys=lines(a);
+ assert.ok(ys.length>=2,'500-dollar grid on exactly 1600 price range');
+ const expected500px=(192-22-19)*500/1600;
+ for(let i=1;i<ys.length;i++)
+  assert.ok(Math.abs((ys[i-1]-ys[i])-expected500px)<.15,
+   'spacing corresponds to 500/1600 of unchanged plot pixel height');
+ const boxes=s=>[...s.matchAll(/<g class="v52-mini-camp" data-camp="(?:ACHAT|VENTE)">[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)]
+  .map(x=>({width:x[3],height:x[4]}));
+ assert.deepEqual(boxes(a),boxes(b),
+  'changing price center must not change the geometry of the volume cubes');
+});
+test('3m signed PRICE displacement is visible at bottom of chart and expires with OKX feed',()=>{
+ const {mini}=create();
+ const cfg={data:candles(),periodData:{to:NOW},width:220,height:192,
+  now:NOW,quoteValue:79880};
+ const neg=mini.miniSvg({...cfg,snapshot:example({priceShift:-57})});
+ assert.ok(neg.includes('class="v52-mini-price-gap"'));
+ assert.ok(neg.includes('Δ BTC 3m -57,0 $'));
+ assert.ok(neg.includes('y="188"'),'3m price gap is at bottom of SVG');
+ assert.ok(neg.includes('fill="#b93946"'),'negative price delta red');
+ const pos=mini.miniSvg({...cfg,snapshot:example({priceShift:57})});
+ assert.ok(pos.includes('Δ BTC 3m +57,0 $'));
+ assert.ok(pos.includes('fill="#117a4b"'),'positive price delta green');
+ const stale=mini.miniSvg({...cfg,snapshot:example({status:'OKX_TRADES_UNAVAILABLE'})});
+ assert.ok(stale.includes('Δ BTC 3m —'));
+ assert.ok(!stale.includes('Δ BTC 3m -57,0 $'),
+  'do not present stale 3m displacement as live');
+});
 test('smaller chart grants proportionally generous size to squares and shares contact axis',()=>{
  const {mini}=create();
  const compact=mini.miniSvg({data:candles(),periodData:{to:NOW},
@@ -96,6 +134,9 @@ test('mini shares existing OKX WS and identical candle fetch; integrated into li
  assert.ok(config.includes("app.get('/elastic-mini-conversion-v542.js'"));
  assert.ok(config.includes('id="v52-mini-conversion"'));
  assert.ok(config.includes('id="v52-mini-conversion-svg"'));
+ assert.ok(config.includes('Axe BTC / 500 $ · MA200 3m'));
+ assert.ok(!config.includes('id="v52-mini-delta"'),
+  '3m displacement is shown once inside the SVG, not redundantly in the footer');
  assert.ok(config.includes('window.BoonoMiniConversion.refresh();'));
  assert.ok(observer.includes('window.BoonoMiniConversion.setCandles(data)'));
  assert.ok(observer.includes('window.BoonoMiniConversion.setQuote(price,ts,status)'));
