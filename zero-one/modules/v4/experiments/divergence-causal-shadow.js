@@ -17,6 +17,7 @@
 const VERSION='divergence-causal-shadow-v0.7';
 const DECISION_IMPACT=false;
 const structuralTrajectory=require('../layers/structural-trajectory');
+const polarityScope=require('./divergence-polarity-scope');
 
 function finite(v){return v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v));}
 function n(v){return finite(v)?Number(v):null;}
@@ -636,6 +637,48 @@ function developingLbw15mFromStructuralAnchor(seriesRows,direction){
     note:'Price/oscillator divergence is mathematically present; LBW delta below the regular-lineage reference. Not a standalone vote.'
   };
 }
+// Regime-wide LINEAGE: all causal same-side extrema after the LAST confirmed
+// MA polarity switch may participate. One off-pattern wick or a non-monotone
+// LBW step does not consume the multi-divergence. Nothing is traded here.
+function polarityMultidivergence15m(seriesRows,direction){
+ const cfg=CFG['15m'],bull=direction==='bullish';
+ const type=bull?'CREUX':'CRETE';
+ const pts=causalDivergencePivots15m(seriesRows)
+   .filter(p=>p.type===type).sort((a,b)=>a.extremeTs-b.extremeTs);
+ if(pts.length<3)return null;
+ const candidates=[];
+ for(let i=0;i<pts.length-2;i++){
+  const anchor=pts[i],points=[],irregular=[];
+  for(let j=i+1;j<pts.length;j++){
+   const p=pts[j];
+   const priceDelta=bull?Number(anchor.price)-Number(p.price):
+     Number(p.price)-Number(anchor.price);
+   const oscDelta=bull?Number(p.lbw)-Number(anchor.lbw):
+     Number(anchor.lbw)-Number(p.lbw);
+   if(priceDelta>=cfg.minPriceDelta&&oscDelta>0)points.push(p);
+   else irregular.push({at:p.extremeTs,price:p.price,lbw:p.lbw,
+     reason:'INTERMEDIATE_PIVOT_NOT_ALIGNED_WITH_ANCHOR'});
+  }
+  if(points.length<2)continue;
+  const end=points[points.length-1];
+  const latestLbwDelta=bull?Number(end.lbw)-Number(anchor.lbw):
+    Number(anchor.lbw)-Number(end.lbw);
+  const priceDelta=bull?Number(anchor.price)-Number(end.price):
+    Number(end.price)-Number(anchor.price);
+  candidates.push({kind:'MULTIDIV',subtype:'POLARITY_REGIME_MULTIDIV',
+   direction,status:latestLbwDelta>=cfg.minLbwDelta?'CONFIRMED':'FORMING',
+   start:anchor,end,points,irregular:irregular.filter(p=>
+    p.at<end.extremeTs),multidiv:true,
+   source:'CAUSAL_LBW15_NON_MONOTONE_WITHIN_MA_REGIME',
+   strength:{priceDeltaUsd:priceDelta,lbwDelta:latestLbwDelta,
+    referenceLbwDelta:cfg.minLbwDelta},
+   decisionImpact:false});
+ }
+ candidates.sort((a,b)=>b.points.length-a.points.length||
+   b.end.extremeTs-a.end.extremeTs||
+   a.start.extremeTs-b.start.extremeTs);
+ return candidates[0]||null;
+}
 function localBullish15mLines(seriesRows){
   const regular=activeRegular15mFromStructuralAnchor(seriesRows,'bullish');
   return [
@@ -744,10 +787,20 @@ function dedupe(lines,tf){
   return out;
 }
 
-function detectTimeframe(seriesRows,auditRows,tf){
-  const series=orderedSeries(seriesRows);
-  const bullPivots=structuralSignalPivots(series,auditRows,tf,'bullish');
-  const bearPivots=structuralSignalPivots(series,auditRows,tf,'bearish');
+function detectTimeframe(seriesRows,auditRows,tf,asOf=null){
+  const original=orderedSeries(seriesRows);
+  const period=polarityScope.TF_MS[tf];
+  const finalConfirmed=original.filter(r=>r._live!==true).at(-1);
+  const observedUntil=Number.isFinite(Number(asOf))&&asOf!==null?
+    Number(asOf):finalConfirmed&&period?finalConfirmed.ts+period:0;
+  const regime=['3m','15m'].includes(tf)?
+    polarityScope.resolve(original,tf,observedUntil):null;
+  const regimeBound=regime?.status==='CONFIRMED_REGIME';
+  const series=regimeBound?regime.rows:original;
+  const audit=regimeBound?(auditRows||[]).filter(r=>
+    Number(r.ts)>=regime.openedAt&&Number(r.ts)<=observedUntil):auditRows;
+  const bullPivots=structuralSignalPivots(series,audit,tf,'bullish');
+  const bearPivots=structuralSignalPivots(series,audit,tf,'bearish');
   const bullRegular=regularLineages(bullPivots,tf,'bullish');
   const bearRegular=regularLineages(bearPivots,tf,'bearish');
 
@@ -782,16 +835,32 @@ function detectTimeframe(seriesRows,auditRows,tf){
     // divergence merely because the native/persistent signal did not print at
     // the strongest oscillator crest. Hidden bearish structures remain
     // unpromoted until separately validated.
-    const localBull=localBullish15mLines(series);
-    const localBear=localBearish15mLines(series);
+    const multiBull=regimeBound?polarityMultidivergence15m(series,'bullish'):null;
+    const multiBear=regimeBound?polarityMultidivergence15m(series,'bearish'):null;
+    const localBull=multiBull?[multiBull]:localBullish15mLines(series);
+    const localBear=multiBear?[multiBear]:localBearish15mLines(series);
     const bearForming=lines.filter(x=>x.direction==='bearish'&&x.status==='FORMING');
     lines=[...localBull,...localBear,...bearForming].filter(Boolean);
   }
 
+  if(regimeBound){
+    lines=lines.filter(l=>l.start&&l.end&&
+      Number(l.start.extremeTs)>=regime.openedAt&&
+      Number(l.end.extremeTs)>=regime.openedAt);
+    lines=lines.map(l=>({...l,
+      regimeId:regime.id,regimeSide:regime.side,
+      freshness:'ACTIVE_SAME_TF_MA_POLARITY',
+      // Price reclaim/wick is allowed inside the same polarity regime:
+      // the line is not consumed by isolated excursions.
+      consumedByWick:false,decisionImpact:false}));
+  }
   lines.sort((a,b)=>(a.start.confirmedAt||a.start.extremeTs)-(b.start.confirmedAt||b.start.extremeTs));
   return {
     version:VERSION,decisionImpact:DECISION_IMPACT,timeframe:tf,
     signalPivots:{bullish:bullPivots,bearish:bearPivots},
+    polarityRegime:regime?polarityScope.compact(regime):{
+      status:'TF_SOURCE_NOT_YET_VERIFIED',timeframe:tf,
+      decisionImpact:false},
     continuationCandidates,
     lines,
     counts:{
@@ -799,6 +868,7 @@ function detectTimeframe(seriesRows,auditRows,tf){
       bullish:lines.filter(x=>x.direction==='bullish').length,
       bearish:lines.filter(x=>x.direction==='bearish').length,
       regular:lines.filter(x=>x.kind==='REGULAR').length,
+      multidiv:lines.filter(x=>x.kind==='MULTIDIV').length,
       continuation:lines.filter(x=>x.kind==='CONTINUATION').length,
       forming:lines.filter(x=>x.status==='FORMING').length
     },
@@ -809,7 +879,10 @@ function detectTimeframe(seriesRows,auditRows,tf){
         :'15m bullish continuation uses the nearest qualifying confirmed causal E15 anchor; no long-range forming projection',
       threeMinuteContinuationDisplay:tf==='3m'?false:null,
       noCombinatorialPairs:true,
-      priceAndOscillatorTimestampsKeptSeparate:true
+      priceAndOscillatorTimestampsKeptSeparate:true,
+      divergenceFreshness:'CONFIRMED_SAME_TIMEFRAME_MA200_POLARITY',
+      multidiv:'ANCHOR-PERSISTENT; non-monotone intermediate extrema or price wicks never consume same-regime lineage',
+      polaritiesWithoutReliableMA:'UNKNOWN_NOT_ASSUMED'
     }
   };
 }
@@ -1207,6 +1280,7 @@ module.exports={
   priceSwingPivots,formingRegular,formingHidden,confirmedHiddenLineage,
   causalDivergencePivots15m,regularAnchorConsumedAt,regularAnchorConsumedBeforeEnd,hiddenLineConsumed,
   latestStructuralAnchor15m,activeRegular15mFromStructuralAnchor,developingLbw15mFromStructuralAnchor,activeHidden15mFromStructuralAnchor,
+  polarityMultidivergence15m,
   localBullish15mFromPivots,localBullish15mLines,
   localBearish15mFromPivots,localBearish15mLines,
   causalHiddenCandidates3m,localLbwPivots,localRegularLines,continuationAfterRegular,

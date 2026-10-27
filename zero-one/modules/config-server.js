@@ -1589,6 +1589,7 @@ function waveUiDivergenceSeries(tf){
         open:Number(v[1]),high:Number(v[2]),low:Number(v[3]),close:Number(v[4]),
         lt_blue_wave:Number(v[5]),blue_wave:Number(v[6]),money_flow:Number(v[7]),
         buy:Number(v[8]),sell:Number(v[9]),
+        ma200:(v[12]!==undefined&&v[12]!==''?Number(v[12]):null),
         wt1_cross_up:(v[13]!==undefined&&v[13]!==''?Number(v[13]):null),
         wt1_cross_dn:(v[14]!==undefined&&v[14]!==''?Number(v[14]):null),
         _live:!!isLive
@@ -4523,16 +4524,32 @@ function drawWaveBand(canvas, key, idx) {
       if(!Number.isFinite(Number(a.lbw))||!Number.isFinite(Number(b.lbw)))return;
       ctx.save();
       ctx.strokeStyle=d.direction==='bullish'?'#1f9d55':'#d33';
-      ctx.lineWidth=1.05;
+      ctx.lineWidth=d.kind==='MULTIDIV'?1.35:1.05;
       ctx.setLineDash(d.kind==='CONTINUATION'?[5,3]:
-        d.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?[4,4]:[]);
+        d.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'||
+        (d.kind==='MULTIDIV'&&d.status==='FORMING')?[4,4]:[]);
       ctx.globalAlpha=d.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?.72:
         d.status==='FORMING'?0.82:0.95;
       const aLbw=key==='wave3'&&Number.isFinite(Number(a.oscExtremeLbw))?Number(a.oscExtremeLbw):Number(a.lbw);
+      const nodes=d.kind==='MULTIDIV'&&Array.isArray(d.points)&&d.points.length?
+        [a,...d.points]:[a,b];
       ctx.beginPath();
-      ctx.moveTo(tx(aTs),y(aLbw));
-      ctx.lineTo(tx(bTs),y(Number(b.lbw)));
-      ctx.stroke();
+      let drawn=0;
+      nodes.forEach(function(p){
+        const ts=Number(p.drawTs??p.extremeTs??p.confirmedAt);
+        const lbw=Number(p.lbw);
+        if(!Number.isFinite(ts)||!Number.isFinite(lbw))return;
+        const x=tx(ts),yy=y(lbw);
+        if(!drawn)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);
+        drawn++;
+      });
+      if(drawn>=2)ctx.stroke();
+      if(d.kind==='MULTIDIV')nodes.forEach(function(p){
+        const ts=Number(p.drawTs??p.extremeTs??p.confirmedAt);
+        if(!Number.isFinite(ts)||ts<t0||ts>t1)return;
+        const x=tx(ts),yy=y(Number(p.lbw));
+        ctx.beginPath();ctx.arc(x,yy,1.8,0,Math.PI*2);ctx.fillStyle=ctx.strokeStyle;ctx.fill();
+      });
       ctx.restore();
     });
     ctx.restore();
@@ -6523,6 +6540,7 @@ function renderV52Living(data){
  const three=r.mcb3||{},band=observed.extremeBand||{};
  const div15=(r.attention?.events||[]).filter(e=>
   e.kind==='MCB15_LBW_DIVERGENCE').at(-1)||null;
+ const divRegime15=r.attention?.polarityRegime||null;
  const maCycle=x=>{
   const q=x?.polarityMemory||{},s=q.polarity==='ABOVE'?'AU-DESSUS':
    q.polarity==='BELOW'?'AU-DESSOUS':'INCONNUE';
@@ -6593,12 +6611,20 @@ function renderV52Living(data){
        f(s54.nativeE15?.confirmed?.direction||'—')+' source '+
        v5Time(s54.nativeE15?.confirmed?.sourceTs)+
        ' · connu '+v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>':'')+
+    (divRegime15?'<div class="v52-muted"><b>RÉGIME DE FRAÎCHEUR 15m</b> · MA15 '+
+      f(divRegime15.side||'INCONNU')+' · confirmé '+
+      v5Time(divRegime15.confirmedAt)+
+      (divRegime15.status==='CONFIRMED_REGIME'?
+       ' · ancres limitées à ce régime MA15':
+       ' · continuité MA15 non démontrée')+
+      ' · sans autorité de trade</div>':'')+
     (div15?'<div class="v52-muted"><b>DIV15 LBW / PRIX · '+
      (div15.direction==='long'?'UP':'DN')+'</b> · prix '+
       n(div15.anchors?.priceFirst)+' → '+n(div15.anchors?.priceSecond)+
      ' $ · LBW15 '+sn(div15.anchors?.lbwFirst)+' → '+
      sn(div15.anchors?.lbwSecond)+' · connue '+v5Time(div15.availableAt)+
      ' · '+f(div15.quality||'OBSERVATION')+
+     ' · points '+Number(div15.points?.length||0)+
      ' · sans autorité de trade</div>':'') )+
    cell('geom','2 · MCB3 · TACTIQUE','LBW3 '+n(three.lbw)+' / BW3 '+n(three.bw),
     '<div class="v53-phase-caption">Tactique '+f(mat.maturity)+

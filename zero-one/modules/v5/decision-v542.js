@@ -20,6 +20,7 @@ function evaluate(input){
    campaignId:s.campaignId,campaignDirection:s.director,
    positionDirection:position?.direction||null,
    observations:adapter.fromV542(d,input),
+   polarityRegime:adapter.polarity15Regime(input.bars15,now),
    lastExitAt:input.lastExitAt??null});
  }else{
   // No synthetic available history when the structural sources are stale.

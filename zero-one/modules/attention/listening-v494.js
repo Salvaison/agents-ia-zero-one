@@ -12,7 +12,9 @@ function decorate({v493Evaluation,frame,position=null,previousAttention=null,las
   campaignId=campaignDirection+'|'+(structural?.extremeTs||e.mcb?.currentLobe?.startTs||'UNKNOWN');
  const attention=temporal.evaluate({now,previous:previousAttention,
   campaignId,campaignDirection,positionDirection:position?.direction||null,
-  observations:adapters.fromV494(e,frame),lastExitAt});
+  observations:adapters.fromV494(e,frame),
+  polarityRegime:adapters.polarity15Regime(frame.sources?.mcb?.tfs?.['15m']?.history,now),
+  lastExitAt});
  const proposal=position&&attention.stage===temporal.STAGES.TRANSFER&&
   e.action?.type==='HOLD'?{
    type:'REVIEW_EARLY_EXIT',direction:position.direction,

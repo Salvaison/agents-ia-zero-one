@@ -20,7 +20,9 @@ function normal(e,at){
    priceFirst:n(anchors.priceFirst),priceSecond:n(anchors.priceSecond),
    mfFirst:n(anchors.mfFirst),mfSecond:n(anchors.mfSecond),
    lbwFirst:n(anchors.lbwFirst),lbwSecond:n(anchors.lbwSecond)}:null,
-  quality:e.quality||null,episodeId:e.episodeId||null};
+  quality:e.quality||null,episodeId:e.episodeId||null,
+  polarityRegimeId:e.polarityRegimeId||null,
+  points:e.points||null};
 }
 function divergence(e){
  if(e?.kind!=='MF_DIVERGENCE'||!e.anchors)return false;
@@ -63,20 +65,39 @@ function proof(events,d,at){
    ...(!priceAfterMF?['PRICE_RESPONSE_AFTER_MF']:[])]};
 }
 function evaluate({now,previous=null,campaignId=null,campaignDirection=null,
- positionDirection=null,observations=[],lastExitAt=null}={}){
+ positionDirection=null,observations=[],lastExitAt=null,
+ polarityRegime=null}={}){
  const at=n(now);
  if(at===null||at<0)throw Error('ATTENTION_REQUIRED_ASOF');
  if(previous&&previous.version!==VERSION)throw Error('ATTENTION_VERSION_MISMATCH');
  if(previous&&at<previous.asOf)throw Error('ATTENTION_ASOF_REGRESSION');
  const cid=campaignId||null,parent=directional(campaignDirection)?campaignDirection:null;
  const pos=directional(positionDirection)?positionDirection:null;
- const previousEvents=previous?.campaignId===cid?previous.events||[]:[];
+ // Explicit polarity change closes ONLY the old divergence PRICE ANCHORS.
+ // Other MCB/MF/PRICE events follow their existing campaign/age semantics.
+ const previousEvents=(previous?.campaignId===cid?previous.events||[]:[])
+  .filter(e=>!polarityRegime?.id||
+    !['MF_DIVERGENCE','MCB15_LBW_DIVERGENCE'].includes(e.kind)||
+    (
+     e.polarityRegimeId===polarityRegime.id&&
+     e.sourceAt>=polarityRegime.openedAt));
+ const samePolarityDivergence=e=>!!(polarityRegime?.id&&
+  ['MF_DIVERGENCE','MCB15_LBW_DIVERGENCE'].includes(e.kind)&&
+  e.polarityRegimeId===polarityRegime.id&&
+  e.sourceAt>=polarityRegime.openedAt);
  const merged=[...previousEvents,...observations.map(x=>normal(x,at)).filter(Boolean)]
-  .filter(e=>e.availableAt<=at&&at-e.availableAt<=150*60000)
+  .filter(e=>e.availableAt<=at&&(
+   at-e.availableAt<=150*60000||samePolarityDivergence(e)))
   .sort((a,b)=>a.availableAt-b.availableAt||a.id.localeCompare(b.id));
  const seen=new Set(),events=[];
  for(const e of merged){if(!seen.has(e.id)){events.push(e);seen.add(e.id);}}
- const bounded=events.slice(-240);
+ // Preserve diverging price anchors for the WHOLE valid MA regime even when
+ // normal 150m tactical telemetry and the 240-event ring roll forward.
+ const stableDivergences=events.filter(samePolarityDivergence).slice(-16);
+ const tactical=events.filter(e=>!samePolarityDivergence(e))
+  .slice(-(240-stableDivergences.length));
+ const bounded=[...stableDivergences,...tactical]
+  .sort((a,b)=>a.availableAt-b.availableAt||a.id.localeCompare(b.id));
  const opposing=pos?proof(bounded,opposite(pos),at):null;
  const aligned=parent?proof(bounded,parent,at):null;
  const hasWatch=!!(opposing&&(opposing.oscillator.observed||
@@ -90,7 +111,8 @@ function evaluate({now,previous=null,campaignId=null,campaignDirection=null,
   ['MCB3_NATIVE','MCB15_NATIVE','MF_TRANSFER','PRICE_DEFENCE','PRICE_TRANSLATION'].includes(e.kind));
  return {version:VERSION,asOf:at,campaignId:cid,direction:parent,
   positionDirection:pos,stage,stageSince,events:bounded,
-  opposing,aligned,postExitEvidence:postExit.slice(-12),
+  opposing,aligned,polarityRegime:polarityRegime||null,
+  postExitEvidence:postExit.slice(-12),
   newCausalEpisodeAfterExit:postExit.length>0,
   attentionOnly:true,entryAllowed:null,exitRequested:null,riskOverride:false,
   brokerOrdersEnabled:false};

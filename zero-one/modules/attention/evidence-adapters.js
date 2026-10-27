@@ -3,6 +3,7 @@
 // A divergence is a price-vs-MF relation, never a naked MF slope or a vote.
 const MIN=60000,THREE=3*MIN,FIFTEEN=15*MIN;
 const lbw15=require('../v4/experiments/divergence-causal-shadow');
+const polarity=require('../v4/experiments/divergence-polarity-scope');
 const n=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
 const dir=d=>d==='long'||d==='short'?d:null;
 function add(out,kind,d,sourceAt,availableAt,more={}){
@@ -11,9 +12,11 @@ function add(out,kind,d,sourceAt,availableAt,more={}){
    id:[kind,d,sourceAt,more.episodeId||''].join('|'),...more});
 }
 function divergenceFromBars(bars,now){
- const closed=(bars||[]).filter(b=>n(b.ts)!==null&&b.ts+FIFTEEN<=now&&
+ const r=polarity.resolve(bars,'15m',now);
+ const source=r.status==='CONFIRMED_REGIME'?r.rows:(bars||[]);
+ const closed=source.filter(b=>n(b.ts)!==null&&b.ts+FIFTEEN<=now&&
   n(b.low)!==null&&n(b.high)!==null&&n(b.money_flow)!==null)
-  .sort((a,b)=>a.ts-b.ts).slice(-24);
+  .sort((a,b)=>a.ts-b.ts).slice(r.status==='CONFIRMED_REGIME'?0:-24);
  if(closed.length<4)return [];
  const out=[];
  // First anchor must be a local price extreme whose following closed candle
@@ -22,19 +25,16 @@ function divergenceFromBars(bars,now){
   const extreme=(a,b)=>d==='long'?a.low<b.low:a.high>b.high;
   const mfImproves=(a,b)=>d==='long'?b.money_flow>a.money_flow:
    b.money_flow<a.money_flow;
-  const previous=[];
-  for(let i=1;i<closed.length-1;i++){
-   if(extreme(closed[i],closed[i-1])&&extreme(closed[i],closed[i+1]))
-    previous.push(i);
-  }
+  // Incremental extreme anchor: O(n), no arbitrary expiration while the
+  // MA polarity remains unchanged. The earliest best PRICE pivot is retained.
+  let best=null;
   for(let j=2;j<closed.length;j++){
-   // Compare against the strongest previous confirmed price pivot, not
-   // simply the most recent minor bounce inside the same attack.
-   const candidates=previous.filter(i=>i<=j-2&&extreme(closed[j],closed[i]));
-   if(!candidates.length)continue;
-   const i=candidates.reduce((best,i)=>best===null||
-    extreme(closed[i],closed[best])?i:best,null);
-   const a=closed[i],b=closed[j];
+   const i=j-2;
+   if(i>=1&&extreme(closed[i],closed[i-1])&&
+      extreme(closed[i],closed[i+1])&&
+      (best===null||extreme(closed[i],closed[best])))best=i;
+   if(best===null||!extreme(closed[j],closed[best]))continue;
+   const a=closed[best],b=closed[j];
    if(!mfImproves(a,b))continue;
    // Two chronological comparisons only; current newer low/high may be forming.
    // Do not infer a price pivot confirmation before the next 15m bar closes.
@@ -45,7 +45,8 @@ function divergenceFromBars(bars,now){
       priceSecond:d==='long'?b.low:b.high,
       mfFirst:a.money_flow,mfSecond:b.money_flow},
      quality:confirmed?'CONFIRMED_PIVOT':'FORMING_SECOND_PIVOT',
-     episodeId:[a.ts,b.ts].join(':')});
+     episodeId:[a.ts,b.ts].join(':'),
+     polarityRegimeId:r.id||null});
   }
  }
  return out.slice(-6);
@@ -53,10 +54,15 @@ function divergenceFromBars(bars,now){
 // A second, separate 15m structural LBW/price divergence family.
 // It must never be disguised as an MF divergence or act as a V5 vote.
 function lbw15Observations(bars,now){
- const confirmed=(bars||[]).filter(b=>n(b.ts)!==null&&b.ts+FIFTEEN<=now)
-  .sort((a,b)=>a.ts-b.ts).slice(-128);
+ const regime=polarity.resolve(bars,'15m',now);
+ const source=regime.status==='CONFIRMED_REGIME'?regime.rows:(bars||[]);
+ const confirmed=source.filter(b=>b._live!==true&&
+  n(b.ts)!==null&&b.ts+FIFTEEN<=now)
+  .sort((a,b)=>a.ts-b.ts);
+ const multi=regime.status==='CONFIRMED_REGIME'?
+  lbw15.polarityMultidivergence15m(confirmed,'bullish'):null;
  const strong=lbw15.activeRegular15mFromStructuralAnchor(confirmed,'bullish');
- const candidate=strong||lbw15.developingLbw15mFromStructuralAnchor(confirmed,'bullish');
+ const candidate=multi||strong||lbw15.developingLbw15mFromStructuralAnchor(confirmed,'bullish');
  if(!candidate||!candidate.start||!candidate.end)return [];
  const a=candidate.start,b=candidate.end,availableAt=Number(b.confirmedAt)+FIFTEEN;
  if(availableAt>now)return [];
@@ -65,9 +71,14 @@ function lbw15Observations(bars,now){
   sourceAt:Number(b.extremeTs),availableAt,
   anchors:{priceFirst:Number(a.price),priceSecond:Number(b.price),
    lbwFirst:Number(a.lbw),lbwSecond:Number(b.lbw)},
-  quality:candidate.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?
-   'CONFIRMED_CAUSAL_EXTREMA_WEAK_LBW_DELTA':'CONFIRMED_CAUSAL_REGULAR',
+  quality:candidate.kind==='MULTIDIV'?
+    'CONFIRMED_SAME_REGIME_MULTIDIV':
+    candidate.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?
+      'CONFIRMED_CAUSAL_EXTREMA_WEAK_LBW_DELTA':'CONFIRMED_CAUSAL_REGULAR',
   episodeId:[a.extremeTs,b.extremeTs].join(':'),
+  polarityRegimeId:regime.id||null,
+  polaritySide:regime.side,
+  points:candidate.points?.map(p=>({extremeTs:p.extremeTs,price:p.price,lbw:p.lbw}))||[],
   price:b.price,
   decisionImpact:false
  }];
@@ -156,4 +167,5 @@ function fromV494(e,frame){
   out.push(x);
  return out.filter(x=>x.availableAt<=at);
 }
-module.exports={fromV542,fromV494,divergenceFromBars,lbw15Observations};
+module.exports={fromV542,fromV494,divergenceFromBars,lbw15Observations,
+  polarity15Regime:(bars,now)=>polarity.compact(polarity.resolve(bars,'15m',now))};
