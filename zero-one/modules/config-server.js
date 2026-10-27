@@ -2955,6 +2955,7 @@ app.get('/', requireAuth, (req, res) => {
       .v52-mini-volume{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:4px 1px 2px;font:850 11.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
       .v52-mini-delta{text-align:center;border-top:1px solid #e8edf1;padding:4px 0 2px;font:850 13px/1.2 'SF Mono',Menlo,monospace;color:#526b78;font-variant-numeric:tabular-nums;white-space:nowrap;}
       .v52-mini-delta.up{color:#117a4b;}.v52-mini-delta.down{color:#b93946;}
+      .v52-mini-price-deport{text-align:center;color:#4387bd;font:750 9px/1.35 'SF Mono',Menlo,monospace;padding:1px 0 3px;white-space:nowrap;font-variant-numeric:tabular-nums;}
       .v52-mini-hours{display:flex;justify-content:space-between;gap:5px;border-bottom:1px solid #e9edf1;padding:1px 0 4px;color:#697f8c;font:750 9.5px/1.25 'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums;}
       .v52-mini-volume .buy{color:#117a4b;}.v52-mini-volume .sell{color:#b93946;}
       .v52-mini-foot{font:9px/1.4 'SF Mono',Menlo,monospace;color:#647887;word-break:normal;}
@@ -6726,6 +6727,8 @@ function renderV52Living(data){
       '<span class="sell" title="Volume vendeur initiateur sur trois minutes">'+
        '<b id="v52-mini-sell">—</b></span></div>'+
      '<div class="v52-mini-delta" id="v52-mini-delta">Δ BTC 3m —</div>'+
+     '<div class="v52-mini-price-deport" id="v52-mini-price-deport"'+
+      ' title="Déplacement net BTC sur 3m divisé par amplitude haut-bas BTC sur 3m. Mesure normalisée du déport entre axe bleu et contact des cubes, distincte des volumes et de eff3.">Déport prix —</div>'+
      '<div class="v52-mini-hours">'+
       '<span>Début <b id="v52-mini-begin">—</b></span>'+
       '<span>Fin <b id="v52-mini-end">—</b></span></div>'+

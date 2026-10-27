@@ -9,6 +9,13 @@ const clamp=(v,low,high)=>Math.max(low,Math.min(high,v));
 const format=(v,d=1)=>num(v)===null?'—':Number(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const signed=(v,d=1)=>num(v)===null?'—':(Number(v)>0?'+':'')+format(v,d);
 const btc=v=>num(v)===null?'—':Number(v).toFixed(Math.abs(Number(v))<.01?4:3);
+// Normalized 3m PRICE translation: net / range. Not volume balance and
+// not eff3 (which would instead require cumulative absolute price travel).
+function relativePriceDeport(e){
+ if(e?.available!==true)return null;
+ const net=num(e.priceNetUsd),range=num(e.priceRangeUsd);
+ return net!==null&&range!==null&&range>0?clamp(net/range,-1,1):null;
+}
 const clock=t=>Number.isFinite(Number(t))?new Date(t).toLocaleTimeString('fr-FR',{
  timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -106,9 +113,9 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  const buy=available?Math.max(0,num(e.buyBtc)||0):0;
  const sell=available?Math.max(0,num(e.sellBtc)||0):0;
  const cx=plot.l+pw/2,cy=plot.t+ph*.55;
- svgParts.push('<line x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+
-  '" y1="'+plot.t+'" y2="'+(h-plot.b)+
-  '" stroke="#667988" stroke-width=".85" stroke-dasharray="3 4" opacity=".75"/>');
+ // The sky-blue vertical is the FIXED zero-price-translation reference,
+ // never the volume balance point and never an actual price/time level.
+ // Draw it OVER the cubes below, so the neutral reference remains visible.
  if(available){
   // For legibility at small widths squares are RELATIVELY larger than the
   // full-size graph, still sqrt-proportional in area to aggressor BTC volume.
@@ -117,10 +124,21 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   const size=v=>v<=0?Math.min(14,maxSide*.25):
     clamp(Math.sqrt(v/max)*maxSide,18,maxSide);
   const sa=size(buy),sb=size(sell);
-  const shift=num(e.priceNetUsd),span=num(e.priceRangeUsd);
-  const ratio=shift!==null&&span!==null&&span>0?clamp(shift/span,-1,1):0;
+  const ratio=relativePriceDeport(e)??0;
   const travel=Math.max(0,Math.min(pw*.13,(pw-sa-sb)/2-3));
   const contact=cx+ratio*travel;
+  // The cyan corridor visually encodes the signed displacement of PRICE,
+  // normalized by the actual high-low range of OKX trades over 3m.
+  // Its pixel width is limited by the cube geometry, so pixel distances
+  // are NOT directly comparable when buyer/seller cube sizes change.
+  if(Math.abs(contact-cx)>.3)
+   svgParts.push('<rect class="v52-mini-price-deport-gap"'+
+    ' x="'+Math.min(cx,contact).toFixed(2)+'" y="'+plot.t+'"'+
+    ' width="'+Math.abs(contact-cx).toFixed(2)+'" height="'+ph+'"'+
+    ' fill="#4a9eff" fill-opacity=".17">'+
+    '<title>Déport prix 3m : '+signed(ratio*100,1)+
+    ' % de l’amplitude observée (Δ BTC 3m / range BTC 3m). Ce n’est ni un écart de volume ni eff3.</title>'+
+    '</rect>');
   const square=(left,sz,col,v,key)=>{
    const top=cy-sz/2,mid=left+sz/2,font=clamp(sz*.17,7.5,10.8);
    const label=btc(v),fits=(label.length*font*.57)>sz-5;
@@ -138,15 +156,24 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   };
   svgParts.push(square(contact-sa,sa,'#117a4b',buy,'ACHAT'));
   svgParts.push(square(contact,sb,'#b93946',sell,'VENTE'));
-  svgParts.push('<line x1="'+contact.toFixed(1)+'" x2="'+contact.toFixed(1)+
-   '" y1="'+(cy-maxSide/2-3).toFixed(1)+'" y2="'+(cy+maxSide/2+3).toFixed(1)+
-   '" stroke="#2f4453" stroke-width=".65" opacity=".86"/>');
+  svgParts.push('<line class="v52-mini-cube-contact" x1="'+contact.toFixed(1)+
+   '" x2="'+contact.toFixed(1)+'" y1="'+(cy-maxSide/2-3).toFixed(1)+
+   '" y2="'+(cy+maxSide/2+3).toFixed(1)+
+   '" stroke="#2f4453" stroke-width=".9" opacity=".95"/>');
  }
+ // The zero axis stays visible even where it crosses a cube. Uses the
+ // existing BOONO blue accent (#4a9eff) to distinguish it from PM/MA.
+ svgParts.push('<line class="v52-mini-blue-zero-axis"'+
+  ' x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+'"'+
+  ' y1="'+plot.t+'" y2="'+(h-plot.b)+
+  '" stroke="#4a9eff" stroke-width="1.6" stroke-opacity=".96">'+
+  '<title>Référence fixe Δ prix BTC sur 3m = 0. Distance au contact = Δ prix 3m / amplitude du prix 3m, projeté sur le déplacement horizontal autorisé.</title>'+
+  '</line>');
  // Live BTC quote, 3m signed price move, and start/end time are rendered in
  // independent, bigger rows OUTSIDE this SVG. No text masks the candles.
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
   ' data-price-span-usd="'+span.toFixed(1)+'" data-price-span-max-usd="1600"'+
-  ' role="img" aria-label="Prix BTC 3m cadré sur les bougies, amplitude maximale 1600 dollars, MA200, graduations 500 dollars, duel acheteurs vendeurs en volume BTC">'+
+  ' role="img" aria-label="Prix BTC 3m, graduations 500 dollars, ligne bleue ciel de référence Δ prix zéro, écart du contact des cubes proportionnel au déport prix 3m normalisé, duel en volumes BTC">'+
   svgParts.join('')+'</svg>';
 }
 function setQuote(price,ts,status){
@@ -188,6 +215,9 @@ function refresh(snapshot){
  set('v52-mini-btc-price',quoteNow===null?'BTC —':'BTC '+format(quoteNow,1)+' $');
  const delta=ok?num(e.priceNetUsd):null;
  set('v52-mini-delta',delta===null?'Δ BTC 3m —':'Δ BTC 3m '+signed(delta,1)+' $');
+ const deport=relativePriceDeport(e);
+ set('v52-mini-price-deport',deport===null?'Déport prix —':
+  'Déport prix '+signed(100*deport,1)+' % du range 3m');
  const deltaRow=document.getElementById('v52-mini-delta');
  if(deltaRow)deltaRow.className='v52-mini-delta'+(
   delta===null?'':delta>0?' up':delta<0?' down':'');

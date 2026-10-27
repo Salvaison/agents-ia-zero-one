@@ -68,3 +68,23 @@ Le mot `Bâton` et sa valeur monétaire demeurent au premier plan ; son complém
 `Vitesse 3m ±XX.X $/min` reste affichée. L'indication `· 2m précédentes ±XX.X $/min` est supprimée **uniquement du module graphique de l'État vivant** (et son libellé comparatif `RALENTISSEMENT` de cette même ligne) pour éviter les coupures. Les calculs de cadence et de vitesse de l'algorithme restent intacts ; aucune version de BOONO ni décision ne change.
 
 Contrôle visuel statique Chromium effectué sur une cellule de 224 px avec `Bâton +39.6 $ · depuis -11.1 $` et `PM3 +52.7 $ · PM5 +43.7 $` : aucune coupure de ligne, complément bien gris. Régression complète après correction : **275 tests, 263 réussis, 0 échec et 12 anciens cas sautés**.
+
+## Axe bleu ciel et espace entre l’axe et la frontière des deux cubes — 27 octobre 2026
+
+**Observation demandée :** le point de contact des cubes ACHAT/VENTE s’écarte latéralement de la position centrale de référence. Cet écart n’est **pas** la différence des volumes acheteurs et vendeurs, un spread de cotation, une différence de prix vertical dans la chandelle ou la métrique `eff3`. Il correspond déjà dans le module d’origine à la **translation nette du prix BTC sur 3 minutes, normalisée par l’amplitude du prix observé pendant ces mêmes 3 minutes** :
+
+\[
+\text{Déport prix 3m (\%)}=100\times \frac{P_{dernier\ trade}-P_{premier\ trade}}{P_{max,3m}-P_{min,3m}}
+\]
+
+Les cubes continuent de se déplacer horizontalement selon `contactX = axeX + déportRelatif × travelDisponiblePx`. Le déplacement en pixels dépend de l'espace disponible et donc des **dimensions relatives des cubes** : seul le déport normalisé en % permet des comparaisons numériques entre les différents instants. Les volumes agressseurs BTC continuent de définir les **surfaces** des carrés, sans affecter le pourcentage du déport.
+
+**Ajout exclusivement visuel :** dans `modules/elastic-mini-conversion-v542.js`, la ligne verticale fixe auparavant gris pointillé devient **bleu ciel `#4a9eff`**, selon l'accent déjà présent dans BOONO Watch. Une bande verticale bleu clair à 17 % d'opacité matérialise l'espace exact jusqu'au contact des deux cubes ; la ligne du contact conserve sa couleur distincte. L'axe fixe signifie `Δ BTC 3m = 0`, et ne représente ni une MA ni un prix absolu.
+
+Sous l'affichage existant `Δ BTC 3m ±XX,X $`, une ligne compacte `Déport prix ±XX,X % du range 3m` caractérise l'espace. Exemple illustratif, et **non un relevé live** : −57 $ de déplacement net dans 155 $ d'amplitude correspond à −36,8 % du range 3m. Sur une maquette étroite, cela a produit ~7,7 pixels d'écart ; ce nombre de pixels n'est pas une unité de trading.
+
+**Source identique** : transactions publiques OKX déjà collectées pour le graphe de Conversion ; aucun nouvel abonnement, aucune nouvelle source, aucun contrat de trading modifié. Si les trades deviennent périmés, aucune bande n'est tracée et le pourcentage revient à `—`. Quand le déplacement net est nul, l'axe et le contact sont confondus. `eff3`, `yield/P75` et `effort/P75` sont inchangés (pas de calcul fictif).
+
+La lisibilité de la ligne centrale et du nouveau pourcentage a été vérifiée dans Chromium sur une maquette de 230 pixels de largeur ; l'intégration dans la session authentifiée utilisateur reste à contrôler. L'amélioration n'entraîne aucune évolution des moteurs V4.9.4/V5.4.2, et aucune modification des seuils, sorties ou entrées.
+
+**Déploiement vérifié — 27 octobre 2026 :** avant redémarrage, sauvegarde du serveur d'interface, du module SVG et des deux ledgers avec empreintes SHA256 sous `/root/boono-conversion-blue-axis-before-20261027/`. Rechargement de `config-server` **uniquement** ; les PID `boono-v494-paper` (962864) et `boono-v542-paper` (962826) sont restés identiques. V4.9.4 et V5.4.2 diffusaient `DATA_OK`, PAPER sans ordre financé ; V5.4.2 comptait 77 trades clôturés au contrôle. Tests V4/V5/attention : **277 cas, 265 réussis, aucun échec et 12 anciens cas sautés**. Le repère bleu et le déport sont des éléments **strictement graphiques**, ne changent ni la politique de trading ni le prix, ni la taille des cubes.

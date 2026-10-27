@@ -105,6 +105,60 @@ test('signed 3m price delta has its own enlarged row, followed by start/end time
  assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m —',
   'expired OKX trade prices cannot masquerade as live');
 });
+test('sky-blue fixed axis and displacement corridor encode signed 3m PRICE net/range',()=>{
+ const {mini}=create(),base={data:candles(),periodData:{to:NOW},
+  width:220,height:192,now:NOW,quoteValue:79880};
+ const snap=example({priceShift:-57,range:155});
+ const falling=mini.miniSvg({...base,snapshot:snap});
+ const rising=mini.miniSvg({...base,snapshot:example({priceShift:57,range:155})});
+ const zero=mini.miniSvg({...base,snapshot:example({priceShift:0,range:155})});
+ const missing=mini.miniSvg({...base,snapshot:example({status:'OKX_TRADES_UNAVAILABLE'})});
+ const x=s=>Number((s.match(/class="v52-mini-blue-zero-axis" x1="([\d.]+)"/)||[])[1]);
+ const contact=s=>Number((s.match(/class="v52-mini-cube-contact" x1="([\d.]+)"/)||[])[1]);
+ const gap=s=>Number((s.match(/class="v52-mini-price-deport-gap" x="([\d.]+)" y="[\d.]+" width="([\d.]+)"/)||[])[2]);
+ assert.ok(falling.includes('stroke="#4a9eff" stroke-width="1.6"'),
+  'zero-price-displacement line uses same BOONO sky-blue accent');
+ assert.ok(falling.includes('fill="#4a9eff" fill-opacity=".17"'),
+  'the corridor must be visibly colored, not an imagined gap');
+ assert.equal(x(falling),x(rising));
+ assert.ok(contact(falling)<x(falling),'negative 3m price displacement shifts cubes left');
+ assert.ok(contact(rising)>x(rising),'positive 3m price displacement shifts cubes right');
+ assert.ok(Math.abs(gap(falling)-Math.abs(contact(falling)-x(falling)))<.25);
+ assert.ok(falling.includes('Déport prix 3m : -36,8 %'));
+ assert.ok(rising.includes('Déport prix 3m : +36,8 %'));
+ assert.ok(!zero.includes('class="v52-mini-price-deport-gap"'),
+  'zero displacement creates zero visual distance');
+ assert.ok(!missing.includes('class="v52-mini-price-deport-gap"'));
+ assert.ok(missing.includes('class="v52-mini-blue-zero-axis"'),
+  'reference remains even if the OKX feed is unavailable');
+ assert.ok(!falling.includes('eff3 -36,8'),
+  'normalized price displacement is not efficiency of conversion');
+});
+test('normalized price deport row is separate from BTC price and does not use volume dominance',()=>{
+ const {mini,dom}=create();
+ const node=()=>({textContent:'',innerHTML:'',className:'',
+  getBoundingClientRect:()=>({width:222,height:192})});
+ for(const name of ['v52-mini-conversion','v52-mini-conversion-svg','v52-mini-delta',
+  'v52-mini-price-deport','v52-mini-begin','v52-mini-end','v52-mini-btc-price',
+  'v52-mini-buy','v52-mini-sell'])dom[name]=node();
+ mini.setQuote(79880,NOW,'OKX live');
+ mini.setCandles({candles:candles(),period:{to:NOW}});
+ mini.refresh(example({buy:100,sell:1,priceShift:-57,range:155}));
+ assert.equal(dom['v52-mini-price-deport'].textContent,
+  'Déport prix -36,8 % du range 3m');
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m -57,0 $');
+ // Changing effort dominance cannot change the normalized PRICE reading.
+ mini.refresh(example({buy:1,sell:100,priceShift:-57,range:155}));
+ assert.equal(dom['v52-mini-price-deport'].textContent,
+  'Déport prix -36,8 % du range 3m');
+ // Changing PRICE range changes the relative displacement but not $ movement.
+ mini.refresh(example({buy:100,sell:1,priceShift:-57,range:190}));
+ assert.equal(dom['v52-mini-price-deport'].textContent,
+  'Déport prix -30,0 % du range 3m');
+ assert.equal(dom['v52-mini-delta'].textContent,'Δ BTC 3m -57,0 $');
+ mini.refresh(example({status:'OKX_TRADES_UNAVAILABLE'}));
+ assert.equal(dom['v52-mini-price-deport'].textContent,'Déport prix —');
+});
 test('smaller chart grants proportionally generous size to squares and shares contact axis',()=>{
  const {mini}=create();
  const compact=mini.miniSvg({data:candles(),periodData:{to:NOW},
