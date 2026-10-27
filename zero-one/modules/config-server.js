@@ -477,7 +477,10 @@ function v52PaperSummary(filename, tag) {
   wins:s.wins,losses:s.losses,equityUsd:s.equityUsd,realizedUsd:s.realizedUsd,
   feesUsd:s.feesUsd,position:s.position||null,
   latestAction:s.lastAction||null,decision:s.latestDecision||s.decision||null,
-  analysis:tag==='V5.4.1'?s.latestAnalysis||null:null,
+  analysis:tag.startsWith('V5.4.')?s.latestAnalysis||null:null,
+  attention:s.temporalAttention?{stage:s.temporalAttention.stage,
+    asOf:s.temporalAttention.asOf,events:s.temporalAttention.events?.length||0,
+    opposingTransfer:!!s.temporalAttention.opposing?.transferable}:null,
   latestTrades:(s.history||[]).slice(-5).reverse(),
   engineVersion:s.engine||null,gitRef:s.gitRef||null,
   source:'ISOLATED_SIMULATION_ONLY_NO_FUNDED_ORDERS'};
@@ -503,7 +506,7 @@ function v53UiReadEvents(){
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
-  const summary=v52PaperSummary('v52-paper-state.json','V5.4.1');
+  const summary=v52PaperSummary('v52-paper-state.json','V5.4.2');
   try{
    const a=summary.analysis,src=v53UiReadEvents();
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
@@ -514,12 +517,17 @@ app.get('/api/v52',requireAuth,(req,res)=>{
     decisionImpact:false};
   }
   sendUiJson(req,res,summary);
- }catch(e){res.status(503).json({error:'V5.4.1 PAPER indisponible',detail:e.message});}
+ }catch(e){res.status(503).json({error:'V5.4.2 PAPER indisponible',detail:e.message});}
 });
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
-  sendUiJson(req,res,v52PaperSummary('v493-baseline-state.json','V4.9.3'));}
- catch(e){res.status(503).json({error:'V4.9.3 baseline indisponible',detail:e.message});}
+  sendUiJson(req,res,v52PaperSummary('v494-paper-state.json','V4.9.4'));}
+ catch(e){res.status(503).json({error:'V4.9.4 PAPER indisponible',detail:e.message});}
+});
+app.get('/api/v493-archive',requireAuth,(req,res)=>{
+ try{res.set('Cache-Control','no-store');
+  sendUiJson(req,res,v52PaperSummary('v493-baseline-state.json','V4.9.3 ARCHIVE'));}
+ catch(e){res.status(503).json({error:'V4.9.3 archive unavailable'});}
 });
 // Separate observational execution lab. Never an order route or command.
 app.get('/api/execution-lab',requireAuth,(req,res)=>{
@@ -562,7 +570,7 @@ app.get('/api/execution-lab',requireAuth,(req,res)=>{
 // Read-only per-engine PAPER history and full reports, always behind Amsterdam session.
 // Read only the selected historical report, not the complete position contexts on refresh.
 const PAPER_LEDGER_PATHS=Object.freeze({
- v52:'v52-paper-state.json',v493:'v493-baseline-state.json'
+ v52:'v52-paper-state.json',v493:'v494-paper-state.json'
 });
 function paperLedgerRead(kind){
  const name=PAPER_LEDGER_PATHS[kind];
@@ -581,7 +589,8 @@ function compactPaperTrade(t,engine){
   maePriceUsd:Number(t.maePriceUsd),exitReason:String(t.exitReason||'PAPER_EXIT'),
   entryHypothesis:t.entryContext&&t.entryContext.phase||t.entryReason||null,
   entryPolicyVersion:engine==='v52'?
-    t.entryPolicyVersion||'v5.2-structural-decision-paper-v0.1':null,
+    t.entryPolicyVersion||'v5.2-structural-decision-paper-v0.1':
+    t.entryPolicyVersion||t.engine||null,
   status:'CLOSED'};
 }
 function paperHistoryView(kind){
@@ -638,7 +647,7 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
   const state=paperLedgerRead(engine);
   let trade=(state.history||[]).find(t=>Number(t.tradeNo)===number)||null;
   if(!trade&&number<=Number(state.completed||0)){
-   const f=path.join(__dirname,'../data',engine==='v52'?'v52-paper-trades.ndjson':'v493-baseline-trades.ndjson');
+   const f=path.join(__dirname,'../data',engine==='v52'?'v52-paper-trades.ndjson':'v494-paper-trades.ndjson');
    trade=readRecentNdjson(f,300).find(t=>Number(t.tradeNo)===number)||null;
   }
   if(!trade){
@@ -654,7 +663,7 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
   let exitEvidence=null;
   try{
    const log=path.join(__dirname,'../data',engine==='v52'?
-     'v52-paper-decisions.ndjson':'v493-baseline-decisions.ndjson');
+     'v52-paper-decisions.ndjson':'v494-paper-decisions.ndjson');
    const ev=readRecentNdjson(log,3000);
    exitEvidence=ev.slice().reverse().find(x=>
      x.tradeEvent&&Number(x.tradeEvent.tradeNo)===number&&
@@ -672,7 +681,7 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
 // Names kept independent: V5.2 magenta, V4.9.3 blue.
 function waveUiComparePaperTrades(startTs,endTs) {
  const entries=[['v52-paper-state.json','V52_PAPER'],
-                ['v493-baseline-state.json','V493_PAPER']];
+                ['v494-paper-state.json','V493_PAPER']];
  const out=[];
  for(const [file,source] of entries){
   let s;try{s=JSON.parse(fs.readFileSync(path.join(__dirname,'../data',file),'utf8'));}catch(_){continue;}
@@ -682,7 +691,7 @@ function waveUiComparePaperTrades(startTs,endTs) {
    if(!Number.isFinite(entryTs)||!Number.isFinite(exitTs)||entryTs>endTs||exitTs<startTs)continue;
    out.push({source,trade:Number(t.tradeNo),entryTs,exitTs,
      entryPrice:Number(t.entryPrice),exitPrice:Number(t.exitPrice),
-     policyVersion:source==='V52_PAPER'?t.entryPolicyVersion||null:null,
+     policyVersion:t.entryPolicyVersion||t.engine||null,
      direction:t.direction,netPnlUsd:Number(t.netPnlUsd),
      exitReason:String(t.exitReason||'PAPER_EXIT').slice(0,120),open:false});
   }
@@ -693,7 +702,7 @@ function waveUiComparePaperTrades(startTs,endTs) {
    if(Number.isFinite(entryTs)&&entryTs<=endTs)
     out.push({source,trade:Number(s.completed||0)+1,entryTs,exitTs:null,
       entryPrice:Number(t.entryPrice),exitPrice:null,direction:t.direction,
-      policyVersion:source==='V52_PAPER'?t.entryPolicyVersion||null:null,
+      policyVersion:t.entryPolicyVersion||t.engine||null,
       netPnlUsd:Number(t.lastNetPnlUsd)||0,exitReason:null,open:true});
   }
  }
@@ -1957,7 +1966,8 @@ function waveUiV54LiveState(paper,auditLatest,now){
  const observedAt=validV54?ts:validAudit?at:null;
  const pos=validV54&&paper.position?paper.position:null;
  return {
-  version:validV54?(String(a.version||'').startsWith('v5.4.1')?'V5.4.1-PAPER':'V5.4-PAPER'):validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
+  version:validV54?(String(a.version||'').startsWith('v5.4.2')?'V5.4.2-PAPER':
+    String(a.version||'').startsWith('v5.4.1')?'V5.4.1-PAPER':'V5.4-PAPER'):validAudit?'MCB-AUDIT':'LIVE-SOURCE-UNAVAILABLE',
   source:validV54?'V54_PAPER_PRICE':validAudit?'MCB_AUDIT_PRICE':'NO_FRESH_PRICE',
   ts:observedAt,price,priceAgeMs:observedAt===null?null:now-observedAt,
   position:pos?{direction:pos.direction,entryPrice:pos.entryPrice,
@@ -3305,7 +3315,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.4.1 PAPER — connexion au moteur décisionnel…</div>
+<div id="v52-live" class="v5-observer v52-main">V5.4.2 PAPER — connexion au moteur décisionnel…</div>
 <div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
@@ -3488,7 +3498,7 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
-  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.1 · Lecture structurelle…</div>
+  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.2 · Lecture structurelle…</div>
   <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
@@ -4900,7 +4910,7 @@ async function loadWaveV5StructureStory(){
     const stale=z.dataIntegrity!=='ASOF_OK';
     const elasticStale=!['EVENT_STREAM_OBSERVED','SAME_ACTIVE_ENGINE'].includes(z.elasticEventStatus);
     const blocks=[
-      '<div class="heading"><span>V5.4.1 · STRUCTURE DIRECTRICE</span>'+
+      '<div class="heading"><span>V5.4.2 · STRUCTURE DIRECTRICE</span>'+
         '<span>V5.4.1 PAPER · ACTIF</span></div>',
       stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
       elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
@@ -6548,7 +6558,7 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.4.1 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>BOONO V5.4.2 · ÉTAT VIVANT</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
@@ -6675,6 +6685,11 @@ function renderV52Living(data){
     ' → E15 confirmé '+v5Time(ch15.confirmed?.observedAt)+
     '<span class="v52-muted"> · jalons observés, ordre réel non imposé ; chaque PM est daté dans sa colonne</span>'+
     '</span></div>'+
+  '<div class="v52-strip"><span><b>ATTENTION V5.4.2</b> '+
+   f(r.attention?.stage||'—')+' · preuves '+Number(r.attention?.events?.length||0)+
+   '</span><span>V4.9.3 SHADOW '+f(r.admissionV493Shadow?.action||'EN ATTENTE')+
+   ' · âge '+(r.admissionV493Shadow?n(r.admissionV493Shadow.ageMs/1000):'—')+
+   ' s · aucune autorité de trade</span></div>'+
   '<div class="v52-strip"><span><b>RISQUE</b> plafond −500$ BTC · floors +120/90 et +220/180</span>'+
    '<span>Frais A/R estimés '+n(eco.expectedFeesUsd)+' $ · mobilité observée '+
      n(eco.empiricalMobilityUsd)+' $ BTC · niveau proche non-veto</span></div>'+
@@ -6684,7 +6699,7 @@ function renderV52Living(data){
    '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
    ' $ · plancher '+n(p.gainFloorUsd)+' $ · invalidation '+n(p.invalidationPrice)+' $</div></div>':
    '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
-  '<div class="v52-muted">PAPER V5.4.1 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
+  '<div class="v52-muted">PAPER V5.4.2 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
    ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
  el.innerHTML=card;
@@ -6703,7 +6718,7 @@ async function loadV52PaperPanel(){
   if(window.elasticConversionV541)
     window.elasticConversionV541.setAnalysis(data.analysis);
   renderV52Living(data);
- }catch(e){if(el)el.textContent='V5.4.1 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.4.2 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 // Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
@@ -6770,17 +6785,20 @@ async function loadV493Panel(){
   const x=await resp.json(),d=x.decision||{},p=x.position||null;
   const n=z=>z===null||z===undefined||!Number.isFinite(Number(z))?'—':Number(z).toFixed(1);
   const age=Math.round((Date.now()-Number(x.updatedAt||0))/1000);
-  el.innerHTML='<div class="v52-strip"><b>V4.9.3 · VERSION DE COMPARAISON</b>'+
+  el.innerHTML='<div class="v52-strip"><b>V4.9.4 · MÉMOIRE TEMPORELLE ACTIVE</b>'+
    '<span>'+x.completed+' trades · '+x.wins+' gagnants · net '+n(x.realizedUsd)+' $</span></div>'+
    '<div class="v5-row">Code historique <b>'+escTrade(x.engineVersion||'v4.9.3')+
     '</b> · commit '+escTrade(x.gitRef||'—')+' · '+escTrade(x.mode||'PAPER')+'</div>'+
    '<div class="v5-row">ACTION '+escTrade(d.type||'—')+' · '+escTrade(d.reason||'—')+
    ' · source '+v5Time(x.updatedAt)+' · âge '+age+'s</div>'+
+   '<div class="v5-row"><b>ATTENTION</b> '+escTrade(x.attention?.stage||'—')+
+   ' · preuves '+Number(x.attention?.events||0)+
+   ' · autorité d’exécution inchangée</div>'+
    (p?'<div class="v5-row"><b>POSITION '+escTrade(p.direction.toUpperCase())+'</b> @ '+n(p.entryPrice)+
    ' · MFE '+n(p.metrics?.mfeUsd)+' · MAE '+n(p.metrics?.maeUsd)+'</div>':
    '<div class="v5-row">FLAT</div>')+
    '<div class="v5-muted">PAPER indépendant, mêmes sources marché, frais modélisés, aucune écriture V4 active.</div>';
- }catch(e){if(el)el.textContent='V4.9.3 comparaison indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V4.9.4 indisponible : '+e.message;}
  finally{v493Pending=false;}
 }
 setInterval(loadV52PaperPanel,10000);
@@ -6813,7 +6831,7 @@ function renderV5StructuralLive(a){
      ' · '+Number(x.materialEvents)+' événement(s)':'')+'</div>').join('');
  const price= n(a.price);
  el.innerHTML=
-   '<div class="v5-head"><span>V5.4.1 · STRUCTURE VIVANTE</span>'+
+   '<div class="v5-head"><span>V5.4.2 · STRUCTURE VIVANTE</span>'+
      '<span style="color:#08794a;">OBSERVATION SEULE · AUCUN TRADE</span></div>'+
    '<div class="v5-row"><b>BTC '+price+' $</b> · relevé '+v5Time(a.ts)+
      ' (Stockholm) · âge '+Math.round(age/1000)+' s</div>'+
@@ -6866,7 +6884,7 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.4.1':'V4.9.3',color=isV52?'#9c1f6f':'#1969a0';
+ const name=isV52?'V5.4.2':'V4.9.4',color=isV52?'#9c1f6f':'#1969a0';
  const prefix=isV52?'V52:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
@@ -6921,7 +6939,7 @@ async function loadPaperHistoryPanel(){
     '<div class="v52-muted">Entrée, sortie, MFE, MAE et P&L net. Chaque RAPPORT ouvre les preuves complètes.</div>'+
     renderPaperHistoryGroup(d.v52,'v52')+
     '<details id="paperV493History" style="margin-top:9px;" '+(wasOpen?'open':'')+'>'+
-      '<summary style="font-weight:800;cursor:pointer;color:#1969a0;">V4.9.3 · Comparateur historique ('+
+      '<summary style="font-weight:800;cursor:pointer;color:#1969a0;">V4.9.4 · Successeur du comparateur V4.9.3 ('+
         Number(d.v493?.completed||0)+' clôture(s))</summary>'+
        renderPaperHistoryGroup(d.v493,'v493')+'</details></div>';
  }catch(e){panel.textContent='Historique PAPER indisponible : '+e.message;}
@@ -6981,16 +6999,16 @@ async function loadTrades() {
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.4.1 PAPER · lecture de la décision en cours…</div>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.4.2 PAPER · lecture de la décision en cours…</div>'+
       (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
         '<div id="execution-lab-live">Données du carnet en attente…</div></details>'+
       '<details id="v493-details" class="v5-observer" '+(baselineWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V4.9.3 · COMPARATEUR PAPER EN ARRIÈRE-PLAN</summary>'+
+        '<summary style="cursor:pointer;font-weight:800;">V4.9.4 · ÉCOUTE TEMPORELLE · V4.9.3 FIGÉ EN SOURCE</summary>'+
         '<div id="v493-live">Version historique chargement…</div></details>'+
       '<details id="v5-structure-details" class="v5-observer" '+(structureWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V5.4.1 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.4.2 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
         '<div id="v5-structure-live">V5.4.1 · structure en cours…</div></details>'+
       '<details id="v5-paper-archive" class="v5-observer" '+(archiveWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V5.1 PAPER · ARCHIVE ARRÊTÉE · 22 trades clôturés</summary>'+
