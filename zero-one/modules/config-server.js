@@ -4524,8 +4524,10 @@ function drawWaveBand(canvas, key, idx) {
       ctx.save();
       ctx.strokeStyle=d.direction==='bullish'?'#1f9d55':'#d33';
       ctx.lineWidth=1.05;
-      ctx.setLineDash(d.kind==='CONTINUATION'?[5,3]:[]);
-      ctx.globalAlpha=d.status==='FORMING'?0.82:0.95;
+      ctx.setLineDash(d.kind==='CONTINUATION'?[5,3]:
+        d.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?[4,4]:[]);
+      ctx.globalAlpha=d.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?.72:
+        d.status==='FORMING'?0.82:0.95;
       const aLbw=key==='wave3'&&Number.isFinite(Number(a.oscExtremeLbw))?Number(a.oscExtremeLbw):Number(a.lbw);
       ctx.beginPath();
       ctx.moveTo(tx(aTs),y(aLbw));
@@ -6519,6 +6521,8 @@ function renderV52Living(data){
   campaign=r.conversionCampaign||{},s54=r.structural54||{},
   origin2h=s54.origins?.m120||{},origin30=s54.origins?.m30||{};
  const three=r.mcb3||{},band=observed.extremeBand||{};
+ const div15=(r.attention?.events||[]).filter(e=>
+  e.kind==='MCB15_LBW_DIVERGENCE').at(-1)||null;
  const maCycle=x=>{
   const q=x?.polarityMemory||{},s=q.polarity==='ABOVE'?'AU-DESSUS':
    q.polarity==='BELOW'?'AU-DESSOUS':'INCONNUE';
@@ -6581,14 +6585,21 @@ function renderV52Living(data){
     '<div class="v52-muted">LBW/BW spread15 '+n(m.bwLbwSpread)+
      ' · pivot confirmé '+v5Time(m.structuralPivotAt)+
      ' · 1h '+f(s54.context1h||m.context1h)+' / 4h '+f(s54.context4h||m.context4h)+'</div>'+
-    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.1</b> '+f(s54.director)+
+    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.2</b> '+f(s54.director)+
       ' · origine '+v5Time(s54.structuralOrigin?.sourceTs)+
       ' · disponible '+v5Time(s54.structuralOrigin?.availableAt)+
       ' · '+f(s54.strategicState)+'</div>'+
       '<div class="v52-muted">LBW15 géométrique ≠ E15 natif · '+
        f(s54.nativeE15?.confirmed?.direction||'—')+' source '+
        v5Time(s54.nativeE15?.confirmed?.sourceTs)+
-       ' · connu '+v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>':'') )+
+       ' · connu '+v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>':'')+
+    (div15?'<div class="v52-muted"><b>DIV15 LBW / PRIX · '+
+     (div15.direction==='long'?'UP':'DN')+'</b> · prix '+
+      n(div15.anchors?.priceFirst)+' → '+n(div15.anchors?.priceSecond)+
+     ' $ · LBW15 '+sn(div15.anchors?.lbwFirst)+' → '+
+     sn(div15.anchors?.lbwSecond)+' · connue '+v5Time(div15.availableAt)+
+     ' · '+f(div15.quality||'OBSERVATION')+
+     ' · sans autorité de trade</div>':'') )+
    cell('geom','2 · MCB3 · TACTIQUE','LBW3 '+n(three.lbw)+' / BW3 '+n(three.bw),
     '<div class="v53-phase-caption">Tactique '+f(mat.maturity)+
       ' · MF3 '+sn(three.mf)+' / Δ3m '+sn(c.mf3Delta3m)+'</div>'+
@@ -6598,7 +6609,7 @@ function renderV52Living(data){
     ((state3||discrepancy3)?'<div class="v53-cross-note">'+
       (discrepancy3?'Croisement et dernier E3 Live de sens différent. ':'')+
       state3+'</div>':'')+
-    '<div class="v52-muted">V5.4.1 : '+f(s54.phase||'tactique héritée')+
+    '<div class="v52-muted">V5.4.2 : '+f(s54.phase||'tactique héritée')+
      ' · pivot LBW3 (mémoire, sans veto) '+f(s54.mcb3?.direction||'—')+
      (s54.sourceFreshness?.firstNewBarSnapshotPending?
        ' · nouvelle bougie : premier relevé en attente (données précédentes fraîches)':'')+

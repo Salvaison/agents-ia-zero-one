@@ -2,7 +2,7 @@
 // BOONO Systems: causal selective-attention memory. Pure, no trading authority.
 const VERSION='boono-attention-v0.2';
 const STAGES={DISCOVERY:'DISCOVERY',HOLD:'CAMPAIGN_HOLD',WATCH:'REVERSAL_ATTENTION',TRANSFER:'TRANSFER_EXAMINATION'};
-const KINDS=new Set(['MCB15_NATIVE','MCB3_NATIVE','MCB3_TURN','MCB15_FORMING','MCB15_PIVOT','MF_DIVERGENCE','MF_ACTION','MF_TRANSFER','PRICE_TRANSLATION','PRICE_DEFENCE','PRICE_FAILURE','PRICE_REJECTION','MA_ACCEPTANCE','MA_REJECTION','PRICE_FALSIFIES']);
+const KINDS=new Set(['MCB15_NATIVE','MCB3_NATIVE','MCB3_TURN','MCB15_FORMING','MCB15_PIVOT','MCB15_LBW_DIVERGENCE','MF_DIVERGENCE','MF_ACTION','MF_TRANSFER','PRICE_TRANSLATION','PRICE_DEFENCE','PRICE_FAILURE','PRICE_REJECTION','MA_ACCEPTANCE','MA_REJECTION','PRICE_FALSIFIES']);
 const n=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
 const opposite=d=>d==='long'?'short':d==='short'?'long':null;
 const directional=d=>['long','short'].includes(d);
@@ -18,7 +18,8 @@ function normal(e,at){
  return {id,kind:e.kind,family,direction:e.direction,sourceAt:source,
   availableAt:known,price:n(e.price),anchors:anchors?{
    priceFirst:n(anchors.priceFirst),priceSecond:n(anchors.priceSecond),
-   mfFirst:n(anchors.mfFirst),mfSecond:n(anchors.mfSecond)}:null,
+   mfFirst:n(anchors.mfFirst),mfSecond:n(anchors.mfSecond),
+   lbwFirst:n(anchors.lbwFirst),lbwSecond:n(anchors.lbwSecond)}:null,
   quality:e.quality||null,episodeId:e.episodeId||null};
 }
 function divergence(e){
@@ -34,6 +35,9 @@ function proof(events,d,at){
  const last=k=>events.findLast(e=>is(e)&&k.includes(e.kind))||null;
  const mcb15=last(['MCB15_PIVOT','MCB15_NATIVE','MCB15_FORMING']);
  const mcb3=last(['MCB3_NATIVE','MCB3_TURN']);
+ // The oscillator divergence is an observed structural relation, not a fresh
+ // E15 native event, and cannot independently open/close a position.
+ const lbw15Divergence=last(['MCB15_LBW_DIVERGENCE']);
  const div=events.findLast(e=>is(e)&&divergence(e))||null;
  const mf=last(['MF_ACTION','MF_TRANSFER']);
  const mfSequence=!!(div&&mf&&mf.availableAt>=div.availableAt&&
@@ -49,7 +53,8 @@ function proof(events,d,at){
  const mcb15Recent=!!(mcb15&&at-mcb15.availableAt<=120*60000);
  const mcb3Recent=!!(mcb3&&at-mcb3.availableAt<=75*60000);
  const priceRecent=!!(price&&at-price.availableAt<=30*60000);
- return {direction:d,oscillator:{mcb15,mcb3,observed:mcb15Recent||mcb3Recent},
+ return {direction:d,oscillator:{mcb15,mcb3,lbw15Divergence,
+    observed:mcb15Recent||mcb3Recent},
   mf:{divergence:div,action:mf,sequence:mfSequence,transfer:transferMF,observed:mfObserved},
   price:{event:price,observed:priceRecent},
   transferable:!!(mcb15Recent&&mfObserved&&priceRecent&&priceAfterMF),

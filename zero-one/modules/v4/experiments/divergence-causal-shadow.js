@@ -591,10 +591,56 @@ function activeHidden15mFromStructuralAnchor(seriesRows,direction){
   };
 }
 
+// A causal low-amplitude LBW divergence must remain VISIBLE as a weak candidate.
+// The +5 LBW reference still separates a fully qualified regular lineage.
+// This is not a new E15 pivot, a new campaign direction, or a trade admission.
+function developingLbw15mFromStructuralAnchor(seriesRows,direction){
+  const cfg=CFG['15m'],bull=direction==='bullish';
+  // The graph may include an intra-candle _live row: exclude it so the two
+  // confirmation bars are genuinely closed and cannot be future evidence.
+  const series=orderedSeries(seriesRows).filter(r=>r._live!==true);
+  const anchor=latestStructuralAnchor15m(series,direction);
+  if(!anchor)return null;
+  const last=series[series.length-1];
+  const kind=bull?'CREUX':'CRETE';
+  const ends=causalDivergencePivots15m(series).filter(p=>{
+    if(p.type!==kind||Number(p.extremeTs)<=Number(anchor.extremeTs))return false;
+    // The last confirming 15m bar must have fully CLOSED; its start timestamp
+    // cannot be backdated into available knowledge.
+    if(!last||Number(p.confirmedAt)+cfg.ms>Number(last.ts)+cfg.ms)return false;
+    const priceDelta=bull?Number(anchor.price)-Number(p.price):
+      Number(p.price)-Number(anchor.price);
+    const lbwDelta=bull?Number(p.lbw)-Number(anchor.lbw):
+      Number(anchor.lbw)-Number(p.lbw);
+    return priceDelta>=cfg.minPriceDelta&&lbwDelta>0&&lbwDelta<cfg.minLbwDelta;
+  });
+  if(!ends.length)return null;
+  ends.sort((a,b)=>bull
+    ?Number(a.price)-Number(b.price)||Number(b.extremeTs)-Number(a.extremeTs)
+    :Number(b.price)-Number(a.price)||Number(b.extremeTs)-Number(a.extremeTs));
+  const end=ends[0];
+  return {
+    kind:'REGULAR',subtype:'STRUCTURAL_E15_WEAK_LBW_CANDIDATE',
+    direction,status:'FORMING',start:anchor,end,
+    source:'CAUSAL_E15_EXTREMA_SUB_REFERENCE',
+    pivotsConfirmed:true,decisionImpact:false,
+    confidence:'LOW_LBW_DELTA_OBSERVATIONAL_ONLY',
+    strength:{
+      priceDeltaUsd:bull?Number(anchor.price)-Number(end.price):
+        Number(end.price)-Number(anchor.price),
+      lbwDelta:bull?Number(end.lbw)-Number(anchor.lbw):
+        Number(anchor.lbw)-Number(end.lbw),
+      regularLbwReference:cfg.minLbwDelta
+    },
+    availableAt:Number(end.confirmedAt)+cfg.ms,
+    note:'Price/oscillator divergence is mathematically present; LBW delta below the regular-lineage reference. Not a standalone vote.'
+  };
+}
 function localBullish15mLines(seriesRows){
+  const regular=activeRegular15mFromStructuralAnchor(seriesRows,'bullish');
   return [
     activeHidden15mFromStructuralAnchor(seriesRows,'bullish'),
-    activeRegular15mFromStructuralAnchor(seriesRows,'bullish')
+    regular||developingLbw15mFromStructuralAnchor(seriesRows,'bullish')
   ].filter(Boolean);
 }
 
@@ -1160,7 +1206,7 @@ module.exports={
   orderedSeries,signalRuns,structuralSignalPivots,regularLineages,
   priceSwingPivots,formingRegular,formingHidden,confirmedHiddenLineage,
   causalDivergencePivots15m,regularAnchorConsumedAt,regularAnchorConsumedBeforeEnd,hiddenLineConsumed,
-  latestStructuralAnchor15m,activeRegular15mFromStructuralAnchor,activeHidden15mFromStructuralAnchor,
+  latestStructuralAnchor15m,activeRegular15mFromStructuralAnchor,developingLbw15mFromStructuralAnchor,activeHidden15mFromStructuralAnchor,
   localBullish15mFromPivots,localBullish15mLines,
   localBearish15mFromPivots,localBearish15mLines,
   causalHiddenCandidates3m,localLbwPivots,localRegularLines,continuationAfterRegular,

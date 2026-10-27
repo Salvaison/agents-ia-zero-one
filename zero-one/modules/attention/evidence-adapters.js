@@ -2,6 +2,7 @@
 // Convert only available source facts into chronological observations.
 // A divergence is a price-vs-MF relation, never a naked MF slope or a vote.
 const MIN=60000,THREE=3*MIN,FIFTEEN=15*MIN;
+const lbw15=require('../v4/experiments/divergence-causal-shadow');
 const n=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
 const dir=d=>d==='long'||d==='short'?d:null;
 function add(out,kind,d,sourceAt,availableAt,more={}){
@@ -49,6 +50,28 @@ function divergenceFromBars(bars,now){
  }
  return out.slice(-6);
 }
+// A second, separate 15m structural LBW/price divergence family.
+// It must never be disguised as an MF divergence or act as a V5 vote.
+function lbw15Observations(bars,now){
+ const confirmed=(bars||[]).filter(b=>n(b.ts)!==null&&b.ts+FIFTEEN<=now)
+  .sort((a,b)=>a.ts-b.ts).slice(-128);
+ const strong=lbw15.activeRegular15mFromStructuralAnchor(confirmed,'bullish');
+ const candidate=strong||lbw15.developingLbw15mFromStructuralAnchor(confirmed,'bullish');
+ if(!candidate||!candidate.start||!candidate.end)return [];
+ const a=candidate.start,b=candidate.end,availableAt=Number(b.confirmedAt)+FIFTEEN;
+ if(availableAt>now)return [];
+ return [{
+  kind:'MCB15_LBW_DIVERGENCE',direction:'long',
+  sourceAt:Number(b.extremeTs),availableAt,
+  anchors:{priceFirst:Number(a.price),priceSecond:Number(b.price),
+   lbwFirst:Number(a.lbw),lbwSecond:Number(b.lbw)},
+  quality:candidate.subtype==='STRUCTURAL_E15_WEAK_LBW_CANDIDATE'?
+   'CONFIRMED_CAUSAL_EXTREMA_WEAK_LBW_DELTA':'CONFIRMED_CAUSAL_REGULAR',
+  episodeId:[a.extremeTs,b.extremeTs].join(':'),
+  price:b.price,
+  decisionImpact:false
+ }];
+}
 function fromV542(decision,input){
  const now=n(decision?.asOf),s=decision?.readings?.structural54||{},
   m=decision?.readings?.maContract||{},c=s.conversion||{};
@@ -89,7 +112,8 @@ function fromV542(decision,input){
    add(out,'PRICE_TRANSLATION',candidate,source,now,
      {price:decision.price,quality:'PM3_PM5_SAME_DIRECTION'});
  }
- return [...divergenceFromBars(input.bars15,now),...out]
+ return [...divergenceFromBars(input.bars15,now),
+  ...lbw15Observations(input.bars15,now),...out]
    .filter(e=>e.availableAt<=now);
 }
 function fromV494(e,frame){
@@ -128,6 +152,8 @@ function fromV494(e,frame){
     {quality:'V493_30M_1H_3M_TRANSFER'});
  for(const x of divergenceFromBars(frame.sources?.mcb?.tfs?.['15m']?.history,at))
   out.push(x);
+ for(const x of lbw15Observations(frame.sources?.mcb?.tfs?.['15m']?.history,at))
+  out.push(x);
  return out.filter(x=>x.availableAt<=at);
 }
-module.exports={fromV542,fromV494,divergenceFromBars};
+module.exports={fromV542,fromV494,divergenceFromBars,lbw15Observations};
