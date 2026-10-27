@@ -2963,6 +2963,9 @@ app.get('/', requireAuth, (req, res) => {
       .v52-cell.prognosis{border-left-color:#737aa3;}.v52-cell.decision{border-left-color:#40545f;}
       .v52-cell .title{font-size:9px;color:#687684;letter-spacing:.04em;font-weight:850;margin-bottom:3px;}
       .v52-cell .value{font-size:11px;font-weight:800;margin-bottom:2px;}
+      .v52-cell.conv > .value{display:flex;align-items:baseline;gap:4px;white-space:nowrap;}
+      .v52-cell.conv .v52-baton-since{font-size:8.5px;font-weight:500;color:#8a98a4;white-space:nowrap;}
+      .v52-cell.conv .v52-conv-speed{white-space:nowrap;}
       .v52-green{color:#14854e;font-weight:850}.v52-red{color:#b52b39;font-weight:850}
       .v52-muted{font-size:9px;color:#75818c}.v52-warn{color:#a36516;font-weight:750}
       .v52-strip{display:flex;justify-content:space-between;gap:5px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid #dce4e8;}
@@ -6700,11 +6703,11 @@ function renderV52Living(data){
     '<div class="v52-muted">Ancre de risque '+f(pl.anchor?.key||'NON DÉMONTRÉE')+
      ' '+n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+'</div>')+
    cell('conv','4 · CONVERSION · PM LIVE',
-    'Bâton '+sn(c.pmLastBaton)+' $ · depuis '+sn(c.pmSinceBaton)+' $',
+    'Bâton '+sn(c.pmLastBaton)+' $'+
+     '<span class="v52-baton-since">· depuis '+sn(c.pmSinceBaton)+' $</span>',
     'PM3 '+sn(c.pm3)+' $ · PM5 '+sn(c.pm5)+' $'+
-    '<div class="v52-muted">Vitesse 3m '+sn(mat.recent3mRateUsdPerMin)+
-    ' $/min · 2m précédentes '+sn(mat.previousNonoverlapping2mRateUsdPerMin)+
-    ' $/min'+(mat.incrementalRateSlowing?' · RALENTISSEMENT':'')+'</div>'+
+    '<div class="v52-muted v52-conv-speed">Vitesse 3m '+
+     sn(mat.recent3mRateUsdPerMin)+' $/min</div>'+
     '<div class="v52-muted">MF3 Δ3m '+sn(c.mf3Delta3m)+
     ' · MF15 Δ10m '+sn(m.mf15Delta10m)+
     ' · cohérence '+f(r.flow15?.qualityGrade||r.flow15?.coherence||'—')+

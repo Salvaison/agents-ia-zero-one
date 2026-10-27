@@ -60,3 +60,11 @@ Occuper la zone vide du **module 4 « CONVERSION · PM LIVE »** dans `État viv
 - Les données PM3, PM5, PM Live, eff3, P75, qualité, direction et statut sont conservées. Aucune nouvelle requête API et aucun WebSocket additionnel.
 - Nouveau rendu compact statique sous Chromium (colonne 230px, graphique 208px), avec chandeliers réels et volumes de démonstration explicitement fictifs. Les deux nouveaux rangs et le cadrage resserré sont visuellement vérifiés.
 - Tests ciblés adaptés aux nouvelles proportions, au cadrage adaptatif plafonné et à l'ordre des rangées ; contrôles des moteurs PAPER, des processus et des ressources d'interface avant déploiement.
+
+## Ajustement typographique — cellule Conversion · 27 octobre 2026
+
+Le mot `Bâton` et sa valeur monétaire demeurent au premier plan ; son complément `· depuis ±XX.X $` est conservé à droite, en **caractères plus petits (8,5 px), gris clair**, sur une seule ligne sans retour automatique. La mise en page de la valeur principale utilise une flexbox alignée sur la ligne de base et ne modifie aucune autre cellule.
+
+`Vitesse 3m ±XX.X $/min` reste affichée. L'indication `· 2m précédentes ±XX.X $/min` est supprimée **uniquement du module graphique de l'État vivant** (et son libellé comparatif `RALENTISSEMENT` de cette même ligne) pour éviter les coupures. Les calculs de cadence et de vitesse de l'algorithme restent intacts ; aucune version de BOONO ni décision ne change.
+
+Contrôle visuel statique Chromium effectué sur une cellule de 224 px avec `Bâton +39.6 $ · depuis -11.1 $` et `PM3 +52.7 $ · PM5 +43.7 $` : aucune coupure de ligne, complément bien gris. Régression complète après correction : **275 tests, 263 réussis, 0 échec et 12 anciens cas sautés**.

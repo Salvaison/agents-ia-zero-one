@@ -143,6 +143,24 @@ test('V5.4.2 PM values are accepted from current PAPER, legacy V4 and funded sou
  assert.equal(x.effort.buyBtc,1.5);
  assert.equal(x.effort.sellBtc,3);
 });
+test('Conversion title keeps the primary Bâton and secondary grey depuis on a single line',()=>{
+ const begin=config.indexOf("cell('conv','4 · CONVERSION · PM LIVE'");
+ const end=config.indexOf("cell('prognosis'",begin);
+ assert.ok(begin>0&&end>begin);
+ const slot=config.slice(begin,end);
+ assert.ok(slot.includes('v52-baton-since'));
+ assert.ok(slot.includes("· depuis '+sn(c.pmSinceBaton)"));
+ assert.ok(config.includes('.v52-cell.conv > .value{display:flex;align-items:baseline;gap:4px;white-space:nowrap;}'));
+ assert.ok(config.includes('.v52-cell.conv .v52-baton-since{font-size:8.5px;font-weight:500;color:#8a98a4;white-space:nowrap;}'));
+ assert.ok(slot.includes("Vitesse 3m '"),'3m speed is preserved');
+ assert.ok(!slot.includes('2m précédentes'),
+  'remove only the textual comparison to 2m, not the underlying measurements');
+ assert.ok(!slot.includes('previousNonoverlapping2mRateUsdPerMin'),
+  'remove second speed sample from the rendered Conversion cell');
+ assert.ok(!slot.includes('RALENTISSEMENT'),
+  'the slow-down tag also depended on removed 2m comparison');
+ assert.ok(config.includes('.v52-cell.conv .v52-conv-speed{white-space:nowrap;}'));
+});
 test('mini shares existing OKX WS and identical candle fetch; integrated into living conversion slot',()=>{
  assert.equal((src.match(/new WebSocket\(/g)||[]).length,0);
  assert.equal((src.match(/fetch\(/g)||[]).length,0);
