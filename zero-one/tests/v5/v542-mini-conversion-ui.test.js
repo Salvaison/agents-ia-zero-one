@@ -197,33 +197,37 @@ test('V5.4.2 PM values are accepted from current PAPER, legacy V4 and funded sou
  assert.equal(x.effort.buyBtc,1.5);
  assert.equal(x.effort.sellBtc,3);
 });
-test('Conversion title keeps the primary Bâton and secondary grey depuis on a single line',()=>{
- const begin=config.indexOf("cell('conv','4 · CONVERSION · PM LIVE'");
+test('Conversion has one grey LIVE header, no nested white frame and Bâton near PM',()=>{
+ const begin=config.indexOf("cell('conv','4. CONVERSION. PM ");
  const end=config.indexOf("cell('prognosis'",begin);
  assert.ok(begin>0&&end>begin);
  const slot=config.slice(begin,end);
- assert.ok(slot.includes('v52-baton-since'));
- assert.ok(slot.includes("· depuis '+sn(c.pmSinceBaton)"));
- assert.ok(config.includes('.v52-cell.conv > .value{display:flex;align-items:baseline;gap:4px;white-space:nowrap;}'));
- assert.ok(config.includes('.v52-cell.conv .v52-baton-since{font-size:8.5px;font-weight:500;color:#8a98a4;white-space:nowrap;}'));
- assert.ok(slot.includes("Vitesse 3m '"),'3m speed is preserved');
- assert.ok(!slot.includes('2m précédentes'),
-  'remove only the textual comparison to 2m, not the underlying measurements');
- assert.ok(!slot.includes('previousNonoverlapping2mRateUsdPerMin'),
-  'remove second speed sample from the rendered Conversion cell');
- assert.ok(!slot.includes('RALENTISSEMENT'),
-  'the slow-down tag also depended on removed 2m comparison');
- assert.ok(config.includes('.v52-cell.conv .v52-conv-speed{white-space:nowrap;}'));
+ assert.ok(slot.includes('id="v52-mini-conversion-status"'));
+ assert.ok(slot.includes('v52-mini-baton'));
+ assert.ok(slot.indexOf('v52-mini-baton')<slot.indexOf('id="v52-mini-pm"'));
+ assert.ok(slot.includes("sn(c.pmLastBaton)+' $ · depuis '+sn(c.pmSinceBaton)"));
+ const above=slot.slice(0,slot.indexOf('id="v52-mini-conversion"'));
+ assert.ok(!above.includes('Bâton +'));
+ assert.ok(!slot.includes('v52-mini-head'),'no duplicated header');
+ assert.ok(config.includes('.v52-cell.conv>.title{font:850 8.7px/1.4'));
+ assert.ok(config.includes('border-bottom:1px solid #cbd5dd'),
+  'single thin light-grey separator below main heading');
+ assert.ok(config.includes('.v52-cell.conv > .value{display:none;}'));
+ assert.ok(config.includes('.v52-mini-conversion{flex:1;min-width:0;margin-top:0;border:0;'));
+ assert.ok(config.includes('.v52-mini-pm{color:#18222b;font-size:9px;'));
+ assert.ok(src.includes("'OKX LIVE 3MIN'"));
+ assert.ok(slot.includes("Vitesse 3m '"));
+ assert.ok(!slot.includes('2m précédentes'));
 });
 test('Conversion information is ordered below the graph with subtle separators and lighter frame',()=>{
- const begin=config.indexOf("cell('conv','4 · CONVERSION · PM LIVE'");
+ const begin=config.indexOf("cell('conv','4. CONVERSION. PM ");
  const end=config.indexOf("cell('prognosis'",begin);
  assert.ok(begin>0&&end>begin);
  const slot=config.slice(begin,end);
  const miniStart=slot.indexOf('id="v52-mini-conversion"');
  assert.ok(miniStart>0);
  const top=slot.slice(0,miniStart);
- assert.ok(top.includes('v52-baton-since'),'Bâton stays above chart');
+ assert.ok(!top.includes('v52-mini-baton'),'Bâton is now in the lower telemetry');
  assert.ok(!top.includes("'PM3 '+sn(c.pm3)"),'redundant top PM3/PM5 removed');
  assert.ok(!top.includes('Vitesse 3m'),'speed removed from the top');
  assert.ok(!top.includes('MF3 Δ3m'),'MF history removed from the top');
@@ -234,6 +238,7 @@ test('Conversion information is ordered below the graph with subtle separators a
   'id="v52-mini-price-deport"',
   'id="v52-mini-begin"',
   'class="v52-mini-mf"',
+  'v52-mini-baton',
   'id="v52-mini-pm"',
   'id="v52-mini-eff"',
   'v52-mini-speed v52-conv-speed',
@@ -267,8 +272,8 @@ test('Conversion information is ordered below the graph with subtle separators a
  }
  assert.ok(slot.indexOf('class="v52-mini-volume"')<
   slot.indexOf('id="v52-mini-delta"'), 'volume values precede price Delta');
- assert.ok(config.includes('padding:4px;background:#f3f5f7;'),
-  'outer frame is light grey, not the previously too-dark shade');
+ assert.ok(config.includes('.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;background:#f3f5f7;}'),
+  'the SINGLE outer Conversion card is light grey, with no nested white frame');
  assert.ok(config.includes('.v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;'),
   'candle viewport remains pure white');
  assert.ok(config.includes('.v52-mini-pm{color:#18222b;font-size:9px;'),
@@ -301,8 +306,10 @@ test('live Etat vivant renders moved MF and speed only after the two time labels
  const nextCell=html.indexOf('class="v52-cell prognosis"',startCell);
  assert.ok(startCell>0&&nextCell>startCell);
  const conv=html.slice(startCell,nextCell),preChart=conv.slice(0,conv.indexOf('id="v52-mini-conversion"'));
- assert.ok(preChart.includes('Bâton +14.6 $'));
- assert.ok(preChart.includes('· depuis -21.4 $'));
+ assert.ok(!preChart.includes('Bâton +14.6 $'));
+ assert.ok(conv.includes('Bâton +14.6 $ · depuis -21.4 $'));
+ assert.ok(conv.indexOf('MF3 Δ3m -2.0')<conv.indexOf('Bâton +14.6 $'));
+ assert.ok(conv.indexOf('Bâton +14.6 $')<conv.indexOf('id="v52-mini-pm"'));
  assert.ok(!preChart.includes('PM3 -61.3'));
  assert.ok(!preChart.includes('MF3 Δ3m'));
  assert.ok(!preChart.includes('Vitesse 3m'));
@@ -350,12 +357,35 @@ test('lightened outer frame remains separate from the white candle window',()=>{
   snapshot:example(),width:222,height:192,now:NOW,quoteValue:79880});
  assert.ok(svg.includes('<rect width="222" height="192" fill="#fff"/>'),
   'SVG candle plotting surface is unconditionally pure white');
- assert.ok(config.includes('padding:4px;background:#f3f5f7;'),
-  'only the enclosing frame uses a subtle light-grey background');
+ assert.ok(config.includes('.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;background:#f3f5f7;}'),
+  'the outer Conversion card is light grey');
+ assert.ok(config.includes('border:0;border-radius:0;padding:0;background:transparent;'),
+  'there is no extra nested white/grey frame around the chart');
  assert.ok(config.includes('overflow:hidden;background:#fff;border:1px solid #d7e0e7'),
   'the chart window must also be explicitly white in CSS');
  assert.ok(!svg.includes('fill="#e6ebf0"'),
   'dark frame color may not be painted over the candlesticks');
+});
+test('10 white rounded black-bordered volume pastilles encode fixed LOG total traded BTC',()=>{
+ const {mini}=create(),base={data:candles(),periodData:{to:NOW},
+  width:220,height:192,now:NOW,quoteValue:79880};
+ const intense=mini.miniSvg({...base,snapshot:example({buy:74.322,sell:754.777})});
+ assert.ok(intense.includes('data-level="9" data-total-btc="829.099"'));
+ assert.equal((intense.match(/class="v52-mini-volume-pastille"/g)||[]).length,10);
+ assert.equal((intense.match(/class="v52-mini-volume-active"/g)||[]).length,9);
+ assert.ok(intense.includes('rx="2" fill="#fff" stroke="#283039"'),
+  'all pastilles are white with black rounded borders');
+ assert.ok(intense.includes('PAS la liquidité disponible dans le carnet'),
+  'executed OKX volume must not be called resting order-book liquidity');
+ const quiet=mini.miniSvg({...base,snapshot:example({buy:1,sell:1})});
+ assert.ok(quiet.includes('data-level="2" data-total-btc="2.000"'));
+ const saturated=mini.miniSvg({...base,snapshot:example({buy:1000,sell:1500})});
+ assert.ok(saturated.includes('data-level="10" data-total-btc="2500.000"'));
+ assert.equal((saturated.match(/class="v52-mini-volume-active"/g)||[]).length,10);
+ const stale=mini.miniSvg({...base,snapshot:example({status:'OKX_TRADES_UNAVAILABLE'})});
+ assert.ok(stale.includes('data-level="unknown" data-total-btc=""'));
+ assert.equal((stale.match(/class="v52-mini-volume-pastille"/g)||[]).length,10);
+ assert.equal((stale.match(/class="v52-mini-volume-active"/g)||[]).length,0);
 });
 test('mini shares existing OKX WS and identical candle fetch; integrated into living conversion slot',()=>{
  assert.equal((src.match(/new WebSocket\(/g)||[]).length,0);

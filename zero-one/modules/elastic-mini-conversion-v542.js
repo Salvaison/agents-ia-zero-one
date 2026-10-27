@@ -16,6 +16,47 @@ function relativePriceDeport(e){
  const net=num(e.priceNetUsd),range=num(e.priceRangeUsd);
  return net!==null&&range!==null&&range>0?clamp(net/range,-1,1):null;
 }
+// The ten small WHITE/BLACK rounded pastilles show the aggregate EXECUTED
+// aggressor volume (buy + sell BTC) over the same 3-minute OKX trade window.
+// Fixed logarithmic thresholds allow comparison across sessions; do NOT
+// mistake this for resting order-book liquidity, and do not display a scale.
+const TOTAL_VOLUME_THRESHOLDS_BTC=[1,2,5,10,20,50,100,200,500,1000];
+function totalVolumeReading(e){
+ const buy=num(e?.buyBtc),sell=num(e?.sellBtc);
+ if(e?.available!==true||buy===null||sell===null||buy<0||sell<0)
+  return {btc:null,level:null};
+ const total=buy+sell;
+ return {btc:total,level:TOTAL_VOLUME_THRESHOLDS_BTC.filter(x=>total>=x).length};
+}
+function volumePastilles(e,status,h){
+ const {btc:total,level}=totalVolumeReading(e);
+ const square=7.2,step=10.4,x=1.2;
+ const y0=Math.max(3,(h-(9*step+square))/2);
+ const title=total===null?'Volume OKX exécuté 3m indisponible':
+   'Volume TOTAL exécuté OKX sur 3m : '+btc(total)+
+   ' BTC (achat + vente), intensité '+level+'/10 selon seuils logarithmiques fixes'+
+   (status==='WARMING_3M'?' ; fenêtre 3m encore partielle':'')+
+   '. Ce n’est PAS la liquidité disponible dans le carnet.';
+ const items=['<g class="v52-mini-total-volume-pastilles" role="img"'+
+  ' aria-label="Intensité du volume total exécuté sur 3 minutes"'+
+  ' data-level="'+(level===null?'unknown':level)+'"'+
+  ' data-total-btc="'+(total===null?'':total.toFixed(3))+'">'+
+  '<title>'+esc(title)+'</title>'];
+ for(let i=0;i<10;i++){
+  const y=y0+i*step,active=level!==null&&9-i<level;
+  items.push('<rect class="v52-mini-volume-pastille" x="'+x+'"'+
+   ' y="'+y.toFixed(1)+'" width="'+square+'" height="'+square+
+   '" rx="2" fill="#fff" stroke="#283039" stroke-width=".85"'+
+   ' data-active="'+(active?'true':'false')+'"/>');
+  // Active levels gain an inner dark mark; the squares remain WHITE with
+  // their black rounded outlines as requested.
+  if(active)items.push('<rect class="v52-mini-volume-active"'+
+   ' x="'+(x+2).toFixed(1)+'" y="'+(y+2).toFixed(1)+'"'+
+   ' width="'+(square-4).toFixed(1)+'" height="'+(square-4).toFixed(1)+
+   '" rx=".65" fill="#283039"/>');
+ }
+ return items.join('')+'</g>';
+}
 const VISIBLE_MINUTES=150; // 2 h 30, same viewport as the full Conversion graph
 function visibleEnd(lastCandleTs,periodData,now){
  const bound=num(periodData?.to);
@@ -80,6 +121,9 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
    ' font-family="SF Mono,Menlo,monospace" font-size="7.8" fill="#657789">'+
    Math.round(p).toLocaleString('fr-FR')+'</text>');
  }
+ // Ten unlabelled total-volume pastilles live in the narrow left margin,
+ // just BEFORE the BTC price tick labels; no extra axis/legend is added.
+ svgParts.push(volumePastilles(snapshot?.effort,snapshot?.status,h));
  // Hourly lines remain in the chart; captions have their own row below it.
  for(let t=Math.ceil(start/3600000)*3600000;t<=end;t+=3600000){
   const x=tx(t);
@@ -215,9 +259,9 @@ function refresh(snapshot){
  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
  const e=current?.effort||{},cv=current?.conversion||{};
  const ok=e.available===true,coverage=num(current?.coverageSeconds)||0;
- const status=current?.status==='LIVE_3M'?'OKX LIVE · 3m':
-   current?.status==='WARMING_3M'?'OKX · '+Math.round(coverage)+'/180s':
-   'OKX indisponible';
+ const status=current?.status==='LIVE_3M'?'OKX LIVE 3MIN':
+   current?.status==='WARMING_3M'?'OKX 3MIN · '+Math.round(coverage)+'s':
+   'OKX INDISPONIBLE';
  set('v52-mini-conversion-status',status);
  set('v52-mini-buy',ok?btc(e.buyBtc)+' BTC':'—');
  set('v52-mini-sell',ok?btc(e.sellBtc)+' BTC':'—');

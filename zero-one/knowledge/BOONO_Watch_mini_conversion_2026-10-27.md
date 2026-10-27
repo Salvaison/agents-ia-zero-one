@@ -125,3 +125,34 @@ Après la réorganisation du module 4, le propriétaire précise la position vou
 Correction CSS isolée dans \`modules/config-server.js\` ; aucune modification du graphe, des valeurs OKX, de la fenêtre 150 minutes, de l'axe bleu, des cubes ou des moteurs de trading. Un test dédié vérifie les bordures présentes/absentes. Un rendu Chromium de la véritable composition mobile à largeur 234 px a confirmé la nouvelle hiérarchie.
 
 **Contrôle déploiement :** suite V4/V5/attention 281 tests, 269 réussis, 0 échec, 12 historiques sautés. Sauvegardes du serveur d'interface et des deux ledgers dans /root/boono-conversion-separators-before-20261027/. Seul config-server redémarré ; PID PAPER V4.9.4 962864 et V5.4.2 962826 inchangés. Aucun changement de décision ni sortie forcée ; ancien SHORT V4.9.4 conservé pendant la mise en service.
+
+## Module 4 unifié + indicateur à 10 pastilles du volume total — 27 octobre 2026
+
+Demande : réunir le graphe Conversion et son en-tête dans une seule surface gris clair, déplacer Bâton juste avant les PM3/PM5/Live en bas, puis créer une colonne de 10 petites pastilles blanches arrondies, bordure noire, à gauche de la graduation BTC, pour rendre la quantité de volume visible sans ajouter d'échelle graphique.
+
+### Affichage
+
+- En-tête UNIQUE : 4. CONVERSION. PM OKX LIVE 3MIN lorsque le WebSocket public OKX est frais et l'historique 3m échauffé ; texte adapté lors de l'initialisation ou de l'indisponibilité. Une fine ligne gris clair sépare cet en-tête du prix BTC.
+- La cellule du module est elle-même gris clair #f3f5f7 avec accent violet existant. Le cadre intérieur v52-mini-conversion supplémentaire est neutralisé (bordure/padding/background absents). La fenêtre SVG des bougies reste #fff et le tracé d'origine, sa MA3, son prix, sa durée de 150 min et ses deux cubes sont inchangés.
+- Bâton +/-X $ · depuis +/-X $ est transféré du haut vers une ligne de petites informations en-dessous de MF, avant PM3 · PM5 · Live, avec la MÊME typographie noire que cette ligne PM.
+- Ordre conservé : en-tête, BTC absolu, bougies/cubes, volumes BTC, Δ BTC 3m, déport prix relatif, Début/Fin (fenêtre 150 min), MF, Bâton, PM3/PM5/Live, eff3/P75, vitesse 3m, qualité/direction.
+
+### Définition exacte du nouvel indicateur
+
+Le volume TOTAL exécuté, mesuré par le flux public des trades agressseurs BTC-USDT-SWAP OKX et affiché par les grands cubes, vaut buyBtc + sellBtc sur la fenêtre roulante 3 minutes. Ce n'est PAS la liquidité encore disponible dans les ordres du carnet. Les grands cubes séparent ACHAT / VENTE ; les pastilles visualisent leur SOMME, indépendante de leur dominance et du déplacement prix.
+
+- Empilement vertical de 10 petits carrés blanc pur, coins arrondis rx=2, bordure noir/gris très foncé. Les niveaux atteints conservent leur fond blanc et reçoivent une petite marque noire au centre ; remplissage du bas vers le haut.
+- Aucun chiffre ni graduation autour des 10 pastilles, pour éviter de charger la fenêtre et de concurrencer l'échelle de prix tous les 500 $.
+- Dix seuils FIXES, logarithmiques et reproductibles entre sessions en BTC échangés sur 3m : 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000. C'est une simple classification VISUELLE, pas un indicateur stratégique ni une calibration P75. L'affichage sature à 1000 BTC et plus. Les seuils sont consignés ici, mais ne sont pas imprimés dans le graphe.
+- Une infobulle / titre accessible précise le volume exact, la classe de 0 à 10, l'état de chauffe éventuel du flux et le fait que ce n'est pas la liquidité du carnet. Les données périmées produisent 10 pastilles vides, jamais un volume déduit artificiellement.
+- La colonne se loge dans la marge gauche préexistante, avant les prix BTC, sans réduire l'espace de dessin ni les tailles/proportions des cubes. Aucun nouvel appel API ou abonnement WebSocket.
+
+Exemple illustratif de la capture utilisateur : 74,322 BTC acheteurs + 754,777 BTC vendeurs = 829,099 BTC échangés, soit 9/10 pastilles. Il ne s'agit pas d'une recommandation de trading ni d'une mesure de profondeur du marché.
+
+La présentation est strictement UI / observation. Aucune modification des règles des moteurs V4.9.4 et V5.4.2, des ordres, du risque hard, des frais ni des archives Divergences.
+
+### Validation et activation — 27 octobre 2026
+
+Rendu Chromium mobile 231 px vérifié, alimenté par les bougies historiques du VPS et, pour la vérification de la disposition uniquement, les valeurs de volume illustratives de la capture (74,322 + 754,777 BTC = 829,099, soit 9/10 pastilles actives). Les tests dédiés contrôlent dix pastilles, leur référence logarithmique fixe, les données périmées, l'absence d'ordres et le nouvel ordre Bâton/PM. Suite complète de 282 tests V4/V5/attention : 270 réussis, zéro échec et 12 cas anciens sautés.
+
+Code d'interface initial et les deux ledgers PAPER sauvegardés avant la bascule sous /root/boono-mini-total-volume-pastilles-before-20261027/. Seul le service config-server a été redémarré ; les PID V4.9.4 962864 et V5.4.2 962826 sont restés inchangés. Aucune clôture de position forcée. Session navigateur authentifiée du propriétaire non vérifiée visuellement.

@@ -2947,9 +2947,9 @@ app.get('/', requireAuth, (req, res) => {
       .v52-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;}
       .v52-cell{min-width:0;border:1px solid #d9e1e8;border-left:3px solid #89a0b3;background:#fff;padding:6px;border-radius:6px;}
       .v52-cell.mcb{border-left-color:#6075b9;}.v52-cell.geom{border-left-color:#5f80ac;}
-       .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;}
-      .v52-mini-conversion{flex:1;min-width:0;margin-top:6px;border:1px solid #d7e0e7;border-radius:5px;padding:4px;background:#f3f5f7;}
-      .v52-mini-head{display:flex;justify-content:space-between;align-items:center;gap:5px;font:700 8.5px/1.45 'SF Mono',Menlo,monospace;color:#617684;}
+       .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;background:#f3f5f7;}
+      .v52-mini-conversion{flex:1;min-width:0;margin-top:0;border:0;border-radius:0;padding:0;background:transparent;}
+      .v52-cell.conv>.title{font:850 8.7px/1.4 'SF Mono',Menlo,monospace;letter-spacing:0;color:#5a6e7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #cbd5dd;padding-bottom:5px;margin-bottom:5px;}
       .v52-mini-price-row{text-align:center;padding:2px 0 3px;margin-bottom:1px;}
       .v52-mini-btc-price{font:850 14px/1.15 'SF Mono',Menlo,monospace;letter-spacing:-.04em;color:#304e60;font-variant-numeric:tabular-nums;}
       .v52-mini-chart{margin:0;min-height:192px;width:100%;overflow:hidden;background:#fff;border:1px solid #d7e0e7;border-radius:3px;}
@@ -2969,8 +2969,7 @@ app.get('/', requireAuth, (req, res) => {
       .v52-cell.prognosis{border-left-color:#737aa3;}.v52-cell.decision{border-left-color:#40545f;}
       .v52-cell .title{font-size:9px;color:#687684;letter-spacing:.04em;font-weight:850;margin-bottom:3px;}
       .v52-cell .value{font-size:11px;font-weight:800;margin-bottom:2px;}
-      .v52-cell.conv > .value{display:flex;align-items:baseline;gap:4px;white-space:nowrap;}
-      .v52-cell.conv .v52-baton-since{font-size:8.5px;font-weight:500;color:#8a98a4;white-space:nowrap;}
+      .v52-cell.conv > .value{display:none;}
       .v52-cell.conv .v52-conv-speed{white-space:nowrap;}
       .v52-green{color:#14854e;font-weight:850}.v52-red{color:#b52b39;font-weight:850}
       .v52-muted{font-size:9px;color:#75818c}.v52-warn{color:#a36516;font-weight:750}
@@ -6708,13 +6707,10 @@ function renderV52Living(data){
       ' · preuve '+v5Time(s54.testedTerritory.availableAt)+'</div>':'')+
     '<div class="v52-muted">Ancre de risque '+f(pl.anchor?.key||'NON DÉMONTRÉE')+
      ' '+n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+'</div>')+
-   cell('conv','4 · CONVERSION · PM LIVE',
-    'Bâton '+sn(c.pmLastBaton)+' $'+
-     '<span class="v52-baton-since">· depuis '+sn(c.pmSinceBaton)+' $</span>',
+   cell('conv','4. CONVERSION. PM <span id="v52-mini-conversion-status">OKX · attente</span>',
+    '',
     '<div id="v52-mini-conversion" class="v52-mini-conversion" role="group"'+
       ' aria-label="Prix BTC en bougies 3m, duel des acheteurs et vendeurs, conversion live">'+
-     '<div class="v52-mini-head"><span>BTC · 3m + CONVERSION</span>'+
-       '<span id="v52-mini-conversion-status">OKX · en attente</span></div>'+
      '<div class="v52-mini-price-row"><strong class="v52-mini-btc-price"'+
        ' id="v52-mini-btc-price">BTC —</strong></div>'+
      '<div id="v52-mini-conversion-svg" class="v52-mini-chart"></div>'+
@@ -6734,6 +6730,8 @@ function renderV52Living(data){
       ' · cohérence '+f(r.flow15?.qualityGrade||r.flow15?.coherence||'—')+
       ' · MF15 '+f(r.flow15?.mf15Role||'—')+
       ' · '+n(c.intervalSeconds)+'s après Bâton</div>'+
+     '<div class="v52-mini-foot v52-mini-pm v52-mini-baton">Bâton '+
+      sn(c.pmLastBaton)+' $ · depuis '+sn(c.pmSinceBaton)+' $</div>'+
      '<div class="v52-mini-foot v52-mini-pm" id="v52-mini-pm">PM3 — · PM5 — · Live —</div>'+
      '<div class="v52-mini-foot" id="v52-mini-eff">eff3 — · yield/P75 — · effort/P75 —</div>'+
      '<div class="v52-mini-foot v52-mini-speed v52-conv-speed">Vitesse 3m '+
