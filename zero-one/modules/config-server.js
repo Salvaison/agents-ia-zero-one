@@ -6509,6 +6509,15 @@ function renderV52Living(data){
   campaign=r.conversionCampaign||{},s54=r.structural54||{},
   origin2h=s54.origins?.m120||{},origin30=s54.origins?.m30||{};
  const three=r.mcb3||{},band=observed.extremeBand||{};
+ const maCycle=x=>{
+  const q=x?.polarityMemory||{},s=q.polarity==='ABOVE'?'AU-DESSUS':
+   q.polarity==='BELOW'?'AU-DESSOUS':'INCONNUE';
+  const c=Number.isInteger(q.retestsSinceChange)?
+   (q.countIsPartial?'≥':'')+q.retestsSinceChange:'—';
+  const since=q.polarityChangeObserved&&q.polarityChangedAt?
+   v5Time(q.polarityChangedAt):'avant couverture';
+  return 'polarité '+s+' · retests '+c+' depuis '+since;
+ };
  const eventTone=d=>d==='long'?'v53-up':d==='short'?'v53-down':'v53-neutral';
  const sideName=d=>d==='long'?'UP':d==='short'?'DN':'—';
  const proofRow=(label,e)=>{
@@ -6601,8 +6610,16 @@ function renderV52Living(data){
     '<div class="v52-muted">MA3 '+f(ma3.state||'—')+
      ' · distance '+sn(ma3.distanceUsd)+' $ · approche '+n(ma3.approachUsd)+
      ' $ · preuve '+f(maProof.status||'—')+'</div>'+
+    '<div class="v52-muted">'+f(maCycle(ma3))+'</div>'+
+    '<div class="v52-muted">Rejet MA3 '+
+     (ma3.polarityMemory?.lastRejection?.at?
+      v5Time(ma3.polarityMemory.lastRejection.at):'—')+
+     ' · reconquête échouée '+
+     (ma3.polarityMemory?.lastFailedReclaim?.at?
+      v5Time(ma3.polarityMemory.lastFailedReclaim.at):'—')+'</div>'+
     '<div class="v52-muted">MA15 '+f(ma15.state||'—')+
      ' · distance '+sn(ma15.distanceUsd)+' $ · approche '+n(ma15.approachUsd)+' $</div>'+
+    '<div class="v52-muted">'+f(maCycle(ma15))+' (compteur informatif)</div>'+
     (s54.available?'<div class="v52-muted">ORIGINE 2h '+
       n(origin2h.low)+' – '+n(origin2h.high)+' $ · place '+
       n(origin2h.positionInPriceRange)+' · 30m Δ '+

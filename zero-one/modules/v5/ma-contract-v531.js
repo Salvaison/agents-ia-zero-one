@@ -5,6 +5,7 @@
 // values for situational proximity only, never confirmed acceptance.
 // Pure evaluation; no broker, no filesystem, no future candles.
 const {number:N,rounded:R,side}=require('./v53-causal');
+const maMemory=require('./ma-polarity-memory-v541');
 const M=60000;
 const PERIOD={ '3m':3*M,'15m':15*M };
 const rv=(v,fallback)=>N(v)===null?fallback:N(v);
@@ -39,10 +40,11 @@ function maPath({tf,raw=[],live=null,now,price,dir}){
    N(live.barTs)!==null&&live.barTs<=now&&
    (!last||live.barTs>=last.ts))liveValue=live.value;
  const confirmedMa=N(last?.ma200),ref=liveValue??confirmedMa;
+ const polarityMemory=maMemory.inspect(tf,raw,now);
  if(ref===null||!d)return {
   tf,role:tf==='3m'?'TACTICAL':'STRUCTURAL',state:'UNKNOWN',
   availableAt:null,distanceUsd:null,hasLive:liveValue!==null,
-  medianRangeUsd:R(med),decisionImpact:false};
+  medianRangeUsd:R(med),polarityMemory,decisionImpact:false};
  const widths=band(ref,med,tf),tol=widths.toleranceUsd,approach=widths.approachUsd;
  const signed=d*(price-ref),inApproach=Math.abs(price-ref)<=approach;
  const closed=last?d*(last.close-last.ma200):null;
@@ -114,7 +116,7 @@ function maPath({tf,raw=[],live=null,now,price,dir}){
   lastConfirmedAt:last?last.ts+period:null,sourceBar:last?.ts||null,
   accepted:state==='ACCEPTED',recentlyTouched,
   testedLive:liveCrossed,confirmedSame,confirmedStrong,
-  lostConfirmed:confirmedLost,
+  lostConfirmed:confirmedLost,polarityMemory,
   zone,structureLevel:riskLevel,decisionImpact:false,
   evidence:'Approach is context; pending test defers new contested admission; risk uses observed confirmed reaction'};
 }

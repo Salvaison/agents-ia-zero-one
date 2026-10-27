@@ -156,7 +156,15 @@ function main(){
    const result=paper.step(s,d,{price,ts:tickTs,sourceAgeMs:auditAge,tickAgeMs:age});
    s=result.state;
    s.latestAnalysis=d;
-   const key=[d.action,d.reason,d.phase,s.position?.direction||'FLAT',result.reason].join('|');
+   // Archive only causal MA transitions/retest episodes, not every 5s candle value.
+   // Retest COUNTS are telemetry; none of them is evaluated by the decision engine.
+   const maMark=tf=>{
+    const m=d.readings?.maContract?.[tf]?.polarityMemory;
+    return m?[m.polarity,m.polarityChangedAt,m.retestsSinceChange,
+      m.lastRejection?.at,m.lastFailedReclaim?.at].join(':'):'UNKNOWN';
+   };
+   const key=[d.action,d.reason,d.phase,s.position?.direction||'FLAT',
+     result.reason,maMark('ma3'),maMark('ma15')].join('|');
    if(result.event||priorKey!==key){
     append(CHANGES,{ts:tickTs,price,action:d.action,reason:d.reason,phase:d.phase,
      candidate:d.candidate,decisionOutcome:result.reason,tradeEvent:result.event||null,

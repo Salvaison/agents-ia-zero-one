@@ -275,8 +275,9 @@ function evaluate(input){
  const qualifiedTacticalEpisode=structuralContinuation?tactical.allowed:
   stance==='STRUCTURAL_REVERSAL_FORMING'?confirmedTransition:
   tacticalCounter;
- const maRisk=ma.evaluate(input,{candidate,readings:{flow15:{
-  mf3Change:MF3,mf15Change:MF15}}}).riskCandidate;
+ const maContract=ma.evaluate(input,{candidate,readings:{flow15:{
+  mf3Change:MF3,mf15Change:MF15}}});
+ const maRisk=maContract.riskCandidate;
  const structuralStop=riskPlace.invalidation;
  const stop=maRisk&&(!structuralStop||maRisk.distanceUsd<structuralStop.distanceUsd)?
   maRisk:structuralStop;
@@ -304,12 +305,18 @@ function evaluate(input){
   (structuralContinuation?tactical.alignedCross:
     tacticalCounter||confirmedTransition));
  const reversalRoom=qualifiedTacticalEpisode;
+ // A contested MA15 is context, not a veto over a PROVEN MA3 defence
+ // inside the confirmed 15m campaign. An unresolved MA3 itself still blocks.
+ const ma15ContextOnly=maContract.entryGate?.source==='15m'&&
+  structuralContinuation&&maContract.ma3?.accepted&&
+  territory.status==='CONFIRMED_MA3_ACCEPTED_AFTER_PRICE_CONTACT';
+ const maGateBlocks=!!maContract.entryGate?.block&&!ma15ContextOnly;
  const entryEligible=!!(!pos&&health&&!newBarPending&&recentTactic&&alignedTactic&&
   stance!=='AWAIT_TACTICAL_ALIGNMENT'&&reversalRoom&&
   (flowQuality==='REINFORCING'||flowQuality==='TACTICAL_LEADING'||
     (tacticalCounter&&flow3>.15))&&
-  mfCompatible&&!pmOpposed&&!realRejection(mc3)&&
-  !realRejection(mc15)&&!structurallyLate&&
+  mfCompatible&&!pmOpposed&&!maGateBlocks&&
+  !realRejection(mc3)&&!realRejection(mc15)&&!structurallyLate&&
   !matureAfterExtension&&hardRiskOK);
  // The first cross of an E3 episode authorizes one candidate in an existing
  // E15 campaign; new E3 / genuinely new price defence can renew it.
@@ -329,6 +336,7 @@ function evaluate(input){
     tactical.reason:'WAIT_CAUSAL_REVERSAL_OR_RESPIRATION_PROOF'],
   [!mfCompatible,'WAIT_MF_NOT_COMPATIBLE_WITH_STRUCTURE'],
   [pmOpposed,'WAIT_PM_OPPOSED_TO_STRUCTURE'],
+  [maGateBlocks,maContract.entryGate?.reason||'WAIT_UNRESOLVED_MA_TEST'],
   [realRejection(mc3)||realRejection(mc15),'WAIT_PROVEN_MA_REJECTION'],
   [structurallyLate,'WAIT_EXTENDED_WAVE_NEAR_PRICE_RANGE_EDGE'],
   [matureAfterExtension,'WAIT_LATE_MCB3_EXTREME_FAR_FROM_DEFENCE'],
@@ -349,11 +357,31 @@ function evaluate(input){
   const mfAdverse=MF15!==null&&pSign*MF15<-.15&&
     MF3!==null&&pSign*MF3<-.15;
   const defendedOpposition=defensible(opposite(pdir)).held;
+  const maForPosition=maContract.ma3;
+  const rejection=maForPosition?.polarityMemory?.lastRejection;
+  const lostSide=pdir==='long'?'ABOVE':'BELOW';
+  // A confirmed MA3 rejection is a remembered price event, not an E3 vote.
+  // It can protect the POSITION (not reverse the MCB15 campaign) only when
+  // BOTH slower/fast MF and an independent defended adverse PRICE agree.
+  const acceptedSinceEntry=!!(rejection&&(
+   rejection.acceptedAt>=pos.entryAt||
+   pos.entryContext?.maContract?.ma3?.accepted));
+  const ma3RejectedSinceEntry=!!(rejection&&
+   rejection.sideLost===lostSide&&rejection.at>pos.entryAt&&
+   now-rejection.at<=12*MIN&&acceptedSinceEntry&&
+   ['REJECTED','LOST'].includes(maForPosition.state)&&
+   n(maForPosition.signedDistanceUsd)!==null&&
+   maForPosition.signedDistanceUsd< -maForPosition.toleranceUsd);
   positionReview={previousCampaign:pos.campaignId||null,currentCampaign:t.campaignId,
    opposingPivotConfirmed:opposingPivot,structuralLoss,mfAdverse,
-   defendedOpposition,stopReference:pos.invalidationPrice,
-   hasHardRiskOverride:false};
-  if((opposingPivot&&mfAdverse&&defendedOpposition)||
+   defendedOpposition,ma3RejectedSinceEntry,
+   ma3RejectionObservedAt:ma3RejectedSinceEntry?rejection.at:null,
+   ma3RejectionEvidence:ma3RejectedSinceEntry?rejection.proof:null,
+   stopReference:pos.invalidationPrice,hasHardRiskOverride:false};
+  if(ma3RejectedSinceEntry&&mfAdverse&&defendedOpposition){
+   action='EXIT_'+pdir.toUpperCase();
+   reason='V541_CONFIRMED_MA3_FAILURE_WITH_MF_PRICE';
+  }else if((opposingPivot&&mfAdverse&&defendedOpposition)||
      (structuralLoss&&mfAdverse&&defendedOpposition)){
    action='EXIT_'+pdir.toUpperCase();
    reason='V54_CONFIRMED_STRUCTURAL_TERRITORY_TRANSFER';
@@ -425,9 +453,7 @@ function evaluate(input){
    place:{...rbase.place,anchor:riskPlace.anchor,
     nearest:riskPlace.nearestContext,
     invalidationRef:stop?.reference||null},
-   maContract:{...ma.evaluate(input,{candidate,readings:{flow15:{
-    mf3Change:MF3,mf15Change:MF15}}}),
-    direction:candidate},
+   maContract:{...maContract,direction:candidate},
    structural54,
    maturity:{...rbase.maturity,
     phase:stance,structuralOrigin:t.parentPivot,
@@ -458,6 +484,8 @@ function evaluate(input){
    tacticalCausalEvidence:qualifiedTacticalEpisode,
    flowCompatible:mfCompatible,
    maReallyRejects:realRejection(mc3)||realRejection(mc15),
+   maTestResolved:!maGateBlocks,
+   ma15ContextOnlyWithProvenMA3:!!ma15ContextOnly,
    tooMatureAfterExtension:matureAfterExtension,
    provenStop:hardRiskOK,entryReady:entryEligible},
   decisionContract:{
