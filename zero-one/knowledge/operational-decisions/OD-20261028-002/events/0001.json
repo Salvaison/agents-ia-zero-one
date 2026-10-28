@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-28T11:16:19+00:00",
+  "status": "AUTORISE",
+  "description": "La demande autorise la création et la publication documentaire de la passation BoonoLab et des sept archives en lecture seule",
+  "evidence": "01-demande-utilisateur-integrale.txt et pièces jointes nommées dans 03-origine-et-justification.md",
+  "previousEventSha256": null
+}

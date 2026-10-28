@@ -53,3 +53,7 @@ Avant une nouvelle discussion, ouvrir ce registre et `zero-one/data/research-bri
 ### Note de provenance du premier dossier (bootstrap)
 
 Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. Le document 02 est un prompt de mission **rédigé par l'assistant pendant l'installation du registre** pour décrire intégralement cette intervention ; il **n'a pas été envoyé tel quel à un agent externe**. Cette exception de démarrage ne peut pas servir de précédent : à partir des opérations suivantes, le prompt réellement transmis à l'exécutant doit être figé avant exécution. Cette distinction est enregistrée dans le journal d'événements du dossier.
+
+## Deuxième décision de référence — BoonoLab
+
+- [OD-20261028-002 — cartographie transversale, passation générique et import des sept archives](OD-20261028-002/03-origine-et-justification.md). Son message utilisateur intégral et la consigne intégrale de production du document sont conservés dans le même dossier. Livrables : [carte générale](../../BOONOLAB_START_HERE.md), [index thématique](../BOONOLAB_INDEX.md), [passations sources](../passations-sources/2026-10-28-import/README.md).

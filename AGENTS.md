@@ -1,8 +1,10 @@
 # BOONO Systems — consignes de travail persistantes (GitHub / Amsterdam)
 
+**Point d'entrée de toute nouvelle discussion BoonoLab :** lire `zero-one/BOONOLAB_START_HERE.md` (architecture, qui est BOONO, objectifs et difficultés), puis `zero-one/knowledge/BOONOLAB_INDEX.md` (sources spécifiques, anciennes passations intégrales, registre et état vivant). Ces deux documents sont génériques : ne pas les remplacer par une ancienne photographie de version.
+
 Pour toute enquête, audit, replay ou correction sur BOONO Systems :
 
-1. Lire en premier `zero-one/knowledge/BOONO_protocole_recherche_compacte_invalidations_2026-10-28.md` et le checkpoint actif (`python3 zero-one/scripts/boono-research-brief.py show`, si disponible). La Knowledge Base est la source des décisions et passations, pas l'historique du chat.
+1. Après la carte générale et l'index, lire `zero-one/knowledge/BOONO_protocole_recherche_compacte_invalidations_2026-10-28.md` et le checkpoint actif (`python3 zero-one/scripts/boono-research-brief.py show`, si disponible). La Knowledge Base est la source des décisions et passations, pas l'historique du chat.
 2. Faire les lectures lourdes et calculs **sur Amsterdam**, pas dans les messages : ne sortir que les agrégats, quelques cas contrastés, les limites et les questions ouvertes. Conserver les preuves intégrales localement sous `zero-one/data/research-briefs/`, non versionné ; utiliser `zero-one/scripts/boono-research-brief.py` pour les audits d'invalidation et les checkpoints.
 3. Après chaque découverte substantielle et avant tout changement de sous-sujet / passation de discussion, enregistrer un checkpoint structuré par statuts **constat vérifié / hypothèse / décision validée / implémentation / tests / mise en service / ouvert**, avec provenance, limites et plage temporelle.
 4. Pour toute décision réellement approuvée ou intervention effectuée, actualiser la Knowledge Base du dépôt et produire un commit ciblé ; vérifier les tests et le SHA distant. Ne jamais conclure « implémenté », « testé » ou « déployé » à partir d'une simple proposition.

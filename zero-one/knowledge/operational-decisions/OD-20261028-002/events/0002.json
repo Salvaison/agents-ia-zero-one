@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-28T11:20:03+00:00",
+  "status": "DOCUMENTE",
+  "description": "Sept passations originales et leur provenance conservées, passation d accueil et index thématique rédigés",
+  "evidence": "knowledge/passations-sources/2026-10-28-import/SHA256SUMS : sept SHA vérifiés ; BOONOLAB_START_HERE.md et knowledge/BOONOLAB_INDEX.md",
+  "previousEventSha256": "39cc8e36848c9bcc73290c20564e910a679a96ece8cb0220a8324ae399a3745f"
+}

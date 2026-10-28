@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261028-002",
+  "title": "Passation générique BoonoLab et index de documentation",
+  "createdAtUtc": "2026-10-28T11:16:19+00:00",
+  "authorization": "Demande explicite utilisateur dans cette discussion 28 octobre 2026",
+  "reference": "Conversation BOONO / BoonoLab 28 octobre 2026 ; sept passations jointes",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b58f6965b49b1bf6bed8318a337ce7b37c42f172654241737052fe7540c6540e",
+      "bytes": 909
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "48f78fe920b3c2dd6a5ee052135f4399735711127c14179f120a1b9b9dfd3448",
+      "bytes": 1222
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c8402015f98d41eafb05ef550bbe8e1a52886fb3b0cc6d4caa3cb910845de2b7",
+      "bytes": 1650
+    }
+  }
+}

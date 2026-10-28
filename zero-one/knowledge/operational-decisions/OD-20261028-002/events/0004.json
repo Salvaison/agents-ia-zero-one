@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-28T11:20:03+00:00",
+  "status": "TESTE",
+  "description": "Copie fidèle des sept pièces, liens locaux et chaîne de registres vérifiés ; 14 tests documentaires réussis",
+  "evidence": "SHA256SUMS sept fichiers OK ; 73 liens locaux zéro manquant ; python3 -m unittest ... : Ran 14 tests OK ; boono-decision-archive verify OK",
+  "previousEventSha256": "92d0b0e50d9adb606423dba6861c0c17788e86a6077784884dfd73a2b16d900d"
+}

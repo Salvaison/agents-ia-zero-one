@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-28T11:20:03+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Documentation et navigation BoonoLab reliées depuis AGENTS.md, index et registre opérationnel, sans modifier le trading",
+  "evidence": "zero-one/BOONOLAB_START_HERE.md ; knowledge/BOONOLAB_INDEX.md ; AGENTS.md ; knowledge/operational-decisions/README.md",
+  "previousEventSha256": "fab88c3a8f1cdafa2b09dd97552671f93522db69a42939727bf4855ca303edba"
+}
