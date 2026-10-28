@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-28T11:42:41+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Rapport specialise et index navigable rediges uniquement en documentation",
+  "evidence": "knowledge/BOONOLAB_conventions_seuils_verrous_actifs_2026-10-28.md et knowledge/BOONOLAB_INDEX.md",
+  "previousEventSha256": "94e5512951a40a8b728e30f8fbea5eb8a7a247f8b5cfb87ce3b4fa9b35164f53"
+}

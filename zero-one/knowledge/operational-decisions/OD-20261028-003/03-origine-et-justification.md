@@ -1,0 +1,9 @@
+# Origine — Audit des seuils et verrous BOONO (28/10/2026)
+
+La première enquête comparative réalisée le 28 octobre a identifié des pertes majeures où l'invalidation mémorisée à l'entrée n'est pas un stop dur, et un ensemble de gains sauvés par les gain-floors. La discussion précédente a instauré une routine documentaire compacte et une passation générique BoonoLab, publiée en version `BOONOLAB_START_HERE.md`. L'utilisateur souhaite maintenant un audit transversal des conventions, seuils chiffrés et verrous explicites ou potentiels, afin de comprendre les règles réelles qui font entrer, attendre ou sortir BOONO.
+
+La méthode retenue provient du principe « serveur = réalité opérationnelle ; code = implémentation ; journaux = observations ; documentation = mémoire ; proposition = hypothèse ». Les deux moteurs PAPER actifs V5.4.3 et V4.9.4 possèdent des logiques indépendantes. Une analyse des barrières ne doit pas réinstaller un veto WHERE ni corriger automatiquement les seuils d'une politique active.
+
+Le présent registre archive le message utilisateur mot pour mot dans 01, et le prompt d'enquête opérationnel rédigé par l'assistant dans 02. Ce dernier est le plan d'exécution de l'enquête, non une citation de l'utilisateur. L'origine comprend les constats de l'audit d'invalidation du 28/10, la décision de compacter les enquêtes, le besoin de documenter les comportements et les contradictions des moteurs.
+
+Portée : recherche, mesures rétrospectives, documentation et publication sur Git uniquement. L'exécution de changements de stratégie requiert un mandat distinct. Sources à lire : runners actifs, modules V5/V4 gelés, audit comparatif 28/10, journaux NDJSON récents, contrats de décision et registre de recherche.

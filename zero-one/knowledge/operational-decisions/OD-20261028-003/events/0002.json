@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-28T11:42:33+00:00",
+  "status": "DOCUMENTE",
+  "description": "Audit V5 et V4 des conventions seuils et verrous",
+  "evidence": "Rapport BOONOLAB_conventions_seuils_verrous_actifs_2026-10-28.md ; décision d origine et sources code",
+  "previousEventSha256": "d44a48fba99bbc59fe929f02e0fd05c8a54d95bfcf0037a5b66bd6701c36a042"
+}

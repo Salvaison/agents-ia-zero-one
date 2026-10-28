@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261028-003",
+  "title": "Audit des conventions et verrous actifs de trading BOONO",
+  "createdAtUtc": "2026-10-28T11:38:44+00:00",
+  "authorization": "Enquête documentaire explicitement proposée par utilisateur, 28 octobre 2026",
+  "reference": "Discussion actuelle BoonoLab, demande de cartographie des conventions et verrous",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c705500d655bd5c373392a5faaf0ed2d6fcc138d425e9e0088c80f9027483425",
+      "bytes": 249
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "bacbbba1e3e9408bb835cb2ba7313893745cbe7ac7f612c3ebf3d9a3fc9cb1c0",
+      "bytes": 2330
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "307b8948a44ae112505e08a6bce69c7ac4d34843102be4af551eb1da173f0e4b",
+      "bytes": 1786
+    }
+  }
+}

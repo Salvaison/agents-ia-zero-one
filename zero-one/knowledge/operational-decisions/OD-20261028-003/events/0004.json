@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-28T11:42:43+00:00",
+  "status": "TESTE",
+  "description": "Documentation referencee et archives de prompts verifiees",
+  "evidence": "74 liens locaux valides, 14 tests unitaires OK, verification manifest OD reussie",
+  "previousEventSha256": "7820d88933a2d3f74fbecbc5a24d316ae530eecd74b7cff82524ab458a1c0f59"
+}

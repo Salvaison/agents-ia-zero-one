@@ -1,0 +1,13 @@
+MISSION BOONOLAB — AUDIT DES CONVENTIONS, SEUILS ET VERROUS ACTIFS
+
+Source de l'autorisation : demande utilisateur intégrale du 28 octobre 2026, archivée séparément, sans reformulation.
+
+1. Vérifier sur Amsterdam les runners PAPER réellement actifs, leur origine Git et les règles de sécurité. Étudier V5.4.3 et V4.9.4, en distinguant politique effective, héritage d'ancienne version, observabilité et shadow. Ne pas activer de nouvelles stratégies et n'exécuter aucun ordre financé.
+2. Reconstituer le circuit décisionnel d'admission, maintien, sortie, gain-floor, risque et réentrée des deux moteurs depuis leur code d'exécution et les modules appelés. Consigner les conventions (hiérarchie MCB15/MCB3, MF, MA, PM, ticker, WHERE, attention) et leurs limites temporelles.
+3. Cataloguer, avec valeurs et unités exactes, les seuils effectifs, les seuils indicatifs, les exceptions et les paramètres de sécurité. Distinguer dollars de mouvement BTC, PnL notionnel en USD, indicateurs MCB et durées.
+4. Mesurer sur les journaux de changements de décision récents quels verrous sont le plus fréquemment observés, sans confondre nombre de snapshots/changements et trades indépendants.
+5. Rechercher les verrous implicites et contradictoires : empilements de preuves, MA/WHERE, signaux tardifs, dérivations de données, masquage des motifs, double protection en paper, mémoire d'anti-churn, contradictions entre motifs et garde effective, faux dégradés.
+6. Produire un rapport précis dans zero-one/knowledge et lier son entrée dans BOONOLAB_INDEX. Pour chaque constat mentionner code source et statut (confirmé, interprétation, expérimentation proposée, non validé). Donner un ordre de priorité d'investigation et des replays sur vrais épisodes ; aucune correction de stratégie sans autorisation séparée.
+7. Enregistrer cette décision de documentation dans le registre OD avec texte utilisateur intégral, présent prompt intégral et origine de l'enquête. Conserver les preuves lourdes sur Amsterdam, transmettre une synthèse compacte dans la discussion ; exécuter les tests de liens, vérifier Git et publier un commit ciblé.
+
+Aucune modification des processus PM2, règles de V5/V4, stop, seuil, positions, ledgers, flux ou exécution n'est autorisée par ce mandat documentaire.
