@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261028-004",
+  "title": "Référentiel BoonoLab des méthodes analyse et critères retenus",
+  "createdAtUtc": "2026-10-28T12:05:59+00:00",
+  "authorization": "Demande documentaire explicite, message utilisateur du 28 octobre 2026",
+  "reference": "Conversation BoonoLab, référentiel méthodologique demandé après audit des seuils et verrous",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "835ba3e857e7a3471af840315671bdc3ea9ca6dd9a2a9dc54a10750ddd643183",
+      "bytes": 155
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b981ebb6bb7fd4296f5c2cde74990596f2f687a10c8afebc5fcd2452927996b8",
+      "bytes": 2392
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c516d893910a8ad164d70fbeeaa508a746bf84a446d70d0206403012d38f7523",
+      "bytes": 1885
+    }
+  }
+}

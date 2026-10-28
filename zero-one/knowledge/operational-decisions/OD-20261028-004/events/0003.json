@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-28T12:08:21+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Référentiel méthodologique Markdown lié à l index BoonoLab et au registre des décisions",
+  "evidence": "knowledge/BOONOLAB_methodes_analyse_et_criteres_2026-10-28.md ; knowledge/BOONOLAB_INDEX.md ; knowledge/operational-decisions/README.md",
+  "previousEventSha256": "4adb87a7cf22949d897705f32735fc2c040a61ae1092ec4005c737f973fb7147"
+}

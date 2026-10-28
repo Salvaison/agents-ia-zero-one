@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-28T12:08:19+00:00",
+  "status": "DOCUMENTE",
+  "description": "Critères retenus et statut des hypothèses expliqués à partir des sources BOONO datées",
+  "evidence": "knowledge/BOONOLAB_methodes_analyse_et_criteres_2026-10-28.md, références vers orientation V5, audit économique et protocole",
+  "previousEventSha256": "5b261e637cc183f483dc7673727fdcb0abf3083af764522949d0e29d851e03be"
+}

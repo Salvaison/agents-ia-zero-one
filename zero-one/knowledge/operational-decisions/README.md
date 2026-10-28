@@ -57,3 +57,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Deuxième décision de référence — BoonoLab
 
 - [OD-20261028-002 — cartographie transversale, passation générique et import des sept archives](OD-20261028-002/03-origine-et-justification.md). Son message utilisateur intégral et la consigne intégrale de production du document sont conservés dans le même dossier. Livrables : [carte générale](../../BOONOLAB_START_HERE.md), [index thématique](../BOONOLAB_INDEX.md), [passations sources](../passations-sources/2026-10-28-import/README.md).
+
+## Référentiel des critères d'analyse (28 octobre 2026)
+
+- [OD-20261028-004 — méthodes d'analyse et critères retenus](OD-20261028-004/03-origine-et-justification.md). Prompt utilisateur littéral, prompt de rédaction, origine et statuts vérifiables ; rapport : [Méthodes d'analyse BoonoLab](../BOONOLAB_methodes_analyse_et_criteres_2026-10-28.md).

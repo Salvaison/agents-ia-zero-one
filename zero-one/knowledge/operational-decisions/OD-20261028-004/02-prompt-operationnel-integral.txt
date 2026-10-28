@@ -1,0 +1,18 @@
+PROMPT OPÉRATIONNEL DOCUMENTAIRE — BOONOLAB, 28 OCTOBRE 2026
+
+Sur la base des archives de BoonoLab et des règles méthodologiques documentées dans la Knowledge Base du dépôt GitHub, rédiger une synthèse durable et concise intitulée « Méthodes d'analyse et critères retenus ». 
+
+Distinguer :
+1. La méthode de lecture du marché (événements/extrêmes, provenance temporelle, MCB15/E15 directeur, MCB3/E3 tactique, MF, MA, prix/territoire, PM/effort/rendement, niveaux, mémoire causale, phases).
+2. Les critères de jugement d'un trade et d'une campagne (justesse temporelle, cohérence des preuves, coût économique, MFE/MAE, bénéfice net après frais, protection, maintien, latence, risque, churn, occasions perdues).
+3. Le protocole d'enquête/replay et de comparaison entre V5.4.3 et V4.9.4 : sources identiques et as-of, cohorte, cas positifs/négatifs, résultats rétrospectifs vs stratégies réellement rejouées, observations archivées vs autorisations.
+4. Les critères réellement validés, les heuristiques de recherche et les questions restant ouvertes ; aucune limite de performance ni seuil statistique inventé.
+5. Le circuit gouvernance, checkpoint compact, documentation et traçabilité des prompts originaux.
+
+S'appuyer sur les documents nommés de la Knowledge Base : orientation V5 validée du 22/10, constitution V5.4 du 26/10, étude des origines/effort du 26/10, bilan des constitutions V1-V4, audit comparatif 28/10, analyse des invalidations, cartographie des verrous du 28/10, passations historiques. Lorsqu'une ancienne règle a été remplacée, ne pas la présenter comme active aujourd'hui.
+
+Créer le fichier Markdown dans zero-one/knowledge, ajouter son lien dans zero-one/knowledge/BOONOLAB_INDEX.md, et archiver la présente demande utilisateur mot pour mot avec le prompt intégral rédigé par l'assistant et une note d'origine dans OD-20261028-004. Vérifier intégrité documentaire, liens et tests pertinents. Publier sur GitHub par commit ciblé avec preuve du SHA distant.
+
+PÉRIMÈTRE : rédaction, consultation et publication documentaire seulement ; ne pas toucher aux règles, processus PM2, flux OKX/TradingView, ledgers PAPER, tests de trading ou ordres financés.
+
+Ce prompt est une consigne de travail produite par l'assistant pour cette tâche, et non une citation de l'utilisateur ou un message remis à un autre agent.

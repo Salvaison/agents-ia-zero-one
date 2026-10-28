@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-28T12:05:59+00:00",
+  "status": "AUTORISE",
+  "description": "Rédaction et publication du référentiel méthodologique BoonoLab, sans changement du trading",
+  "evidence": "Demande utilisateur littérale et prompt documentaire archivés dans OD-20261028-004",
+  "previousEventSha256": null
+}

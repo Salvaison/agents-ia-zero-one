@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-28T12:08:24+00:00",
+  "status": "TESTE",
+  "description": "Contrôle des liens internes et de l intégrité du dossier de décision réalisé",
+  "evidence": "81 liens locaux vérifiés, zéro cassé ; 14 tests unitaires du protocole OK ; vérification SHA registre OK",
+  "previousEventSha256": "ab4a1233daecff78136762b65e8312ab18a821bb034d8b5dc2e19ae1c85899f6"
+}
