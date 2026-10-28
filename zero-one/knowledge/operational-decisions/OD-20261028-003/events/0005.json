@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-28T11:43:01+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Rapport de conventions et cartographie des verrous publies dans la Knowledge Base GitHub, sans modification trading",
+  "evidence": "Commit 89b4fc1 publie sur origin/main, document et index verifies, aucun runner PAPER modifie",
+  "previousEventSha256": "257b16b6a592eebd8755c07db38c92717efb29bb90e45b0f71f5999ae4e1d1e4"
+}
