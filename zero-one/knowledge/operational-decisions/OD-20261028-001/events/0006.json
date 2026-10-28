@@ -1,0 +1,8 @@
+{
+  "sequence": 6,
+  "recordedAtUtc": "2026-10-28T10:40:44+00:00",
+  "status": "DOCUMENTE",
+  "description": "Précision bootstrap : le prompt numéro 02 est une consigne de mission de l assistant rédigée pendant la mise en place ; pas un prompt envoyé textuellement à un autre agent. Le texte utilisateur 01 demeure strictement littéral.",
+  "evidence": "README du registre, note de provenance du premier dossier ; original utilisateur vérifié par sha256 et comparaison exacte",
+  "previousEventSha256": "0f8e0525a30bd8b0a7cd0b9fa0ba07c072a341f8f18dd0447a63f0ed78682fd0"
+}

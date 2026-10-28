@@ -49,3 +49,7 @@ Avant une nouvelle discussion, ouvrir ce registre et `zero-one/data/research-bri
 ## Première décision
 
 - [OD-20261028-001 — rendre obligatoires les prompts opérationnels intégraux avec leur origine](OD-20261028-001/03-origine-et-justification.md)
+
+### Note de provenance du premier dossier (bootstrap)
+
+Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. Le document 02 est un prompt de mission **rédigé par l'assistant pendant l'installation du registre** pour décrire intégralement cette intervention ; il **n'a pas été envoyé tel quel à un agent externe**. Cette exception de démarrage ne peut pas servir de précédent : à partir des opérations suivantes, le prompt réellement transmis à l'exécutant doit être figé avant exécution. Cette distinction est enregistrée dans le journal d'événements du dossier.
