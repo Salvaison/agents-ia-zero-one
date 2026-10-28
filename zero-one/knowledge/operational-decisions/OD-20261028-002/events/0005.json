@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-28T11:20:32+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Passation générique, index et sept passations d origine publiés sur GitHub main et accessibles en lecture, sans modifications des moteurs PAPER ni des services",
+  "evidence": "Commit 47a565ba760b6d9b0bfc61010d4073a294339f3f confirmé à la fois en local et sur origin/main ; vérifications 73 liens, 14 tests et 7 SHA256 OK",
+  "previousEventSha256": "cc43cf8c88fd58b19819ae792e6768ca6403931c736d7f5fac1e0f0d09ea45c4"
+}
