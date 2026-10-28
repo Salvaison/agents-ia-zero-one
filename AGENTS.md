@@ -10,3 +10,9 @@ Pour toute enquête, audit, replay ou correction sur BOONO Systems :
 6. Préserver le temps de conversation : par défaut < 4 000 caractères de sortie par extrait d'outil et pas de dumps massifs. Référencer les fichiers locaux / KB plutôt que répéter leur texte.
 
 Ce protocole a été explicitement demandé et validé le 28 octobre 2026 pour éviter la perte des recherches lors de la saturation des longues conversations.
+
+## Exigence complémentaire — prompts d'origine intégraux (28/10/2026)
+
+**OBLIGATOIRE avant chaque intervention opérationnelle BOONO :** lire `zero-one/knowledge/operational-decisions/README.md`. Créer un dossier `OD-AAAAMMJJ-NNN` avec le(s) texte(s) utilisateur d'origine **mot pour mot**, le **prompt d'exécution intégral effectivement confié à l'agent**, et une **explication de l'origine** (déclencheur, observations, données, décisions antérieures, motifs, autorisation, portée et limites). Distinguer la parole de l'utilisateur de la reformulation de l'assistant. Ne pas substituer une synthèse à la preuve originale. La commande `zero-one/scripts/boono-decision-archive.py create` crée un enregistrement neuf, non écrasable par l'outil, avec SHA-256 ; `event` trace chaque état, et `verify` contrôle les originaux et l'historique.
+
+Pour une validation abrégée (« oui »), inclure aussi dans le dossier la proposition originale exacte approuvée et les messages du contexte nécessaires, avec auteurs. Si une source intégrale n'est plus accessible, ne jamais l'inventer ni prétendre qu'elle est archivée. Tout changement de portée ou de prompt produit un NOUVEL identifiant lié à l'ancien ; une décision DOCUMENTÉE n'est ni IMPLÉMENTÉE, ni TESTÉE, ni MISE EN SERVICE. Ne pas versionner de secrets en clair dans Git. Le registre est une procédure explicite, pas une capture automatique des chats.

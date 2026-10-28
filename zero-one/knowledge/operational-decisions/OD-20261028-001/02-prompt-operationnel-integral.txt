@@ -1,0 +1,16 @@
+MISSION OPÉRATIONNELLE — BOONO Systems, traçabilité intégrale des décisions
+
+Autorisation explicite de l'utilisateur (28/10/2026) : conserver pour chaque décision opérationnelle le prompt qui la décrit DANS SON INTÉGRALITÉ, accompagné d'une explication de son origine.
+
+Exécuter exclusivement la modification du protocole documentaire et de ses outils d'archivage ; ne modifier aucune politique, moteur PAPER, service, risque, ordre, sortie ou gain-floor.
+
+1. Créer un registre versionné par décision sous zero-one/knowledge/operational-decisions/, avec identifiant unique.
+2. Avant toute exécution opérationnelle future, enregistrer le texte original de la demande/validation de l'utilisateur et le texte intégral exact du prompt d'exécution transmis à l'agent. Distinguer les auteurs ; ne jamais substituer une synthèse à ces sources.
+3. Documenter l'origine complète : question ou observation déclencheuse, analyses et épisodes concernés, preuves connues, justification du choix, lien avec les décisions antérieures, autorisation et limites du mandat.
+4. Verrouiller les originaux contre les modifications silencieuses ; vérifier leur empreinte SHA-256 et leur intégrité. Toute évolution de portée reçoit un nouvel identifiant relié au précédent.
+5. Tracer par événements distincts les statuts documenté, autorisé, implémenté, testé et mis en service, avec preuves ; ne jamais affirmer l'exécution sans vérification.
+6. Inscrire la procédure dans AGENTS.md et la routine de recherche compacte déjà validée, afin qu'elle devienne un préalable aux opérations BOONO.
+7. Fournir des tests unitaires de non-écrasement, intégrité, chaîne d'événements et conservation exacte des prompts, puis publier les fichiers ciblés dans le dépôt GitHub. Ne jamais versionner des identifiants secrets.
+8. Archiver cette demande actuelle comme premier enregistrement, en séparant la phrase utilisateur littérale du présent prompt opérationnel, qui est rédigé par l'assistant.
+
+Critère de clôture : archive et outil présents, tests réussis, Git local et distant synchronisés, référence GitHub vérifiable. La nouvelle exigence documentaire est mise en service, mais elle ne change pas les mécanismes de trading.

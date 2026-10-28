@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261028-001",
+  "title": "Archiver intégralement chaque prompt opérationnel avec origine",
+  "createdAtUtc": "2026-10-28T10:38:37+00:00",
+  "authorization": "Utilisateur : demande explicite de traçabilité des décisions, 28 octobre 2026",
+  "reference": "ChatGPT, conversation BOONO du 28 octobre 2026, demande actuelle (pas de permalink fourni)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ae2e65432795c6b6968c3cf82af80de6a92e4d0f3d90c6f0901902d345b69099",
+      "bytes": 176
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a87116bc057d6c07a10fd43c96619948610fae046f3f73152b528427a78fb156",
+      "bytes": 2270
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "3a478001b8b8d45d7c5e77f32450e8ede9196fd9b419f68d5344745e6fdc098f",
+      "bytes": 2776
+    }
+  }
+}

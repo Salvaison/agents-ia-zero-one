@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-28T10:39:40+00:00",
+  "status": "TESTE",
+  "description": "Huit tests du registre et six tests du protocole de recherche réussis, originaux et chaîne événementielle contrôlés",
+  "evidence": "python3 -m unittest zero-one/tests/research/test_boono_decision_archive.py zero-one/tests/research/test_boono_research_brief.py -v : Ran 14 tests ... OK",
+  "previousEventSha256": "ecd4a594b54521599c5aeb14ac731eea19ee0c4278ca590105780525eaaf1829"
+}

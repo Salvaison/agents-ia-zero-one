@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-28T10:39:35+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Outil de registre immuable, intégration dans AGENTS.md et protocole de recherche compacte, README du registre",
+  "evidence": "zero-one/scripts/boono-decision-archive.py ; AGENTS.md ; zero-one/knowledge/operational-decisions/README.md ; protocole documentaire du 28/10",
+  "previousEventSha256": "68133827a9c816238762783db213360d7d467e52e1df5af7987be9f08387ea39"
+}

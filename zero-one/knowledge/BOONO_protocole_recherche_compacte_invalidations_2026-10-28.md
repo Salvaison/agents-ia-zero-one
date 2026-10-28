@@ -82,3 +82,11 @@ Les cinq exceptions :
 4. Faire tenir les prochains résultats et questions dans le checkpoint puis la KB avant saturation du chat.
 
 **Décision validée :** mettre en oeuvre une routine permanente de recherche compacte. **Hypothèse non validée :** remplacer la logique actuelle de sortie par l'invalidation structurelle. La distinction est explicite pour toute passation ultérieure.
+
+## 7. Traçabilité intégrale des prompts : extension obligatoire validée le 28/10/2026
+
+La routine compacte ci-dessus ne remplace **jamais** le texte original de chaque décision opérationnelle. Le propriétaire demande expressément la conservation **du prompt entier qui décrit l'opération et l'explication de son origine**.
+
+Avant tout changement réellement opérationnel (y compris modification de script, service ou protocole), créer `zero-one/knowledge/operational-decisions/OD-AAAAMMJJ-NNN/` à l'aide de `zero-one/scripts/boono-decision-archive.py`. Le dossier contient le texte littéral des demandes et validations utilisateur, le prompt final d'exécution littéral, ainsi que l'origine motivée (événement, données, analyses, choix, mandat, limites). Les originaux sont contrôlés par SHA-256, conservés dans Git, et les événements d'implémentation, tests et mise en service sont ajoutés sans réécrire les décisions historiques. Le checkpoint de recherche et les passations incluent l'ID de décision, l'état vérifié et le commit source.
+
+Le protocole détaillé, les exceptions de confidentialité et les commandes sont dans `zero-one/knowledge/operational-decisions/README.md`. Cette extension modifie uniquement notre gouvernance documentaire ; **aucune règle de trading V4/V5** n'est changée.

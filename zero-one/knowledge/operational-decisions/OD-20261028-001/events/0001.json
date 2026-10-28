@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-28T10:39:32+00:00",
+  "status": "AUTORISE",
+  "description": "Utilisateur demande explicitement la conservation intégrale du prompt et de son origine pour chaque décision opérationnelle BOONO",
+  "evidence": "01-demande-utilisateur-integrale.txt, message courant du 28/10/2026, texte original vérifié mot pour mot",
+  "previousEventSha256": null
+}

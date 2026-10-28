@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-28T10:39:34+00:00",
+  "status": "DOCUMENTE",
+  "description": "Originaux de la demande et du prompt opérationnel ainsi que origine/justification figés dans le registre et manifest SHA-256",
+  "evidence": "OD-20261028-001/manifest.json, verify OK, texte original 176 octets sans saut de ligne final",
+  "previousEventSha256": "691ea14fdc1a1928a4adc335575813bdaf346034235f773e9ffb9e9141b75008"
+}

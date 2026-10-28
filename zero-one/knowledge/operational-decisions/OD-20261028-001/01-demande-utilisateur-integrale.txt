@@ -1,0 +1,1 @@
+Je veux aussi que chaque fois que nous prenons une décision opérationnelle que le prompt qui la décrit soit gardé dans son intégralité avec une explication de son origine
