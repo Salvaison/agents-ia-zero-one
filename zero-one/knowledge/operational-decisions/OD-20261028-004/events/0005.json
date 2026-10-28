@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-28T12:09:13+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Rapport de méthode et index BoonoLab publiés sur GitHub sans changer le trading",
+  "evidence": "Commit aff9346 vérifié sur main distante ; 81 liens et 14 tests documentaires validés",
+  "previousEventSha256": "c8c204b8dfcfa92fbf64678761ae7d934d76e6ef61d988e7f8b2ff7a7a2f54f3"
+}
