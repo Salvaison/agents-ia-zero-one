@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-28T10:40:10+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Registre GitHub et routine documentaire active, outil et tests versionnés sur la branche main",
+  "evidence": "GitHub origin/main=12a6900, push confirmé ; aucun moteur PAPER modifié",
+  "previousEventSha256": "85bbaa521e303c724b450eb69bb2fc13d87d14353189abbea59ceefd195bb817"
+}
