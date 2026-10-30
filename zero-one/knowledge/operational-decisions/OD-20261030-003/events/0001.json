@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T17:10:39+00:00",
+  "status": "AUTORISE",
+  "description": "Diagnostic Fibo et correction read-only de distances Etat vivant; changement de stop/entree/sortie non autorise.",
+  "evidence": "Demande littérale en 01; prompt assistant en 02; origine/limites en 03.",
+  "previousEventSha256": null
+}

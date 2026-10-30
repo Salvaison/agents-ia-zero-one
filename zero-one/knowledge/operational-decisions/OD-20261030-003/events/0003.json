@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T17:17:08+00:00",
+  "status": "TESTE",
+  "description": "45 tests Node de Fib, V5 UI et admissions liés réussis; Node --check serveur/module; source réelle 30/10 17:12UTC (prix 77139.2) : manuel groupe6 76514.1 distance -625.1 et campagne 77193.7 distance +54.5.",
+  "evidence": "node --test tests/v5/v543-fib-context-readonly.test.js tests/v5/v53-causal-chain-ui.test.js tests/v5/v542-mini-conversion-ui.test.js tests/v5/v5-live-structure-main-ui.test.js tests/v5/v541-structural-admission.test.js 45/45.",
+  "previousEventSha256": "f10d5f40c30ce24e6a7bbf77422764bea0f376778d8793805366c2d22f4ea407"
+}

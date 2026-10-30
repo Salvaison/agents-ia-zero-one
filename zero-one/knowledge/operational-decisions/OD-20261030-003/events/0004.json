@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T17:17:08+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "UI read-only config-server redémarré et PM2 sauvegardé; HTTP /login=200 et /api/v52 sans login=302; V494/V543 PAPER et shadow sont restés online. Pas de validation visuelle authentifiée.",
+  "evidence": "pm2 restart config-server --update-env, pm2 save, curl local; source module V5 et ledgers de trading inchangés.",
+  "previousEventSha256": "15ae0091c3c013e81e4e9a805cd5bc180e493b571595caf261287f38c6b17f95"
+}

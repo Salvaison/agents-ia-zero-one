@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T17:17:08+00:00",
+  "status": "IMPLEMENTE",
+  "description": "module fib-context-readonly, API V52 et affichage État vivant/LIEU avec groupes fibo manuels, niveaux 0.382 dynamiques de campagne, distances signées et provenance; décision/ordres inchangés.",
+  "evidence": "modules/v5/fib-context-readonly.js, modules/config-server.js et tests/v5/v543-fib-context-readonly.test.js, rapport KB.",
+  "previousEventSha256": "cb8739bc084594d4ec8d6f79acc2e51b8636ee491aa17102229cadf0b56b745e"
+}

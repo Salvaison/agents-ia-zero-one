@@ -69,3 +69,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Audit historique des gain-floors et continuation (30 octobre 2026)
 
 - [OD-20261030-002 — origine 220/180, V494 avec 120/90 et invalidations, chaîne V543 #102](OD-20261030-002/03-origine-et-justification.md). Recherche strictement en lecture seule ; [rapport](../BOONOLAB_494_gainfloors_structures_continuation_2026-10-30.md). Les simulations indicatives ne sont ni validation de gain ni modification des moteurs PAPER.
+
+## Correction diagnostique Fibonacci / Etat vivant (30 octobre 2026)
+
+- [OD-20261030-003 — niveaux Fibonacci calculés et distances cohérentes en État vivant](OD-20261030-003/03-origine-et-justification.md) : demande intégrale, consigne, provenance, tests et redémarrage UI uniquement. [Rapport de diagnostic](../BOONOLAB_fibonacci_lieu_audit_modules_2026-10-30.md). **Aucun niveau automatique de Fibo promu en invalidation ou stop PAPER.**

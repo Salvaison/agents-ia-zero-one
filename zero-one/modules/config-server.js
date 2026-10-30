@@ -42,6 +42,7 @@ const zlib = require('zlib');
 const path = require('path');
 const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
 const v53CausalChainUi=require('./v5/v53-causal-chain-view');
+const fibContextReadOnly=require('./v5/fib-context-readonly');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
 
@@ -507,6 +508,15 @@ app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
   const summary=v52PaperSummary('v52-paper-state.json','V5.4.3');
+  // The fib0/fib1 Ledger is not a set of derived Fibonacci trading levels.
+  // Attach as read-only UI data, never pass these levels to V5 decisions.
+  try{
+   const a=summary.analysis;
+   summary.fibContext=fibContextReadOnly.evaluate({
+    levels:JSON.parse(fs.readFileSync(LEVELS_PATH,'utf8')),
+    price:a?.price,now:a?.asOf,structural54:a?.readings?.structural54});
+  }catch(e){summary.fibContext={unavailable:true,reason:'FIB_CONTEXT_UNAVAILABLE',
+    brokerOrdersEnabled:false,decisionImpact:false};}
   try{
    const a=summary.analysis,src=v53UiReadEvents();
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
@@ -6565,6 +6575,8 @@ function renderV52Living(data){
  const a=data.analysis||{},r=a.readings||{},m=r.mcb15||{},g=r.geometry||{},
   c=r.conversion||{},pl=r.place||{},eco=r.economics||{},
   mat=r.maturity||{},chain=r.causalChain||{},p=data.position||null;
+ const fctx=data.fibContext||{},fibNearest=fctx.mapped?.nearest||null,
+  fibCampaign=fctx.campaign?.available?fctx.campaign:null;
  const n=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':Number(x).toFixed(1);
  const f=x=>escTrade(String(x===null||x===undefined?'—':x));
  const pos=x=>x==='long'?'long':x==='short'?'short':'';
@@ -6700,7 +6712,20 @@ function renderV52Living(data){
      ' E3 et Cross3 appartiennent à une seule famille, sans ordre de validation imposé.</div>')+
    cell('place','3 · LIEU',''+f(pl.nearest?.key||'frontière inconnue')+
     ' '+n(pl.nearest?.price)+' $',
-    'Frontière cartographiée (contexte, sans veto)'+
+    'Frontière de contexte dans le sens candidat (pas forcément la plus proche)'+
+    (fibNearest?'<div class="v52-muted">FIB ENREGISTRÉ · groupe '+f(fibNearest.groupId)+
+     ' · ratio '+n(fibNearest.ratio)+' · '+n(fibNearest.price)+' $'+
+     ' · distance signée '+sn(fibNearest.distanceUsd)+
+     ' $ (niveau − prix) · ancienneté de l’ancre non datée · CONTEXTE seulement</div>':
+     '<div class="v52-muted">FIB enregistré · aucun groupe complet</div>')+
+    (fibCampaign?'<div class="v52-muted">FIB CAMPAGNE illustratif · 0,382 depuis origine '+
+     n(fibCampaign.progressFromOrigin382.price)+' $ (distance '+
+     sn(fibCampaign.progressFromOrigin382.distanceUsd)+' $)'+
+     ' · retracement 38,2% depuis extrême '+
+     n(fibCampaign.retracementFromExtreme382.price)+' $ (distance '+
+     sn(fibCampaign.retracementFromExtreme382.distanceUsd)+' $)'+
+     ' · extrême connu '+v5Time(fibCampaign.extremeConfirmedAt)+
+     ' · aucun stop automatique</div>':'')+
     '<div class="v52-muted">MA3 '+f(ma3.state||'—')+
      ' · distance '+sn(ma3.distanceUsd)+' $ · approche '+n(ma3.approachUsd)+
      ' $ · preuve '+f(maProof.status||'—')+'</div>'+

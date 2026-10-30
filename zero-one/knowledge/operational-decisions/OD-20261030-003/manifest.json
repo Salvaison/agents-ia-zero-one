@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-003",
+  "title": "Fibonacci observe dans État vivant : niveaux derives, distances et origine des extremes",
+  "createdAtUtc": "2026-10-30T17:10:39+00:00",
+  "authorization": "Diagnostic de lieu/fibonacci et correction non autoritaire d affichage seulement; aucune modification de strategie PAPER",
+  "reference": "Conversation BOONOTRADE, message integral 30 octobre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b0d227c6b2e7c873d8a8045d6d9b7642f40b6eff89c28a1f5112ebf2344afab0",
+      "bytes": 1444
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "15781949a878ba06f53a96c72fe850193eec90a9af1d329744b0eb959cb5404b",
+      "bytes": 1529
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "be0bec1fad88ce5e606642e76b8a405f7cc342603bf747be63285983da6e418b",
+      "bytes": 1596
+    }
+  }
+}

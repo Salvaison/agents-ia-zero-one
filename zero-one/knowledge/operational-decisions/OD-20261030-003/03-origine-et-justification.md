@@ -1,0 +1,7 @@
+# Origine — Diagnostic Fibo et modules BOONO
+Demande utilisateur le 30 octobre 2026 : comparer modules entrée/sortie avec voies long/short, contester la rétention d'Audit, corriger l'incohérence observée des distances de fib0/fib1 et examiner une invalidation 0,382 en REVERSAL_ATTENTION.
+Preuves préliminaires (lecture seule Amsterdam) :
+- audit-history.json est une fenêtre roulante ~24h à 30s, /api/audit-history s'appuie dessus ; archives septembre, pas replays 5s historiques complet.
+- levels.json contient trois groupes de 2 ancres fib0/fib1. L'UI NIVEAUX calcule 0,382 et 0,618 localement (config-server.js ~5417) mais V5 decision-v52 levelsAt EXCLUT fib0/fib1, v53-causal.mapPlace ne crée pas de ratios dérivés; V4 where étudie seulement les niveaux bruts. 'LIEU' de V5 affiche r.place.nearest, parfois frontière du côté candidat, sans distance au Fibonacci 0,382.
+- 30/10 ~17h05 UTC prix ~77291, groupe6 fib0=87649 fib1=58500, ratio .382 => 76514,1 (distance signée -776,9), et non les distances aux ancres. Le pivot actuel de campagne LONG 76652 et haut confirmé 2h 78070 fournissent 2 façons distinctes d'étiqueter 0,382 (progrès depuis bas ou retracement depuis haut), ne pas confondre.
+Le mandat implicite de diagnostic et correction d'information est limité à une réparation read-only d'affichage. Une révision réelle de la logique des ordres, invalidation, phases et taille est une proposition non validée. La demande originale intégrale est archivée en 01; la consigne ici est rédigée par l'assistant; aucun agent externe ne l'a reçue mot à mot.
