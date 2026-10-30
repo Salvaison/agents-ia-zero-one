@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T18:26:02+00:00",
+  "status": "TESTE",
+  "description": "67 tests Node réussis dont 8 ciblés UI et sécurité XSS, compatibilité V494 V542 et Etat vivant; app.js complet compilé; endpoint HTTP auth 200 quatre branches, UI HTML/JS 200, non-auth 302, JSON environ 2117 octets.",
+  "evidence": "node --test tests/attention/v494-dual-shadow-ui.test.js et tests connexes (67/67); vm.Script full app.js; test HTTP local session authentifiée ; aucun ordre financé.",
+  "previousEventSha256": "0006c2fe70c5a77420b130291e6134ca3ea4c4b1c4e3ac04d32e3f2f0f044a51"
+}

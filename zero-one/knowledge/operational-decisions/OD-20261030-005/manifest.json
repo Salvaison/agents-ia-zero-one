@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-005",
+  "title": "Exposer le laboratoire V494 double module dans BOONO Watch SHADOWS",
+  "createdAtUtc": "2026-10-30T18:17:45+00:00",
+  "authorization": "Demande explicite de visualisation des résultats V494 shadow; lecture seule sans autorité de trading",
+  "reference": "BOONO conversation 2026-10-30: demande exacte en document 01",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2d36fef3a06154f91d38b25e68b9e10674e0a901aba084ca046791de58e621e4",
+      "bytes": 123
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "6b3184c4c5a3f1ff3a5213728ff92436d14286123e79f841daf6c05b45c438b6",
+      "bytes": 1540
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "affd6748813761342c2a55ade7b2d412586bdaea6a2d9263e774e378809ca54b",
+      "bytes": 1608
+    }
+  }
+}

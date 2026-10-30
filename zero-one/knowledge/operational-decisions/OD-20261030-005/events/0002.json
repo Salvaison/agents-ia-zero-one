@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T18:26:02+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Ajout summary view V494 strictement borne, API authentifiée /api/shadows/v494-dual et affichage quatre branches A/B/C/D en tête de SHADOWS, PNL frais LONG/SHORT, clôtures, détails et influence sortie->nouvelle entrée sans archives lourdes.",
+  "evidence": "modules/attention/v494-dual-ui-summary.js, modules/config-server.js, tests/attention/v494-dual-shadow-ui.test.js, KB BOONOLAB_V494_Dual_Shadow_Watch_UI_2026-10-30.md",
+  "previousEventSha256": "aaad8b2347e25dd735dae8760968c69e300b399c2544e3b07f614d57778beb0e"
+}

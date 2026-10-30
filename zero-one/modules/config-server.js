@@ -42,6 +42,7 @@ const zlib = require('zlib');
 const path = require('path');
 const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
 const v53CausalChainUi=require('./v5/v53-causal-chain-view');
+const v494DualUiSummary=require('./attention/v494-dual-ui-summary');
 const fibContextReadOnly=require('./v5/fib-context-readonly');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
@@ -1378,6 +1379,23 @@ app.get('/api/shadows', requireAuth, (req, res) => {
   }
 });
 
+// V494 entry/exit laboratory: small on-demand snapshot, no recent-NDJSON
+// scan, no trading state mutation, never part of Etat vivant.
+app.get('/api/shadows/v494-dual',requireAuth,(req,res)=>{
+ try{
+  const filename=path.join(__dirname,
+   '../data/v494-dual-module-shadow-summary.json');
+  const size=fs.statSync(filename).size;
+  if(size>256*1024)throw Error('V494_DUAL_SUMMARY_TOO_LARGE');
+  const raw=JSON.parse(fs.readFileSync(filename,'utf8'));
+  const payload=v494DualUiSummary.build(raw,Date.now());
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,payload);
+ }catch(e){
+  res.status(503).json({error:'V494 dual-module shadow indisponible',
+   detail:'SUMMARY_UNAVAILABLE_OR_INCOMPATIBLE'});
+ }
+});
 // Isolated V5 PAPER positions. Never read V4 history for pink bands; no
 // broker action. Return numeric UTC timestamps, no raw V5 analysis state.
 function waveUiV5PaperTrades(startTs,endTs){
@@ -3412,6 +3430,24 @@ app.get('/', requireAuth, (req, res) => {
 .shadow-event-main{font-size:9.5px;line-height:1.35;min-width:0;}
 .shadow-event-main b{font-size:9.5px;}
 .shadow-empty{padding:12px;color:#777;font-size:10px;}
+/* V494 four-branch research panel — summary-only, no audit/history download */
+.shadow-dual-panel{border-bottom:1px solid #dde1e3;margin-bottom:13px;padding-bottom:11px;}
+.shadow-dual-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.shadow-dual-explain{font-size:9.5px;line-height:1.5;color:#697783;margin:4px 0 9px;}
+.shadow-dual-num{font-size:15px;font-weight:850;line-height:1.2;}
+.shadow-dual-alert{font-size:9.5px;line-height:1.45;color:#765d36;}
+.shadow-dual-meta{font-size:9px;color:#74818b;line-height:1.4;margin-top:7px;}
+.shadow-dual-trades{margin-top:9px;border-top:1px solid #e2e8ed;padding-top:7px;}
+.shadow-dual-trades summary,.shadow-dual-influences summary{font-size:9.5px;cursor:pointer;font-weight:700;color:#37536b;}
+.shadow-dual-trades .shadow-dual-trade-row{border-top:1px solid #edf0f1;padding:6px 0;font-size:9px;line-height:1.45;}
+.shadow-dual-trades .shadow-dual-trade-row:first-of-type{margin-top:6px;}
+.shadow-dual-contrast{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+.shadow-dual-contrast .shadow-stat{min-height:42px;}
+.shadow-dual-influences{border:1px solid #d7dde0;border-radius:8px;background:#fff;padding:8px 10px;margin-top:9px;}
+.shadow-dual-influence{padding:7px 0;border-top:1px solid #edf0f1;font-size:9px;line-height:1.4;}
+.shadow-dual-influence:first-of-type{margin-top:6px;}
+@media(max-width:700px){.shadow-dual-contrast{grid-template-columns:1fr;}}
+
 @media(max-width:700px){
   .shadow-grid{grid-template-columns:1fr;}
   .shadow-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -3425,6 +3461,7 @@ app.get('/', requireAuth, (req, res) => {
     <div><div class="shadow-title">BOONO — SHADOWS</div><div class="shadow-sub">Observatoire expérimental · aucune autorité implicite</div></div>
     <div id="shadowWindow" class="shadow-window">Chargement…</div>
   </div>
+  <div id="shadowV494Dual" class="shadow-dual-panel"><div class="shadow-empty">Shadow Entrée / Sortie V4.9.4 · lecture du résumé…</div></div>
   <div id="shadowLive"><div class="shadow-empty">Chargement des shadows…</div></div>
 </div>
 </div>
@@ -6239,9 +6276,194 @@ document.addEventListener('click',function(ev){
   shadowSelectedOccurrenceLabel=label;
   if(shadowLastData)renderShadowOccurrences(shadowLastData,key,label,true,b);
 });
+// Lightweight V494 factorial laboratory. Renders in SHADOWS only; API returns
+// a bounded JSON summary, not the journals, Audit history or trading state.
+function v494DualMoney(value,precision){
+ if(value===null||value===undefined||value===''||
+   !Number.isFinite(Number(value)))return '—';
+ return shadowMoney(value,precision===undefined?2:precision);
+}
+function v494DualFmt(value,precision){
+ if(value===null||value===undefined||value===''||
+   !Number.isFinite(Number(value)))return '—';
+ return shadowFmt(value,precision===undefined?1:precision);
+}
+function v494DualNum(value){
+ return Number.isFinite(Number(value))?String(Math.max(0,Math.trunc(Number(value)))):'0';
+}
+function v494DualTradeRow(t){
+ return '<div class="shadow-dual-trade-row">'+
+  '<b>'+escTrade(shadowDateTime(t.exitAt))+' · '+escTrade(String(t.direction||'—').toUpperCase())+'</b>'+
+  ' · net '+escTrade(v494DualMoney(t.netPnlUsd,2))+
+  ' · frais '+escTrade(v494DualMoney(t.feesUsd,2))+
+  '<div class="shadow-secondary">'+
+  'Entrée '+escTrade(v494DualFmt(t.entryPrice,1))+
+  ' → sortie '+escTrade(v494DualFmt(t.exitPrice,1))+' $ BTC'+
+  ' · MFE '+escTrade(v494DualFmt(t.mfePriceUsd,1))+
+  ' · MAE '+escTrade(v494DualFmt(t.maePriceUsd,1))+
+  ' · restitution '+escTrade(v494DualFmt(t.givebackPriceUsd,1))+' $ BTC'+
+  ' · '+escTrade(t.exitReason||'—')+'</div></div>';
+}
+function v494DualCard(lane,openFolds){
+ const id=String(lane.key||''),recent=lane.recentTrades||[];
+ const open=openFolds.has('trades-'+id)?' open':'';
+ const hasResult=Number(lane.completed||0)>0;
+ const rows=[
+  ['Entrées / clôtures',v494DualNum(lane.entries)+' / '+v494DualNum(lane.completed)],
+  ['Entrées LONG / SHORT',v494DualNum(lane.entriesLong)+' / '+v494DualNum(lane.entriesShort)],
+  ['Net LONG / SHORT',hasResult?v494DualMoney(lane.netLongUsd,2)+' / '+
+   v494DualMoney(lane.netShortUsd,2):'en collecte'],
+  ['Frais comptabilisés',v494DualMoney(lane.feesUsd,2)],
+  ['Entrées filtrées',v494DualNum(lane.blockedEntries)],
+  ['TP1 partiels',v494DualNum(lane.partialExits)]
+ ];
+ const pos=lane.position;
+ const posTxt=pos?'Position '+String(pos.direction||'—').toUpperCase()+
+  ' @ '+v494DualFmt(pos.entryPrice,1)+
+  ' · latent '+v494DualMoney(pos.unrealizedNetUsd,2)+
+  ' · MFE '+v494DualFmt(pos.mfePriceUsd,1)+' $ BTC':
+  'FLAT · aucune position virtuelle';
+ const top=(lane.exitReasons||[]).slice(0,3).map(function(v){
+  return String(v.reason)+' ×'+String(v.count);
+ }).join(' · ');
+ return '<div class="shadow-card">'+
+  '<div class="shadow-card-head">'+
+    '<span class="shadow-card-title">BRANCHE '+escTrade(id)+'</span>'+
+    '<span class="shadow-dual-meta">'+escTrade(id==='A'?'RÉFÉRENCE':'EXPÉRIENCE')+'</span>'+
+  '</div>'+
+  '<div class="shadow-main">'+(hasResult?
+   escTrade(v494DualMoney(lane.realizedNetUsd,2))+' net réalisé':
+   '<span class="shadow-dual-num">EN COLLECTE</span>')+'</div>'+
+  '<div class="shadow-secondary">'+escTrade(lane.entryName||'')+
+  ' / '+escTrade(lane.exitName||'')+'</div>'+
+  '<div class="shadow-secondary">'+escTrade(posTxt)+'</div>'+
+  shadowKv(rows)+
+  (top?'<div class="shadow-secondary">Sorties · '+escTrade(top)+'</div>':'')+
+  '<details class="shadow-dual-trades" data-v494-fold="trades-'+escTrade(id)+'"'+open+'>'+
+  '<summary>Dernières clôtures ('+v494DualNum(recent.length)+
+   ' affichées, maximum 5)</summary>'+
+  (recent.length?recent.map(v494DualTradeRow).join(''):
+   '<div class="shadow-empty">Aucune campagne clôturée depuis l’activation du laboratoire.</div>')+
+  '</details></div>';
+}
+function v494DualInfluenceRow(e){
+ let summary='';
+ if(e.type==='EXIT_ENABLED_REENTRY'){
+  summary='SORTIE → RÉENTRÉE · '+(e.entryPolicy||'')+
+   ' · sortie précédente '+(e.priorExitReason||'—')+
+   ' · nouvelle entrée '+String(e.newDirection||'—').toUpperCase()+
+   ' à '+v494DualFmt(e.newEntryPrice,1)+' $ BTC'+
+   ' tandis que la référence conserve '+String(e.originalStillIn||'—').toUpperCase();
+ }else if(e.type==='EXIT_INFLUENCES_ENTRY_EXPOSURE'){
+  summary='Décalage de position dû aux sorties · '+(e.entryPolicy||'')+
+   ' · Réf '+(e.original||'FLAT')+' / superviseur '+(e.review||'FLAT');
+ }else if(e.type==='ENTRY_FILTER_INFLUENCES_EXPOSURE'){
+  summary='Décalage dû à la sélection d’entrée · '+(e.exitPolicy||'')+
+   ' · Entrée exacte '+(e.original||'FLAT')+' / filtrée '+(e.filtered||'FLAT');
+ }else summary=e.type||'Événement';
+ return '<div class="shadow-dual-influence">'+
+  '<b>'+escTrade(shadowDateTime(e.ts))+'</b> · '+escTrade(summary)+'</div>';
+}
+function renderV494DualShadow(data){
+ const root=document.getElementById('shadowV494Dual');
+ if(!root)return;
+ const opened=new Set(root.querySelectorAll?
+  Array.from(root.querySelectorAll('details[data-v494-fold]')).filter(function(d){
+   return d.open;
+  }).map(function(d){return d.getAttribute('data-v494-fold');}):[]);
+ const branches=Array.isArray(data.branches)?data.branches:[];
+ if(data.brokerOrdersEnabled!==false||data.decisionImpact!==false||
+  branches.length!==4){
+  root.innerHTML='<div class="shadow-empty">Le résumé V494 n’est pas un observatoire valide en lecture seule.</div>';
+  return;
+ }
+ const stale=data.status!=='DATA_RECENT';
+ const ref=data.realReference||{},diff=data.descriptiveDiff||{};
+ const localTime=shadowDateTime(data.asOf);
+ const match=ref.comparableAtSameStep?
+  (ref.sameExposure?'OUI, exposition identique':'NON, divergence d’exposition'):
+  'lecture des deux moteurs non synchronisée';
+ const fullyComparable=branches.every(function(b){return Number(b.completed||0)>0;});
+ const differenceMetrics=[
+  ['Sortie seule (B − A)',diff.exitWithExactEntry],
+  ['Sortie avec entrée filtrée (D − C)',diff.exitWithFilteredEntry],
+  ['Entrée seule (C − A)',diff.entryWithOriginalExit],
+  ['Entrée avec sortie supervisée (D − B)',diff.entryWithSupervisorExit],
+  ['Interaction D−C − (B−A)',diff.interactionContrast]
+ ];
+ const diffText=fullyComparable?
+  'Écarts cumulés indicatifs, non appariés : sorties et réentrées peuvent modifier l’exposition.':
+  'Effets P&L encore non comparables : attendre des clôtures dans les branches concernées.';
+ const diffs='<div class="shadow-section-title">CONTRASTES A / B / C / D · NET APRÈS FRAIS</div>'+
+   '<div class="shadow-dual-contrast">'+differenceMetrics.map(function(pair){
+    return shadowStat(v494DualMoney(pair[1],2),pair[0]);
+   }).join('')+'</div>'+
+   '<div class="shadow-dual-meta">'+escTrade(diffText)+'</div>';
+ const influences=(data.recentInfluence||[]).slice(0,8);
+ const exitEnabled=influences.filter(function(e){return e.type==='EXIT_ENABLED_REENTRY';}).length;
+ const recent=(data.recentEvents||[]).slice(0,6);
+ const eventHtml=recent.map(function(e){
+  return '<div class="shadow-dual-influence"><b>'+escTrade(shadowDateTime(e.ts))+
+   '</b> · '+escTrade(e.type||'SHADOW')+' · '+escTrade(e.route||'—')+
+   (e.direction?' · '+escTrade(e.direction.toUpperCase()):'')+
+   ' · '+escTrade(e.reason||'—')+
+   (e.netPnlUsd===null?'':' · net '+escTrade(v494DualMoney(e.netPnlUsd,2)))+
+   '</div>';
+ }).join('');
+ root.innerHTML=
+  '<div class="shadow-dual-head">'+
+   '<div class="shadow-section-title">V4.9.4 · LABORATOIRE ENTRÉE / SORTIE · 4 BRANCHES</div>'+
+   '<div class="shadow-window">'+escTrade(localTime)+' · '+v494DualNum(data.observationCount)+
+   ' observations · '+escTrade(stale?'SOURCE ANCIENNE':'À JOUR')+'</div>'+
+  '</div>'+
+  '<div class="shadow-dual-explain">A : référence originale · B : sorties alternatives · C : entrées MCB15 filtrées · D : combinaison. '+
+   'Quatre comptes PAPER virtuels séparés, aucune autorité sur V494. Tous les résultats sont nets des frais modélisés.</div>'+
+  (stale?'<div class="shadow-dual-alert">Attention : résumé ancien ('+
+   escTrade(shadowFmt(Number(data.ageMs)/60000,1))+' minutes). Vérifier le service PM2.</div>':'')+
+  '<div class="shadow-dual-meta">Concordance de la branche A avec V494 actuel : <b>'+
+   escTrade(match)+'</b> · comparaison ponctuelle uniquement, pas une validation de reproduction des trades.</div>'+
+  '<div class="shadow-section-title">POSITION / BILAN PAR BRANCHE</div>'+
+  '<div class="shadow-grid">'+branches.map(function(b){
+   return v494DualCard(b,opened);
+  }).join('')+'</div>'+
+  diffs+
+  '<details class="shadow-dual-influences" data-v494-fold="influence"'+
+    (opened.has('influence')?' open':'')+'>'+
+   '<summary>Influence des sorties sur les entrées · '+v494DualNum(data.influenceCount)+
+     ' divergences mémorisées · '+v494DualNum(exitEnabled)+
+     ' réentrée(s) explicitement attribuée(s) dans les dernières occurrences</summary>'+
+   (influences.length?influences.map(v494DualInfluenceRow).join(''):
+    '<div class="shadow-empty">Pas encore de divergence entre modules sur les épisodes prospectifs.</div>')+
+  '</details>'+
+  '<details class="shadow-dual-influences" data-v494-fold="events"'+
+   (opened.has('events')?' open':'')+'>'+
+   '<summary>Derniers événements du laboratoire ('+v494DualNum(recent.length)+' affichés)</summary>'+
+   (eventHtml||'<div class="shadow-empty">Aucune entrée ou sortie virtuelle encore enregistrée.</div>')+
+  '</details>'+
+  '<div class="shadow-dual-meta">Lecture à la demande de résumés bornés, sans Audit ni ledger complet. '+
+   'Les différences de P&L ne constituent ni un backtest apparié ni une preuve d’amélioration.</div>';
+}
+let v494DualShadowPending=false;
+async function loadV494DualShadow(){
+ const root=document.getElementById('shadowV494Dual');
+ if(!root||v494DualShadowPending)return;
+ v494DualShadowPending=true;
+ try{
+  const res=await fetch('/api/shadows/v494-dual',{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  renderV494DualShadow(await res.json());
+ }catch(e){
+  root.innerHTML='<div class="shadow-empty">Laboratoire Entrée/Sortie V494 indisponible : '+
+   escTrade(e.message)+'. Les autres SHADOWS restent accessibles.</div>';
+ }finally{v494DualShadowPending=false;}
+}
+
 async function loadShadows(){
   const root=document.getElementById('shadowLive');
   if(!root)return;
+  // Independent compact request; legacy /api/shadows may compute slowly.
+  // The V494 panel must still render when the legacy endpoint fails.
+  loadV494DualShadow();
   try{
     const res=await fetch('/api/shadows',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);

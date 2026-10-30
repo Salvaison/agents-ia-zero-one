@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T18:26:02+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server redémarré seul et PM2 sauvegardé; panneau Entrée/Sortie visible sous TRADES > SHADOWS, et API V494 lecture seule opérationnelle; moteurs V494 V543 et shadows inchangés; résultats actuels encore en collecte.",
+  "evidence": "PM2 config-server online, boono-v494-paper online, boono-v543-paper online, boono-v494-entry-exit-shadow online, boono-audit-14d online; /login 200, /api/shadows/v494-dual non-auth 302; auth 200.",
+  "previousEventSha256": "6b0b798a0384fae821c1eaec427d09235b1ab0fab88ab58aa5a8d742e2f03368"
+}

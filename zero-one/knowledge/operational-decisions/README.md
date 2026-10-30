@@ -77,3 +77,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Audit14D et laboratoire V494 Entrée/Sortie (30 octobre 2026)
 
 - [OD-20261030-004 — rétablir Audit14D et modules Entrée/Sortie en shadow V494](OD-20261030-004/03-origine-et-justification.md). La demande, la mission complète, l’origine et les événements autorisation/implémentation/tests/service restent distincts. [Rapport technique](../BOONOLAB_Audit14D_V494_Entree_Sortie_Shadow_2026-10-30.md). **V494/V543 PAPER inchangés.**
+
+## SHADOWS — résultats du comparateur V494 Entrée/Sortie (30 octobre 2026)
+
+- [OD-20261030-005 — exposition de A/B/C/D en BOONO Watch](OD-20261030-005/03-origine-et-justification.md) : demande exacte, autorisation d’observabilité uniquement, implémentation, tests et service. [Rapport interface et API](../BOONOLAB_V494_Dual_Shadow_Watch_UI_2026-10-30.md). Les décisions V494/V543 PAPER restent inchangées.
