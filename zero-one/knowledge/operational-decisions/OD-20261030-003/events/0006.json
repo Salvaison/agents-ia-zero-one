@@ -1,0 +1,8 @@
+{
+  "sequence": 6,
+  "recordedAtUtc": "2026-10-30T17:19:07+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Statut final confirmé : correction UI Fibonacci read-only opérationnelle sous config-server ; ajout de la note de snapshot Audit seulement, moteurs PAPER inchangés, aucun cron ajouté.",
+  "evidence": "PM2 config-server online pid 1856275; V494/V543/shadow online; GitHub main 58acfa4; aucune modification de politique de trading.",
+  "previousEventSha256": "46912481a5be41a815367c522dff443c3c8f81af096ce27cf258c109001a13fa"
+}
