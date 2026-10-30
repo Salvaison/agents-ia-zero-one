@@ -88,3 +88,6 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 - [OD-20261030-007 — Ticker de qualité 4×15m et corroboration prospective](OD-20261030-007/03-origine-et-justification.md). Mesures d'effort/rendement et couverture temporelle, sans vote indépendant.
 - [OD-20261030-008 — Couche distincte de chronologie des états, horodatée et consultable](OD-20261030-008/03-origine-et-justification.md). Sept familles, transitions et snapshots 30s. États réellement observés vs hypothèses encore non observées.
 - [Rapport d'architecture, méthode, tests et service](../BOONOLAB_Elastic_V494_ticker4x15_et_chronologie_2026-10-30.md).
+## Contrastes factoriels V494 — deux lectures (30 octobre 2026)
+
+- [OD-20261030-009 — Contrastes A/B/C/D nets, réalisés et provisoires](OD-20261030-009/03-origine-et-justification.md). Le laboratoire était actif mais les quatre branches ouvertes n'avaient pas clôturé : ajout sans autorité trading d'une valorisation mark-to-market **incluant TP1 et frais estimés restants**, séparée du P&L réalisé. [Rapport de rétablissement, tests et mise en service](../BOONOLAB_V494_contrastes_A_B_C_D_nets_live_2026-10-30.md).

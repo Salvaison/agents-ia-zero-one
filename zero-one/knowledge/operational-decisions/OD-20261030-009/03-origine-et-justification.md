@@ -1,0 +1,11 @@
+# OD-20261030-009 — rétablissement de la consultation des contrastes factoriels
+
+**Demande précise** : le propriétaire réclame de « remettre en route » la section « CONTRASTES A / B / C / D · NET APRÈS FRAIS », visible dans les SHADOWS de BOONO Watch. Le texte littéral du message constitue `01-demande-utilisateur-integrale.txt`.
+
+**Constat préalable en lecture seule du 30/10 vers 19:56 UTC** : le processus PM2 `boono-v494-entry-exit-shadow` est ONLINE (PID 1867294, sans changement depuis son installation), le résumé `v494-dual-module-shadow-summary.json` s'actualise toutes les ~30 secondes et compte 246 observations. A/B/C/D ont chacune ouvert un LONG à 76 745,6 $ BTC (19:46:23 UTC) ; 0 clôture dans chaque branche et 0 événement de divergence. La projection UI rend donc volontairement des tirets pour les contrastes **réalisés** tant que chaque paire ne dispose pas d'au moins une clôture. Il serait faux de présenter 0 $ comme preuve d'amélioration ou d'attribuer l'absence de clôture à une panne.
+
+**Choix technique** : conserver les contrastes réalisés séparés et inchangés, mais ajouter des contrastes provisoires de valeur nette marquée à un même cours observé, après frais déjà encourus et frais de sortie estimés, pour visualiser le résultat avant les premières clôtures. Les positions indépendantes doivent conserver la même qualité de calcul TP1/runner : `realizedGrossUsd` des fractions prises, P&L du nominal restant, frais d'entrée, partiel et sortie restante. Les écarts restent des comparaisons d'exposition, non un A/B statistiquement apparié. Le propriétaire n'autorise aucune modification des règles de trading.
+
+**Sources** : `knowledge/BOONOLAB_Audit14D_V494_Entree_Sortie_Shadow_2026-10-30.md`, `knowledge/BOONOLAB_V494_Dual_Shadow_Watch_UI_2026-10-30.md`, OD-20261030-004/005. Les quatre branches du laboratoire sont strictement PAPER virtuel et non broker. Le titre « NET APRÈS FRAIS » doit distinguer valeurs réalisées et mark-to-market estimatif pour éviter toute confusion économique.
+
+**Mission** : instruction 02 préparée par l'assistant et exécutée directement dans cette conversation, pas une requête d'agent externe. Prompts originaux et statut de l'exécution conservés séparément selon la gouvernance BOONOLAB.

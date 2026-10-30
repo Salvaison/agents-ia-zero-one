@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T20:02:58+00:00",
+  "status": "TESTE",
+  "description": "Tests mark/taker, TP1, positions identiques/divergentes, absence de clôture, source stale, rendu UI, régression V494/Elastic et compilation JS généré sans erreur",
+  "evidence": "node --test tests/attention/*.test.js tests/v4/elastic-observer-v05.test.js -> 92 tests réussis, 0 échec; /tmp/boono-v494-contrastes-regression.log; node --check; vm.Script(/app.js template) OK",
+  "previousEventSha256": "4d6907b629e3c10d348df827ef3822288e0d2a64fb1c8901a6170e980fe7c18e"
+}

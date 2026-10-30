@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-009",
+  "title": "Contrastes V494 A/B/C/D : valorisation provisoire nette apres frais",
+  "createdAtUtc": "2026-10-30T19:58:07+00:00",
+  "authorization": "Demande explicite de remettre en route les contrastes des quatre branches en SHADOWS",
+  "reference": "Conversation BOONO du 30 octobre 2026, continuation OD-20261030-004/005",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ae358a509abbad2caeab8c67fb207a45f03c81dd308cb5f4afcc93fd6e94c745",
+      "bytes": 91
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "cc4067b830adbd5f4f762a0b2c7d1596e0e9c04ff4cefda4f361a7efa8de63b8",
+      "bytes": 2737
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "75a9c752ed699b274eb01d7428a8fb5f9ee6ed68c008d5f186a2b2d1186dcf4e",
+      "bytes": 2320
+    }
+  }
+}

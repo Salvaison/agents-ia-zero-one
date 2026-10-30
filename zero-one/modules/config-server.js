@@ -6373,13 +6373,16 @@ function v494DualCard(lane,openFolds){
   ['Net LONG / SHORT',hasResult?v494DualMoney(lane.netLongUsd,2)+' / '+
    v494DualMoney(lane.netShortUsd,2):'en collecte'],
   ['Frais comptabilisés',v494DualMoney(lane.feesUsd,2)],
+  ['Portefeuille marqué net',lane.entries||lane.completed?
+    v494DualMoney(lane.markedPortfolioNetUsd,2)+' (estimation)':'en collecte'],
   ['Entrées filtrées',v494DualNum(lane.blockedEntries)],
   ['TP1 partiels',v494DualNum(lane.partialExits)]
  ];
  const pos=lane.position;
  const posTxt=pos?'Position '+String(pos.direction||'—').toUpperCase()+
   ' @ '+v494DualFmt(pos.entryPrice,1)+
-  ' · latent '+v494DualMoney(pos.unrealizedNetUsd,2)+
+  ' · net estimé si sortie '+v494DualMoney(
+     pos.markedNetIfClosedUsd===null?pos.unrealizedNetUsd:pos.markedNetIfClosedUsd,2)+
   ' · MFE '+v494DualFmt(pos.mfePriceUsd,1)+' $ BTC':
   'FLAT · aucune position virtuelle';
  const top=(lane.exitReasons||[]).slice(0,3).map(function(v){
@@ -6443,6 +6446,7 @@ function renderV494DualShadow(data){
   (ref.sameExposure?'OUI, exposition identique':'NON, divergence d’exposition'):
   'lecture des deux moteurs non synchronisée';
  const fullyComparable=branches.every(function(b){return Number(b.completed||0)>0;});
+ const preview=data.markedDiff||{},ready=data.comparisonReadiness||{};
  const differenceMetrics=[
   ['Sortie seule (B − A)',diff.exitWithExactEntry],
   ['Sortie avec entrée filtrée (D − C)',diff.exitWithFilteredEntry],
@@ -6451,13 +6455,40 @@ function renderV494DualShadow(data){
   ['Interaction D−C − (B−A)',diff.interactionContrast]
  ];
  const diffText=fullyComparable?
-  'Écarts cumulés indicatifs, non appariés : sorties et réentrées peuvent modifier l’exposition.':
-  'Effets P&L encore non comparables : attendre des clôtures dans les branches concernées.';
+  'Résultats réalisés descriptifs, NON appariés : dates, frais, positions et réentrées peuvent différer.':
+  'Réalisé : attendre au moins une clôture par paire. Les quatre positions ouvertes ne sont pas comptées comme clôturées.';
+ const provisionalMetrics=[
+  ['Sortie seule (B − A)',preview.exitWithExactEntry],
+  ['Sortie avec entrée filtrée (D − C)',preview.exitWithFilteredEntry],
+  ['Entrée seule (C − A)',preview.entryWithOriginalExit],
+  ['Entrée avec sortie supervisée (D − B)',preview.entryWithSupervisorExit],
+  ['Interaction D−C − (B−A)',preview.interactionContrast]
+ ];
+ const markTxt=ready.status==='SAME_EXPOSURE_NO_CONTRAST_YET'?
+  'Mêmes positions et mêmes entrées dans les quatre branches : écarts provisoires nuls, aucune divergence observée à ce stade.':
+  ready.status==='EXPOSURE_DIVERGED'?
+   'Expositions divergentes détectées : les écarts provisoires reflètent les portefeuilles, pas un effet causal isolé.':
+  ready.status==='NO_EXPOSURE_YET'?
+   'Aucune exposition virtuelle depuis le début du laboratoire.':
+   'Valorisation descriptive des quatre comptes indépendants au même instant BTC.';
  const diffs='<div class="shadow-section-title">CONTRASTES A / B / C / D · NET APRÈS FRAIS</div>'+
+   '<div class="shadow-dual-meta">Deux lectures distinctes : réalisé uniquement sur les campagnes clôturées ; '+
+    'provisoire = net réalisé cumulé + position ouverte valorisée au prix BTC observé, '+
+    'après frais payés et frais de sortie restants estimés. Pas un résultat encaissé.</div>'+
+   '<div class="shadow-section-title">RÉALISÉ · CAMPAGNES CLÔTURÉES</div>'+
    '<div class="shadow-dual-contrast">'+differenceMetrics.map(function(pair){
     return shadowStat(v494DualMoney(pair[1],2),pair[0]);
    }).join('')+'</div>'+
-   '<div class="shadow-dual-meta">'+escTrade(diffText)+'</div>';
+   '<div class="shadow-dual-meta">'+escTrade(diffText)+'</div>'+
+   '<div class="shadow-section-title">PROVISOIRE · PORTEFEUILLE MARQUÉ NET APRÈS FRAIS</div>'+
+   '<div class="shadow-dual-contrast">'+provisionalMetrics.map(function(pair){
+    return shadowStat(v494DualMoney(pair[1],2),pair[0]);
+   }).join('')+'</div>'+
+   '<div class="shadow-dual-meta">'+escTrade(markTxt)+
+    ' · '+v494DualNum(data.influenceCount)+' divergence(s) historisée(s)'+
+    ' · '+(ready.allHaveClosed?'4 branches avec clôtures':
+     'clôtures encore insuffisantes pour une comparaison finale')+
+    ' · prix/fills futurs non garantis, slippage et funding non modélisés.</div>';
  const influences=(data.recentInfluence||[]).slice(0,8);
  const exitEnabled=influences.filter(function(e){return e.type==='EXIT_ENABLED_REENTRY';}).length;
  const recent=(data.recentEvents||[]).slice(0,6);

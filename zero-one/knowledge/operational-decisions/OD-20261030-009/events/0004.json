@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T20:02:58+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Laboratoire et interface relancés isolément après sauvegarde; même exposition préservée et valeur marquée disponible en source fraîche, V494/V543 non redémarrés",
+  "evidence": "Backup /root/boono-v494-contrastes-marked-prelaunch-20261030; boono-v494-entry-exit-shadow PID1892578; config-server PID1892708; V494 PAPER PID962864 V543 PAPER PID1081650 inchangés; 258 observations, net marqué 4.8412 USD chacune au 30/10 20:02:30 UTC, 0 clôture, 0 divergence; HTTP anonyme 302",
+  "previousEventSha256": "32eb0a64b19624016bd302a281181cd8133b2e73dbabe2098b6c58d4d8179511"
+}

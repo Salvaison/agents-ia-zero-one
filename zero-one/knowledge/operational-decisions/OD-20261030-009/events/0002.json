@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T20:02:58+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Projection financière A/B/C/D enrichie de valorisation provisoire nette des positions ouvertes et contrastes B-A D-C C-A D-B/interaction séparés du réalisé",
+  "evidence": "modules/attention/v494-dual-module-shadow.js markedPosition + summary; modules/attention/v494-dual-ui-summary.js markedDiff/comparisonReadiness; modules/config-server.js deux niveaux de rendu; aucune fonction decisionnelle/ledger PAPER modifiée",
+  "previousEventSha256": "f953f707794491d2718eacd3b2405e230ff0e2bf0b29c3c8ee629ec919d66d26"
+}

@@ -34,6 +34,8 @@ function branch(branchId,label,id,entryName,exitName,v){
   entries:nn(v?.entries),completed:nn(v?.completed),
   blockedEntries:nn(v?.blockedEntries),partialExits:nn(v?.partialExits),
   realizedNetUsd:money(v?.netRealizedUsd),
+  markedPortfolioNetUsd:money(v?.portfolioMarkedNetUsd),
+  markedValuationStatus:str(v?.markedValuationStatus||'UNAVAILABLE',40),
   feesUsd:money(v?.feesUsd),
   entriesLong:nn(v?.entriesByDirection?.long),
   entriesShort:nn(v?.entriesByDirection?.short),
@@ -41,6 +43,12 @@ function branch(branchId,label,id,entryName,exitName,v){
   netShortUsd:money(v?.netByDirection?.short),
   position:p?{direction:str(p.direction,6),entryAt:num(p.entryAt),
    entryPrice:money(p.entryPrice),
+   remainingNotionalUsd:money(p.remainingNotionalUsd),
+   tp1Taken:p.tp1Taken===true,
+   markedNetIfClosedUsd:money(p.markedValuation?.positionNetIfClosedUsd),
+   estimatedRemainingExitFeeUsd:money(p.markedValuation?.estimatedRemainingExitFeeUsd),
+   partialGrossUsd:money(p.markedValuation?.partialGrossUsd),
+   markPriceUsd:money(p.markedValuation?.priceUsd),
    mfePriceUsd:money(p.mfePriceUsd),
    maePriceUsd:money(p.maePriceUsd),
    unrealizedNetUsd:money(p.unrealizedNetUsd),
@@ -78,6 +86,21 @@ function build(s,now=Date.now()){
  // differences are DESCRIPTIVE, never a paired causal or portfolio estimate.
  const metric=(x,y)=>x.completed&&y.completed?
   money(x.realizedNetUsd-y.realizedNetUsd):null;
+ const marked=(x,y)=>{
+  if(x.markedPortfolioNetUsd===null||y.markedPortfolioNetUsd===null)return null;
+  if(!x.entries&&!y.entries&&!x.completed&&!y.completed)return null;
+  return money(x.markedPortfolioNetUsd-y.markedPortfolioNetUsd);
+ };
+ const sameExposure=(x,y)=>{
+  const p=x.position,q=y.position;
+  return !p&&!q||!!(p&&q&&p.direction===q.direction&&p.entryAt===q.entryAt&&
+    p.entryPrice===q.entryPrice&&p.remainingNotionalUsd===q.remainingNotionalUsd&&
+    p.tp1Taken===q.tp1Taken);
+ };
+ const sameExposureAllFour=lanes.slice(1).every(x=>sameExposure(x,a));
+ const anyTrade=lanes.some(x=>x.entries>0||x.completed>0);
+ const anyClosed=lanes.some(x=>x.completed>0);
+ const allHaveClosed=lanes.every(x=>x.completed>0);
  const same=s.originalComparison||{};
  const age=now-at;
  return {version:VERSION,sourceVersion:SOURCE,mode:'SHADOW_ONLY',
@@ -93,6 +116,27 @@ function build(s,now=Date.now()){
     money((d.realizedNetUsd-c.realizedNetUsd)-
       (b.realizedNetUsd-a.realizedNetUsd)):null,
    causalInterpretation:'NOT_A_PAIRED_BACKTEST'},
+  markedDiff:{
+   exitWithExactEntry:marked(b,a),
+   exitWithFilteredEntry:marked(d,c),
+   entryWithOriginalExit:marked(c,a),
+   entryWithSupervisorExit:marked(d,b),
+   interactionContrast:[a,b,c,d].every(x=>x.markedPortfolioNetUsd!==null)&&anyTrade?
+    money((d.markedPortfolioNetUsd-c.markedPortfolioNetUsd)-
+      (b.markedPortfolioNetUsd-a.markedPortfolioNetUsd)):null,
+   valuationMethod:'CLOSED_NET_PLUS_OPEN_POSITION_IF_EXITED_AT_OBSERVED_PRICE_WITH_ESTIMATED_REMAINING_TAKER_FEE',
+   interpretation:'PROVISIONAL_MARK_NOT_REALIZED_NOT_PAIRED_CAUSAL_EFFECT'
+  },
+  comparisonReadiness:{
+   anyTrade,anyClosed,allHaveClosed,sameExposureAllFour,
+   influenceCount:nn(s.influenceCount),allMarkedAvailable:lanes.every(
+    x=>x.markedPortfolioNetUsd!==null),
+   status:!anyTrade?'NO_EXPOSURE_YET':
+    nn(s.influenceCount)>0||!sameExposureAllFour?'EXPOSURE_DIVERGED':
+    allHaveClosed?'CLOSED_OBSERVATIONS_COMPARABLE_DESCRIPTIVELY':
+    'SAME_EXPOSURE_NO_CONTRAST_YET',
+   note:'A zero provisional difference with identical portfolios is NOT evidence of trading advantage'
+  },
   realReference:{sourceAgeMs:num(same.sourceAgeMs),
    comparableAtSameStep:same.comparableAtSameStep===true,
    sameExposure:same.sameExposure===true,

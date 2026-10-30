@@ -258,13 +258,48 @@ function advance(s,frame,dependencies={},quality='DATA_OK'){
  }
  return {state:s,events,reason:'EVALUATED'};
 }
+// Valuation is descriptive only. Treat realized TP1 proceeds as part of the
+// still-open campaign, then mark remaining notional at the same observed BTC
+// price and reserve the estimated fee for closing that remaining notional.
+// No change to risk, orders, entries, exits or the PAPER ledgers.
+function markedPosition(p){
+ if(!p)return null;
+ const price=Number(p.lastPrice),entry=Number(p.entryPrice),
+   remaining=Number(p.notionalUsd);
+ if(![price,entry,remaining].every(Number.isFinite)||
+   price<=0||entry<=0||remaining<=0)return null;
+ const partialGross=Number(p.realizedGrossUsd||0),
+   entryFee=Number(p.entryFeeUsd||0),
+   partialFees=Number(p.partialFeesUsd||0);
+ if(![partialGross,entryFee,partialFees].every(Number.isFinite))return null;
+ const remainingGross=pnl(p.direction,entry,price,remaining),
+   estimatedExitFee=remaining*TAKER*(price/entry);
+ return {
+  priceUsd:round(price),
+  partialGrossUsd:round(partialGross),
+  remainingGrossUsd:round(remainingGross),
+  entryFeeUsd:round(entryFee),
+  partialFeesUsd:round(partialFees),
+  estimatedRemainingExitFeeUsd:round(estimatedExitFee),
+  positionNetIfClosedUsd:round(partialGross+remainingGross-
+    entryFee-partialFees-estimatedExitFee),
+  methodology:'REALIZED_PARTIAL_GROSS_PLUS_REMAINING_MARK_MINUS_ENTRY_PARTIAL_AND_ESTIMATED_EXIT_TAKER_FEES',
+  assumption:'FUTURE_EXIT_AT_LAST_OBSERVED_BTC_PRICE_NO_SLIPPAGE_NO_FUNDING'
+ };
+}
 function summary(s){
  const branches={};
  for(const [id,b] of Object.entries(s.branches)){
-  const p=b.position;
+  const p=b.position,mark=markedPosition(p),
+   cumulativeMarkedNetUsd=p?
+    mark?round(b.realizedNetUsd+mark.positionNetIfClosedUsd):null:
+    round(b.realizedNetUsd);
   branches[id]={entryPolicy:b.route.entryPolicy,
    exitPolicy:b.route.exitPolicy,completed:b.completed,
    netRealizedUsd:b.realizedNetUsd,feesUsd:b.feesUsd,
+   portfolioMarkedNetUsd:cumulativeMarkedNetUsd,
+   markedValuationStatus:p?(mark?'OPEN_WITH_ESTIMATED_EXIT_FEE':
+     'OPEN_PRICE_UNAVAILABLE'):(b.entries>0?'FLAT_CLOSED_PORTFOLIO':'NO_EXPOSURE_YET'),
    entries:b.entries,blockedEntries:b.blockedEntries,
    entriesByDirection:b.entriesByDirection,blockedByDirection:b.blockedByDirection,
    netByDirection:{long:round(b.history.filter(x=>x.direction==='long')
@@ -274,10 +309,12 @@ function summary(s){
    partialExits:b.partialExits,exitsByReason:b.exitsByReason,
    position:p?{direction:p.direction,entryAt:p.entryAt,
     entryPrice:p.entryPrice,entryInvalidation:p.entryInvalidation,
+    remainingNotionalUsd:p.notionalUsd,tp1Taken:!!p.tp1Taken,
     mfePriceUsd:p.metrics.mfeUsd,maePriceUsd:p.metrics.maeUsd,
     unrealizedNetUsd:round(pnl(p.direction,p.entryPrice,p.entryPrice+
      p.metrics.currentSignedUsd*side(p.direction),p.notionalUsd)-
-     p.entryFeeUsd-p.partialFeesUsd-p.notionalUsd*TAKER)}:null,
+     p.entryFeeUsd-p.partialFeesUsd-p.notionalUsd*TAKER),
+    markedValuation:mark}:null,
    recentTrades:b.history.slice(-6)};
  }
  return {version:s.version,mode:s.mode,
@@ -289,4 +326,4 @@ function summary(s){
   recentEvents:s.events.slice(-12),
   evaluationNote:'Four independent parallel ledgers; net not equivalent to a shared-capital trading result'};
 }
-module.exports={VERSION,ROUTES,initial,migrate,advance,summary};
+module.exports={VERSION,ROUTES,initial,migrate,advance,summary,markedPosition};

@@ -167,3 +167,51 @@ test('stale and unavailable data are not labelled recent',()=>{
  assert.ok(holder.innerHTML.includes('SOURCE ANCIENNE'));
  assert.ok(holder.innerHTML.includes('résumé ancien'));
 });
+
+test('render marks same exposure and distinguishes realized dashes from provisional zero',()=>{
+ const s=fixture();
+ for(const b of Object.values(s.branches)){
+  b.entries=1;b.completed=0;b.netRealizedUsd=0;
+  b.portfolioMarkedNetUsd=3.2145;
+  b.markedValuationStatus='OPEN_WITH_ESTIMATED_EXIT_FEE';
+  b.position={direction:'long',entryAt:1793389583511,entryPrice:76745.6,
+    remainingNotionalUsd:1500,tp1Taken:false,mfePriceUsd:250,maePriceUsd:40,
+    unrealizedNetUsd:3.2,
+    markedValuation:{positionNetIfClosedUsd:3.2145,
+      estimatedRemainingExitFeeUsd:.752,priceUsd:76985}};
+ }
+ const data=view.build(s,s.lastObservationAt+1000);
+ assert.equal(data.descriptiveDiff.exitWithExactEntry,null);
+ assert.equal(data.markedDiff.exitWithExactEntry,0);
+ assert.equal(data.comparisonReadiness.status,'SAME_EXPOSURE_NO_CONTRAST_YET');
+ const {ctx,holder}=uiContext();ctx.renderV494DualShadow(data);
+ for(const label of ['RÉALISÉ · CAMPAGNES CLÔTURÉES',
+   'PROVISOIRE · PORTEFEUILLE MARQUÉ NET APRÈS FRAIS',
+   'Mêmes positions et mêmes entrées','net estimé si sortie',
+   'Portefeuille marqué net','clôtures encore insuffisantes']){
+   assert.ok(holder.innerHTML.includes(label),'missing '+label);
+ }
+ assert.ok(holder.innerHTML.includes('0.00')||
+   holder.innerHTML.includes('+0.00'));
+ assert.ok(!holder.innerHTML.includes('3.21 $ net réalisé'));
+});
+test('render shows pending realized contrasts but nonzero provisional difference after exit',()=>{
+ const s=fixture();
+ const a=s.branches.EXACT_V493__FROZEN_V493,
+  b=s.branches.EXACT_V493__CONTINUATION_SUPERVISOR;
+ a.entries=1;b.entries=1;
+ a.portfolioMarkedNetUsd=5;
+ b.portfolioMarkedNetUsd=3.15;b.completed=1;b.netRealizedUsd=3.15;
+ a.position={direction:'long',entryAt:1793389583511,entryPrice:76745.6,
+  remainingNotionalUsd:1500,tp1Taken:false,mfePriceUsd:500,maePriceUsd:10,
+  markedValuation:{positionNetIfClosedUsd:5,priceUsd:76985}};
+ s.influenceCount=1;
+ const result=view.build(s,s.lastObservationAt+1000);
+ assert.equal(result.descriptiveDiff.exitWithExactEntry,null);
+ assert.equal(result.markedDiff.exitWithExactEntry,-1.85);
+ assert.equal(result.comparisonReadiness.status,'EXPOSURE_DIVERGED');
+ const {ctx,holder}=uiContext();ctx.renderV494DualShadow(result);
+ assert.ok(holder.innerHTML.includes('Expositions divergentes détectées'));
+ assert.ok(holder.innerHTML.includes('-1.85'));
+ assert.ok(holder.innerHTML.includes('PROVISOIRE'));
+});
