@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T18:00:58+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "PM2 boono-audit-14d deux minutes et boono-v494-entry-exit-shadow 30 secondes lancés, PM2 sauvegarde ; boono-v494-paper, boono-v543-paper et boono-v543-hold-shadow non redemarres ; aucun ordre finance ni route UI ajoutee.",
+  "evidence": "pm2 start scripts/boono-audit-14d.py --interpreter python3 -- --service --period 120; pm2 start modules/attention/v494-dual-module-shadow-runner.js; pm2 save; status.json, v494-dual-module-shadow-summary.json. Premier bilan 13 observations shadow sans trades et archive 3009 rows, full fields.",
+  "previousEventSha256": "2e68a93018d3ee29ab50c6837ba58eb9df62e9de624d6ac530926d3fbe4df429"
+}

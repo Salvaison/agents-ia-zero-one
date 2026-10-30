@@ -1,0 +1,3 @@
+Il faut que nous rétablissions history-audit. Je propose qu'il garde une fenêtres glissantes de 2 semaines avec les données complètes. Mais cette archive ne doit pas alourdir le fonctionnement de l'interface et l'état vivant
+
+Je propose que tu crée un shadow avec ces 2 modules entrée / sorties que nous puissions en étudier l'implémentation pour 494 sans déranger son fonctionnement actuelle qui n'a pas encore fait toutes ses preuves, surtout comment un modules sorties va influencer le module entrée, cela nous permettra d'en controller experimentallement leur influence

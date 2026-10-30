@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T17:45:13+00:00",
+  "status": "AUTORISE",
+  "description": "Démarrer archivage hors UI et shadow indépendant V494 entrée/sortie sans ordres ni changement de règles PAPER.",
+  "evidence": "01 message utilisateur verbatim, 02 plan d’exécution assistant, 03 origine.",
+  "previousEventSha256": null
+}

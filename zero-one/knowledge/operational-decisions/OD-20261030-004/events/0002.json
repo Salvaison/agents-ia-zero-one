@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T18:00:58+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Archive froide Audit 14j a horaire UTC, gzip, relance idempotente et recuperation snapshot; 2 modules ombres V494 Entree/Sortie avec quatre portefeuilles distincts et diagnostic sortie puis reentree, reporter on-demand.",
+  "evidence": "scripts/boono-audit-14d.py, modules/attention/v494-{entry-module-shadow,exit-module-shadow,dual-module-shadow,dual-module-shadow-runner}.js, scripts/boono-v494-dual-shadow-report.js et rapport BOONOLAB_Audit14D_V494_Entree_Sortie_Shadow_2026-10-30.md; aucun fichier des runners PAPER touche.",
+  "previousEventSha256": "0657dec449993c54499b2ee3dde7fcf49539acb39351120dc6b13747c4cfa6da"
+}

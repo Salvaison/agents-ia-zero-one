@@ -1,0 +1,9 @@
+# Origine du double dispositif — 30 octobre 2026
+
+L'utilisateur demande explicitement : (a) rétablir history-audit, rétention glissante complète de 2 semaines, sans surcoût sur État vivant/Watch ; (b) shadow avec deux modules Entrée/Sortie, portant la logique de V494, indépendants du PAPER, afin d'étudier la causalité de sortie → nouvelles entrées.
+
+Contexte documenté : `zero-one/modules/baton-relay.js` écrit `zero-one/data/audit-history.json` borné à environ 2 880 relevés de 30 secondes ; script historique `zero-one/archive-audit.sh` existe, mais pas de tâche PM2/cron et archives arrêtées le 22 septembre. Un snapshot non versionné `data/research-briefs/audit-snapshot-20261030-1717Z.json.gz` fournit quelques données d'une fenêtre aujourd'hui déjà partiellement tournée. La rétention de 14 jours ne peut être recréée rétroactivement au-delà des données encore existantes.
+
+V494 s'appuie sur le moteur V4.9.3 figé `cdf1936` depuis `/root/boono-v493-baseline`, son compte et ses décisions propres; les sorties tardives et les bonnes continuations motivent un test contradictoire. Quatre branches (Entry exact/Entry filtre contextuel) x (Exit exact/Exit supervisor causal) permettront de distinguer l'effet de chaque module, ainsi que les différences d'exposition et de réentrée. Aucun changement réel de politique V4/V5 n'est autorisé.
+
+Contraintes : archivage hors UI, source Audit à 30s (pas ticks exhaustifs OKX), protection 14 jours, dossier de logs privé, un seul écrivain par service, état persisté, gestion des redémarrages, refus du broker. Les chiffres d'un shadow ne sont pas comparables directement sans synchronisation de cadence/prix et comptabilité nette/frais. Les échanges et travaux antérieurs V4 sont documentés dans `knowledge/BOONOLAB_494_gainfloors_structures_continuation_2026-10-30.md` et `knowledge/BOONOLAB_fibonacci_lieu_audit_modules_2026-10-30.md`.

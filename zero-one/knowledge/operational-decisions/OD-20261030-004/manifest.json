@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-004",
+  "title": "Restaurer archive Audit 14 jours et installer laboratoire V494 Entrée/Sortie en shadow",
+  "createdAtUtc": "2026-10-30T17:45:13+00:00",
+  "authorization": "Demande utilisateur explicite : archivage 14 jours et shadow deux modules, sans modification de V4.9.4 ni V5.4.3",
+  "reference": "Conversation BOONOTRADE du 30 octobre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "3456f534eb4352be4f6c89edf5ae7defa629c476437b3685c3452d4d16f13950",
+      "bytes": 584
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5c104d4a77b4bca3d0aad9b9e589b95b87f7491b0c34dbd062ef441f0687143a",
+      "bytes": 1953
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "1ad80ea5cd05bcba2c32b03bf9692066eb7d5155306d9dbc1d041ab30d36b587",
+      "bytes": 1936
+    }
+  }
+}

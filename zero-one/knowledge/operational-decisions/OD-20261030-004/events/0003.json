@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T18:00:58+00:00",
+  "status": "TESTE",
+  "description": "7 tests archive + 10 tests modules shadow et 15 tests de compatibilite V494/V542, total 32, aucun echec ; test-read V493 cdf1936 OK; verification archive gzip 3009 observations 55 champs 0 erreur.",
+  "evidence": "python3 -m unittest discover -s zero-one/tests/research -p test_boono_audit_14d.py; node --test zero-one/tests/attention/v494-dual-module-shadow.test.js zero-one/tests/attention/v494-v542.test.js; scripts/boono-audit-14d.py --verify et node modules/attention/v494-dual-module-shadow-runner.js --test-read.",
+  "previousEventSha256": "25d93a92ad70d438345ac2a6b27a53b7e719e31e09df1996641dc63a8dc9a6ec"
+}

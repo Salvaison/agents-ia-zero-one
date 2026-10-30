@@ -73,3 +73,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Correction diagnostique Fibonacci / Etat vivant (30 octobre 2026)
 
 - [OD-20261030-003 — niveaux Fibonacci calculés et distances cohérentes en État vivant](OD-20261030-003/03-origine-et-justification.md) : demande intégrale, consigne, provenance, tests et redémarrage UI uniquement. [Rapport de diagnostic](../BOONOLAB_fibonacci_lieu_audit_modules_2026-10-30.md). **Aucun niveau automatique de Fibo promu en invalidation ou stop PAPER.**
+
+## Audit14D et laboratoire V494 Entrée/Sortie (30 octobre 2026)
+
+- [OD-20261030-004 — rétablir Audit14D et modules Entrée/Sortie en shadow V494](OD-20261030-004/03-origine-et-justification.md). La demande, la mission complète, l’origine et les événements autorisation/implémentation/tests/service restent distincts. [Rapport technique](../BOONOLAB_Audit14D_V494_Entree_Sortie_Shadow_2026-10-30.md). **V494/V543 PAPER inchangés.**
