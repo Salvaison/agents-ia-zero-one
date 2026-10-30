@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-006",
+  "title": "Elastic shadow V494 : EASY/POWERFUL, transitions et transfert de force",
+  "createdAtUtc": "2026-10-30T19:08:48+00:00",
+  "authorization": "Autorisation explicite de rétablissement du shadow et suivi V494, sans modification de politique PAPER",
+  "reference": "Discussion BOONO du 30 octobre 2026; validation Oui après bilan Elastic",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ddbb2ca29017e58158540989db994bb0f320e875b99bcdf7798fd907baa79406",
+      "bytes": 507
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "e871b43251b6b131a661ebcda0778741d2a1c77b1234cc08bffadb318a538a1e",
+      "bytes": 2993
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "33464390c23bd22734b8915e63a40b4be36482ed2b1e6d8f15d68b9079a137bd",
+      "bytes": 2778
+    }
+  }
+}

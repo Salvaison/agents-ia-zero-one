@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T19:37:29+00:00",
+  "status": "TESTE",
+  "description": "83 tests Node régression attention + Elastic v0.5, aucun échec; six scripts UI parse; dry run réel V494 en lecture seule",
+  "evidence": "node --test tests/attention/*.test.js tests/v4/elastic-observer-v05.test.js -> 83 PASS, 0 FAIL, /tmp/boono-state-regression.log; node modules/attention/v494-elastic-shadow-runner.js --test-read; dry-run initial state seven families",
+  "previousEventSha256": "0e56cd413e2f8e955edb7a408b7902aa317055cfa3ddab2aeafea8c0529e23bf"
+}

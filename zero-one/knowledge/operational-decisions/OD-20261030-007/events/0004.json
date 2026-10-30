@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T19:40:04+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Shadow Elastic V494 indépendant et ticker 4x15, couche chronologie as-of dans SHADOWS actifs; aucun changement PAPER",
+  "evidence": "PM2 boono-v494-elastic-shadow pid1887174 online sans restart; config-server pid1887299 redémarré seul; state timeline 12 transitions, snapshots 3, statuts SHADOW_ONLY/false/false; V494 pid962864 et V543 pid1081650 inchangés; test 83 PASS; HTTP anonyme 302",
+  "previousEventSha256": "486df0331507cb9f6f07e09d18607a9850ed97817bfd892599472297aa3e34d5"
+}

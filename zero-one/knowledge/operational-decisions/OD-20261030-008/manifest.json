@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-008",
+  "title": "Couche de chronologie horodatée de tous les états Elastic V494",
+  "createdAtUtc": "2026-10-30T19:29:27+00:00",
+  "authorization": "Demande explicite de couche d’enregistrement distincte, states horodatés dans Shadows, shadow uniquement",
+  "reference": "Conversation BOONO du 30/10/2026, suivi OD-006 et OD-007",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "a8527ea7f80c90aef6306e096ec691ff080a25461092a9e49f829119df1eb485",
+      "bytes": 107
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "79b6156ec02f8170a087e36142db9599f292760124b4fd5205ea3f866fbd97fd",
+      "bytes": 2458
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "6d468bebc056a8e6f8e4803effdfb047064e4b56c126e6589f349c9a6d1539af",
+      "bytes": 1943
+    }
+  }
+}

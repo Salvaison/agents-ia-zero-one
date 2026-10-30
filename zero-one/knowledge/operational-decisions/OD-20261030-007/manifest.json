@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-007",
+  "title": "Ticker 4x15min et corroboration prospective Elastic V494",
+  "createdAtUtc": "2026-10-30T19:15:18+00:00",
+  "authorization": "Complément explicite de restauration du ticker 4x15 et sa comparaison avec le shadow, sans pouvoir trading",
+  "reference": "Conversation BOONO 30 octobre 2026; complément OD-20261030-006",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "38c8164ef18e65d44be206c81e06511654c8ca93b69a1d0902f448fc450fcadb",
+      "bytes": 92
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "bc8a57255e2ea2a64253b7cfb478257a6a57a972a75a5932dfc969dcf07e2039",
+      "bytes": 1574
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "de6bc61c75f9f499c4f92b9f1c4d83efaad9c11bf7f31508579cfd763caa881f",
+      "bytes": 1319
+    }
+  }
+}

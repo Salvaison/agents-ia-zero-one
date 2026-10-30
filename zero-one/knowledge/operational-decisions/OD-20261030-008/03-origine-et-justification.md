@@ -1,0 +1,9 @@
+# OD-20261030-008 — Chronologie des états, couche indépendante du ticker
+
+**Origine :** nouvelle instruction explicite du propriétaire pendant l'implémentation d'Elastic pour V4.9.4, après rappel des familles de qualités, états de rendement/effort, états de marché, états de campagne, phases temporelles et régimes 4×15. Verbatim dans `01-demande-utilisateur-integrale.txt`. La formulation « une autre couche » est réalisée comme un panneau indépendant dans SHADOWS, et non comme une nouvelle règle de trading.
+
+**Références :** `knowledge/elastic-v0.5-shared-measures-causal-history-2026-10-21.md`, `knowledge/elastic-operational-v1-constitution-2026-10-22.md`, `knowledge/BOONOLAB_Elastic_shadow_bilan_2026-10-30.md`, `knowledge/operational-decisions/OD-20261030-006`, `...007`. Le système V494 courant est V493 figé cdf1936 et exposé en lecture seule, il fournit qualités P75/effort et `marketQuality.state`. Une partie des états de campagne/transfert n'a jamais reçu d'autorité ou de définition reproductible validée ; leur lecture doit porter `EXPERIMENTAL_HYPOTHESIS` ou `UNRESOLVED`.
+
+**Limites :** aucune reconstitution fictive des jours où Elastic complet était arrêté. Des « liquidités » dans le vocabulaire du projet décrivent le flux agressif observable et ses rendements, PAS la profondeur de liquidité passive. NDJSON rotatif ne garantit pas une rétention temporelle de 14 jours ; `Audit14D` reste un système indépendant. Un événement portant un timestamp source MCB peut être connu seulement à un `observedAt` ultérieur. Les conclusions économiques requièrent replay des positions, pas des variations de prix seules.
+
+**Autorisation :** observabilité shadow + archivage + interface uniquement ; AUCUNE politique d'ordre V4.9.4/V5.4.3 autorisée à changer. Le prompt est celui rédigé par l'assistant pour l'exécution de cette conversation, pas un envoi à un agent externe.

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T19:37:29+00:00",
+  "status": "AUTORISE",
+  "description": "Rétablissement du ticker d états 4x15 et corroboration demandés",
+  "evidence": "Demande exacte du propriétaire 01; origine et protocole 02/03",
+  "previousEventSha256": null
+}

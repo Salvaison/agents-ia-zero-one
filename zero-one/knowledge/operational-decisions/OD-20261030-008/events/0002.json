@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T19:37:29+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Codes de l observateur Elastic, ticker 4x15, couche de chronologie et endpoints SHADOWS implémentés sans changer les PAPER",
+  "evidence": "zero-one/modules/attention/v494-elastic-{shadow,shadow-runner,ticker,state-layer,state-history,ui-summary}.js; modules/config-server.js; data non encore en service",
+  "previousEventSha256": "1f22f835c0b6c2bf4e695700680117fae3cde0d1dd38b92572c897b34bbcf99e"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T19:29:27+00:00",
+  "status": "AUTORISE",
+  "description": "Mandat explicite de chronologie des états en SHADOWS, sans pouvoir de trading",
+  "evidence": "Message utilisateur du 30/10/2026 conservé mot pour mot en 01; mission intégrale en 02; origine en 03",
+  "previousEventSha256": null
+}

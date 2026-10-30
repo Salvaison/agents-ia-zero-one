@@ -81,3 +81,10 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## SHADOWS — résultats du comparateur V494 Entrée/Sortie (30 octobre 2026)
 
 - [OD-20261030-005 — exposition de A/B/C/D en BOONO Watch](OD-20261030-005/03-origine-et-justification.md) : demande exacte, autorisation d’observabilité uniquement, implémentation, tests et service. [Rapport interface et API](../BOONOLAB_V494_Dual_Shadow_Watch_UI_2026-10-30.md). Les décisions V494/V543 PAPER restent inchangées.
+
+## Elastic V494 : rétablissement, ticker 4×15 et chronologie (30 octobre 2026)
+
+- [OD-20261030-006 — Restaurer Elastic pour V494 et éprouver EASY/POWERFUL, EASY→CONTESTED et transferts](OD-20261030-006/03-origine-et-justification.md). Shadow autonome, aucun impact PAPER.
+- [OD-20261030-007 — Ticker de qualité 4×15m et corroboration prospective](OD-20261030-007/03-origine-et-justification.md). Mesures d'effort/rendement et couverture temporelle, sans vote indépendant.
+- [OD-20261030-008 — Couche distincte de chronologie des états, horodatée et consultable](OD-20261030-008/03-origine-et-justification.md). Sept familles, transitions et snapshots 30s. États réellement observés vs hypothèses encore non observées.
+- [Rapport d'architecture, méthode, tests et service](../BOONOLAB_Elastic_V494_ticker4x15_et_chronologie_2026-10-30.md).

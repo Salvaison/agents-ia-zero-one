@@ -43,6 +43,9 @@ const path = require('path');
 const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjson');
 const v53CausalChainUi=require('./v5/v53-causal-chain-view');
 const v494DualUiSummary=require('./attention/v494-dual-ui-summary');
+const v494ElasticUiSummary=require('./attention/v494-elastic-ui-summary');
+const v494StateLayer=require('./attention/v494-elastic-state-layer');
+const v494StateHistory=require('./attention/v494-elastic-state-history');
 const fibContextReadOnly=require('./v5/fib-context-readonly');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
@@ -1377,6 +1380,60 @@ app.get('/api/shadows', requireAuth, (req, res) => {
   } catch (e) {
     res.status(500).json({error:'shadows indisponibles',detail:e.message});
   }
+});
+
+// Independent Elastic v494 follow-up lab: read only the compact summary,
+// never the event journal, baseline V494 paper state or full Audit in the UI.
+app.get('/api/shadows/v494-elastic',requireAuth,(req,res)=>{
+ try{
+  const file=path.join(__dirname,'../data/v494-elastic-shadow-summary.json');
+  if(fs.statSync(file).size>256*1024)throw Error('ELASTIC_SUMMARY_TOO_LARGE');
+  const raw=JSON.parse(fs.readFileSync(file,'utf8'));
+  const payload=v494ElasticUiSummary.build(raw,Date.now());
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,payload);
+ }catch(_){
+  res.status(503).json({error:'Elastic V494 indisponible',
+   detail:'ELASTIC_SUMMARY_UNAVAILABLE_OR_INCOMPATIBLE'});
+ }
+});
+
+// V494 timestamped state layer: authenticated compact status and on-demand
+// paginated transitions or 30-second snapshots, separate from ticker/Elastic.
+app.get('/api/shadows/v494-state-layer',requireAuth,(req,res)=>{
+ try{
+  const filename=path.join(__dirname,'../data/v494-elastic-state-summary.json');
+  if(fs.statSync(filename).size>256*1024)throw Error('STATE_SUMMARY_TOO_LARGE');
+  const raw=JSON.parse(fs.readFileSync(filename,'utf8'));
+  if(raw.version!==v494StateLayer.VERSION||
+     raw.brokerOrdersEnabled!==false||raw.decisionImpact!==false||
+     raw.mode!=='SHADOW_ONLY')throw Error('UNTRUSTED_STATE_HISTORY');
+  const age=Date.now()-Number(raw.asOf||0);
+  sendUiJson(req,res,{...raw,status:age>=0&&age<=90000?'DATA_RECENT':'SOURCE_STALE',
+   ageMs:age,storage:'ROTATING_STATE_TRANSITIONS_AND_30S_SNAPSHOTS',
+   note:'As-of observations only; theoretical states may remain NOT_OBSERVED'});
+ }catch(_){
+  res.status(503).json({error:'Couche des états indisponible',
+    detail:'STATE_SUMMARY_UNAVAILABLE'});
+ }
+});
+app.get('/api/shadows/v494-state-history',requireAuth,(req,res)=>{
+ try{
+  const kind=String(req.query.kind||'transitions');
+  const hours=Number(req.query.hours||24);
+  const family=String(req.query.family||'ALL');
+  const limit=Number(req.query.limit||45);
+  const before=req.query.before||null;
+  const file=path.join(__dirname,'../data/',
+    kind==='snapshots'?'v494-elastic-state-observations.ndjson':
+     'v494-elastic-state-timeline.ndjson');
+  const payload=v494StateHistory.page(file,{kind,hours,family,limit,before});
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,payload);
+ }catch(_){
+  res.status(400).json({error:'Historique des états indisponible',
+   detail:'INVALID_QUERY_OR_HISTORY_UNAVAILABLE'});
+ }
 });
 
 // V494 entry/exit laboratory: small on-demand snapshot, no recent-NDJSON
@@ -3462,6 +3519,8 @@ app.get('/', requireAuth, (req, res) => {
     <div id="shadowWindow" class="shadow-window">Chargement…</div>
   </div>
   <div id="shadowV494Dual" class="shadow-dual-panel"><div class="shadow-empty">Shadow Entrée / Sortie V4.9.4 · lecture du résumé…</div></div>
+  <div id="shadowV494Elastic" class="shadow-dual-panel"><div class="shadow-empty">Elastic V4.9.4 · lecture des qualités et transferts…</div></div>
+  <div id="shadowV494States" class="shadow-dual-panel"><div class="shadow-empty">Chronologie des états Elastic · lecture des couches horodatées…</div></div>
   <div id="shadowLive"><div class="shadow-empty">Chargement des shadows…</div></div>
 </div>
 </div>
@@ -6443,6 +6502,366 @@ function renderV494DualShadow(data){
   '<div class="shadow-dual-meta">Lecture à la demande de résumés bornés, sans Audit ni ledger complet. '+
    'Les différences de P&L ne constituent ni un backtest apparié ni une preuve d’amélioration.</div>';
 }
+// V494 Elastic: compact autonomous research panel. No legacy evaluation scans.
+function elastic494EventLabel(kind){
+ const labels={
+  'EASY_TO_CONTESTED_AT_EXTREME':'EASY → CONTESTED · extrême 2h',
+  'EASY_TO_CONTESTED_OUTSIDE_EXTREME':'EASY → CONTESTED · témoin hors extrême',
+  'CONTESTED_TO_EASY_OPPOSITE_CAMP':'CONTESTED → EASY · camp opposé',
+  'CONTESTED_TO_EASY_ORIGINAL_CAMP':'CONTESTED → EASY · camp initial',
+  'CONTESTED_TO_EASY_UNLINKED':'CONTESTED → EASY · sans parent',
+  'POWERFUL_ONSET':'Début POWERFUL / EXCEPTIONAL',
+  'POWERFUL_RESOLVED':'Résolution de poussée POWERFUL',
+  'V494_BASELINE_ENTRY_STRONG':'Entrée V494 pendant poussée intense',
+  'V494_BASELINE_ENTRY_EASY':'Entrée V494 avec EASY',
+  'V494_BASELINE_EXIT':'Sortie V494 observée'
+ };
+ return labels[kind]||String(kind||'QUALITÉ').replace(/_/g,' ');
+}
+function elastic494Outcome(h){
+ if(!h)return 'à mesurer';
+ if(h.status==='CENSORED')return 'censuré (source incomplète)';
+ if(h.status!=='MEASURED')return 'inconnu';
+ return v494DualFmt(h.signedUsd,1)+' $ BTC'+
+   ' · MFE '+v494DualFmt(h.mfeUsd,1)+' / MAE '+v494DualFmt(h.maeUsd,1);
+}
+function renderV494ElasticShadow(data){
+ const root=document.getElementById('shadowV494Elastic');if(!root)return;
+ const open=new Set(Array.from(root.querySelectorAll('details[data-elastic-fold]'))
+   .filter(function(x){return x.open;})
+   .map(function(x){return x.getAttribute('data-elastic-fold');}));
+ if(data.brokerOrdersEnabled!==false||data.decisionImpact!==false||
+   data.mode!=='SHADOW_ONLY'){
+  root.innerHTML='<div class="shadow-empty">Elastic V494 : source sans contrat SHADOW vérifiable.</div>';
+  return;
+ }
+ const x=data.current||{},range=data.range2h||{},last=data.recentEvents||[];
+ const count=(k)=>data.totals?.[k]||{},fmt=(v)=>v494DualFmt(v,1);
+ const counts=(keys)=>{
+  const a=keys.map(k=>count(k));
+  return a.reduce((acc,v)=>({seen:acc.seen+(v.seen||0),
+    matured15:acc.matured15+(v.matured15||0),
+    positive15:acc.positive15+(v.positive15||0),
+    censored:acc.censored+(v.censored||0)}),
+    {seen:0,matured15:0,positive15:0,censored:0});
+ };
+ const easy=counts(['QUALITY_CONFIRMED_EASY']);
+ const strong=counts(['QUALITY_CONFIRMED_POWERFUL','QUALITY_CONFIRMED_EXCEPTIONAL']);
+ const edge=counts(['EASY_TO_CONTESTED_AT_EXTREME']);
+ const outside=counts(['EASY_TO_CONTESTED_OUTSIDE_EXTREME']);
+ const transfer=counts(['CONTESTED_TO_EASY_OPPOSITE_CAMP']);
+ const score=(v)=>v.matured15?String(v.positive15)+'/'+v.matured15:'en collecte';
+ const stats='<div class="shadow-section-title">ESSAIS PROSPECTIFS · +15 MIN BTC, PAS PNL NET</div>'+
+  '<div class="shadow-stat-grid">'+
+   shadowStat(score(easy),'EASY confirmé · signe favorable')+
+   shadowStat(score(strong),'POWERFUL/EXCEPTIONAL · signe favorable')+
+   shadowStat(score(edge),'EASY→CONTESTED au bord')+
+   shadowStat(score(outside),'EASY→CONTESTED témoin')+
+   shadowStat(score(transfer),'CONTESTED→EASY adverse')+
+   shadowStat(String(strong.seen||0),'impulsions fortes confirmées')+
+   shadowStat(String(edge.seen||0),'transitions aux extrêmes')+
+   shadowStat(String(data.observations||0),'échantillons V494 30 s')+
+  '</div>';
+ const hour=data.hourlyRegime||{},hourName=hour.classification||'COVERAGE_INSUFFICIENT';
+ const topShare=(fractions,max=3)=>Object.entries(fractions||{})
+   .sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,max)
+   .map(([k,v])=>escTrade(k)+' '+shadowFmt(100*Number(v),0)+' %').join(' · ');
+ const qHours=(data.quality4x15||[]).map(function(b,i){
+  return '<div class="shadow-card">'+
+    '<div class="shadow-card-head"><span class="shadow-card-title">'+
+     escTrade(shadowDateTime(b.startAt))+' · '+(b.partial?'EN FORMATION':'15 MIN CLOSES')+
+     '</span><span class="shadow-dual-meta">'+
+     shadowFmt(100*Number(b.coverageFraction||0),0)+' % couvert</span></div>'+
+    '<div class="shadow-main">'+
+     (topShare(b.qualityFractions,2)||'Aucune qualité observée')+'</div>'+
+    '<div class="shadow-secondary">LONG '+shadowFmt(100*Number(b.directionFractions?.long||0),0)+
+     ' % · SHORT '+shadowFmt(100*Number(b.directionFractions?.short||0),0)+
+     ' % · CONTESTED '+shadowFmt(100*Number(b.directionFractions?.contested||0),0)+' %</div>'+
+    shadowKv([
+     ['Régime marché',topShare(b.marketFractions,2)||'—'],
+     ['Effort/prix',topShare(b.travelFractions,2)||'—'],
+     ['Phase (hyp.)',topShare(b.phaseFractions,2)||'—'],
+     ['Effort / P75',fmt(b.meanEffortVsP75)+' ×'],
+     ['Rendement / P75',fmt(b.meanYieldVsP75)+' ×'],
+     ['Débit agressif',fmt(b.meanFlowBtcPerSec)+' BTC/s'],
+     ['Prix BTC',fmt(b.priceMoveUsd)+' $ · retenu '+
+       (b.priceRetainedFraction===null?'—':shadowFmt(100*b.priceRetainedFraction,0)+' %')]
+    ])+'</div>';
+ }).join('');
+ const ticker='<div class="shadow-section-title">TICKER MÉMOIRE · 4 × 15 MIN · RÉGIME 1H</div>'+
+   '<div class="shadow-card"><div class="shadow-card-head">'+
+      '<span class="shadow-card-title">'+escTrade(hourName)+'</span>'+
+      '<span class="shadow-dual-meta">Couverture '+shadowFmt(100*Number(hour.coverageFraction||0),0)+' %</span>'+
+     '</div>'+
+     '<div class="shadow-secondary">LONG '+shadowFmt(100*Number(hour.directionFractions?.long||0),0)+
+       ' % · SHORT '+shadowFmt(100*Number(hour.directionFractions?.short||0),0)+
+       ' % · contesté '+shadowFmt(100*Number(hour.directionFractions?.contested||0),0)+' %'+
+       ' · productif '+shadowFmt(100*Number(hour.productiveShare||0),0)+
+       ' % · stérile '+shadowFmt(100*Number(hour.sterileShare||0),0)+' %</div>'+
+     '<div class="shadow-secondary">Régime expérimental, confiance fondée sur la couverture, '+
+       'jamais une probabilité de gain ni un vote MCB supplémentaire.</div>'+
+    '</div>'+
+    '<div class="shadow-grid">'+qHours+'</div>'+
+    '<div class="shadow-dual-meta">Les quatre barres couvrent les qualités, les régimes V4, '+
+      'la lecture effort/prix et les phases hypothétiques. BTC/s est un débit agressif moyen '+
+      'et non une profondeur de carnet ; PM3/PM5 glissants ne sont pas additionnés.</div>';
+ const comparisons=(data.corroboration||[]).slice(0,12).map(function(c){
+  return '<div class="shadow-dual-influence"><b>'+
+    escTrade(elastic494EventLabel(c.kind))+'</b> · '+
+    escTrade(c.alignment)+
+    ' · '+(c.matured15?String(c.positive15)+'/'+c.matured15:
+      'aucune évaluation complète')+' favorable à +15m'+
+    (c.mean15Usd!==null?' · Δ moyen '+fmt(c.mean15Usd)+' $ BTC':'')+
+    ' · '+String(c.seen)+' occurrence(s)</div>';
+ }).join('');
+ const corroborationPanel='<details class="shadow-dual-influences" data-elastic-fold="corroboration"'+
+   (open.has('corroboration')?' open':'')+'>'+
+   '<summary>Corroboration ticker / shadow · résultats à +15m ('+
+     (data.corroboration||[]).length+' groupes)</summary>'+
+   (comparisons||'<div class="shadow-empty">Pas encore de résultats prospectifs.</div>')+
+   '<div class="shadow-dual-meta">ALIGNÉ/OPPOSÉ indique une lecture de régime connue à l’instant '+
+     'de l’événement. La seule mesure externe de corroboration est la suite du prix BTC ; '+
+     'le ticker et Elastic partagent les mêmes sources.</div></details>';
+ const seen=last.slice(0,14).map(function(e){
+  const hasHyp=e.entryHypothesis||e.exitHypothesis;
+  const desc=hasHyp?
+   (e.entryHypothesis?'Hypothèse entrée '+String(e.entryHypothesis.direction).toUpperCase():'')+
+   (e.exitHypothesis?' · Hypothèse protection '+String(e.exitHypothesis.positionDirection).toUpperCase():''):
+   'simple observation';
+  return '<div class="shadow-dual-influence"><b>'+
+   escTrade(shadowDateTime(e.at))+' · '+escTrade(elastic494EventLabel(e.kind))+
+   '</b> · '+escTrade(String(e.direction||'—').toUpperCase())+
+   ' à '+fmt(e.price)+' $ BTC'+
+   (e.phase?' · '+escTrade(e.phase):'')+
+   '<div class="shadow-secondary">'+escTrade(desc)+
+   (e.rangeEdge?' · '+escTrade(e.rangeEdge):'')+
+   ' · ticker 1h '+escTrade(e.tickerAtEvent?.regime||'—')+
+   ' / '+escTrade(e.tickerAtEvent?.corroboration||'—')+
+   ' · +5m '+escTrade(elastic494Outcome(e.horizon5))+
+   ' · +15m '+escTrade(elastic494Outcome(e.horizon15))+
+   ' · +30m '+escTrade(elastic494Outcome(e.horizon30))+
+   '</div></div>';
+ }).join('');
+ const healthy=data.status==='DATA_RECENT';
+ const details='<details class="shadow-dual-influences" data-elastic-fold="events"'+
+  (open.has('events')?' open':'')+'><summary>Événements et résultats à +5 / +15 / +30 min ('+
+    last.length+' récents)</summary>'+
+   (seen||'<div class="shadow-empty">Aucune transition encore suivie.</div>')+'</details>';
+ root.innerHTML=
+  '<div class="shadow-dual-head"><div class="shadow-section-title">ELASTIC · SUIVI V4.9.4 · CONVERSION & TRANSFERT</div>'+
+   '<div class="shadow-window">'+escTrade(shadowDateTime(data.asOf))+
+   ' · '+(healthy?'SOURCE FRAÎCHE':'SOURCE ANCIENNE')+'</div></div>'+
+  '<div class="shadow-dual-explain">SHADOW PUR · qualificateur Elastic v0.5 repris sur les mesures P75 du V493 gelé. '+
+    'Aucun veto ni EXIT ajouté à V494. Les phénomènes d’entrée et sortie sont évalués en prix BTC après observation.</div>'+
+  (!healthy?'<div class="shadow-dual-alert">Source figée ('+
+    shadowFmt(Number(data.ageMs)/60000,1)+' min) — vérifier le processus Elastic.</div>':'')+
+  '<div class="shadow-grid">'+
+   '<div class="shadow-card"><div class="shadow-card-title">CONVERSION COURANTE</div>'+
+    '<div class="shadow-main">'+escTrade(x.quality||'—')+' · '+
+      escTrade(String(x.direction||'CONTESTED').toUpperCase())+'</div>'+
+    shadowKv([
+     ['Prix / position',fmt(data.price)+' $ · '+escTrade(data.position||'FLAT')],
+     ['PM3 / PM5 / Live',fmt(x.pm3)+' / '+fmt(x.pm5)+' / '+fmt(x.pmLive)+' $'],
+     ['Rendement / P75',fmt(x.yieldVsP75)+'×'],
+     ['Effort / P75',fmt(x.effortVsP75)+'×'],
+     ['Régime V4',escTrade(x.marketState||'UNKNOWN')],
+     ['Effort / rendement',escTrade(x.travelState||'UNKNOWN')],
+     ['Phase (hypothèse)',escTrade(x.phaseHypothesis||'UNPROVEN')],
+     ['Débit agressif',fmt(x.flowBtcPerSec)+' BTC/s'],
+     ['Persistance',String(x.samples||0)+' relevé(s)']
+    ])+'</div>'+
+   '<div class="shadow-card"><div class="shadow-card-title">RANGE BTC 2H · CONFIRMÉ 3M</div>'+
+    '<div class="shadow-main">'+(range.valid?fmt(range.low)+' — '+fmt(range.high)+' $':'INDISPONIBLE')+'</div>'+
+    shadowKv([
+      ['Position',range.valid?shadowFmt(100*Number(range.positionFraction),1)+' % du range':'couverture insuffisante'],
+      ['Extrême',(range.nearUpper?'HAUT':range.nearLower?'BAS':'AUCUN')+' · bande exploratoire 10 %'],
+      ['Couverture',fmt(range.coverageMinutes)+' min'],
+      ['Campagne MCB15',String(data.campaignId||'—').slice(0,32)]
+    ])+'</div>'+
+  '</div>'+
+  ticker+stats+corroborationPanel+details+
+  '<div class="shadow-dual-meta">POWERFUL n’est pas un EXIT automatique. EASY→CONTESTED en haut/bas : '+
+   'entrée opposée et protection du camp initial sont comparées, avec témoins hors extrême. '+
+   'Un CONTESTED→EASY contraire est une candidature de transfert, pas encore une inversion MCB15 validée. '+
+   'Seuil de proximité du range 10 % exploratoire ; périodes non observées censurées.</div>';
+}
+// Independent state-change recorder, separate from conversion and the 4×15 ticker.
+// The history is fetched only if the visitor opens the chronological layer.
+let v494StatesPending=false;
+const v494StatesHistory={kind:'transitions',hours:24,family:'ALL',
+ items:[],before:null,hasMore:false,loaded:false,busy:false,error:null};
+function state494Esc(v){return escTrade(v===null||v===undefined?'—':String(v));}
+function state494ResultRows(){
+ const h=v494StatesHistory;
+ if(h.busy&&!h.items.length)return '<div class="shadow-empty">Lecture des changements horodatés…</div>';
+ if(h.error)return '<div class="shadow-dual-alert">'+state494Esc(h.error)+'</div>';
+ if(!h.loaded)return '<div class="shadow-empty">Ouvrir la chronologie pour charger les événements.</div>';
+ if(!h.items.length)return '<div class="shadow-empty">Aucun état enregistré pour cette fenêtre. L’historique démarre avec le shadow, sans reconstitution.</div>';
+ return h.items.map(function(e){
+  const when='<b>'+state494Esc(shadowDateTime(e.at))+'</b>';
+  if(h.kind==='snapshots'){
+   const values=Object.entries(e.states||{}).map(([family,value])=>
+    state494Esc(family)+': <b>'+state494Esc(value)+'</b>').join(' · ');
+   const m=e.measurements||{};
+   return '<div class="shadow-dual-influence">'+when+
+    ' · SNAPSHOT 30s · BTC '+v494DualFmt(e.price,1)+' $'+
+    '<div class="shadow-secondary">'+values+'</div>'+
+    '<div class="shadow-secondary">PM3 / PM5 / Live '+v494DualFmt(m.pm3Usd,1)+
+      ' / '+v494DualFmt(m.pm5Usd,1)+' / '+v494DualFmt(m.pmLiveUsd,1)+
+      ' $ BTC · rendement/P75 '+v494DualFmt(m.yieldVsP75,2)+
+      '× · effort/P75 '+v494DualFmt(m.effortVsP75,2)+
+      '× · débit agressif '+v494DualFmt(m.aggressiveFlowBtcPerSec,3)+
+      ' BTC/s · liquidité passive non mesurée</div></div>';
+  }
+  return '<div class="shadow-dual-influence">'+when+' · '+
+    state494Esc(e.title||e.family)+
+    (e.researchOnly?' · <i>HYPOTHÈSE</i>':' · observé V493')+
+    ' · '+state494Esc(e.from||'—')+' → <b>'+state494Esc(e.to)+'</b>'+
+    '<div class="shadow-secondary">'+state494Esc(e.transition)+
+    ' · prix '+v494DualFmt(e.price,1)+' $ BTC'+
+    ' · connu '+state494Esc(shadowDateTime(e.asOf))+
+    (e.sourceTs?' · dernier E15 source '+state494Esc(shadowDateTime(e.sourceTs)):'')+
+    '</div></div>';
+ }).join('');
+}
+function renderV494StateHistory(){
+ const box=document.getElementById('shadowStateHistoryRows');
+ if(!box)return;
+ box.innerHTML=state494ResultRows()+
+  (v494StatesHistory.hasMore?'<button type="button" id="shadowStateMore" class="wave-mode-btn">Afficher les 45 événements plus anciens</button>':'')+
+  '<div class="shadow-dual-meta">'+
+   'Changements d’état et snapshots 30s archivés sur Amsterdam · journal rotatif (capacité bornée, pas 14 jours garantis). '+
+   'UTC en stockage, heures affichées en Europe/Paris. Aucun événement créé pour une période sans observation.</div>';
+ const more=document.getElementById('shadowStateMore');
+ if(more)more.onclick=()=>loadV494StateHistory(true);
+}
+async function loadV494StateHistory(older=false){
+ const h=v494StatesHistory,root=document.getElementById('shadowV494States');
+ if(!root||h.busy||older&&!h.hasMore)return;
+ if(!older){h.items=[];h.before=null;h.hasMore=false;h.loaded=false;}
+ h.busy=true;h.error=null;renderV494StateHistory();
+ try{
+  const query=new URLSearchParams({
+   kind:h.kind,hours:String(h.hours),family:h.family,limit:'45'
+  });
+  if(older&&h.before!==null)query.set('before',String(h.before));
+  const res=await fetch('/api/shadows/v494-state-history?'+query.toString(),{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();
+  if(data.decisionImpact!==false||data.brokerOrdersEnabled!==false)
+   throw new Error('contrat shadow invalide');
+  h.items=older?[...h.items,...(data.items||[])]:data.items||[];
+  h.items=h.items.slice(0,320);h.hasMore=data.hasMore===true&&h.items.length<320;
+  h.before=data.nextBefore??null;h.loaded=true;
+ }catch(e){h.error='Chronologie indisponible : '+e.message;}
+ finally{h.busy=false;renderV494StateHistory();}
+}
+function renderV494StateLayer(data){
+ const root=document.getElementById('shadowV494States');if(!root)return;
+ const open=root.querySelector('details[data-state-fold="history"]')?.open===true;
+ if(data.decisionImpact!==false||data.brokerOrdersEnabled!==false||
+    data.mode!=='SHADOW_ONLY'){
+  root.innerHTML='<div class="shadow-empty">La chronologie ne présente pas un contrat SHADOW valide.</div>';return;
+ }
+ const voc=Array.isArray(data.vocabulary)?data.vocabulary:[],current=data.current||{};
+ const isFresh=data.status==='DATA_RECENT';
+ const cards=voc.map(function(v){
+  const currentState=current[v.family]||'NON OBSERVÉ';
+  const counts=(data.seenValues||{})[v.family]||{};
+  const known=(v.labels||[]).map(function(k){
+   return (k===currentState?'<b>':'')+state494Esc(k)+
+    (counts[k]?' ('+Number(counts[k])+')':' (non observé)')+
+    (k===currentState?'</b>':'');
+  }).join(' · ');
+  return '<div class="shadow-card"><div class="shadow-card-head">'+
+   '<span class="shadow-card-title">'+state494Esc(v.title)+'</span>'+
+   '<span class="shadow-dual-meta">'+
+    (String(v.origin||'').startsWith('EXPERIMENTAL')?'HYPOTHÈSE':'SOURCE V493')+
+   '</span></div>'+
+   '<div class="shadow-main">'+state494Esc(currentState)+'</div>'+
+   '<details class="shadow-dual-influences"><summary>Vocabulaire et apparitions</summary>'+
+    '<div class="shadow-secondary">'+known+'</div></details></div>';
+ }).join('');
+ const recent=(data.latestTransitions||[]).slice(0,7).map(e=>
+  '<div class="shadow-dual-influence"><b>'+state494Esc(shadowDateTime(e.at))+
+   '</b> · '+state494Esc(e.title)+' · '+state494Esc(e.from||'—')+
+   ' → '+state494Esc(e.to)+' · '+
+   (e.researchOnly?'hypothèse':'mesuré')+'</div>').join('');
+ root.innerHTML=
+  '<div class="shadow-dual-head"><div class="shadow-section-title">CHRONOLOGIE DES ÉTATS · COUCHE SÉPARÉE · V494</div>'+
+   '<div class="shadow-window">'+state494Esc(shadowDateTime(data.asOf))+
+   ' · '+(isFresh?'À JOUR':'SOURCE ANCIENNE')+'</div></div>'+
+  '<div class="shadow-dual-explain">Sept dimensions indépendamment horodatées : qualité, état temporel, '+
+    'rendement/effort, régime marché, campagne, phase de conversion, régime horaire 4×15. '+
+    'Chaque changement est enregistré, ainsi que chaque snapshot 30s. Aucune politique PAPER modifiée.</div>'+
+  (!isFresh?'<div class="shadow-dual-alert">Historique figé : '+v494DualFmt(Number(data.ageMs)/60000,1)+' min.</div>':'')+
+  '<div class="shadow-grid">'+cards+'</div>'+
+  '<div class="shadow-section-title">DERNIÈRES TRANSITIONS HORODATÉES</div>'+
+  (recent||'<div class="shadow-empty">En attente du premier relevé live.</div>')+
+  '<details id="shadowStateHistoryDetails" data-state-fold="history" class="shadow-dual-influences"'+
+    (open?' open':'')+'><summary>Ouvrir le registre horodaté · transitions / relevés 30s</summary>'+
+   '<div class="shadow-dual-meta">Filtrer par famille, durée et type de relevé · pagination à la demande · pas de scan de la base d’ordres ni du moteur PAPER.</div>'+
+   '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 0;">'+
+    '<select id="shadowStateKind" class="wave-mode-btn">'+
+     '<option value="transitions"'+(v494StatesHistory.kind==='transitions'?' selected':'')+'>Changements</option>'+
+     '<option value="snapshots"'+(v494StatesHistory.kind==='snapshots'?' selected':'')+'>Snapshots 30s</option></select>'+
+    '<select id="shadowStateWindow" class="wave-mode-btn">'+
+     [6,24,48,168,336].map(h=>'<option value="'+h+'"'+
+       (v494StatesHistory.hours===h?' selected':'')+'>'+h+' h</option>').join('')+'</select>'+
+    '<select id="shadowStateFamily" class="wave-mode-btn">'+
+     '<option value="ALL">Toutes familles</option>'+
+     voc.map(v=>'<option value="'+state494Esc(v.family)+'"'+
+       (v494StatesHistory.family===v.family?' selected':'')+'>'+state494Esc(v.title)+'</option>').join('')+
+    '</select>'+
+    '<button type="button" id="shadowStateRefresh" class="wave-mode-btn">Actualiser</button>'+
+   '</div>'+
+   '<div id="shadowStateHistoryRows"></div>'+
+  '</details>'+
+  '<div class="shadow-dual-meta">L’origine et les horloges sont conservées. '+
+   'Les états de campagne et de phase sont des hypothèses, pas des confirmations indépendantes. '+
+   'La liquidité passive/cachée n’est pas mesurée. Les États « non observé » ne sont pas attribués rétroactivement.</div>';
+ const details=root.querySelector('#shadowStateHistoryDetails');
+ details.ontoggle=()=>{if(details.open&&!v494StatesHistory.loaded&&!v494StatesHistory.busy)
+   loadV494StateHistory(false);};
+ const sync=(id,field,transform=x=>x)=>root.querySelector('#'+id).onchange=e=>{
+  v494StatesHistory[field]=transform(e.target.value);
+  loadV494StateHistory(false);
+ };
+ sync('shadowStateKind','kind');sync('shadowStateWindow','hours',Number);
+ sync('shadowStateFamily','family');
+ root.querySelector('#shadowStateRefresh').onclick=()=>loadV494StateHistory(false);
+ if(open)renderV494StateHistory();
+}
+let v494StatesLayerPending=false;
+async function loadV494StateLayer(){
+ const root=document.getElementById('shadowV494States');
+ if(!root||v494StatesLayerPending)return;
+ v494StatesLayerPending=true;
+ try{
+  const res=await fetch('/api/shadows/v494-state-layer',{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  renderV494StateLayer(await res.json());
+ }catch(e){
+  root.innerHTML='<div class="shadow-empty">Chronologie des états indisponible : '+
+   state494Esc(e.message)+'. Les autres SHADOWS restent accessibles.</div>';
+ }finally{v494StatesLayerPending=false;}
+}
+
+let v494ElasticShadowPending=false;
+async function loadV494ElasticShadow(){
+ const root=document.getElementById('shadowV494Elastic');
+ if(!root||v494ElasticShadowPending)return;
+ v494ElasticShadowPending=true;
+ try{
+  const res=await fetch('/api/shadows/v494-elastic',{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  renderV494ElasticShadow(await res.json());
+ }catch(e){
+  root.innerHTML='<div class="shadow-empty">Elastic V494 indisponible : '+
+    escTrade(e.message)+'. Les autres SHADOWS restent accessibles.</div>';
+ }finally{v494ElasticShadowPending=false;}
+}
+
 let v494DualShadowPending=false;
 async function loadV494DualShadow(){
  const root=document.getElementById('shadowV494Dual');
@@ -6461,9 +6880,10 @@ async function loadV494DualShadow(){
 async function loadShadows(){
   const root=document.getElementById('shadowLive');
   if(!root)return;
-  // Independent compact request; legacy /api/shadows may compute slowly.
-  // The V494 panel must still render when the legacy endpoint fails.
+  // Independent compact requests: never block the two V494 panels on legacy data.
   loadV494DualShadow();
+  loadV494ElasticShadow();
+  loadV494StateLayer();
   try{
     const res=await fetch('/api/shadows',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);

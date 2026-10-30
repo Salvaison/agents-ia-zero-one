@@ -1,0 +1,1 @@
+Oui, nous devons aussi rétablir le ticker d'états 4X15min et le corroborer avec le shadow
