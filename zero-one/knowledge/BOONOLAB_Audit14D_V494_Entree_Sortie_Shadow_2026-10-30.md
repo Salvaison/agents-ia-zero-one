@@ -53,6 +53,8 @@ Test de performance architectural : nouveau processus isolé PM2 avec ~20–23 M
 | **C — Entrée seule** | Filtre inflexion MCB15 | V493 exacte | Effet des candidats sélectifs **à sortie comparable** |
 | **D — Interaction** | Filtre inflexion MCB15 | Superviseur de continuation | Interaction des choix entrée et sortie |
 
+**Contrat de position gelé vérifié :** chaque portefeuille fournit au moteur V493 original les champs de position utilisés par le PAPER V494 (horodatage entrée, setup, metrics MFE/MAE/PNL, notionnel et TP1). Une évaluation directe en lecture seule du vrai moteur V493 avec une position shadow reconstituée a retourné HOLD sans erreur. Une migration additive préserve les états existants.
+
 Chaque branche possède son **propre état de campagne et de décision V493**, `prevEval`, mémoire d'attention, position, frais, TP1, PNL, MFE/MAE, historique, nombre d'entrées filtrées et résultats LONG/SHORT. Après une sortie anticipée dans B/D, le moteur gelé est réévalué en **FLAT uniquement dans cette branche** : si une nouvelle candidature est ensuite autorisée, elle peut ouvrir alors que la branche A/C garde encore sa position. Inversement, une entrée sélective bloquée peut changer les futures occasions.
 
 `EXIT_INFLUENCES_ENTRY_EXPOSURE` et `ENTRY_FILTER_INFLUENCES_EXPOSURE` sont enregistrés lorsque les portefeuilles divergent. Une entrée post-sortie conserve sa précédente sortie et l'horodatage ; le labo pourra comparer P&L net, réentrées, temps d'exposition et opportunités bloquées **par campagne**, pas seulement par trade. Les résultats contrefactuels diffèrent des entrées/sorties historiques et **ne peuvent pas être comparés en naïve liste de trades par numéro**.

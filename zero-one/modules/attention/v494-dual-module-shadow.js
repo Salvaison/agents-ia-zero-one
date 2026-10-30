@@ -35,6 +35,13 @@ function migrate(s){
    if(b.position)b.entriesByDirection[b.position.direction]++;
   }
   if(!b.blockedByDirection)b.blockedByDirection={long:0,short:0};
+  if(b.position){
+   const p=b.position;
+   if(!p.entryTimestamp)p.entryTimestamp=new Date(p.entryAt).toISOString();
+   if(!p.entrySetupId)p.entrySetupId=null;
+   if(!p.metrics.favorableUsd)p.metrics.favorableUsd=Math.max(0,p.metrics.currentSignedUsd||0);
+   if(!p.metrics.adverseUsd)p.metrics.adverseUsd=Math.max(0,-(p.metrics.currentSignedUsd||0));
+  }
   if(!('lastExit' in b))b.lastExit=(b.history||[]).length?
    {ts:b.history.at(-1).exitAt,reason:b.history.at(-1).reason,
     direction:b.history.at(-1).direction,
@@ -56,13 +63,22 @@ function open(s,b,e,selected,frame,anchor){
  const fee=round(NOTIONAL*TAKER);
  const lv=anchor?anchor({frame,direction:selected.direction,evaluation:e}):null;
  const inv=lv&&Number.isFinite(lv.price)?lv.price:null;
- const p={direction:selected.direction,entryAt:ts,entryPrice:price,
+ const p={direction:selected.direction,entryAt:ts,
+  entryTimestamp:new Date(ts).toISOString(),entryPrice:price,lastPrice:price,
   entryFeeUsd:fee,initialNotionalUsd:NOTIONAL,notionalUsd:NOTIONAL,
+  marginUsd:150,initialMarginUsd:150,capitalUsd:1000,leverage:10,
+  entryPolicyVersion:'v4.9.4-temporal-reversal-listening-paper-v1',
+  tradingFeesPaidUsd:fee,realizedPnlUsd:-fee,grossRealizedPnlUsd:0,
   realizedGrossUsd:0,partialFeesUsd:0,tp1Taken:false,tpEvents:[],
-  entryReason:e.action?.reason||null,entrySetupKey:selected.setupKey,
+  entryReason:e.action?.reason||null,entryMode:e.action?.stage||null,
+  entrySetupTs:e.setup?.setupTs||null,entrySetupId:e.setup?.setupId||null,
+  entrySetupKey:e.setup?.setupKey||selected.setupKey,
+  maxAdversePriceMoveUsd:500,maxRiskBudgetUsd:10,
+  riskAt500PriceMoveUsd:NOTIONAL*500/price,
   entryPolicy:b.route.entryPolicy,exitPolicy:b.route.exitPolicy,
   entryInvalidation:inv,entryInvalidationProof:lv||null,
-  metrics:{mfeUsd:0,maeUsd:0,currentSignedUsd:0}};
+  metrics:{mfeUsd:0,maeUsd:0,currentSignedUsd:0,
+    favorableUsd:0,adverseUsd:0,currentPnlUsd:-2*fee}};
  b.position=p;b.entries++;b.entriesByDirection[p.direction]++;
  b.feesUsd=round(b.feesUsd+fee);
  return {type:'ENTRY',ts,route:b.route.id,direction:p.direction,
@@ -77,6 +93,10 @@ function takePartial(b,price,ts){
  const fee=notional*TAKER*(price/p.entryPrice);
  p.realizedGrossUsd+=pnl(p.direction,p.entryPrice,price,notional);
  p.partialFeesUsd+=fee;p.notionalUsd-=notional;p.tp1Taken=true;
+ p.marginUsd*=1-frac;
+ p.grossRealizedPnlUsd=p.realizedGrossUsd;
+ p.tradingFeesPaidUsd+=fee;
+ p.realizedPnlUsd=p.realizedGrossUsd-p.tradingFeesPaidUsd;
  p.tpEvents.push({ts,price,fraction:frac,feeUsd:round(fee)});
  b.feesUsd=round(b.feesUsd+fee);
  b.partialExits++;
@@ -124,6 +144,11 @@ function advance(s,frame,dependencies={},quality='DATA_OK'){
    p.metrics.mfeUsd=Math.max(p.metrics.mfeUsd,signed);
    p.metrics.maeUsd=Math.max(p.metrics.maeUsd,-signed);
    p.metrics.currentSignedUsd=signed;
+   p.metrics.favorableUsd=Math.max(0,signed);
+   p.metrics.adverseUsd=Math.max(0,-signed);
+   p.lastPrice=price;
+   p.metrics.currentPnlUsd=pnl(p.direction,p.entryPrice,price,p.notionalUsd)-
+    p.entryFeeUsd-p.partialFeesUsd-p.notionalUsd*TAKER;
   }
   const e=engine.evaluate(frame,p,branch.prevEval);
   const attention=listening.decorate({v493Evaluation:e,frame,

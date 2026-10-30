@@ -78,6 +78,11 @@ test('4 independent ledgers: early EXIT frees a new entry while frozen EXIT stay
  const a=lab.advance(s,frame(T,80000),dependencies);
  assert.equal(a.events.filter(e=>e.type==='ENTRY').length,4);
  assert.ok(s.branches.EXACT_V493__FROZEN_V493.position);
+ const originalPosition=s.branches.EXACT_V493__FROZEN_V493.position;
+ assert.equal(originalPosition.entryTimestamp,new Date(T).toISOString());
+ assert.equal(originalPosition.initialNotionalUsd,1500);
+ assert.equal(originalPosition.metrics.currentPnlUsd,-1.5);
+ assert.equal(originalPosition.entrySetupKey,'key|'+(T-900000));
  const ts=T+360000,
  f=frame(ts,79850,{action:'HOLD',
   bars:[{ts:ts-180000,close:79850,high:80020,low:79830}],

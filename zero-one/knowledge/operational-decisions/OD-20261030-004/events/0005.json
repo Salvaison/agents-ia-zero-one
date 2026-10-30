@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-30T18:04:14+00:00",
+  "status": "TESTE",
+  "description": "Non-regression shadow V494: contrat de position identique au runner (entryTimestamp, setup, metrics, TP1, frais), evaluation directe V493 frozen avec position shadow en HOLD sans erreur, tests doubles reussis.",
+  "evidence": "module attention/v494-dual-module-shadow.js et tests 10/10; smoke engine.evaluate(frame,shadowPosition,previousEvaluation) -> HOLD avec gitRef cdf1936; services PAPER non modifies.",
+  "previousEventSha256": "ce720921913a8eb2a15b8492ef168f8097b68b417b12768329853bd85e645eea"
+}
