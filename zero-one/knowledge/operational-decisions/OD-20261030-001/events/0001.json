@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T08:24:42+00:00",
+  "status": "AUTORISE",
+  "description": "Étudier les pertes MFE, installer shadow contrefactuel V5 et développer/proposer une utilisation de linvalidation structurelle; la promotion active requiert un test de non-régression causal.",
+  "evidence": "Message utilisateur intégral daté du 30 octobre dans 01, prompt opérationnel rédigé par assistant dans 02, origine dans 03.",
+  "previousEventSha256": null
+}

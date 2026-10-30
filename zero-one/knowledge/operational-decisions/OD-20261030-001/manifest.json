@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-001",
+  "title": "Maintien V5 shadow et invalidation structurelle des positions",
+  "createdAtUtc": "2026-10-30T08:24:36+00:00",
+  "authorization": "Demande utilisateur 30 octobre 2026 : installer au minimum un shadow, étudier et intégrer l’invalidation structurelle après validation des tests",
+  "reference": "Conversation BOONO du 30 octobre 2026, message intégral archivé",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "60e0528e78e170041a0ed5fa23c50871ab6c4224c38dc079d97ec36f8bde9a38",
+      "bytes": 1080
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "77e51f5827a1907ed25e0ceb3a337fa4566bc0227d4793517128207e8c2f00fe",
+      "bytes": 2934
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "634eb38bf66cbec2d8b34d099d7afa8bc2e6e5d6c375501259446df06a578479",
+      "bytes": 1934
+    }
+  }
+}

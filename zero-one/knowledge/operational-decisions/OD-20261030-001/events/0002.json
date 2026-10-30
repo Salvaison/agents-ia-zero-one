@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T08:40:19+00:00",
+  "status": "IMPLEMENTE",
+  "description": "4 variantes de maintien V543 shadow, observateur d invalidation rapide, replay snapshot, trace ticks 5s, et rapport, sans toucher a V4/V5 PAPER.",
+  "evidence": "modules/v5/{campaign-hold-shadow,structural-invalidation-observer,campaign-hold-shadow-runner}.js, scripts/v543-campaign-hold-replay.js, tests/v5/campaign-hold-shadow.test.js, rapport KB.",
+  "previousEventSha256": "1b63bc870dcc78ddfabb48be3d8f60de1571220c1965919c7c46fbc2086315a3"
+}

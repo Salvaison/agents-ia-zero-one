@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T08:40:19+00:00",
+  "status": "TESTE",
+  "description": "52 tests Node OK sur nouvelles protections et contrats existants V541/V543/attention; dry-run READ_ONLY_OK; 3 replays indicatifs avec calibration baseline historique insuffisante.",
+  "evidence": "node --test tests/v5/campaign-hold-shadow.test.js tests/v5/v543-causal-offensive-maturity.test.js tests/v5/v541-ma-causal-protection.test.js tests/attention/v494-v542.test.js : 52/52; node --check; scripts/v543-campaign-hold-replay.js #102/#103/#108; aucun stop reel PAPER active.",
+  "previousEventSha256": "9444a4567ae5dad9045d81a1bc87cca7263be2bea09d87621c1e17b90cd516e5"
+}

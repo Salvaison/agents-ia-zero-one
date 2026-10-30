@@ -1,0 +1,9 @@
+#102 est vraiment inacceptable et de tout les 220/180, de quel MFE ont ils perdu?Donc de "reversal_attention" Boono à un besoin urgent à reconnaitre le transfert complet pour effectuer ces sortie, même chose pour 494 quand il se trompe doit apprendre à invalidé sa campagne plus tôt. "MCB15 opposées, un transfert MF et une réponse du prix dans le bon ordre temporel.", là les exigences semblent trop élevée?
+
+"Conclusion sur ta question : nous avons une mémoire d'attention active, mais pas encore un véritable shadow comparatif capable de dire combien V5 aurait gagné ou perdu en conservant ses positions au-delà des gain-floors." Nous devons mettre en place ceci, au moins en shadow ou si celà peut améliorer 543, c'est à implémenter.
+
+Pourquoi #47 n'a pas utiliser son gain_floor?
+
+Puis je trouve que nous devons implémenter au trades l'utilisation de l'invalidation structurelle que Boono propose.
+
+"Un pivot E15 opposé confirmé ou deux clôtures 3m au-delà de l'invalidation." ces seuil ne sont pas bon, c'est à redéfinir si ce n'est de les enlevés

@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T08:40:20+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "PM2 boono-v543-hold-shadow uniquement: quatre forks read-only; V4.9.4 et V5.4.3 PAPER actifs inchanges, aucun nouvel EXIT en production PAPER.",
+  "evidence": "pm2 boono-v543-hold-shadow online, donnees locales data/v543-campaign-hold-shadow-summary.json, brokerOrdersEnabled=false, decisionImpact=false, pm2 save; pas de broker.",
+  "previousEventSha256": "771ba9ee1a75102e72a20846b7d1fcc41833b3a82daa72585242e9938d0cbb7f"
+}
