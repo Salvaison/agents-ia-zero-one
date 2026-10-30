@@ -49,6 +49,8 @@ Tests : **45/45** sur calcul Fibonacci (groupes montant/descendant, repères inv
 
 **Archive quotidienne à rétablir explicitement** avec vérification cron, sauvegarde rotative, horodatage UTC et contrôle que le backup correspond au jour nommé. **Aucun cron n'a été créé dans cette mission**, hors périmètre du correctif de lecture Fibo.
 
+**Conservation ponctuelle effectuée :** une copie gzip validée des 2 926 observations Audit disponibles au contrôle a été écrite sous `zero-one/data/research-briefs/audit-snapshot-20261030-1717Z.json.gz` (environ 365 KiB, fenêtre 29/10 16:55 UTC – 30/10 17:17 UTC), sans réécrire le flux live ni rétablir automatiquement l’archivage quotidien. Cette preuve locale non versionnée ne reconstitue pas les jours manquants.
+
 ## 5. Architecture du moteur — hypothèse, pas implémentation
 
 Au lieu de deux moteurs LONG/SHORT se neutralisant mutuellement, proposer :

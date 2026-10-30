@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-10-30T17:18:19+00:00",
+  "status": "DOCUMENTE",
+  "description": "Diagnostic complémentaire : archives Audit quotidiennes absentes depuis 22 septembre et snapshot ponctuel contrôlé 30 octobre 17:17 UTC, sans installation de cron.",
+  "evidence": "zero-one/data/research-briefs/audit-snapshot-20261030-1717Z.json.gz; gzip -t OK; 2926 rows, 29/10 16:55 UTC -> 30/10 17:17 UTC",
+  "previousEventSha256": "927704368cc37c7d7d69d7b3ccc10d5af2cc213022f75761ef8bf6f438e92f85"
+}
