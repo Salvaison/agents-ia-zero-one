@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T12:39:33+00:00",
+  "status": "DOCUMENTE",
+  "description": "Recherche retrospective de V4.10.0 et 4.10.9, gain floors V494, limites V5-like et chaine conditionnelle #102 publiee sous forme de rapport de connaissances; aucun reglage PAPER modifie.",
+  "evidence": "knowledge/BOONOLAB_494_gainfloors_structures_continuation_2026-10-30.md; data/research-briefs/v494-floor-structure-replay-37-50.json et v543-102-trail-proof-20261030.json; fichiers source script sur Amsterdam.",
+  "previousEventSha256": "7ba380f6ae187ca7d1e2325cb25ae8a87d3235ade2edaf75be5ef553e31556d1"
+}

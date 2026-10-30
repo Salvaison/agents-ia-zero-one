@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T12:39:34+00:00",
+  "status": "DOCUMENTE",
+  "description": "Precision de provenance: archive OD creee apres les premieres lectures/scripts exploratoires en lecture seule; le prompt 02 est une consigne de synthese redigee par assistant et non un message envoye a un worker externe.",
+  "evidence": "Aucun outil de trading modifie avant ou apres OD; source utilisateur 01 conservee in extenso, origine 03 indique etude seulement. Cette precision complete le registre sans recreer de faux verbatim.",
+  "previousEventSha256": "b0e05df34b3c5b9205a705ac0d5d6a9b7877ea2d30b698f7b122bc3ba5e6b4ca"
+}

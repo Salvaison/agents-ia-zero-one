@@ -65,3 +65,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Recherche sur les sorties V5 — 30 octobre 2026
 
 - [OD-20261030-001 — shadow de maintien V5 et invalidation structurelle](OD-20261030-001/03-origine-et-justification.md) : demande utilisateur et prompt opérationnel conservés intégralement ; shadow non autoritaire en service ; aucune politique PAPER V4/V5 modifiée. Rapport : [BOONO — risque, 220/180, maintien](../BOONO_risk_maintien_shadow_v01_2026-10-30.md).
+
+## Audit historique des gain-floors et continuation (30 octobre 2026)
+
+- [OD-20261030-002 — origine 220/180, V494 avec 120/90 et invalidations, chaîne V543 #102](OD-20261030-002/03-origine-et-justification.md). Recherche strictement en lecture seule ; [rapport](../BOONOLAB_494_gainfloors_structures_continuation_2026-10-30.md). Les simulations indicatives ne sont ni validation de gain ni modification des moteurs PAPER.

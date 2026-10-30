@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T12:35:58+00:00",
+  "status": "AUTORISE",
+  "description": "Enquête lecture seule demandée par utilisateur, pas de changement actif des politiques V494/V543.",
+  "evidence": "Source originale dans 01; mission de recherche assistant dans 02; origine détaillée dans 03.",
+  "previousEventSha256": null
+}

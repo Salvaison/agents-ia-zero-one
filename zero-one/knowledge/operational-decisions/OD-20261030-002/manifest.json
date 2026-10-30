@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-002",
+  "title": "Enquête V4 historique 440/180, 220/180, 120/90, invalidations et continuation",
+  "createdAtUtc": "2026-10-30T12:35:58+00:00",
+  "authorization": "Mandat de recherche et d évaluation, non une validation de politique de trading",
+  "reference": "Conversation BOONO 30 octobre 2026, message original intégral archivé",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6d4efd8220b96f902314b5110c589f906bbe1bc25f59ddacbdc181de55e88343",
+      "bytes": 1034
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "4da6a4902f1846c079243cd3e0c03935e45f6b625705eb114abecf60f7fb9e06",
+      "bytes": 1731
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e6d0a60fab76e2fff7394f43e51b7264ccda68ff4ecab816caeb0dc998349f3c",
+      "bytes": 1726
+    }
+  }
+}

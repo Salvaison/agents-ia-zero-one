@@ -1,0 +1,5 @@
+"V4 ne possède pas le gain-floor 120/90 ni le 220/180 de V5." Oui c'est juste, il avait été appliqué dans des générations ultérieur. Vas chercher laquel de ceux là a introduit le seuil 220/180 et remplacé  cette régle 440/180 et cherche dans la documentation pourquoi nous l'avions changé? fait une évaluation des résultat 494 avec gain_floor 120/90 et utilisation des limites structurelles que Boono propose.
+
+"120/90 + plancher structurel évolutif, 81 600,2 $, +17,07 $" Présente moi cette chaine causale qui permet d'obtenir ce résultat
+
+"Le pivot E15 opposé et les deux clôtures 3m ne sont plus des prérequis dans cette nouvelle logique expérimentale." Cette régle a été mise pour garantir la continuation et empêcher de sortir trop facillement d'un trade, non? En la remplaçant ou enlevé pour facilité les sorties en fin de mouvement, nous risquons simplement de sortir trop facilement, non? Est-ce une raison des réussites de 494?Si oui, nous devons trouver un autre moyen de garantir la continuation
