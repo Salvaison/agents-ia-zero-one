@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-30T21:02:07+00:00",
+  "status": "AUTORISE",
+  "description": "Test en shadow non autoritaire de niveau structurel plus transfert observé, sans gain-floor",
+  "evidence": "Demande utilisateur littérale archivée fichier 01; prompt opérationnel assistant fichier 02",
+  "previousEventSha256": null
+}

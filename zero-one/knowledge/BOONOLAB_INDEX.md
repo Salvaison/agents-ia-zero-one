@@ -52,3 +52,5 @@ Les **sept pièces jointes fournies le 28 octobre 2026** ont été archivées **
 Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-utilisateur-integrale.txt` ; `02-prompt-operationnel-integral.txt` ; `03-origine-et-justification.md` ; `manifest.json` avec empreintes ; `events/` pour états datés. Le commit de Git prouve une publication de texte, **pas** une modification effective des moteurs. Le journal des versions `knowledge/version-log.md` fournit l'histoire ancienne ; les documents **V5.4.3 et V4.9.4** font autorité pour leur périmètre spécifique, sous réserve de vérification sur serveur.
 
 **Pour le prochain chat :** partir de [BOONOLAB_START_HERE](../BOONOLAB_START_HERE.md), sélectionner ici **2 à 4 sources maximum** correspondant à la question, consulter le checkpoint actif, contrôler l'état réel, et ne remonter dans la conversation que les résultats nécessaires.
+
+- [V543 sans gain-floor : invalidation + transfert, shadow v0.3 (30/10)](BOONOLAB_V543_sans_gainfloor_invalidation_et_transfert_2026-10-30.md) — règle conjointe, essais et limites (OD-20261030-010).

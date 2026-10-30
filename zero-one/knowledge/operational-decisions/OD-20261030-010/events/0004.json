@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-30T21:05:49+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Shadow V543 v0.3 online; nouveau fork non autoritaire créé à plat, ancien état conservé, PAPER V543/V494 non redémarrés",
+  "evidence": "PM2 boono-v543-hold-shadow online pid 1905494; summary v543-campaign-hold-shadow-v0.3, STRUCTURAL_LEVEL_AND_TRANSFER completed=0/open=false, brokerOrdersEnabled=false, decisionImpact=false; PM2 PAPER V543 pid 1081650 / V494 pid 962864 intacts",
+  "previousEventSha256": "7df730661a7c8c42cc280956d1473ea6190b347a107c7b691b6af63afdd91ac8"
+}

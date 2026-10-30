@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261030-010",
+  "title": "V543 sans gain-floor : niveau structurel + transfert observé en shadow",
+  "createdAtUtc": "2026-10-30T21:02:07+00:00",
+  "authorization": "Expérimentation en shadow demandée par utilisateur; PAPER non modifié",
+  "reference": "Conversation BOONO Systems du 30 octobre 2026, suivi shadow V543",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6ea646e6fec2817e571f4847ee4a463fbece1a6f6dda167d44d6b08ed08f6d17",
+      "bytes": 117
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a29b38b9b96b7d0855782c5f7a91d893c0e38028e5e730f77356bfaad2da3abd",
+      "bytes": 2366
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "37046737c6d1254ce31b51b870a394737f6a5225e22652f13e9642d6155c2c90",
+      "bytes": 1592
+    }
+  }
+}

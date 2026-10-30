@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-30T21:04:46+00:00",
+  "status": "TESTE",
+  "description": "Tests ciblés et non-régression V5 réussis",
+  "evidence": "node --test tests/v5/campaign-hold-shadow.test.js : 23/23 ; node --test tests/v5/*.test.js : 239 total, 227 réussis, 12 ignorés, 0 échec; node --check : OK",
+  "previousEventSha256": "dc16f2682b42513611ec75eab35c1db7c3efda3e2e00c7ab46c1a9f6c7fd8302"
+}

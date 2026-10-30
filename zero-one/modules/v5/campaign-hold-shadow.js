@@ -4,37 +4,41 @@
 // a live gain-floor. Overlapping subsequent actual entries are explicitly
 // rejected in that fork, never counted as fictional profits.
 const invalidation=require('./structural-invalidation-observer');
-const VERSION='v543-campaign-hold-shadow-v0.2';
+const structuralTransfer=require('./structural-transfer-observer');
+const VERSION='v543-campaign-hold-shadow-v0.3';
+const PRIOR_VERSION='v543-campaign-hold-shadow-v0.2';
 const LEGACY_VERSION='v543-campaign-hold-shadow-v0.1';
 const NOTIONAL=1500,TAKER=.0005,RISK_USD=500;
 const POLICIES=['STRUCTURE_ONLY','EARLY_INVALIDATION','TERRITORY_FLOOR_120',
- 'BASELINE_PLUS_FAST_INVALIDATION'];
+ 'BASELINE_PLUS_FAST_INVALIDATION','STRUCTURAL_LEVEL_AND_TRANSFER'];
 const n=x=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):null;
 const r=x=>Math.round(x*10000)/10000;
 const side=x=>x==='long'?1:x==='short'?-1:0;
 const clone=x=>JSON.parse(JSON.stringify(x));
+function blankVariant(policy){
+ return {policy,position:null,completed:0,realizedNetUsd:0,feesUsd:0,
+  blockedReentries:0,blockedTradeNos:[],records:[],
+  previousAttention:null,previousOffensiveMaturity:null};
+}
 function initial(startedAt,bootstrapPosition=null){
  return {version:VERSION,mode:'READ_ONLY_SHADOW',brokerOrdersEnabled:false,
   decisionImpact:false,startedAt,lastObservationAt:0,
   bootstrapIgnoredEntryAt:bootstrapPosition?.entryAt||null,
   lastAcceptedPaperEntryAt:bootstrapPosition?.entryAt||null,
   baselines:{},
-  variants:Object.fromEntries(POLICIES.map(policy=>[policy,{
-   policy,position:null,completed:0,realizedNetUsd:0,feesUsd:0,
-   blockedReentries:0,blockedTradeNos:[],records:[],
-   previousAttention:null,previousOffensiveMaturity:null}])),
+  variants:Object.fromEntries(POLICIES.map(policy=>[policy,blankVariant(policy)])),
   events:[],lastError:null};
 }
 function migrate(s){
- if(!s||!([VERSION,LEGACY_VERSION].includes(s.version))||s.brokerOrdersEnabled!==false)
-  throw Error('SHADOW_MIGRATION_REFUSED');
+ if(!s||!([VERSION,PRIOR_VERSION,LEGACY_VERSION].includes(s.version))||
+   s.brokerOrdersEnabled!==false)throw Error('SHADOW_MIGRATION_REFUSED');
  if(s.version===VERSION)return s;
+ if(s.version===LEGACY_VERSION&&!s.variants.BASELINE_PLUS_FAST_INVALIDATION)
+  s.variants.BASELINE_PLUS_FAST_INVALIDATION=blankVariant('BASELINE_PLUS_FAST_INVALIDATION');
+ if(!s.variants.STRUCTURAL_LEVEL_AND_TRANSFER)
+  s.variants.STRUCTURAL_LEVEL_AND_TRANSFER=blankVariant('STRUCTURAL_LEVEL_AND_TRANSFER');
  s.version=VERSION;
- s.variants.BASELINE_PLUS_FAST_INVALIDATION={
-  policy:'BASELINE_PLUS_FAST_INVALIDATION',position:null,completed:0,
-  realizedNetUsd:0,feesUsd:0,blockedReentries:0,blockedTradeNos:[],records:[],
-  previousAttention:null,previousOffensiveMaturity:null};
- s.migrationNote='BASELINE_PLUS_FAST_INVALIDATION begins on the NEXT true PAPER entry; no retroactive fork';
+ s.migrationNote='New STRUCTURAL_LEVEL_AND_TRANSFER fork begins on NEXT true PAPER entry; no retroactive position; older forks retained';
  return s;
 }
 function pnl(p,price){
@@ -141,6 +145,19 @@ function step(state,{paperState,now,price,input={},tickFresh=true,
    attention:decision.readings?.attention?.stage||null};
   v.previousAttention=decision.readings?.attention??v.previousAttention;
   v.previousOffensiveMaturity=decision.readings?.offensiveMaturityMemory??v.previousOffensiveMaturity;
+  // Specific joint experiment: never convert an isolated V541 EXIT into
+  // this fork's exit without BOTH causal level loss and adversarial transfer.
+  if(v.policy==='STRUCTURAL_LEVEL_AND_TRANSFER'){
+   const joint=structuralTransfer.inspect({position:p,now:ts,price:px,
+    bars3:input.bars3,conversion:decision.readings?.conversion||{},
+    positionReview:decision.readings?.structural54?.positionReview||null,
+    tickFresh});
+   v.lastInvalidation=joint;
+   v.lastDecision.alternativeV541Exit=decision.action==='EXIT_'+p.direction.toUpperCase();
+   if(joint.exitRequested)
+    finish(v,px,ts,'SHADOW_'+joint.reason,state,events,joint);
+   continue;
+  }
   let inv=null;
   if(v.policy==='EARLY_INVALIDATION'||v.policy==='TERRITORY_FLOOR_120'||
      v.policy==='BASELINE_PLUS_FAST_INVALIDATION'){
@@ -192,7 +209,10 @@ function summary(state){
   variants[k]={open:v.position?{tradeNo:v.position.originTradeNo,
      entryPrice:v.position.entryPrice,direction:v.position.direction,
      entryAt:v.position.entryAt,mfePriceUsd:v.position.mfePriceUsd,
-     maePriceUsd:v.position.maePriceUsd,gainFloorUsd:v.position.gainFloorUsd}:null,
+     maePriceUsd:v.position.maePriceUsd,gainFloorUsd:v.position.gainFloorUsd,
+     lastPrice:v.position.lastPrice,
+     provisionalNetIfClosedUsd:pnl(v.position,v.position.lastPrice).net,
+     lastInvalidation:v.lastInvalidation||null}:null,
     completed:v.completed,netUsd:v.realizedNetUsd,feesUsd:v.feesUsd,
     blockedReentries:v.blockedReentries,
     pairedTrades:comparable.length,

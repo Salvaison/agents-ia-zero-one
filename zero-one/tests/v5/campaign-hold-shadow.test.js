@@ -130,3 +130,106 @@ test('shadow v0.1 state migrates without losing prior research positions',()=>{
  assert.equal(next.variants.BASELINE_PLUS_FAST_INVALIDATION.position,null);
  assert.match(next.migrationNote,/NEXT/);
 });
+
+const transfer=require('../../modules/v5/structural-transfer-observer');
+test('joint exit: level loss with adverse PM but neutral MF is not a transfer',()=>{
+ const res=transfer.inspect({position:pos(),now:T+THREE+10000,price:79865,
+  bars3:[candle(T+THREE,79870)],
+  conversion:{pm3:-22,pmCombined:-30,mf3Delta3m:0,mf15Delta10m:.1}});
+ assert.equal(res.levelLoss.confirmedLoss,true);
+ assert.equal(res.transfer.observed,false);
+ assert.equal(res.exitRequested,false);
+});
+test('joint exit: confirmed loss and adverse PM3 PM Live MF3 transfer',()=>{
+ const res=transfer.inspect({position:pos(),now:T+THREE+10000,price:79865,
+  bars3:[candle(T+THREE,79870)],
+  conversion:{pm3:-22,pmCombined:-30,mf3Delta3m:-.4,mf15Delta10m:.1}});
+ assert.equal(res.transfer.pmAndFastMf,true);
+ assert.equal(res.exitRequested,true);
+ assert.match(res.reason,/STRUCTURAL_LEVEL_LOSS_AND_OBSERVED_TRANSFER/);
+});
+test('joint exit: defended opposite price and MF3 MF15 adverse also corroborate',()=>{
+ const res=transfer.inspect({position:pos(),now:T+THREE+10000,price:79865,
+  bars3:[candle(T+THREE,79870)],
+  positionReview:{defendedOpposition:true},
+  conversion:{pm3:8,pmCombined:3,mf3Delta3m:-.5,mf15Delta10m:-.3}});
+ assert.equal(res.transfer.defendedPriceAndMf,true);
+ assert.equal(res.exitRequested,true);
+});
+test('joint exit: isolated wick or unsupported transfer never exits',()=>{
+ const r=transfer.inspect({position:pos(),now:T+15000,price:79894,bars3:[],
+  conversion:{pm3:-20,pmCombined:-28,mf3Delta3m:-.5,mf15Delta10m:-.5}});
+ assert.equal(r.exitRequested,false);
+ assert.equal(r.levelLoss.provenLoss,false);
+});
+test('joint exit: rapid material loss with PM/MF before 3m close',()=>{
+ const r=transfer.inspect({position:pos(),now:T+15000,price:79820,bars3:[],
+  conversion:{pm3:-20,pmCombined:-28,mf3Delta3m:-.5,mf15Delta10m:.1}});
+ assert.equal(r.levelLoss.urgentLoss,true);
+ assert.equal(r.exitRequested,true);
+});
+test('joint exit: short direction and stale decision guard',()=>{
+ const p={...pos(),direction:'short',invalidationPrice:80100};
+ const a={position:p,now:T+THREE+10000,price:80145,
+  bars3:[candle(T+THREE,80131)],
+  conversion:{pm3:30,pmCombined:15,mf3Delta3m:.5,mf15Delta10m:.2}};
+ assert.equal(transfer.inspect({...a,tickFresh:true}).exitRequested,true);
+ assert.equal(transfer.inspect({...a,tickFresh:false}).exitRequested,false);
+});
+test('joint shadow never uses 120/90 or 220/180 gain floor',()=>{
+ const {s,p,paper}=enter();
+ model.step(s,{paperState:paper,now:T+10000,price:80280,input:{bars3:[]},
+  decide:()=>({action:'HOLD'})});
+ const x=model.step(s,{paperState:{...paper,position:null},now:T+15000,
+  price:80070,input:{bars3:[]},decide:()=>({action:'HOLD'})});
+ assert.equal(s.variants.BASELINE_PLUS_FAST_INVALIDATION.completed,1);
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.completed,0);
+ assert.ok(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.position);
+ assert.equal(x.events.filter(e=>e.policy==='STRUCTURAL_LEVEL_AND_TRANSFER'&&e.type==='SHADOW_EXIT').length,0);
+});
+test('joint shadow ignores standalone V541 exit if initial level intact',()=>{
+ const {s,p,paper}=enter();
+ model.step(s,{paperState:{...paper,position:null},now:T+15000,
+  price:80100,input:{bars3:[]},
+  decide:()=>({action:'EXIT_LONG',reason:'V541_MA3_TRANSFER',readings:{
+   conversion:{pm3:-50,pmCombined:-40,mf3Delta3m:-.5,mf15Delta10m:-.5},
+   structural54:{positionReview:{defendedOpposition:true}}}})});
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.completed,0);
+ assert.equal(s.variants.STRUCTURE_ONLY.completed,1);
+});
+test('joint shadow exits when lost structural level and transfer confirmed, counts fees',()=>{
+ const {s,p,paper}=enter();
+ const out=model.step(s,{paperState:{...paper,position:null},now:T+THREE+15000,
+  price:79860,input:{bars3:[candle(T+THREE,79872)]},
+  decide:()=>({action:'HOLD',readings:{
+   conversion:{pm3:-50,pmCombined:-30,mf3Delta3m:-.5,mf15Delta10m:-.1},
+   structural54:{positionReview:{defendedOpposition:false}}}})});
+ const rec=s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.records[0];
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.completed,1);
+ assert.equal(rec.exitReason,'SHADOW_CONFIRMED_STRUCTURAL_LEVEL_LOSS_AND_OBSERVED_TRANSFER');
+ assert.ok(rec.feesUsd>1.49&&rec.feesUsd<1.51);
+ assert.ok(out.events.some(e=>e.policy==='STRUCTURAL_LEVEL_AND_TRANSFER'&&e.type==='SHADOW_EXIT'));
+});
+test('joint shadow retains hard-risk -500 and blocks overlapping baseline entries',()=>{
+ const {s,p,paper}=enter();
+ model.step(s,{paperState:{...paper,position:null},now:T+10000,
+  price:80130,input:{bars3:[]},decide:()=>({action:'HOLD'})});
+ const next=pos(T+15000,80130,80080);
+ model.step(s,{paperState:{...paper,position:next,completed:1},now:T+20000,
+  price:80130,input:{bars3:[]},decide:()=>({action:'HOLD'})});
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.blockedReentries,1);
+ model.step(s,{paperState:{...paper,position:null,completed:1},now:T+25000,
+  price:79490,input:{bars3:[]},decide:()=>({action:'HOLD'})});
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.completed,1);
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.records[0].exitReason,'SHADOW_HARD_RISK_500');
+});
+test('migration v0.2 preserves existing virtual positions and new fork starts flat',()=>{
+ const {s}=enter();
+ const old=s.variants.STRUCTURE_ONLY.position.entryAt;
+ s.version='v543-campaign-hold-shadow-v0.2';
+ delete s.variants.STRUCTURAL_LEVEL_AND_TRANSFER;
+ model.migrate(s);
+ assert.equal(s.version,model.VERSION);
+ assert.equal(s.variants.STRUCTURE_ONLY.position.entryAt,old);
+ assert.equal(s.variants.STRUCTURAL_LEVEL_AND_TRANSFER.position,null);
+});

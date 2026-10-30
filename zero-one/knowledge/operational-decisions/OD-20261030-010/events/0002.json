@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-30T21:04:46+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Observateur de transfert structurel et cinquième fork shadow v0.3 codés, migration sûre, sans changement PAPER",
+  "evidence": "modules/v5/structural-transfer-observer.js; modules/v5/campaign-hold-shadow.js; tests/v5/campaign-hold-shadow.test.js",
+  "previousEventSha256": "1f8c82b1edeec25b80be7ef54c193083793e2f693e79cfab166bbe5b65d8a010"
+}

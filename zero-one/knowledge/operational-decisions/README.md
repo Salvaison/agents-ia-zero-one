@@ -91,3 +91,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Contrastes factoriels V494 — deux lectures (30 octobre 2026)
 
 - [OD-20261030-009 — Contrastes A/B/C/D nets, réalisés et provisoires](OD-20261030-009/03-origine-et-justification.md). Le laboratoire était actif mais les quatre branches ouvertes n'avaient pas clôturé : ajout sans autorité trading d'une valorisation mark-to-market **incluant TP1 et frais estimés restants**, séparée du P&L réalisé. [Rapport de rétablissement, tests et mise en service](../BOONOLAB_V494_contrastes_A_B_C_D_nets_live_2026-10-30.md).
+
+## V543 sans gain-floor — invalidation structurelle + transfert observé (30 octobre 2026)
+
+- [OD-20261030-010 — expérimentation V543 STRUCTURAL_LEVEL_AND_TRANSFER](OD-20261030-010/03-origine-et-justification.md). Cinq forks non autoritaires comparés, nouveau fork sans gain-floor sur niveau d’entrée perdu et transfert adverse corroboré ; [protocole et contrôles](../BOONOLAB_V543_sans_gainfloor_invalidation_et_transfert_2026-10-30.md). Les deux PAPER restent inchangés.

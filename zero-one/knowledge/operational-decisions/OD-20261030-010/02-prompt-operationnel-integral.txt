@@ -1,0 +1,12 @@
+Mission rédigée par l'assistant pour exécuter la demande utilisateur du 30 octobre 2026, reproduite littéralement dans le fichier 01.
+
+Sur Amsterdam, dans le repo /root/agents-ia-zero-one, mettre en place en lecture seule une variante de shadow V5.4.3 nommée STRUCTURAL_LEVEL_AND_TRANSFER (sans gain-floor), à côté des variantes actuelles, sans modifier boono-v543-paper, boono-v494-paper ni leurs ledgers ou brokers.
+
+Contrat expérimental :
+1. Ancrer le niveau au entryInvalidation calculé causalement et sauvegardé à l'entrée, sans déplacement défavorable de ce niveau.
+2. Ne pas sortir sur une simple mèche du niveau, ni sur E3/PM ou MF isolé ; exiger une preuve de perte du niveau (clôture 3m confirmée après l'entrée, au-delà du buffer de l'observateur préexistant ; OU perte matérielle urgente au prix effectivement observé) ET un transfert adverse observable, corroboré entre conversion PM et MF, ou défense du prix adverse et MF. Distinguer transfert initial du changement stratégique E15.
+3. Aucun plancher de prise de gain 120/90 ou 220/180 dans cette variante ; conserver le hard-risk -500 $ BTC sur tick frais comme sécurité. Une sortie structurelle V541 isolée ne doit pas remplacer la condition conjointe spécifique de cette expérience ; l'observer séparément.
+4. Maintenir les forks existants inchangés, suivre P&L net après frais, MFE/MAE, drawdown/exposition si disponibles, réentrées réelles bloquées par le fork et conditions d'exit, et conserver les preuves as-of sans fuite du futur.
+5. Démarrer la nouvelle variante uniquement pour les prochaines véritables entrées PAPER observées ; ne pas inventer de positions historiques ni écraser les forks persistants. Migration sûre, tests négatifs/positifs, tests de frais, stale, long/short, risque, une mèche, transfert insuffisant, et l'exigence sans floor.
+6. Redémarrer uniquement le service PM2 boono-v543-hold-shadow après tests et vérifier online, brokerOrdersEnabled=false, decisionImpact=false ; ne pas promouvoir la politique PAPER.
+7. Archiver les origines, le prompt littéral, les étapes AUTORISE/IMPLEMENTE/TESTE/MIS_EN_SERVICE avec preuves dans OD-20261030-010, et publier les modifications et les résultats dans la Knowledge Base Git. Distinguer explicitement hypothèse, implémentation, validation et performance non démontrée.
