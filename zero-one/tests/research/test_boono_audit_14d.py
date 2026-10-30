@@ -82,6 +82,19 @@ class Audit14DayTest(unittest.TestCase):
         self.live([self.row(BASE)])
         with self.assertRaisesRegex(ValueError,"VERSION"):
             audit.ingest(self.src,self.dest,BASE+1000)
+    def test_second_concurrent_archive_writer_is_refused(self):
+        import subprocess
+        import sys
+        import fcntl
+        self.dest.mkdir()
+        self.live([self.row(BASE)])
+        with (self.dest / ".archive-writer.lock").open("a+") as fd:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            r = subprocess.run([sys.executable, str(CODE), "--once",
+                "--source", str(self.src), "--dest", str(self.dest)],
+                capture_output=True, text=True)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn("AUDIT_ARCHIVE_WRITER_ALREADY_RUNNING", r.stderr)
     def test_source_corruption_does_not_replace_good_archived_data(self):
         self.live([self.row(BASE)])
         audit.ingest(self.src,self.dest,BASE+1000)

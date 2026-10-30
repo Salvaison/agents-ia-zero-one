@@ -11,6 +11,7 @@ import datetime as dt
 import gzip
 import json
 import os
+import fcntl
 import pathlib
 import re
 import sys
@@ -229,18 +230,27 @@ def main():
         return
     if args.period < 60:
         raise ValueError("AUDIT_PERIOD_MUST_BE_60S_OR_MORE")
-    i = 0
-    while True:
-        s = ingest(args.source, args.dest,
-                   seed_file=args.seed_file if i == 0 else None)
-        if i == 0 or s["lastAdded"] > 0 and i % 30 == 0:
-            print(json.dumps({"version": VERSION, "now": s["lastPollAt"],
-                "added": s["lastAdded"], "cursor": s["cursorTs"],
-                "files": s["filesPresent"], "gaps": len(s["gaps"])},
-                ensure_ascii=False), flush=True)
-        if not args.service:
-            break
-        i += 1
-        time.sleep(args.period)
+    args.dest.mkdir(parents=True, exist_ok=True)
+    # One writer for the whole PM2 process lifetime. A second cron/process may
+    # run --verify safely but cannot race the cursor, append or rotation.
+    lock_path = args.dest / ".archive-writer.lock"
+    with lock_path.open("a+") as locked:
+        try:
+            fcntl.flock(locked.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as e:
+            raise RuntimeError("AUDIT_ARCHIVE_WRITER_ALREADY_RUNNING") from e
+        i = 0
+        while True:
+            s = ingest(args.source, args.dest,
+                       seed_file=args.seed_file if i == 0 else None)
+            if i == 0 or s["lastAdded"] > 0 and i % 30 == 0:
+                print(json.dumps({"version": VERSION, "now": s["lastPollAt"],
+                    "added": s["lastAdded"], "cursor": s["cursorTs"],
+                    "files": s["filesPresent"], "gaps": len(s["gaps"])},
+                    ensure_ascii=False), flush=True)
+            if not args.service:
+                break
+            i += 1
+            time.sleep(args.period)
 if __name__ == "__main__":
     main()

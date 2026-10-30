@@ -55,10 +55,15 @@ else{
  }
  const influences=(s.recentInfluence||[]);
  console.log('Exposure-influence events recent '+influences.length);
- for(const i of influences.slice(-5))
-  console.log(new Date(i.ts).toISOString()+' '+i.type+
+ for(const i of influences.slice(-5)){
+  if(i.type==='EXIT_ENABLED_REENTRY')
+   console.log(new Date(i.ts).toISOString()+' EXIT_ENABLED_REENTRY '+
+    i.entryPolicy+' prior '+i.priorExit?.reason+' -> '+i.newDirection+
+    ' while original holds '+i.originalBlockedBy?.direction);
+  else console.log(new Date(i.ts).toISOString()+' '+i.type+
    ' '+(i.entryPolicy||i.exitPolicy)+' '+i.original+' -> '+
    (i.review||i.filtered));
+ }
  console.log('Active V494 comparison',JSON.stringify(result.realBaseline));
  console.log(result.warning);
 }

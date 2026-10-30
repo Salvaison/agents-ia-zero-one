@@ -103,6 +103,8 @@ test('4 independent ledgers: early EXIT frees a new entry while frozen EXIT stay
  assert.equal(s.branches.EXACT_V493__CONTINUATION_SUPERVISOR.position.direction,'short');
  assert.equal(newOrders[0].precedingExit?.reason,'CONFIRMED_TERRITORY_LOSS_WITH_PRICE_MF');
  assert.ok(s.influenceEvents.some(e=>e.type==='EXIT_INFLUENCES_ENTRY_EXPOSURE'));
+ assert.ok(s.influenceEvents.some(e=>e.type==='EXIT_ENABLED_REENTRY'&&
+   e.priorExit.reason==='CONFIRMED_TERRITORY_LOSS_WITH_PRICE_MF'));
  assert.equal(s.brokerOrdersEnabled,false);
  assert.equal(s.decisionImpact,false);
 });

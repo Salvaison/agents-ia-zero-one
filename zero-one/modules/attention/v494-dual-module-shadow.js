@@ -195,6 +195,28 @@ function advance(s,frame,dependencies={},quality='DATA_OK'){
    }
   }
  }
+ // Direct causal probe: a new V493-approved entry exists ONLY in the branch
+ // previously freed by its EXIT while the original branch is still occupied.
+ // This is stronger evidence than a generic divergence of open positions.
+ for(const entryPolicy of entries.POLICIES){
+  const original=s.branches[entryPolicy+'__FROZEN_V493'];
+  const review=s.branches[entryPolicy+'__CONTINUATION_SUPERVISOR'];
+  const ev=events.find(x=>x.type==='ENTRY'&&x.route===review.route.id);
+  if(ev&&original.position&&review.lastExit&&
+    original.position.entryAt<review.lastExit.ts&&
+    ev.ts>review.lastExit.ts){
+   const impact={type:'EXIT_ENABLED_REENTRY',ts,
+    entryPolicy,freedRoute:review.route.id,
+    priorExit:review.lastExit,
+    newDirection:ev.direction,newEntryPrice:ev.entryPrice,
+    originalBlockedBy:{direction:original.position.direction,
+     entryAt:original.position.entryAt,entryPrice:original.position.entryPrice},
+    interpretation:'The reviewed EXIT changed FLAT/occupied state before this independent original V493 entry'};
+   s.influenceEvents.push(impact);
+   s.influenceEvents=s.influenceEvents.slice(-120);
+   event(s,events,impact);
+  }
+ }
  // Factorial comparisons: for each fixed entry logic, vary EXIT; for each
  // fixed exit logic, vary ENTRY. A change here is not attributed to a single
  // newly detected signal, but to its entire independent branch history.

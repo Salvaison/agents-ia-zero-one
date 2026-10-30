@@ -1,0 +1,8 @@
+{
+  "sequence": 7,
+  "recordedAtUtc": "2026-10-30T18:06:32+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Services PM2 Audit14D et V494 shadow rechargés sur version renforcée, sauvegardés; 3022 observations Audit, 27 fichiers, 55 champs source, zéro erreur; 25 observations du V494 shadow avec 4 branches et aucune position encore clôturée.",
+  "evidence": "pm2 restart boono-audit-14d, boono-v494-entry-exit-shadow; pm2 save; audit verify 3022/27/55/0 et report 25 observations. Original boono-v494-paper, boono-v543-paper et Watch inchangés.",
+  "previousEventSha256": "adc6a84676148986e367d3a5372e719f8822d6b63831c83f6570094cf74e1996"
+}

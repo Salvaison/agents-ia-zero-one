@@ -14,7 +14,7 @@
 | Stockage | `data/audit-14d/audit-YYYYMMDDTHH.ndjson[.gz]` avec UTC, objets complets JSON, **aucune agrégation/renonciation à des colonnes** |
 | Compression | Gzip pour chaque heure terminée ; heure courante append NDJSON |
 | Métadonnées | `data/audit-14d/status.json` : curseur, compte cumulatif, âge source, heures et lacunes détectées |
-| Robustesse | Timestamps triés, déduplication du même relevé source, reprise idempotente si arrêt après append, refus de schéma/version incorrecte, fichiers temporaires et renommages atomiques |
+| Robustesse | Timestamps triés, déduplication du même relevé source, reprise idempotente si arrêt après append, verrou exclusif d’écrivain par fichier flock, refus de schéma/version incorrecte, fichiers temporaires et renommages atomiques |
 | UI | **AUCUNE route supplémentaire**, aucun nouveau payload, aucun rafraîchissement BOONO Watch, aucune modification de `baton-relay.js` |
 | Fichiers existants | `data/audit-history.json` continue d'être la source glissante d'interface ; le script historique `archive-audit.sh` et les anciens `data/archives/audit-*.gz` ne sont ni écrasés ni utilisés comme writer concurrent |
 
@@ -57,7 +57,7 @@ Test de performance architectural : nouveau processus isolé PM2 avec ~20–23 M
 
 Chaque branche possède son **propre état de campagne et de décision V493**, `prevEval`, mémoire d'attention, position, frais, TP1, PNL, MFE/MAE, historique, nombre d'entrées filtrées et résultats LONG/SHORT. Après une sortie anticipée dans B/D, le moteur gelé est réévalué en **FLAT uniquement dans cette branche** : si une nouvelle candidature est ensuite autorisée, elle peut ouvrir alors que la branche A/C garde encore sa position. Inversement, une entrée sélective bloquée peut changer les futures occasions.
 
-`EXIT_INFLUENCES_ENTRY_EXPOSURE` et `ENTRY_FILTER_INFLUENCES_EXPOSURE` sont enregistrés lorsque les portefeuilles divergent. Une entrée post-sortie conserve sa précédente sortie et l'horodatage ; le labo pourra comparer P&L net, réentrées, temps d'exposition et opportunités bloquées **par campagne**, pas seulement par trade. Les résultats contrefactuels diffèrent des entrées/sorties historiques et **ne peuvent pas être comparés en naïve liste de trades par numéro**.
+`EXIT_INFLUENCES_ENTRY_EXPOSURE`, `ENTRY_FILTER_INFLUENCES_EXPOSURE` et `EXIT_ENABLED_REENTRY` (preuve d’une nouvelle entrée V493 autorisée uniquement après la sortie de la branche concernée) sont enregistrés lorsque les portefeuilles divergent. Une entrée post-sortie conserve sa précédente sortie et l'horodatage ; le labo pourra comparer P&L net, réentrées, temps d'exposition et opportunités bloquées **par campagne**, pas seulement par trade. Les résultats contrefactuels diffèrent des entrées/sorties historiques et **ne peuvent pas être comparés en naïve liste de trades par numéro**.
 
 **Pas de propagation mutuelle d'une direction :** le module Sortie n'a pas le droit de créer un LONG/SHORT. Le module Entrée ne peut pas fermer une position : il peut seulement la proposer lorsqu'une branche est FLAT.
 
@@ -73,7 +73,7 @@ Le `hard-risk -500 BTC`, nominal 1 500$, frais taker 0,05% par côté, TP1/runne
 
 ## 4. Tests et limites / décisions ouvertes
 
-- **Archivage : 7 tests** : champs complets, démarrage avec snapshot chevauchant, reprise/déduplication, refus de corruption, gzip, purge dans l'heure à 14 jours, détection de trous.
+- **Archivage : 8 tests** : champs complets, démarrage avec snapshot chevauchant, reprise/déduplication, refus de corruption, gzip, purge dans l'heure à 14 jours, détection de trous.
 - **Laboratoire V494 : 10 tests directs**, complétés par **15 tests existants d'attention V494/V542 (25/25)** : candidature d'entrée inchangée, filtre LONG/SHORT, un E3/mèche n'invalide pas, une vraie contreconversion + MF peut déclencher un EXIT virtuel, les quatre ledgers se séparent causalement après une sortie, une réentrée devient disponible en B/D, frais/TP1, hard-risk, état versionné et duplicate.
 - Test de lecture vraie `--test-read` depuis Amsterdam : V493 `cdf1936`, 4 branches annoncées, prix Audit as-of frais, `brokerOrdersEnabled=false`.
 - Les deux nouveaux services PM2 sont actifs et sauvegardés ; le moteur V4.9.4 et le V5.4.3 PAPER étaient en ligne sans redémarrage.
