@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-31T20:41:52+00:00",
+  "status": "DOCUMENTE",
+  "description": "Rapport correctif publie sur GitHub main apres audit read-only, source et decision HOLD/floor confrontes; aucun changement trading",
+  "evidence": "Git commit 071f118 pushed origin/main ; verification GitHub fetch_file chemin zero-one/knowledge/BOONOLAB_analyse_trades_shadows_2026-10-31.md, blob 375e75b6039f7e89d3ff459e2c005fd14f0fc207 ; les services PAPER et les scripts moteurs restent inchanges",
+  "previousEventSha256": "54ef3422f052357605beb5a81b56f1a7b5a282ae7b4759f8f15666150875e96e"
+}
