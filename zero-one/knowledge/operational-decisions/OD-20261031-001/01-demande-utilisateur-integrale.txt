@@ -1,0 +1,3 @@
+Mhouais... Moi se qui me frappe  est que aujourd'hui 494 n'a pas réussi de campagne longue comme hier, même produit un tas de fragmentation et 543 a fragmenter et fait des campagnes longues, aussi il était là au point d'infléxion et il réussi à partir dans le bon sens la plus part du temps mais je ne comprend pas que toutes ses sorties sont des gain floor à 0, il y a forcement un problème avec ces invalidations...
+
+Et publie ton rapport sur Github

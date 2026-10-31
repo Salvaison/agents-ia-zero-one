@@ -95,3 +95,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## V543 sans gain-floor — invalidation structurelle + transfert observé (30 octobre 2026)
 
 - [OD-20261030-010 — expérimentation V543 STRUCTURAL_LEVEL_AND_TRANSFER](OD-20261030-010/03-origine-et-justification.md). Cinq forks non autoritaires comparés, nouveau fork sans gain-floor sur niveau d’entrée perdu et transfert adverse corroboré ; [protocole et contrôles](../BOONOLAB_V543_sans_gainfloor_invalidation_et_transfert_2026-10-30.md). Les deux PAPER restent inchangés.
+
+## Audit des campagnes V494 vs V543 du 31 octobre 2026
+
+- [OD-20261031-001 — correction de lecture, diagnostic des gain-floors / invalidations et publication](OD-20261031-001/03-origine-et-justification.md) : demande utilisateur intégrale, mission exacte, origine, statut d'enquête et de publication. [Rapport comparatif corrigé](../BOONOLAB_analyse_trades_shadows_2026-10-31.md) : V494 30 vs 31 octobre, sept parents E15 / neuf sorties V543 floor avec décisions `HOLD`, hiérarchie PAPER, shadows et contre-exemples, aucun changement de trading.

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-31T20:41:08+00:00",
+  "status": "DOCUMENTE",
+  "description": "Relecture corrective journaux et code V494/V543; 9 exits gain-floor du 31/10 face à 9 HOLD du moteur; audit comparatif documenté sans mutation PAPER",
+  "evidence": "zero-one/knowledge/BOONOLAB_analyse_trades_shadows_2026-10-31.md ; data/v494-paper-trades.ndjson, v52-paper-trades.ndjson, v52-paper-decisions.segment-20261031*.ndjson, v543-campaign-hold-shadow-summary.json, v494-dual-module-shadow-summary.json ; modules/v5/paper-v543.js code branche exit",
+  "previousEventSha256": "624886fe24503976e76670cba70cd6b1f3717f4beb5f4c274e4b0ce9fe620890"
+}

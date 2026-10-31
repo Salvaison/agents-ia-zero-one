@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261031-001",
+  "title": "Campagnes 494 contre 543 : diagnostic gain floors invalidations et publication audit",
+  "createdAtUtc": "2026-10-31T20:38:42+00:00",
+  "authorization": "Autorisation explicite de réévaluer les dernières campagnes et publier le rapport sur GitHub; aucune modification PAPER",
+  "reference": "Message utilisateur du 31 octobre 2026 et rapports de la KB BOONOLAB",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "0fa8d69bfe6ac5ad2d77ff5b76ff34b3165df8cadd9ab439f9d0ce0b9fc7bd49",
+      "bytes": 461
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "262467d6a6426cce2a553e3f8da43a3d8ec8ef990009eb024deb4a65d145958f",
+      "bytes": 2505
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "01c549c41f207d098cad0761866bde5fe01dce96122075c7c54d9354a6b40730",
+      "bytes": 1942
+    }
+  }
+}

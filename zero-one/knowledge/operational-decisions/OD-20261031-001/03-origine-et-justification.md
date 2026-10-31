@@ -1,0 +1,9 @@
+# OD-20261031-001 — Réévaluation critique des campagnes et publication de l'audit
+
+**Origine de l'enquête :** le propriétaire conteste une première analyse trop centrée sur le P&L global et souligne : V494 n'a pas reproduit ses longues campagnes du 30/10 le 31/10, multiplie les positions improductives ; V543 trouve au contraire souvent un mouvement utile au départ, mais les gains sont presque tous ramenés par un gain-floor à l'équilibre. Il demande également explicitement la publication du rapport sur GitHub.
+
+**Références de la méthode :** `knowledge/BOONOLAB_methodes_analyse_et_criteres_2026-10-28.md`, documentation des gain-floors, `knowledge/BOONOLAB_V543_sans_gainfloor_invalidation_et_transfert_2026-10-30.md` et ses 5 politiques shadows, `knowledge/BOONOLAB_V494_contrastes_A_B_C_D_nets_live_2026-10-30.md`. Les données « trade », « parent E15 », « événement de qualité », « évaluation de candidature » et « 30s snapshot » ne sont pas des répétitions indépendantes. Un P&L marqué n'est pas un profit réalisé.
+
+**Contrainte stricte :** recherche et documentation, sans nouvelle validation de seuil de trading, sans autorité pour désactiver les floors PAPER, remplacer les invalidations, toucher aux ledgers ni démarrer un déploiement. Le shadow expérimental sans gain-floor et à invalidation+transfert a déjà été autorisé et déployé sous OD-20261030-010 ; sa présence est un fait de contexte, **pas une autorisation de promouvoir sa politique**.
+
+**Publication demandée :** le rapport du 31/10 avait été conservé localement sous `BOONOLAB_analyse_trades_shadows_2026-10-31_NON_PUBLIE.md` et non publié à cause d'un HTTP 403 par le connecteur GitHub ; il faut publier la version corrigée sous nom canonique et établir le commit distant. La consigne opérationnelle du dossier 02 est rédigée par l'assistant pour l'exécution directe de ce message, sans agent externe.
