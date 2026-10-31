@@ -481,6 +481,14 @@ function v52PaperSummary(filename, tag) {
   updatedAt:s.lastObservationAt,startedAt:s.startedAt,completed:s.completed,
   wins:s.wins,losses:s.losses,equityUsd:s.equityUsd,realizedUsd:s.realizedUsd,
   feesUsd:s.feesUsd,position:s.position||null,
+  floorAuthority:tag==='V5.4.3'?{
+   version:s.floorAuthorityVersion||'LEGACY_AUTONOMOUS_GAIN_FLOOR',
+   activeVersion:s.position?.floorAuthorityVersion||s.floorAuthorityVersion||null,
+   currentPositionLegacy:!!(s.position&&
+    String(s.position.floorAuthorityVersion||'').startsWith('v543-legacy-autonomous')),
+   activatedAt:s.floorAuthorityActivatedAt||null,
+   attentionEpisodes:s.floorAttentionCount||0,
+   last:s.floorAttentionLast||null}:null,
   latestAction:s.lastAction||null,decision:s.latestDecision||s.decision||null,
   analysis:tag.startsWith('V5.4.')?s.latestAnalysis||null:null,
   attention:s.temporalAttention?{stage:s.temporalAttention.stage,
@@ -7502,18 +7510,32 @@ function renderV52Living(data){
    (a.checks?.offensiveMaturityBlocksNewAdmission?
     ' · entrée DIFFÉRÉE · requalification possible':'')+
    '</span></div>':'')+
-  '<div class="v52-strip"><span><b>RISQUE</b> plafond −500$ BTC · floors +120/90 et +220/180</span>'+
+  '<div class="v52-strip"><span><b>RISQUE</b> hard-cap −500$ BTC · nouvelles entrées : gain-floors 120/90, 220/180 = ALERTES sous MCB/structure'+
+   (data.floorAuthority?.currentPositionLegacy?
+    ' · POSITION HÉRITÉE : floor autonome préservé jusqu’à clôture':'')+
+   '</span>'+
    '<span>Frais A/R estimés '+n(eco.expectedFeesUsd)+' $ · mobilité observée '+
      n(eco.empiricalMobilityUsd)+' $ BTC · niveau proche non-veto</span></div>'+
   (p?'<div class="v52-ledger"><b class="'+(p.direction==='long'?'v52-green':'v52-red')+'">POSITION '+f(p.direction).toUpperCase()+'</b>'+
    ' · entrée '+n(p.entryPrice)+' $ · '+v5Time(p.entryAt)+
    ' · P&L net potentiel '+sn(p.lastNetPnlUsd)+' $'+
    '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
-   ' $ · plancher '+n(p.gainFloorUsd)+' $ · invalidation '+n(p.invalidationPrice)+' $</div></div>':
+   ' $ · '+(data.floorAuthority?.currentPositionLegacy?
+      'floor ancien exécutoire ':'floor indicatif non-exécutoire ')+
+      n(p.gainFloorUsd)+' $ BTC · invalidation '+n(p.invalidationPrice)+' $</div></div>':
    '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
   '<div class="v52-muted">PAPER V5.4.3 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
    ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
-   ' $ · dernière action '+event+' · pas d’ordre broker financé</div>';
+   ' $ · dernière action '+event+' · pas d’ordre broker financé</div>'+
+  (data.floorAuthority?'<div class="v52-muted">Autorité sorties '+f(data.floorAuthority.version)+
+   ' · activée '+v5Time(data.floorAuthority.activatedAt)+
+   ' · position '+(data.floorAuthority.currentPositionLegacy?
+    'LEGACY / protection ancienne':'NOUVELLE AUTORITÉ MCB')+
+   ' · alertes floor distinctes '+Number(data.floorAuthority.attentionEpisodes||0)+
+   ' · dernière : '+(data.floorAuthority.last?f(data.floorAuthority.last.status)+
+    ' · '+v5Time(data.floorAuthority.last.at)+
+    ' · MCB '+f(data.floorAuthority.last.mcbStructureAction||'—'):
+    'aucune')+'</div>':'');
  el.innerHTML=card;
  // BOONO Watch rebuilds this cell on refresh; restore the cached mini chart
  // immediately rather than waiting for another OKX trade or chart request.

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-10-31T21:03:35+00:00",
+  "status": "TESTE",
+  "description": "29/29 tests cibles; regression V5 et Attention 306 reussis, 12 ignores, 0 echec hors test historique MA indisponible; 1 echec historique independant et confirme seul; code backend et JS genere verifies syntaxiquement",
+  "evidence": "/tmp/boonolab-v543-floor-targeted-2.log; /tmp/boonolab-v543-floor-full-regression-20261031.log (322, 309 pass, 12 skip, 1 old MA); /tmp/boonolab-v543-floor-regression-except-historical.csv.log (318, 306 pass, 12 skip); /tmp/boono-v541-ma-regression-standalone.log ; test ancien independant module ma et CSV live tail",
+  "previousEventSha256": "7d7542dfa508b71f3651d335aa2af5d762ea7a028b7891b19006bbbe4ce0a203"
+}

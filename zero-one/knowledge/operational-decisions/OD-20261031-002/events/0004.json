@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-10-31T21:08:53+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouvelle autorite floor MCB/structure active V543 pour les prochaines entrees; SHORT deja ouvert conserve son floor autonome historique; V494 et shadows inchanges; Watch affiche la distinction",
+  "evidence": "V543 PAPER PID2183247 startup 2026-10-31T21:06:58Z floorAuthorityVersion=v543-mcb-structure-first-floor-advisory-v1, positionVersion=v543-legacy-autonomous-gain-floor-v1, floorAuthorityActivatedAt=1793480818169; config-server PID2183409; V494 PAPER PID962864; historique 135 trades, equity801.868, net -198.132, usedKeys et policyActivatedAt preservés; sauvegarde /root/boono-v543-floor-authority-final-snapshot-20261031; tests ciblés29/29, regression ciblée 306 pass 12 skip; HTTP anon302, app.js vm valid; aucune exposition broker",
+  "previousEventSha256": "dc968167b4a7c203bfa954fc23027631180d21f24391a8b22d74e08411946bcb"
+}

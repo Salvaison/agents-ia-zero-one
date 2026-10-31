@@ -12,25 +12,49 @@ const V522_VERSION='v5.2.2-paper-ledger-v0.2';
 const LEGACY_VERSION='v5.2-paper-ledger-v0.1';
 const PREVIOUS_POLICY='v5.2-structural-decision-paper-v0.1';
 const NOTIONAL=1500,INIT=1000,TAKER=.0005,RISK_PRICE=500;
+// V5.4.3: MCB/structure has authority over economic gain-floor requests.
+// Floors remain observed as price-distance alerts, never autonomous exits.
+const FLOOR_AUTHORITY_VERSION='v543-mcb-structure-first-floor-advisory-v1';
+const LEGACY_FLOOR_AUTHORITY_VERSION='v543-legacy-autonomous-gain-floor-v1';
 const n=v=>v===null||v===undefined||v===''?null:Number.isFinite(Number(v))?Number(v):null;
 const round=v=>Math.round(v*10000)/10000;
 const sign=d=>d==='long'?1:-1;
 function initial(now=Date.now()){return {version:VERSION,mode:'PAPER_ONLY',brokerOrdersEnabled:false,
  startedAt:now,policyActivatedAt:now,lastObservationAt:0,notionalUsd:NOTIONAL,capitalUsd:INIT,equityUsd:INIT,
+ floorAuthorityVersion:FLOOR_AUTHORITY_VERSION,floorAuthorityActivatedAt:now,
+ floorAttentionCount:0,floorAttentionLast:null,
  realizedUsd:0,feesUsd:0,completed:0,wins:0,losses:0,position:null,
  history:[],usedKeys:[],lastAction:null,decision:null,lastReason:null,decisionImpactOnV4:false};}
 function migrate(state,now=Date.now()){
  if(!state)return initial(now);
- if(state.version===VERSION)return state;
+ if(state.version===VERSION){
+  // Preserve the V5.4.3 campaign, anti-churn admission epoch and any
+  // in-flight position when installing the independent EXIT authority change.
+  if(state.floorAuthorityVersion!==FLOOR_AUTHORITY_VERSION){
+   // An existing position entered under the prior policy keeps its exact
+   // economic EXIT contract until closure; the NEXT entry uses the new mode.
+   if(state.position&&!state.position.floorAuthorityVersion)
+    state.position.floorAuthorityVersion=LEGACY_FLOOR_AUTHORITY_VERSION;
+   state.floorAuthorityVersion=FLOOR_AUTHORITY_VERSION;
+   state.floorAuthorityActivatedAt=now;
+   state.floorAttentionCount=Number(state.floorAttentionCount)||0;
+   state.floorAttentionLast=state.floorAttentionLast||null;
+  }
+  return state;
+ }
  if(![LEGACY_VERSION,V522_VERSION,V53_VERSION,V531_VERSION,V532_VERSION,V533_VERSION,V54_VERSION,V541_VERSION,V542_VERSION].includes(state.version)||
    state.brokerOrdersEnabled!==false)
    throw Error('V543_LEDGER_MIGRATION_REFUSED: '+String(state.version||'NO_VERSION'));
  // Preserve every trade, entry key, fee, equity and ongoing position.
  const copy={...state,version:VERSION,policyActivatedAt:now,
+  floorAuthorityVersion:FLOOR_AUTHORITY_VERSION,floorAuthorityActivatedAt:now,
+  floorAttentionCount:0,floorAttentionLast:null,
   history:(state.history||[]).map(t=>({...t,
     entryPolicyVersion:t.entryPolicyVersion||PREVIOUS_POLICY})),
   position:state.position?{...state.position,
-    entryPolicyVersion:state.position.entryPolicyVersion||PREVIOUS_POLICY}:null};
+    entryPolicyVersion:state.position.entryPolicyVersion||PREVIOUS_POLICY,
+    floorAuthorityVersion:state.position.floorAuthorityVersion||
+     LEGACY_FLOOR_AUTHORITY_VERSION}:null};
  return copy;
 }
 function pnl(p,price){const gross=(price-p.entryPrice)*sign(p.direction)*NOTIONAL/p.entryPrice;
@@ -55,6 +79,9 @@ function exit(s,ts,price,reason){
   netPnlUsd:q.net,mfePriceUsd:round(p.mfePriceUsd),maePriceUsd:round(p.maePriceUsd),
   entryKey:p.entryKey,entryContext:p.entryContext,
   entryInvalidation:p.invalidationPrice,exitReason:reason,
+  exitAuthorityVersion:p.floorAuthorityVersion||
+   s.floorAuthorityVersion||null,
+  floorAttentionEpisodes:p.floorAttentionEpisodes||0,
   slippage:'NOT_MODELED',funding:'NOT_MODELED',filledAt:'ACTUAL_OBSERVED_TICK'};
  s.position=null;s.completed++;s.realizedUsd=round(s.realizedUsd+q.net);
  s.feesUsd=round(s.feesUsd+q.exitFee);s.equityUsd=round(INIT+s.realizedUsd);
@@ -90,12 +117,41 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
   p.maePriceUsd=Math.max(p.maePriceUsd,-move);p.lastNetPnlUsd=pnl(p,price).net;
   if(p.mfePriceUsd>=220)p.gainFloorUsd=180;
   else if(p.mfePriceUsd>=120)p.gainFloorUsd=Math.max(90,p.gainFloorUsd||0);
-  if(tickFresh&&move<=-RISK_PRICE)result=exit(s,ts,price,'HARD_RISK_500');
-  else if(tickFresh&&p.gainFloorUsd>0&&move<=p.gainFloorUsd)
+  const structuralExit=decision.action==='EXIT_'+p.direction.toUpperCase();
+  const hardRisk=tickFresh&&move<=-RISK_PRICE;
+  const floorRequest=tickFresh&&p.gainFloorUsd>0&&move<=p.gainFloorUsd;
+  const inheritedLegacyFloor=p.floorAuthorityVersion===
+   LEGACY_FLOOR_AUTHORITY_VERSION;
+  // Distinct floor crossings ONLY in the new advisory policy, not every 5s.
+  // A protected MCB15 campaign can breathe through 90/180 without an EXIT.
+  if(tickFresh&&!inheritedLegacyFloor){
+   if(floorRequest&&!p.floorRequestActive){
+    s.floorAttentionCount=(s.floorAttentionCount||0)+1;
+    p.floorAttentionEpisodes=(p.floorAttentionEpisodes||0)+1;
+    s.floorAttentionLast={at:ts,positionEntryAt:p.entryAt,
+     direction:p.direction,campaignId:p.campaignId||null,
+     floorPriceMoveUsd:p.gainFloorUsd,currentPriceMoveUsd:round(move),
+     mfePriceUsd:round(p.mfePriceUsd),mcb15CampaignId:
+      decision.readings?.structural54?.campaignId||null,
+     mcb15Phase:decision.readings?.structural54?.phase||decision.phase||null,
+     mcbStructureAction:decision.action||'UNKNOWN',
+     mcbStructureReason:decision.reason||null,
+     status:hardRisk?'HARD_RISK_OVERRIDE':
+      structuralExit?'ALIGNED_WITH_STRUCTURAL_EXIT':
+      'FLOOR_EXIT_DEFERRED_TO_MCB_STRUCTURE',
+     authority:FLOOR_AUTHORITY_VERSION};
+   }
+   p.floorRequestActive=floorRequest;
+  }
+  // A hard adverse risk cap is independent of both the gain floor and MCB.
+  // All other exits are directed by the existing causal MCB/structure engine.
+  if(hardRisk)result=exit(s,ts,price,'HARD_RISK_500');
+  else if(inheritedLegacyFloor&&floorRequest)
    result=exit(s,ts,price,'GAIN_FLOOR_120_90_OR_220_180');
-  else if(tickFresh&&decision.action==='EXIT_'+p.direction.toUpperCase())
+  else if(tickFresh&&structuralExit)
    result=exit(s,ts,price,decision.reason);
-  reason=result?'EXIT_PAPER':'HOLD_CAMPAGNE';
+  reason=result?'EXIT_PAPER':floorRequest&&!inheritedLegacyFloor?
+   'HOLD_MCB_STRUCTURE_OVERRIDES_GAIN_FLOOR':'HOLD_CAMPAGNE';
  }else if(decision.action==='ENTER_LONG'||decision.action==='ENTER_SHORT'){
   const dir=decision.action==='ENTER_LONG'?'long':'short';
   const crossTs=decision.readings?.geometry?.cross3?.ts;
@@ -161,6 +217,7 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
    const fee=round(NOTIONAL*TAKER);
    s.position={direction:dir,entryAt:ts,entryPrice:price,lastPrice:price,
     entryPolicyVersion:decision.version||VERSION,
+    floorAuthorityVersion:FLOOR_AUTHORITY_VERSION,
     campaignId:decision.readings?.causalChain?.campaignId||null,
     entryKey:decision.entryKey,entryFeeUsd:fee,notionalUsd:NOTIONAL,
     invalidationPrice:inv,invalidationReference:decision.invalidation.reference,
@@ -200,4 +257,4 @@ function step(s,decision,{price,ts,sourceAgeMs,tickAgeMs}){
  s.lastReason=reason;
  return {state:s,event:result&&result.event||null,trade:result&&result.trade||null,reason};
 }
-module.exports={VERSION,V542_VERSION,V541_VERSION,V54_VERSION,V533_VERSION,V532_VERSION,V531_VERSION,V53_VERSION,V522_VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};
+module.exports={VERSION,FLOOR_AUTHORITY_VERSION,LEGACY_FLOOR_AUTHORITY_VERSION,V542_VERSION,V541_VERSION,V54_VERSION,V533_VERSION,V532_VERSION,V531_VERSION,V53_VERSION,V522_VERSION,LEGACY_VERSION,NOTIONAL,TAKER,initial,migrate,step,pnl};

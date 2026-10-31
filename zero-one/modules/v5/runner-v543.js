@@ -203,6 +203,11 @@ function main(){
    if(result.event||priorKey!==key){
     append(CHANGES,{ts:tickTs,price,action:d.action,reason:d.reason,phase:d.phase,
      candidate:d.candidate,decisionOutcome:result.reason,tradeEvent:result.event||null,
+     floorAuthority:{version:s.floorAuthorityVersion||null,
+      positionVersion:s.position?.floorAuthorityVersion||null,
+      activatedAt:s.floorAuthorityActivatedAt||null,
+      totalRequestEpisodes:s.floorAttentionCount||0},
+     floorAttention:s.floorAttentionLast?.at===tickTs?s.floorAttentionLast:null,
      conversion:d.readings.conversion,place:d.readings.place,geometry:d.readings.geometry,
      maturity:d.readings.maturity,causalChain:d.readings.causalChain,
      maContract:d.readings.maContract,
@@ -234,7 +239,11 @@ function main(){
  }
  stream.on('error',e=>console.error('[V52 PRICE] '+e.message));
  stream.start();
- console.log('[V543 PAPER] '+JSON.stringify({policy:decision.VERSION,mode:'PAPER_ONLY',brokerOrdersEnabled:false,
+ console.log('[V543 PAPER] '+JSON.stringify({policy:decision.VERSION,
+  floorAuthorityVersion:s.floorAuthorityVersion||null,
+  positionFloorAuthorityVersion:s.position?.floorAuthorityVersion||null,
+  floorAuthorityActivatedAt:s.floorAuthorityActivatedAt||null,
+  mode:'PAPER_ONLY',brokerOrdersEnabled:false,
   startAt:s.startedAt,priorTrades:s.completed,position:s.position?.direction||null}));
  setInterval(tick,INTERVAL_MS);
 }

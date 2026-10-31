@@ -99,3 +99,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Audit des campagnes V494 vs V543 du 31 octobre 2026
 
 - [OD-20261031-001 — correction de lecture, diagnostic des gain-floors / invalidations et publication](OD-20261031-001/03-origine-et-justification.md) : demande utilisateur intégrale, mission exacte, origine, statut d'enquête et de publication. [Rapport comparatif corrigé](../BOONOLAB_analyse_trades_shadows_2026-10-31.md) : V494 30 vs 31 octobre, sept parents E15 / neuf sorties V543 floor avec décisions `HOLD`, hiérarchie PAPER, shadows et contre-exemples, aucun changement de trading.
+
+## Régime V494 du samedi et autorité de sortie V543 — 31 octobre 2026
+
+- [OD-20261031-002 — étudier le faible débit du week-end V494 et rétrograder les gain-floors V543 sous autorité MCB/structure](OD-20261031-002/03-origine-et-justification.md). V494 en **analyse seulement** : archive Audit14D comparée sur mêmes heures vendredi/samedi, pas de veto temporel. V543 PAPER : floors 120/90 et 220/180 convertis en **alertes non exécutoires pour les prochaines entrées**, hard-risk −500 et sorties MCB/structure conservés ; position préexistante garde sa politique de floor jusqu'à clôture. **Mise en service contrôlée**, tests et limites dans le [rapport détaillé](../BOONOLAB_V494_weekend_regime_V543_floor_MCB_structure_2026-10-31.md).

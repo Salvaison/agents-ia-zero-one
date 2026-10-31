@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261031-002",
+  "title": "V494 weekend regime audit and V543 MCB-structure-first gain floor downgrade",
+  "createdAtUtc": "2026-10-31T20:55:59+00:00",
+  "authorization": "Demande utilisateur explicite de rétrograder ou retirer l autorité autonome des gain floors V543 ; étude V494 sans filtre de weekend",
+  "reference": "Conversation BOONOLAB 31 octobre 2026, suite OD-20261031-001 et OD-20261030-010",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "68ec80f476a3859c048b0ad355992a33494f1f4d252972f9dbc0c1a59b0dbe3a",
+      "bytes": 282
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "4277ccf6f04300155f1c8101016103b1c830a1c8474672894ce0c553d504276c",
+      "bytes": 2810
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "b45a88f95cb9d14bd3f91b21c5f5df3f4a799eea444bed03f43fd13742b17732",
+      "bytes": 2616
+    }
+  }
+}

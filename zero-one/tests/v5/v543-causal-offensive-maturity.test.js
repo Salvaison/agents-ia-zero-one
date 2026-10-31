@@ -164,13 +164,16 @@ test('Ledger migration carries all state, keys, historical fees and inherited po
   assert.equal(next[field],source[field]);
  assert.deepEqual(next.usedKeys,source.usedKeys);
  assert.deepEqual(next.history,source.history);
- assert.deepEqual(next.position,source.position);
+ assert.deepEqual({...next.position,floorAuthorityVersion:null},
+  {...source.position,floorAuthorityVersion:null});
+ assert.equal(next.position.floorAuthorityVersion,
+  newPaper.LEGACY_FLOOR_AUTHORITY_VERSION);
  assert.equal(next.version,newPaper.VERSION);
  assert.equal(next.policyActivatedAt,8000);
  assert.equal(next.brokerOrdersEnabled,false);
  assert.throws(()=>newPaper.migrate({...source,version:'CORRUPT'},8000),/MIGRATION_REFUSED/);
 });
-test('V543 PAPER hard -500 and 120/90 profit floor protect capital independently',()=>{
+test('V543 PAPER keeps hard -500 independent and demotes 120/90 to MCB-structure advice',()=>{
  const start=newPaper.initial(100);
  start.policyActivatedAt=100;start.lastObservationAt=100;
  start.position={direction:'long',entryAt:100,entryPrice:80000,lastPrice:80000,
@@ -189,7 +192,12 @@ test('V543 PAPER hard -500 and 120/90 profit floor protect capital independently
  const floor=newPaper.step(winning,{version:active.VERSION,action:'HOLD',reason:'TEST',
   phase:'STRUCTURAL_CONTINUATION',asOf:302,price:80089},
   {price:80089,ts:302,sourceAgeMs:0,tickAgeMs:0});
- assert.equal(floor.trade.exitReason,'GAIN_FLOOR_120_90_OR_220_180');
+ assert.equal(floor.trade,null);
+ assert.equal(floor.reason,'HOLD_MCB_STRUCTURE_OVERRIDES_GAIN_FLOOR');
+ assert.equal(winning.position.direction,'long');
+ assert.equal(winning.floorAttentionCount,1);
+ assert.equal(winning.floorAttentionLast.status,'FLOOR_EXIT_DEFERRED_TO_MCB_STRUCTURE');
+ assert.equal(winning.floorAuthorityVersion,newPaper.FLOOR_AUTHORITY_VERSION);
 });
 test('Paper step writes new V5.4.3 entry policy without erasing existing anti-churn keys',()=>{
  const s=newPaper.initial(100);s.startedAt=100;s.policyActivatedAt=100;
@@ -204,6 +212,7 @@ test('Paper step writes new V5.4.3 entry policy without erasing existing anti-ch
  const out=newPaper.step(s,decision,{price:80000,ts:300,sourceAgeMs:0,tickAgeMs:0});
  assert.equal(out.reason,'ENTER_PAPER');
  assert.equal(s.position.entryPolicyVersion,active.VERSION);
+ assert.equal(s.position.floorAuthorityVersion,newPaper.FLOOR_AUTHORITY_VERSION);
  assert.equal(s.position.direction,'long');
  assert.ok(s.usedKeys.includes(decision.entryKey));
  const second=newPaper.step(s,{...decision,action:'HOLD'},

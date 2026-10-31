@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-10-31T21:03:35+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Autorite gain floor v543 retiree des sorties automatiques et releguee en alerte as-of; MCB/structure EXIT prioritaire et hard risk -500 inchange; V494 seulement audite weekend",
+  "evidence": "zero-one/modules/v5/paper-v543.js FLOOR_AUTHORITY_VERSION; zero-one/modules/v5/runner-v543.js journaux floorAttention; zero-one/modules/config-server.js affichage alerte non executoire; zero-one/knowledge/BOONOLAB_V494_weekend_regime_V543_floor_MCB_structure_2026-10-31.md",
+  "previousEventSha256": "4283cba863f5995b8d8896b8582c1d1aa3fd2bf00575bff95c7ccc0255e82124"
+}

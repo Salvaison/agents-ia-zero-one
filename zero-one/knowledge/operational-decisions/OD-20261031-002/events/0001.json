@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-10-31T20:55:59+00:00",
+  "status": "AUTORISE",
+  "description": "Autorite gain-floor V543 a subordonner a MCB/structure, hard-risk preserve, V494 en observation de regime sans modification",
+  "evidence": "Demande exacte conservee 01, mission precise 02, origine 03; aucun changement PAPER precedent la creation de ce dossier",
+  "previousEventSha256": null
+}

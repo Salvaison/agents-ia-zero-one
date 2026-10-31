@@ -1,0 +1,3 @@
+Non sur 494 je crois plutôt qu'il n'aime pas le marché du weekend, il n'aime pas cette mollesse et indécision, petit volym. C'est mon hypothèse
+
+Pour 543 il faut enlever ou régresser dans la logique les gains floors, que leur autorité soit sous bordonnée à MCB et structure
