@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T13:33:15+00:00",
+  "status": "DOCUMENTE",
+  "description": "Sprites réalisés dans le chat et documentés avec masques alpha, SHA256, dimensions et aperçus ; aucune mise en service OVH",
+  "evidence": "knowledge/BOONO_TV_chat_5_postures_bureau_sprites_2026-11-01.md ; ZIP fourni en conversation et test alpha/masque",
+  "previousEventSha256": "f44853d7ad4a508d92c71f5798d231a2790fa60dc2fbd38fcb1281b288215375"
+}

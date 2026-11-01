@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-003",
+  "title": "BOONO-TV cinq sprites transparents du chat sur le bureau",
+  "createdAtUtc": "2026-11-01T13:32:16+00:00",
+  "authorization": "Demande explicite de fabrication de cinq graphiques découpés, sans déploiement sur OVH",
+  "reference": "Conversation BOONO-TV, 1er novembre 2026, chat noir et bureau canonique",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "0203b3e0158a0bbdc525a581ca3481db6a1f2b007fac07a07f5cfb821d5d6654",
+      "bytes": 516
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "365f4b1c2afb999b466be64d6f75560ed441bdb87009919b91a6933cc937a965",
+      "bytes": 1684
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "8a10b26fc9477fda4f352e04ba5730715bafd350be215e083e4f49a04e25e049",
+      "bytes": 2611
+    }
+  }
+}

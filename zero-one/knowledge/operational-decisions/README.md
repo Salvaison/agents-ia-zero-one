@@ -111,3 +111,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — chambre et fenêtres à paysages (1er novembre 2026)
 
 - [OD-20261101-002 — validation de la chambre et découpe alpha des vitrages](OD-20261101-002/03-origine-et-justification.md) : messages d'origine, prompt, provenance, décision et fichiers produits localement ; [fiche de la chambre canonique et empreintes](../BOONO_TV_chambre_canonique_vitrages_paysages_2026-11-01.md). Le décor est **validé** ; alpha/masque **fournis dans la conversation**, **non copiés sur OVH ni publiés en binaire dans Git**.
+
+## BOONO-TV — chat noir, cinq sprites RGBA sur le bureau (1er novembre 2026)
+
+- [OD-20261101-003 — cinq dessins du chat, découpages transparents et masques](OD-20261101-003/03-origine-et-justification.md) : demande exacte, provenance du générateur et du script de détourage, réalisation et vérification ; [fiche des cinq sprites](../BOONO_TV_chat_5_postures_bureau_sprites_2026-11-01.md). **Nouveaux dessins à valider pour mise en service ; binaires remis dans le chat, non sur OVH.**

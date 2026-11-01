@@ -1,0 +1,11 @@
+# Provenance exacte des instructions de l'intervention
+
+L'outil de génération visuelle a été appelé avec le message utilisateur de 1er novembre 2026 comme contexte. Aucune chaîne de texte formant un « prompt d'exécution explicite » n'a été transmise comme argument de l'outil ; le moteur d'image a interprété directement le contexte fourni. La planche résultante a été découpée en cinq sprites dans le runtime de ChatGPT avec le script `boono_chat_build_sprites.py` (copie intégrale dans le ZIP livré à l'utilisateur). Cet enregistrement est établi **après** la génération, pour rendre la provenance lisible ; il n'est pas présenté comme un prompt antérieur fictif.
+
+Instructions effectivement suivies, résumées sans les présenter comme verbatim :
+- Conserver le chat noir longiligne, yeux jaunes, malicieux, confirmé auparavant dans le loft BOONO, avec l'encrage comics à trame, et le bureau canonique comme support de prévisualisation.
+- Créer cinq poses différentes (assise attentive, jeu, ruse/allongé, toilette, alerte).
+- Générer un visuel avec véritable transparence RGBA et détourer les cinq silhouettes par séparation de composants alpha, sans copier des morceaux d'autres silhouettes.
+- Produire cinq fichiers PNG RGBA individuels standardisés 640x512, cinq masques 8 bits identiques aux canaux alpha, des découpes natives, des aperçus sur le bureau et une archive ZIP testée.
+- N'effectuer aucun déploiement de BOONO-TV, aucune modification de moteurs PAPER, ni action sur la production OVH.
+- Rédiger une note de réalisation et publier uniquement cette documentation et le statut réel dans la KB GitHub (pas de binaires).

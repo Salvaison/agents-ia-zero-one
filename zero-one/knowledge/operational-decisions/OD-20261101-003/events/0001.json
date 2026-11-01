@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T13:33:15+00:00",
+  "status": "AUTORISE",
+  "description": "Demande explicite de cinq nouveaux graphiques transparents du chat destinés au coin supérieur gauche du bureau",
+  "evidence": "01-demande-utilisateur-integrale.txt : validation initiale du personnage puis instruction exacte",
+  "previousEventSha256": null
+}
