@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T19:13:20+00:00",
+  "status": "AUTORISE",
+  "description": "Mandat explicite de reformatage du loft et réduction du personnage BOONO avec établi à taille inchangée",
+  "evidence": "01-demande-utilisateur-integrale.txt et capture Screenshot 2026-11-01 19.35.49.png",
+  "previousEventSha256": null
+}

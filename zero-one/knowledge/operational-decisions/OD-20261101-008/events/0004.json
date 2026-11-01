@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-01T19:13:20+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Recadrage V2 plein canevas activé par défaut sur studio OVH preview ; URL ?reframeV1=1 restaure V2 précédente et ?sceneV1=1 restaure V1, aucune modification PAPER",
+  "evidence": "OVH 127.0.0.1:3091 boono-v2.css/js ; manifest complet servi HTTP 200 ; capture source MarketCipher OK",
+  "previousEventSha256": "922a21117327c2e8f6a6a4c433ade22967a6aec7e259e80f64a86b75ac662949"
+}

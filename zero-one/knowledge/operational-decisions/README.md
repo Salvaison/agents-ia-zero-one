@@ -131,3 +131,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — établi plus petit et bord arrière recoupé (1er novembre 2026)
 
 - [OD-20261101-007 — recoupe alpha de la bande bois, réduction de l'établi et recalage des deux écrans](OD-20261101-007/03-origine-et-justification.md) : source utilisateur et capture, prompt rétrospectif, origine, mise en service sur OVH et limites ; [rapport de contrôle](../BOONO_TV_etabli_compact_2026-11-01.md). Source FFmpeg reproductible dans `boono-tv/scene-v2/generate_compact_desk.sh`. **Avant/après visuel à confirmer sur le navigateur noVNC ; aucune modification du moteur PAPER.**
+
+## BOONO-TV — recadrage plein canevas (1er novembre 2026)
+
+- [OD-20261101-008 — Reformatage loft et dix poses BOONO, conservation de l’échelle de l’établi](OD-20261101-008/03-origine-et-justification.md) : message source et capture, prompt rétrospectif, statuts implémentation/tests/service et limites ; [rapport technique](../BOONO_TV_reformatage_scene_1200x1080_2026-11-01.md) et [sources Python/JS/CSS/manifest](../../boono-tv/scene-v2/README.md). **19 images 1200×1080 installées sur OVH, rollback V2/V1 opérationnel ; prolongement du sol et détourage BOONO encore à valider graphiquement.**

@@ -1,0 +1,238 @@
+{
+  "schema": 2,
+  "release": "BOONOTV-V2-REFRAMED-20261101",
+  "created_at": "2026-11-01T19:05:42.100015+00:00",
+  "canvas": [
+    1200,
+    1080
+  ],
+  "loft": {
+    "mode": "extend floor using mirrored comic-floor only",
+    "native": [
+      1536,
+      1024
+    ],
+    "resized": [
+      1200,
+      800
+    ],
+    "preserved_content_y": "0..744"
+  },
+  "desk": {
+    "pixel_pos": [
+      140,
+      465
+    ],
+    "size": [
+      920,
+      613
+    ],
+    "unchanged_canonical_scale": true
+  },
+  "boono": {
+    "pixel_pos": [
+      483,
+      342
+    ],
+    "size": [
+      288,
+      374
+    ],
+    "previous_size": [
+      374,
+      486
+    ],
+    "scale_ratio": 0.7700534759358288,
+    "notes": "same poses, uniformly resized and bottom anchored on screens"
+  },
+  "cat": {
+    "pixel_pos": [
+      190,
+      460
+    ],
+    "size": [
+      230,
+      184
+    ]
+  },
+  "artwork_sources": "Only supplied approved images; no new objects/props created",
+  "limitations": [
+    "Floor extension is a mirrored continuation, not painted outpainting",
+    "BOONO head pose/orbit expression unchanged; only resize and anchor",
+    "Projection quads remain matched to existing unchanged compact desk",
+    "No automatic image proof of perfect hands/screen contact"
+  ],
+  "files": {
+    "loft_north_1200x1080.png": {
+      "sha256": "183c71a9ec2d1e38e518b5192b6fd5b9bcd1e2d874a38f64bffc642290244901",
+      "bytes": 2508218,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "landscape_city_1200x1080.png": {
+      "sha256": "5b670170c3bf99762555df601df745fbc9f11cef64d59f154c97b963e2c20854",
+      "bytes": 2633344,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "landscape_mountain_1200x1080.png": {
+      "sha256": "5d50ce0d8a944999bd7cef84d30356c882c64ea88a61616a563f89c705ab2692",
+      "bytes": 83781,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "desk_1200x1080.png": {
+      "sha256": "e78b2c9ac66be0cd831a9cbfea255aee1b3acd897c2bb63c0de8659e9c74991d",
+      "bytes": 998691,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_01_concentrated_1200x1080.png": {
+      "sha256": "e209583cbbfa86772d460eef5b9bde156ba8cfa3ae84b3d32e1e69a5a52f3c3b",
+      "bytes": 184011,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_02_thinking_left_1200x1080.png": {
+      "sha256": "f76a176557efb535446b3011b33be9858eaef9b46a18c191e569fb59c00540e4",
+      "bytes": 177710,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_03_right_finger_left_screen_1200x1080.png": {
+      "sha256": "955898254ac924cebea48ff139fd92695c5eaff669b2015366a9dec19d61568c",
+      "bytes": 172780,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_04_left_open_hand_1200x1080.png": {
+      "sha256": "acfb54d9fac93913e13eb1fa3a9f93e04e149dbee0794e4e4c1600c34ec99eab",
+      "bytes": 178866,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_05_observe_right_1200x1080.png": {
+      "sha256": "0ccbaff61cafa04d08de1377d92dbfd176fe2c85f586bffc8587f8eedb85e619",
+      "bytes": 177822,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_06_pause_right_1200x1080.png": {
+      "sha256": "3a4d740980ff0aff5a12f589585e438868639422d3c08a4cc15a762c274f3da6",
+      "bytes": 172366,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_07_idea_1200x1080.png": {
+      "sha256": "b3a18a78d179e155233b61071e146273985807314643160dae1bcb1ef13d6d0c",
+      "bytes": 184146,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_08_verify_left_1200x1080.png": {
+      "sha256": "23d6a2f3fa4585bd08d57e55f5a713ef4a1b9fe49d32d392ef7edaff7e891309",
+      "bytes": 172010,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_09_window_1200x1080.png": {
+      "sha256": "5dcd4f41193fa1baad97c054213924bb2fd3c278b6fd11cfe3052ef424591fdb",
+      "bytes": 158414,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "boono_10_relaxed_1200x1080.png": {
+      "sha256": "fcb6a864b6c8ee12e597bb454ec86f69e3039335efb94c0ce6f7329794e3f765",
+      "bytes": 168349,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "cat_01_observe_1200x1080.png": {
+      "sha256": "8235325b59f524cdb066bcc4c0258909461483184f276dbbe08a91731f671db9",
+      "bytes": 25455,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "cat_02_joue_1200x1080.png": {
+      "sha256": "25a44c70177f4a503db7a2b7aa21b873554a0f5f57b152985d2a23d77c477758",
+      "bytes": 28124,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "cat_03_ruse_1200x1080.png": {
+      "sha256": "cd9f8e8df0555c47467d1d46d65674d4251c91580c61fdfd045a407d68d4b87c",
+      "bytes": 21177,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "cat_04_toilette_1200x1080.png": {
+      "sha256": "f3d60962785ac9528931e0fa82bc8fb33787f25969fcd5dd912af2d1d4a844d9",
+      "bytes": 27202,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    },
+    "cat_05_surveille_1200x1080.png": {
+      "sha256": "4cca9ed2631b961d18f2b72b25a2efa551ed5b66b31b3bc377337b029689bcf7",
+      "bytes": 27115,
+      "size": [
+        1200,
+        1080
+      ],
+      "mode": "RGBA"
+    }
+  }
+}

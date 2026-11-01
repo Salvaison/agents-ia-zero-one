@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-01T19:13:20+00:00",
+  "status": "TESTE",
+  "description": "19 hashes/dimensions OK ; contrôle alpha des fenêtres ; 4 scénarios de chargement DOM simulés OK ; HTML/CSS/JS et MarketCipher HTTP 200, sourceOnline ; tests de retour V1/V2. Rendu visuel utilisateur à confirmer.",
+  "evidence": "knowledge/BOONO_TV_reformatage_scene_1200x1080_2026-11-01.md ; test_v2_reframe_runtime.js sur OVH ; manifest SHA256",
+  "previousEventSha256": "a70e64fdb1ba36cb2f9503addb8fd5edd0a3b136d0e77a09d8961940e1a7a623"
+}

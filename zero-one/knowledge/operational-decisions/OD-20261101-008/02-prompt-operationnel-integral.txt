@@ -1,0 +1,13 @@
+# BOONO-TV — mission de recadrage proportionnel sur OVH (procès-verbal rédigé rétrospectivement)
+
+Attention : cette consigne décrit précisément l'intervention réellement exécutée après le mandat utilisateur, et n'est pas présentée comme un message antérieur envoyé verbatim à un agent.
+
+1. Préserver la géométrie de l'établi compact validé (920×613 dans le cadre 1200×1080, position x140 y465) et la calibration des deux écrans ; ne pas redessiner les ferrures, graphes vivants et connecteurs.
+2. Corriger la différence de ratio loft 1536×1024 (3:2) → cadre 1200×1080 (10:9), en conservant la verrière, le set musical, les affiches et le salon dans leur géométrie originale. Ne pas déformer la hauteur des fenêtres. Prolonger de manière expérimentale la partie sol sous l'illustration, en l'isolant comme travail de compositing encore à valider.
+3. Recadrer les dix poses approuvées de BOONO sur des images pleine scène de 1200×1080, en réduisant leur boîte de dessin de 374×486 à 288×374, positionnée vers (483,342), avec le bas des avant-bras maintenu au contact des écrans. Maintenir le regard principal vers la table dans les attitudes de travail, sans prétendre modifier les traits du personnage par un simple recadrage.
+4. Convertir les cinq poses de chat, le bureau compact, le loft transparent et les deux fonds interchangeables en ressources de 1200×1080, PNG RGBA, sans toucher aux sources originales.
+5. Installer les nouveaux médias dans un sous-dossier indépendant `assets/boonotv-v2-20261101/reframed-20261101`, avec manifeste horodaté et empreintes SHA256 des 19 fichiers.
+6. Étendre les fichiers `boono-v2.css` et `boono-v2.js` en gardant leur ancienne version sauvegardée, avec détection du pack, chargement contrôlé, sélection automatique et retour `?reframeV1=1`; `?sceneV1=1` doit toujours donner la scène historique.
+7. Vérifier syntaxe JavaScript, toutes les empreintes/tailles, endpoints HTTP et source TradingView via studio OVH ; exécuter un test d'initialisation simulant le navigateur avec 4 scénarios d'URL (normal, rollback V2, rollback V1, variante).
+8. Documenter les restrictions : le prolongement du sol ne remplace pas un travail d'illustrateur/outpainting final, et plusieurs sprites originaux conservent des fragments de chaise/fond autour du personnage. Aucune modification des moteurs PAPER ni des ordres, aucun redémarrage Amsterdam.
+9. Versionner uniquement le code, le manifeste, l'index et le rapport dans la KB GitHub ; les 19 PNG volumineux restent sur OVH, sans prétendre les publier dans le dépôt.

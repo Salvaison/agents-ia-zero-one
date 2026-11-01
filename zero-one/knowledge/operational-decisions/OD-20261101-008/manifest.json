@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-008",
+  "title": "BOONO-TV reformatage scene loft et poses en 1200x1080",
+  "createdAtUtc": "2026-11-01T19:11:25+00:00",
+  "authorization": "Demande explicite de recadrage et reproportion de toutes les ressources retenues",
+  "reference": "Conversation BOONO-TV du 1er novembre 2026, capture Screenshot 2026-11-01 19.35.49.png",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2d0837393e74fba1f06a1d1e894cc937e74325483965032864c250cf87d474b1",
+      "bytes": 719
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "4eba506e685fe571bb6d471ecc2c47adfe56cb1a78e5f32e8970de3cc567a0a1",
+      "bytes": 2612
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "3196550ad9c4d888f2071962a9b8af2a209fb6d28d1cd16daad912625a97c228",
+      "bytes": 2682
+    }
+  }
+}

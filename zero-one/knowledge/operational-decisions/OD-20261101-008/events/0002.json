@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T19:13:20+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Pack 19 images 1200x1080 recadrées sur OVH, scripts CSS/JS adaptés, préchargement et bascule V2/V1 ; établi et calibration inchangés",
+  "evidence": "OVH assets/boonotv-v2-20261101/reframed-20261101/ ; scene/boono-v2.js ; scene/boono-v2.css ; scene/build_reframed_scene.py",
+  "previousEventSha256": "1e563b61f06470b0c7fbbeb0e9c05d2784a84d4d9549a3ac9f10ed2bcc221632"
+}

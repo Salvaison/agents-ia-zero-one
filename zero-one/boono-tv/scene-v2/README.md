@@ -34,3 +34,20 @@ La page `scene/index.html` ajoute `<link rel="stylesheet" href="/boono-v2.css">`
 `?sceneV1=1` affiche l'ancienne scène sans supprimer aucun asset. La sauvegarde OVH du `index.html` historique se trouve dans `incoming/backup-boono-tv-20261101-before-v2/`.
 
 Ne pas copier un ancien `projection-config.json` ni redémarrer BOONOTRADE pour résoudre un problème de studio visuel.
+
+
+## Recadrage plein canevas 1200 × 1080 — OD-20261101-008
+
+Cette version ajuste le cadrage après comparaison avec une capture du studio. **L'établi reste à son échelle validée** 920 × 613 à (140,465) ; BOONO passe de 374 × 486 à 288 × 374 et est ancré à (483,342), mains au même niveau de travail. Le chat conserve 230 × 184 à (190,460).
+
+**Sur OVH :**
+- `scene/build_reframed_scene.py` produit 19 images pleine scène à partir du pack source, sous `assets/boonotv-v2-20261101/reframed-20261101/`.
+- `scene/boono-v2.css` sélectionne les images plein canevas avec la classe `boono-reframed` ;
+- `scene/boono-v2.js` vérifie les 19 assets, les précharge et active la nouvelle mise en page, avec repli automatique sur l'ancienne V2 si les images manquent.
+- `reframed-20261101-manifest.json` conserve les SHA256, dimensions et ancres. Les PNG volumineux sont **sur OVH**, non dans Git.
+
+**Retours :** `?reframeV1=1` pour l'ancienne V2 (bureau compact mais fond tronqué) ; `?sceneV1=1` pour l'ancienne composition du studio.
+
+**QA :** 19 SHA conformes, tests d'initialisation JS simulée sur quatre URLs, flux MarketCipher et snapshot Amsterdam conservés. Le prolongement de sol sous y=700 constitue une **retouche de compositing**, non une illustration finale. Plusieurs sprites gardent des fonds de chaise résiduels. Ne pas présenter ces défauts comme corrigés sans nouveau masque vérifié.
+
+[Récit de l'intervention et statut](../../knowledge/BOONO_TV_reformatage_scene_1200x1080_2026-11-01.md) · [Registre OD-20261101-008](../../knowledge/operational-decisions/OD-20261101-008/03-origine-et-justification.md).

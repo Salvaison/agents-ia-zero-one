@@ -49,3 +49,32 @@
 #room.boono-v2 #deskScreenLeft,
 #room.boono-v2 #deskScreenRight{z-index:11}
 @media(prefers-reduced-motion:reduce){#room.boono-v2 #boonoV2Cat,#room.boono-v2 .boono-character{transition:none}}
+
+/* BOONO-TV 01/11 · Camera-space reframing (full 1200x1080 images).
+   Reversible with ?reframeV1=1; original desk geometry unchanged. */
+#room.boono-v2.boono-reframed .boono-scene,
+#room.boono-v2.boono-reframed .boono-scene.working,
+#room.boono-v2.boono-reframed .boono-scene.thinking,
+#room.boono-v2.boono-reframed .boono-scene.worried,
+#room.boono-v2.boono-reframed .boono-scene.concentrated,
+#room.boono-v2.boono-reframed .boono-scene.confident,
+#room.boono-v2.boono-reframed .boono-scene.observe,
+#room.boono-v2.boono-reframed .boono-scene.execute {
+ background-image:url('/assets/boonotv-v2-20261101/reframed-20261101/loft_north_1200x1080.png')!important;
+ background-position:0 0!important;background-size:1200px 1080px!important;
+ background-repeat:no-repeat!important;opacity:1!important
+}
+#room.boono-v2.boono-reframed .boono-desk {
+ background-image:url('/assets/boonotv-v2-20261101/reframed-20261101/desk_1200x1080.png')!important;
+ background-position:0 0!important;background-size:1200px 1080px!important
+}
+#room.boono-v2.boono-reframed .boono-character {
+ background-image:var(--boono-v2-character)!important;
+ background-position:0 0!important;background-size:1200px 1080px!important
+}
+#room.boono-v2.boono-reframed #boonoV2Landscape {
+ width:1200px!important;height:1080px!important;object-fit:fill!important
+}
+#room.boono-v2.boono-reframed #boonoV2Cat {
+ left:0!important;top:0!important;width:1200px!important;height:1080px!important;object-fit:fill!important
+}
