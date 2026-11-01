@@ -123,3 +123,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — sept postures assises, détourage et perspective (1er novembre 2026)
 
 - [OD-20261101-005 — alignement des personnages et masques alpha](OD-20261101-005/03-origine-et-justification.md) : validation d'intention, sept sprites RGBA et masques contrôlés, essai de perspective **insuffisant pour production** ; [rapport technique](../BOONO_TV_7_postures_assises_masques_perspective_2026-11-01.md). Découpes et visuels contenus uniquement dans le ZIP de conversation, pas de déploiement OVH, aucun changement PAPER.
+
+## BOONO-TV — reconstruction scène V2 sur OVH (1er novembre 2026)
+
+- [OD-20261101-006 — installation OVH, assets, projection, repli V1](OD-20261101-006/03-origine-et-justification.md) : demande exacte, mandat, journaux d'événements ; [rapport technique et réserves de qualité](../BOONO_TV_reconstruction_scene_V2_OVH_2026-11-01.md). Code V2 archivé dans [boono-tv/scene-v2](../../boono-tv/scene-v2/README.md) et 29 images vérifiées par le manifeste. Mise en service de la **prévisualisation locale** sans modification du trading ; rendu final navigateur distant à valider.

@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-01T18:11:03+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Scene V2 activee par defaut sur studio OVH PREVIEW port local 3091 avec repli ?sceneV1=1. Aucune diffusion publique prouvee ; inspection visuelle encore ouverte.",
+  "evidence": "Page racine importe boono-v2.css/js ; assets servis HTTP 200 ; /api/health sourceOnline=true",
+  "previousEventSha256": "0e06baf7658a61f30b4b3ed606fcfad65b352ce624e0346830a9e6421163110c"
+}

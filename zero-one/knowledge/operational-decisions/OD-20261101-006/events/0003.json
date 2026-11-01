@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-01T18:11:03+00:00",
+  "status": "TESTE",
+  "description": "SHA 29/29, archive valide, syntaxe JS, HTTP 200, source Amsterdam online, MarketCipher non vide ; geometrie en simulation Chromium locale. Rendu visuel du navigateur remote reste non verifie.",
+  "evidence": "knowledge/BOONO_TV_reconstruction_scene_V2_OVH_2026-11-01.md ; projection-config original byte-identique ; report des controles",
+  "previousEventSha256": "2a7f11c013fc7bac12cad484b8fa454fc7b60b52f01fa5980ecc85c8ba575e57"
+}

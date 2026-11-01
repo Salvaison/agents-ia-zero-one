@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-006",
+  "title": "BOONO-TV v2 reconstruction studio OVH et scene canonique",
+  "createdAtUtc": "2026-11-01T18:08:54+00:00",
+  "authorization": "Mandat explicite de reconstruire la scene sur OVH avec les assets retenus",
+  "reference": "Conversation BOONO-TV 1er novembre 2026, commande de reconstruction et transfert SCP",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "dafb9bef8485c98bad6ebb7f1990ed74489674df99727eab4b73ddb50409b982",
+      "bytes": 164
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "90c1862c24532fca6c4ce2f44e986e144c88f6e3019dd1adb82d2ba0bd33c5b9",
+      "bytes": 2737
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "cab63bc181b7c500ee96e2a3f341f1db056b253697f7fd2e774ccc60ec517a23",
+      "bytes": 2247
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T18:11:03+00:00",
+  "status": "AUTORISE",
+  "description": "Mandat explicite de reconstruire BOONO-TV avec les ressources retenues et archive livree",
+  "evidence": "01-demande-utilisateur-integrale.txt ; transfert SCP confirme par utilisateur ; ZIP SHA256 documente",
+  "previousEventSha256": null
+}

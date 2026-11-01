@@ -1,0 +1,24 @@
+# BOONO-TV — compte rendu opérationnel de reconstruction V2 (établi après intervention)
+
+**Ce document est rédigé après le début des opérations** et ne prétend pas être un prompt envoyé textuellement à un exécutant externe avant les changements.
+
+**Mandat de l'utilisateur :** installer sur OVH les ressources validées le 1er novembre 2026, reconstruire la scène de travail BOONO-TV, préserver les flux de données réels, conserver un retour à l'état précédent.
+
+## Opérations effectivement accomplies
+
+1. Vérifier sur OVH le ZIP de transfert de l'utilisateur et chacune des 29 ressources du manifeste (SHA256, taille, présence).
+2. Archiver les fichiers de scène existants et la calibration dans `incoming/backup-boono-tv-20261101-before-v2/`. Ne pas écraser la calibration historique.
+3. Extraire le pack sous `runtime/boono-tv/assets/boonotv-v2-20261101/` sans remplacer les assets historiques.
+4. Créer `scene/boono-v2.css` et `scene/boono-v2.js`, puis les référencer dans la page servie sur le port local du studio. Ces fichiers sont intégrés ici en copie exacte dans `zero-one/boono-tv/scene-v2/`.
+5. Afficher le loft nord avec les affiches Muddy Waters et Howlin’ Wolf, ses vitrages transparents avec paysage arrière, l'établi et les dix postures BOONO (sept états actifs, trois variantes d'inspection), ainsi que les cinq postures du chat.
+6. Respecter l'autorité de couches voulue : **BOONO et ses mains au-dessus du bureau et des écrans**, sans séparation supplémentaire de ses mains.
+7. Replacer les deux surfaces d'écran au-dessus des cadres en laiton, avec écran gauche instruments internes et écran droit vraie image MarketCipher en lecture seule. Conserver le flux Amsterdam et le rythme de casting du studio.
+8. Préserver l'ancienne présentation accessible via `?sceneV1=1`, et documenter les tests, les limites et le chemin de reprise. Ne pas modifier les collecteurs, les moteurs ni les ledgers du trading.
+
+## Qualifications
+
+**Vérifiés sur OVH :** archive ZIP intègre, hashes des 29 assets, accessibilité HTTP, contrôle syntaxique JS, configuration précédente byte-identique, API et capture MarketCipher disponibles, retour V1 codé.
+**Contrôle géométrique :** simulation navigateur Chromium locale avec les deux nouveaux quadrilatères et BOONO au premier plan, non capture directe du navigateur connecté sur OVH.
+**Non confirmé définitivement :** qualité finale des silhouettes aux bords fins et des masques, égalité chromatique dans les paysages et qualité du rendu final sur le navigateur remote. Les sprites sont des prototypes graphiques, pas une preuve de perfection.
+
+**Aucun ordre financé, aucun réglage de risque ni moteur PAPER modifié.**

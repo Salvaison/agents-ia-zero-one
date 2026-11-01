@@ -1,0 +1,379 @@
+{
+  "schema": 1,
+  "release": "BOONOTV-v2-artwork-2026-11-01",
+  "canonical": {
+    "room": "loft_north_rgba.png",
+    "desk": "desk_canonical_alpha.png",
+    "poses": [
+      "concentrated",
+      "thinking_left",
+      "right_finger_left_screen",
+      "left_open_hand",
+      "observe_right",
+      "pause_right",
+      "idea",
+      "verify_left",
+      "window",
+      "relaxed"
+    ],
+    "cat": [
+      "observe",
+      "joue",
+      "ruse",
+      "toilette",
+      "surveille"
+    ]
+  },
+  "roomCanvas": [
+    1200,
+    1080
+  ],
+  "deskScale": {
+    "x": 0,
+    "y": 280,
+    "width": 1200,
+    "height": 800
+  },
+  "boonoPose": {
+    "x": 440,
+    "y": 125,
+    "width": 374,
+    "height": 486,
+    "zIndex": "above desk"
+  },
+  "cat": {
+    "x": 180,
+    "y": 340,
+    "width": 230,
+    "height": 184
+  },
+  "screenGeometry": "NOT CALIBRATED: retain existing market data but new quads must be measured against new desk",
+  "projectedLeft": "BOONO internal",
+  "projectedRight": "authentic TradingView MarketCipher",
+  "photographic_assets": "generated user-approved drawings, not real execution charts",
+  "warnings": [
+    "Pose masks extracted from original brown-gradient sprite sheet, not manually perfected",
+    "The new built-in illustrative charts in the desk must be replaced with real projected screens",
+    "This archive is NOT deployed on OVH"
+  ],
+  "poseAssets": {
+    "concentrated": {
+      "index": 1,
+      "filename": "boono_01_concentrated.png",
+      "source_cell": [
+        0,
+        0,
+        307,
+        421
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "thinking_left": {
+      "index": 2,
+      "filename": "boono_02_thinking_left.png",
+      "source_cell": [
+        307,
+        0,
+        614,
+        421
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "right_finger_left_screen": {
+      "index": 3,
+      "filename": "boono_03_right_finger_left_screen.png",
+      "source_cell": [
+        614,
+        0,
+        922,
+        421
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "left_open_hand": {
+      "index": 4,
+      "filename": "boono_04_left_open_hand.png",
+      "source_cell": [
+        922,
+        0,
+        1229,
+        421
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "observe_right": {
+      "index": 5,
+      "filename": "boono_05_observe_right.png",
+      "source_cell": [
+        1229,
+        0,
+        1536,
+        421
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "pause_right": {
+      "index": 6,
+      "filename": "boono_06_pause_right.png",
+      "source_cell": [
+        0,
+        488,
+        307,
+        902
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "idea": {
+      "index": 7,
+      "filename": "boono_07_idea.png",
+      "source_cell": [
+        307,
+        488,
+        614,
+        902
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "verify_left": {
+      "index": 8,
+      "filename": "boono_08_verify_left.png",
+      "source_cell": [
+        614,
+        488,
+        922,
+        902
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "window": {
+      "index": 9,
+      "filename": "boono_09_window.png",
+      "source_cell": [
+        922,
+        488,
+        1229,
+        902
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    },
+    "relaxed": {
+      "index": 10,
+      "filename": "boono_10_relaxed.png",
+      "source_cell": [
+        1229,
+        488,
+        1536,
+        902
+      ],
+      "mask": "alpha channel PNG, separately exported",
+      "base_size": [
+        400,
+        520
+      ],
+      "anchor": [
+        200,
+        490
+      ],
+      "status": "prototype; fine-edge review required"
+    }
+  },
+  "files": {
+    "boono_07_idea_mask.png": {
+      "sha256": "0beb87143d5f180e2f2037c914ce4da1d469a4035dfff3baa4d01407ac7a59a5",
+      "bytes": 10009
+    },
+    "boono_06_pause_right.png": {
+      "sha256": "ab2c45eb79383c6c1a53a3ff19a7276ac5fc0f3661900a824fba5ccab28d97fc",
+      "bytes": 280682
+    },
+    "boono_07_idea.png": {
+      "sha256": "57b194d781afa4d0ffe0dc17ed4a439b778c00a7a80eeeac38062f2fb778b88c",
+      "bytes": 296592
+    },
+    "boono_02_thinking_left_mask.png": {
+      "sha256": "fd3ffcff176126e751e001ae8ab5eacc2d3925100b6df57df17209329e665847",
+      "bytes": 6652
+    },
+    "cat_04_toilette.png": {
+      "sha256": "87c2bfa8d16ff9284ac662bba21de806397bd8ea77ca07fc190579db21f01b32",
+      "bytes": 120672
+    },
+    "boono_02_thinking_left.png": {
+      "sha256": "344893936c5b30e646187a96be5874985d41b84e6b1298a894682f23759a3d53",
+      "bytes": 289608
+    },
+    "boono_04_left_open_hand.png": {
+      "sha256": "2e343cac4e3eb520e8880213330fd58195b5fbb269af80b7748bcdaaaec5fd48",
+      "bytes": 289129
+    },
+    "cat_01_observe.png": {
+      "sha256": "eeff50cbccfa6d7140625dd7ae800ba44f7ab372c94875ee5a438f1e5c822ba4",
+      "bytes": 110363
+    },
+    "cat_03_ruse.png": {
+      "sha256": "bfdf11f0fb8253ddaf15cd07b7eab037e1a93a22ba38d5f38504d1fb97cf9851",
+      "bytes": 89265
+    },
+    "loft_reference.png": {
+      "sha256": "4e3110916ffbd5be999af2e8ca3cdb5df5e74c462640bbbc0ecbd43366619145",
+      "bytes": 3427156
+    },
+    "boono_03_right_finger_left_screen.png": {
+      "sha256": "9c1a56c87f511654b7c7eaa3ded3347035307a65bc8bac507751fab29da07cf7",
+      "bytes": 282534
+    },
+    "boono_01_concentrated_mask.png": {
+      "sha256": "1ce83c93d330ed8dde2b0980c8a174fe63697fcb5fc8adb63d41ab1dc811bda2",
+      "bytes": 10305
+    },
+    "boono_01_concentrated.png": {
+      "sha256": "7d86526c2a20ff2b2e072b64e2b25b403e4a9df9f60ed5c4d437f9a0eb4eb71d",
+      "bytes": 297736
+    },
+    "boono_09_window_mask.png": {
+      "sha256": "9c3ae15da8406e650ac4d1ad70bd37d47d7affd37c1b8107db0c8746a349c9be",
+      "bytes": 6211
+    },
+    "boono_08_verify_left.png": {
+      "sha256": "0fa22df4bd70c09754e963cff8a36b9c0c0debb30a4922f71b6ca7c63da361b9",
+      "bytes": 280362
+    },
+    "landscape_mountain_demo.jpg": {
+      "sha256": "05b85effbe3814f36b7339f2e04b293e092898e5a86e05fa364b9fa8aa5db7b7",
+      "bytes": 40671
+    },
+    "boono_10_relaxed_mask.png": {
+      "sha256": "d300745654953ac6e682bfd5c1982173976cf4deea88fe06d50349f1fba9c2a8",
+      "bytes": 10863
+    },
+    "boono_08_verify_left_mask.png": {
+      "sha256": "dd4e9257c801404d9ae18d161117e34001c51583356dddb4673d0eef7a03ffa5",
+      "bytes": 10211
+    },
+    "boono_05_observe_right_mask.png": {
+      "sha256": "cea0f7616bc3c65e2873475e470800849b1ec4b609e23dcfb65533594b62ce37",
+      "bytes": 8721
+    },
+    "desk_canonical_alpha.png": {
+      "sha256": "c658facf29f644042a8255925c9bfa780e218ea56103f0ef1dc6807b73a34f05",
+      "bytes": 3760010
+    },
+    "boono_05_observe_right.png": {
+      "sha256": "11713a1cecce3c3fb344eee08efd00d92cf25a476deabbd805e0bf3f94280cad",
+      "bytes": 289306
+    },
+    "cat_05_surveille.png": {
+      "sha256": "e0bcac58dd9e33be020aa1ceb4fcae02a5f2611173c369607554f589f1d39be7",
+      "bytes": 118731
+    },
+    "boono_09_window.png": {
+      "sha256": "a81bd5f8cafe99b9b744f4a22d3b42732ef476e5c5c02600f7828467d1b2093e",
+      "bytes": 253441
+    },
+    "boono_06_pause_right_mask.png": {
+      "sha256": "efb215217125bc0dd5da4d1ef3a3018ab4a3a043b0d2c3841db8af0b7d73df96",
+      "bytes": 9266
+    },
+    "cat_02_joue.png": {
+      "sha256": "43694b8984ae7001016707bfc2a0eb1ef2ee4160237217846f93f4c570f6c76d",
+      "bytes": 123254
+    },
+    "boono_04_left_open_hand_mask.png": {
+      "sha256": "01d4d1d689b7400458bcdefaa6df72149536da761f23dbd50510cbbde119da9d",
+      "bytes": 10390
+    },
+    "boono_03_right_finger_left_screen_mask.png": {
+      "sha256": "c122cf8bf47e058c3370a812151582d668f0b1ee92bc8b8bfcb02e8f3e26c3d2",
+      "bytes": 9894
+    },
+    "boono_10_relaxed.png": {
+      "sha256": "7dd6c4551d6a9f294aa7a14177d6d4b5bbe0e873b6e472ab4ac6d2063030e92b",
+      "bytes": 266423
+    },
+    "loft_north_rgba.png": {
+      "sha256": "590b2df725976a7435bc820677679a6a854d5852992eaa8396d87717fc9a5334",
+      "bytes": 3886636
+    }
+  }
+}

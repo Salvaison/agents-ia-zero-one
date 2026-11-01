@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T18:11:03+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Pack image V2 installe sur OVH avec CSS/JS et imports HTML ; scene V1 conservee comme repli, sans retoucher la calibration V1",
+  "evidence": "OVH runtime/boono-tv/assets/boonotv-v2-20261101/ ; scene/boono-v2.css ; scene/boono-v2.js ; index.html",
+  "previousEventSha256": "5a2e1ce94420e62e77fc546d5757497e430d4c181ab6289c77183b7cb539cddf"
+}
