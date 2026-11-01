@@ -1,0 +1,12 @@
+# Mission constatée pour OD-20261101-005
+
+Ce texte est un procès-verbal de l'intervention effectivement menée en conversation, et NON la citation d'un prompt envoyé à un exécutant externe : le moteur d'image a agi depuis le contexte conversationnel.
+
+- Référence personnage : mugshot BOONO, fiche canonique v1.0, sept états historiques du casting BOONO-TV.
+- Source validée : planche sept postures assises avec BOONO et de faux meubles/accessoires de décor inclus.
+- Correction demandée : supprimer l'environnement collé aux sprites, produire un masque alpha réel et un fichier transparent indépendant par posture, vérifier la perspective derrière l'établi validé.
+- Réalisation dans le runtime conversation : extraction par masques assistés et opérations OpenCV, sept PNG RGBA 640x560, sept masques de 8 bits égaux au canal alpha, scripts/manifest/QA et essais de perspective du bureau 1536x1024.
+- Validation du compositing : distinction des couches « robot derrière établi » et « mains devant les écrans ». Le prototype montre que BOONO est partiellement occulté par la profondeur du plateau ; les interactions avec l'écran exigent une reprise graphique des mains.
+- Aucun sprite n'est qualifié de définitif sans artefacts : restes d'accessoires près de certaines épaules et fins de torse à retoucher ; il ne faut pas copier ces sorties dans les assets live.
+- Aucune modification des moteurs PAPER, des données/ordres de trading, du studio OVH ou du fichier de calibration vivant.
+- Archiver le résultat et le rapport technique dans la KB, versionner seulement le texte, préserver la source de la demande et la preuve du statut.

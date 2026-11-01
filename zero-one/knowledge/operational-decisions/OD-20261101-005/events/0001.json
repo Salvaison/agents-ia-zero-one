@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T16:17:23+00:00",
+  "status": "AUTORISE",
+  "description": "Validation des sept attitudes et exigence de résoudre perspective/détourage sans artefact",
+  "evidence": "01-demande-utilisateur-integrale.txt, source verbatim de la conversation",
+  "previousEventSha256": null
+}

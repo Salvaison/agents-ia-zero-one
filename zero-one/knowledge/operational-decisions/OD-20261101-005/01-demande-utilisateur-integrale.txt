@@ -1,0 +1,5 @@
+[Demande originale concernant la production de sept postures assises]
+Bien maintenant tu vas pouvoir me crée les 7 postures assises derriére son bureau de Boono dans BoonoTv avec masque de transparence, celon le cahier des charge établit
+
+[Validation et exigence de perspective/détourage — message courant]
+Oui je valide mais pense à la géométrie de l'image et du bureau, là il y aura un problème de perspective entre Boono et l'établit et découpe bien le personnage du fond de l'image que nous puissions l'intégrer sans artefact

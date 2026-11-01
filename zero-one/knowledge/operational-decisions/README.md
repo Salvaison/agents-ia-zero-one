@@ -119,3 +119,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — identité du personnage (1er novembre 2026)
 
 - [OD-20261101-004 — fiche canonique d'apparence et de caractère de BOONO](OD-20261101-004/03-origine-et-justification.md) : origine et demandes exactes, prompt de rédaction conservé, statut documentaire ; [fiche complète](../BOONO_identite_visuelle_mecanique_personnalite_v1_2026-11-01.md) et [rapport d'itérations](../BOONO_TV_rapport_identite_personnage_2026-11-01.md). **Charte retenue, sprites du robot debout encore non validés ; pas de déploiement BOONO-TV.**
+
+## BOONO-TV — sept postures assises, détourage et perspective (1er novembre 2026)
+
+- [OD-20261101-005 — alignement des personnages et masques alpha](OD-20261101-005/03-origine-et-justification.md) : validation d'intention, sept sprites RGBA et masques contrôlés, essai de perspective **insuffisant pour production** ; [rapport technique](../BOONO_TV_7_postures_assises_masques_perspective_2026-11-01.md). Découpes et visuels contenus uniquement dans le ZIP de conversation, pas de déploiement OVH, aucun changement PAPER.

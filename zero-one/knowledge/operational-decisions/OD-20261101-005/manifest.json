@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-005",
+  "title": "BOONO-TV sept sprites alpha et geometrie du bureau",
+  "createdAtUtc": "2026-11-01T16:16:19+00:00",
+  "authorization": "Validation des sept postures, exigence de transparence et de correction perspective",
+  "reference": "Conversation BOONO-TV, 1er novembre 2026 — sept poses assises et images de bureau",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "5e66d09ace2247ace6161fcf2cdacda97a3e2b87972406df07fc74d4b07c4fa2",
+      "bytes": 544
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8c43532b5b28320fec0003348494da5042e91ec3396eea3963a56889d6553a85",
+      "bytes": 1673
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "f8c31f6936fa56bcaae3003b4001a806730e11c1994d9a2e2e53601d40e82a47",
+      "bytes": 1803
+    }
+  }
+}

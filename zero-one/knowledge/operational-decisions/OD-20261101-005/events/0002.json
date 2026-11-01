@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T16:17:23+00:00",
+  "status": "DOCUMENTE",
+  "description": "Sept sprites RGBA et masques créés et QA alpha réussi ; test perspective démontre la nécessité de mains avant supplémentaires ; non prêt pour intégration",
+  "evidence": "BOONO_TV_7_postures_sprites_masques_et_perspective_v1.zip disponible dans conversation ; knowledge/BOONO_TV_7_postures_assises_masques_perspective_2026-11-01.md ; SHA256 dans le rapport",
+  "previousEventSha256": "56734b72cb6cbab124af8b3a1f8f649c8e46e991fa1d9ee8a6e99ecc656f9136"
+}
