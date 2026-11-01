@@ -107,3 +107,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — bureau canonique et atelier musical (1er novembre 2026)
 
 - [OD-20261101-001 — valider le bureau/ordinateur et documenter l'exploration du loft](OD-20261101-001/03-origine-et-justification.md) : messages d'origine intégraux, prompt de documentation, provenance, statut et limites ; [bureau canonique v1.0](../BOONO_TV_bureau_ordinateur_reference_canonique_2026-11-01.md) ; [compte rendu et loft encore à valider](../BOONO_TV_compte_rendu_bureau_et_loft_2026-11-01.md). **Publication documentaire uniquement, aucun déploiement studio ni changement PAPER.**
+
+## BOONO-TV — chambre et fenêtres à paysages (1er novembre 2026)
+
+- [OD-20261101-002 — validation de la chambre et découpe alpha des vitrages](OD-20261101-002/03-origine-et-justification.md) : messages d'origine, prompt, provenance, décision et fichiers produits localement ; [fiche de la chambre canonique et empreintes](../BOONO_TV_chambre_canonique_vitrages_paysages_2026-11-01.md). Le décor est **validé** ; alpha/masque **fournis dans la conversation**, **non copiés sur OVH ni publiés en binaire dans Git**.

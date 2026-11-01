@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-002",
+  "title": "Loft BOONO-TV canonique et masque alpha pour paysages",
+  "createdAtUtc": "2026-11-01T13:16:12+00:00",
+  "authorization": "Validation explicite de la chambre, puis demande de masque et de référence canonique",
+  "reference": "Conversation BOONO-TV, 1er novembre 2026 (illustration du loft et deux affiches source)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "8de52b93a53157716c272e5d0b417d1e4cc5108a8c57aee43e998c475b765e70",
+      "bytes": 518
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b18a14d90860e20c15c1c987bdbf5e89840b663b1c274f8449f8ebfe299eda01",
+      "bytes": 1638
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e6c3ed1f20ff6e0a111e3d80cdf3453fae401b856da4fbbe99064dc7c1ecf3f5",
+      "bytes": 2063
+    }
+  }
+}

@@ -1,0 +1,5 @@
+[Message utilisateur — première validation du nouveau loft et des affiches]
+Ok très bien je valide aussi le chat mais refait l'image de la chambre, même géométrie, même mobilier mais avec les affiches mises à jour 
+
+[Message utilisateur — validation de la nouvelle illustration et création du masque]
+Ok très bien, fait maintenant un mask de transparence aux fenêtres pour que l'on puisse mettre derrière une couche avec différents paysages. Fait de cette image la référence pour la chambre de Boono

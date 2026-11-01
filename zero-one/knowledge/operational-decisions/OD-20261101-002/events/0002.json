@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T13:17:23+00:00",
+  "status": "DOCUMENTE",
+  "description": "Référence de la chambre fixée dans la KB ; PNG RGB, RGBA, masque et aperçu créés dans la conversation (non versés en binaire sur serveur) ; aucun déploiement studio",
+  "evidence": "knowledge/BOONO_TV_chambre_canonique_vitrages_paysages_2026-11-01.md ; SHA256 des quatre PNG ; contrôle alpha 1536x1024",
+  "previousEventSha256": "259f7047f71a029078e4579ccfd542fbdf82c474aad7028079fef89f14a46e74"
+}

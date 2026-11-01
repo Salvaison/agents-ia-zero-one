@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T13:17:23+00:00",
+  "status": "AUTORISE",
+  "description": "Approbation explicite de la chambre et demande de détourage des fenêtres en vue de paysages variables",
+  "evidence": "Texte utilisateur littéral dans 01 ; fichier de description du 01/11",
+  "previousEventSha256": null
+}
