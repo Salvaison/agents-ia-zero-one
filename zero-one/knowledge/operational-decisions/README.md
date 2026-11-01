@@ -103,3 +103,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## Régime V494 du samedi et autorité de sortie V543 — 31 octobre 2026
 
 - [OD-20261031-002 — étudier le faible débit du week-end V494 et rétrograder les gain-floors V543 sous autorité MCB/structure](OD-20261031-002/03-origine-et-justification.md). V494 en **analyse seulement** : archive Audit14D comparée sur mêmes heures vendredi/samedi, pas de veto temporel. V543 PAPER : floors 120/90 et 220/180 convertis en **alertes non exécutoires pour les prochaines entrées**, hard-risk −500 et sorties MCB/structure conservés ; position préexistante garde sa politique de floor jusqu'à clôture. **Mise en service contrôlée**, tests et limites dans le [rapport détaillé](../BOONOLAB_V494_weekend_regime_V543_floor_MCB_structure_2026-10-31.md).
+
+## BOONO-TV — bureau canonique et atelier musical (1er novembre 2026)
+
+- [OD-20261101-001 — valider le bureau/ordinateur et documenter l'exploration du loft](OD-20261101-001/03-origine-et-justification.md) : messages d'origine intégraux, prompt de documentation, provenance, statut et limites ; [bureau canonique v1.0](../BOONO_TV_bureau_ordinateur_reference_canonique_2026-11-01.md) ; [compte rendu et loft encore à valider](../BOONO_TV_compte_rendu_bureau_et_loft_2026-11-01.md). **Publication documentaire uniquement, aucun déploiement studio ni changement PAPER.**

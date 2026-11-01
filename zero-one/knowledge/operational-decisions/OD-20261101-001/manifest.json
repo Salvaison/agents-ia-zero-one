@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-001",
+  "title": "Bureau canonique BOONO-TV et nouvelle exploration du loft",
+  "createdAtUtc": "2026-11-01T12:11:07+00:00",
+  "authorization": "Validation explicite utilisateur le 1er novembre 2026 pour documenter l'établi et explorer le loft",
+  "reference": "Conversation BOONO-TV, 1er novembre 2026 (messages et illustrations fournis en conversation)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "212df822cd199309714da1be7c1ff294e8b53e64efdffb42ad699028d0f84dc7",
+      "bytes": 1553
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "30aeb5cd0d580e920423cf6ccd30093700fadb204ad24a10243bec138be83a8b",
+      "bytes": 1948
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2c3c673c4ed5773478ccd96bc65a8346f748698fcf033e4f79061fdd3a1a06f9",
+      "bytes": 2288
+    }
+  }
+}

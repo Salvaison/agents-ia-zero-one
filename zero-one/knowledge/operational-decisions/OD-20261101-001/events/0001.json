@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T12:13:49+00:00",
+  "status": "AUTORISE",
+  "description": "Validation explicite du bureau et autorisation d'une étude illustrative du loft, documentation du 1er novembre",
+  "evidence": "Messages utilisateur intégraux consignés en 01, description approuvée dans la conversation",
+  "previousEventSha256": null
+}

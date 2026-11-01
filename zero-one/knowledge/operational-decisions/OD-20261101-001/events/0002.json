@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T12:13:49+00:00",
+  "status": "DOCUMENTE",
+  "description": "Spécification du bureau canonique v1.0 et rapport du loft musical rédigés ; nouveau dessin non encore validé ; aucune intégration OVH",
+  "evidence": "knowledge/BOONO_TV_bureau_ordinateur_reference_canonique_2026-11-01.md ; knowledge/BOONO_TV_compte_rendu_bureau_et_loft_2026-11-01.md ; index",
+  "previousEventSha256": "b4f6438d23754c58d355d36668bade859cbe7432789d0127108cf9bd88e0b763"
+}
