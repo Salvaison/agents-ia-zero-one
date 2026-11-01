@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-01T18:31:37+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouvelle version compacte visible par defaut sur OVH preview ; option ?sceneV1=1 toujours disponible, historique restaure possible. Validation visuelle fine non encore effectuee.",
+  "evidence": "CSS modifie servi depuis 127.0.0.1:3091; PNG compact HTTP 200; backup etat V2 precedent disponible",
+  "previousEventSha256": "3ef0ba742376fc6e26fc36c9b7f69cb5f1a9194930335711a2881b0e7fa9e3a8"
+}

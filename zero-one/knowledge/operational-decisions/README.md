@@ -127,3 +127,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — reconstruction scène V2 sur OVH (1er novembre 2026)
 
 - [OD-20261101-006 — installation OVH, assets, projection, repli V1](OD-20261101-006/03-origine-et-justification.md) : demande exacte, mandat, journaux d'événements ; [rapport technique et réserves de qualité](../BOONO_TV_reconstruction_scene_V2_OVH_2026-11-01.md). Code V2 archivé dans [boono-tv/scene-v2](../../boono-tv/scene-v2/README.md) et 29 images vérifiées par le manifeste. Mise en service de la **prévisualisation locale** sans modification du trading ; rendu final navigateur distant à valider.
+
+## BOONO-TV — établi plus petit et bord arrière recoupé (1er novembre 2026)
+
+- [OD-20261101-007 — recoupe alpha de la bande bois, réduction de l'établi et recalage des deux écrans](OD-20261101-007/03-origine-et-justification.md) : source utilisateur et capture, prompt rétrospectif, origine, mise en service sur OVH et limites ; [rapport de contrôle](../BOONO_TV_etabli_compact_2026-11-01.md). Source FFmpeg reproductible dans `boono-tv/scene-v2/generate_compact_desk.sh`. **Avant/après visuel à confirmer sur le navigateur noVNC ; aucune modification du moteur PAPER.**

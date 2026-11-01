@@ -1,0 +1,12 @@
+# Opération corrective BOONO-TV — desk compact v1
+
+**Reconstitution précise du travail réellement exécuté sur OVH ; ce texte est archivé après le début du travail, non présenté comme un prompt émis avant l'exécution.**
+
+- Prendre la capture fournie par l'utilisateur et la référence canonicale du bureau comme base. Les deux écrans sont inclinés dans la surface du bois, BOONO et ses mains doivent être en couche au-dessus du bureau.
+- Ne pas redessiner les vis, ferrures et modules ; transformer uniquement l'alpha de l'image `desk_canonical_alpha.png`, éliminant la large surface de bois vide derrière les écrans par un seuil courbe Y(X) adouci ; préserver le boîtier de connexions à gauche, les écrans et le rack.
+- Créer `desk_canonical_compact_v1.png` sous le pack V2 OVH sans écraser le visuel source.
+- Réduire la taille de l'établi de 1200×800 à 920×613.333 dans le canvas 1200×1080, et le placer en (140,465). Déplacer BOONO en (440,230) sur 374×486, le chat en (190,460) sur 230×184.
+- Recalculer les deux homographies du studio pour qu'elles restent alignées avec les cadres laiton après réduction : gauche TL(451.267,655.9), TR(660.567,694.233), BR(556.3,802.333), BL(327.833,730.267) ; droite TL(713.467,721.067), TR(1019.367,791.6), BR(945.767,984.8), BL(604.6,859.833).
+- Ne pas toucher au lien Amsterdam, au code trading ni aux processus PAPER, aux véritables captures MarketCipher ou à la configuration historique `desk/projection-config.json`.
+- Sauvegarder CSS/JS et asset original, tester l'alpha avec des pixels échantillons et la présence en HTTP, et conserver `?sceneV1=1` comme rollback fonctionnel.
+- Copier le CSS OVH byte-pour-byte dans Git, versionner le script de fabrication FFmpeg et publier dans la KB un rapport distinguant intervention, tests et limites (notamment contrôle visuel sur navigateur distant à confirmer).

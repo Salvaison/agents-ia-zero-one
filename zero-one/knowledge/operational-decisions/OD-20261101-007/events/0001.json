@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T18:31:37+00:00",
+  "status": "AUTORISE",
+  "description": "Le propriétaire demande la reduction de l établi et le retrait de la bande arrière vide, sur preuve de capture ChromeOS",
+  "evidence": "01-demande-utilisateur-integrale.txt ; capture Screenshot 2026-11-01 19.14.10.png visible dans la conversation",
+  "previousEventSha256": null
+}

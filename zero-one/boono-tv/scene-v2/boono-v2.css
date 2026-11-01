@@ -16,27 +16,28 @@
 }
 #room.boono-v2 .boono-desk{
   display:block!important;opacity:1!important;
-  background-image:url('/assets/boonotv-v2-20261101/desk_canonical_alpha.png')!important;
-  background-position:0 280px!important;
-  background-size:1200px 800px!important;
+  background-image:url('/assets/boonotv-v2-20261101/desk_canonical_compact_v1.png')!important;
+  background-position:140px 465px!important;
+  background-size:920px 613.333px!important;
   background-repeat:no-repeat!important
 }
 #room.boono-v2 .boono-character{
   background-image:var(--boono-v2-character)!important;
-  background-position:440px 125px!important;
+  background-position:440px 230px!important;
   background-size:374px 486px!important;
   background-repeat:no-repeat!important;
   opacity:1!important;display:block!important;visibility:visible!important;
   z-index:12
 }
+/* New quads are a scale+translation of the V2 test, following the reduced desk. */
 #room.boono-v2 .desk-surface-left{
-  transform:matrix3d(.3491454691,-.1592596073,0,-.0004909492,-1.453652239,-.0830053126,0,-.0012393969,0,0,1,0,406,529,0,1)!important
+  transform:matrix3d(.1989489455,-.2449966573,0,-.0004909435,-1.28798766,-.3739000877,0,-.0012394,0,0,1,0,451.267,655.9,0,1)!important
 }
 #room.boono-v2 .desk-surface-right{
-  transform:matrix3d(.4567751471,-.1028262826,0,-.0004714253,-1.6378211234,.4748527695,0,-.0010289363,0,0,1,0,748,614,0,1)!important
+  transform:matrix3d(.2841886248,-.1968524124,0,-.0004714312,-1.3997221141,.1064640822,0,-.0010289459,0,0,1,0,713.467,721.067,0,1)!important
 }
 #room.boono-v2 #boonoV2Landscape{position:absolute;inset:0 auto auto 0;width:1200px;height:800px;z-index:0;pointer-events:none;object-fit:fill}
-#room.boono-v2 #boonoV2Cat{position:absolute;left:180px;top:340px;width:230px;height:184px;object-fit:fill;z-index:13;pointer-events:none;transition:opacity .5s ease}
+#room.boono-v2 #boonoV2Cat{position:absolute;left:190px;top:460px;width:230px;height:184px;object-fit:fill;z-index:13;pointer-events:none;transition:opacity .5s ease}
 #room.boono-v2 #boonoV2Label{position:absolute;right:15px;bottom:16px;z-index:24;padding:6px 10px;background:#071823ba;color:#bcdee2;border:1px solid #477484;font:700 11px monospace;pointer-events:none}
 #room.boono-v2 .expression-fx{display:none!important}
 #room.boono-v2 #pricePanel,

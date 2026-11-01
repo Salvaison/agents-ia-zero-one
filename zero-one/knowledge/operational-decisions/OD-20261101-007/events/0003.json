@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-01T18:31:37+00:00",
+  "status": "TESTE",
+  "description": "Pixels alpha controles, PNG et CSS accessibles HTTP 200, simulateur local de perspective coherent, service et tunnel sourceOnline=true, calibration V1 intacte ; rendu navigateur utilisateur restant a confirmer",
+  "evidence": "BOONO_TV_etabli_compact_2026-11-01.md et hashes controles",
+  "previousEventSha256": "dd1dbfc52cfc630c776f1e7f01f25f350c3b0dcb49db698002f53924b40ddafd"
+}

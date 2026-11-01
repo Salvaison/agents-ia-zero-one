@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-007",
+  "title": "BOONO-TV compactage bureau et retrait bois arrière",
+  "createdAtUtc": "2026-11-01T18:30:31+00:00",
+  "authorization": "Demande explicite de réduction du bureau et retrait de son rebord arrière vide",
+  "reference": "Conversation BOONO-TV 1er novembre 2026, capture du studio et correction d’échelle",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c9007b91f5d52a7be81ea82c0a0d8c0e7dc26d955fef00c3ec231f964d7ca79f",
+      "bytes": 526
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "c06f8b3a68d79e47d4aa807ba53cdb3775bed164774b6a0f573f68a873d811d8",
+      "bytes": 1898
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "7bc552be173ea2792504e0a642641f2fbf9d31afc320c0f6bfa9036a11aa72b1",
+      "bytes": 2259
+    }
+  }
+}

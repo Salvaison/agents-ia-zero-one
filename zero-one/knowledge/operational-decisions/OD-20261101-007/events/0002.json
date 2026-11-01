@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T18:31:37+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Nouvelle variante PNG alpha du plateau, bureau 920x613.333 a (140,465), BOONO et chat recales, homographies gauche/droite ajustees dans CSS V2 ; sources originales preservees",
+  "evidence": "OVH scene/boono-v2.css, assets/boonotv-v2-20261101/desk_canonical_compact_v1.png, backup-before-compact-desk",
+  "previousEventSha256": "399c1685f84448511f5600829fb53bfa809119e872a91ec95f2313d602df2b9a"
+}
