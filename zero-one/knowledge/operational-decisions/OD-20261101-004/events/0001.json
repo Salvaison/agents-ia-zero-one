@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T15:36:20+00:00",
+  "status": "AUTORISE",
+  "description": "L utilisateur approuve la caractérisation BOONO et demande le fichier Markdown et un rapport GitHub",
+  "evidence": "01-demande-utilisateur-integrale.txt : demandes exactes",
+  "previousEventSha256": null
+}

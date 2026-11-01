@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-004",
+  "title": "BOONO identite visuelle mecanique et personnalite canonique",
+  "createdAtUtc": "2026-11-01T15:33:47+00:00",
+  "authorization": "Validation explicite de la fiche, demande de fichier Markdown et rapport Git",
+  "reference": "Conversation BOONO-TV du 1er novembre 2026 — mugshot et itérations de personnage",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "7beabd536866a3d49170b05c7b39aa44e39d3e83e2813516b6bf46200d1a19c8",
+      "bytes": 517
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "ec2d3455f85327760f6c9b66012fb945ae7a744142468c8a61f23002b8aca3a8",
+      "bytes": 1692
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "10c958ddb23f0a65ea31b301b4f2f5d9df6c9fa0e27695881ee6ca3f5c595963",
+      "bytes": 2389
+    }
+  }
+}

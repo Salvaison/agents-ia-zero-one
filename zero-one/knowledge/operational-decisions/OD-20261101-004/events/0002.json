@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T15:36:20+00:00",
+  "status": "DOCUMENTE",
+  "description": "Fiche BOONO 15 sections, rapport d itérations et liens Knowledge Base créés ; aucun déploiement du personnage ni modification du trading",
+  "evidence": "knowledge/BOONO_identite_visuelle_mecanique_personnalite_v1_2026-11-01.md ; knowledge/BOONO_TV_rapport_identite_personnage_2026-11-01.md",
+  "previousEventSha256": "180e895735bc0b848fc32a6697ee6bf9a564e72edf58d29b0497bfc3417cfc36"
+}

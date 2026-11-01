@@ -1,0 +1,10 @@
+[Message utilisateur — traits physiques retenus dans les dernières variantes]
+Les pied du 2 son meilleur mais les expressions du 1 son trés bonnes aussi, je note aussi que la tête de boono est devenue un peu plus rectangulaire et c'est bien!
+
+Ok, fait moi maintenant une déscription détaillée de Boono pour en caractérisé son apparence et son caractère
+
+[Message utilisateur — validation de la fiche]
+Trés bien fait en un markdown
+
+[Message utilisateur — demande de publication]
+et un rapport sur Git

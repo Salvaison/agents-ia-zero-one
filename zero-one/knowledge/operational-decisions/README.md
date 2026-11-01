@@ -115,3 +115,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — chat noir, cinq sprites RGBA sur le bureau (1er novembre 2026)
 
 - [OD-20261101-003 — cinq dessins du chat, découpages transparents et masques](OD-20261101-003/03-origine-et-justification.md) : demande exacte, provenance du générateur et du script de détourage, réalisation et vérification ; [fiche des cinq sprites](../BOONO_TV_chat_5_postures_bureau_sprites_2026-11-01.md). **Nouveaux dessins à valider pour mise en service ; binaires remis dans le chat, non sur OVH.**
+
+## BOONO-TV — identité du personnage (1er novembre 2026)
+
+- [OD-20261101-004 — fiche canonique d'apparence et de caractère de BOONO](OD-20261101-004/03-origine-et-justification.md) : origine et demandes exactes, prompt de rédaction conservé, statut documentaire ; [fiche complète](../BOONO_identite_visuelle_mecanique_personnalite_v1_2026-11-01.md) et [rapport d'itérations](../BOONO_TV_rapport_identite_personnage_2026-11-01.md). **Charte retenue, sprites du robot debout encore non validés ; pas de déploiement BOONO-TV.**
