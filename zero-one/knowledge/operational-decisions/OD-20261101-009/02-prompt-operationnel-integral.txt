@@ -1,0 +1,12 @@
+# BOONO-TV — réactivation des plans MCB et Prix (décompte technique a posteriori)
+
+**Mandat source :** l'utilisateur demande de réafficher le rideau de vagues MarketCipher et le graphique du prix, et souhaite que le prix soit plus grand, avec une amplitude de mouvement plus perceptible. Cet enregistrement est rédigé après l'intervention, pas un prompt verbatim transmis à un autre agent.
+
+1. Vérifier sur OVH les composants préexistants `#marketCurtain`, `#curtainWave15`, `#curtainWave3`, `#pricePanel`, `#pricePanelCanvas`, la fonction `renderMarketCurtain` et le renderer partagé ; constater qu'ils fonctionnent déjà mais sont explicitement masqués par la feuille V2.
+2. Sauvegarder avant modification les fichiers `scene/boono-v2.css`, `scene/app.js` et `scene/index.html` sur OVH, sans altérer les captures de TradingView, les collecteurs MarketCipher, les moteurs PAPER ou la calibration.
+3. Ajouter à la fin du CSS V2 des règles qui rétablissent les deux bandes de vagues (15m et 3m, 6h) en transparence `opacity .80`, sous l'établi et BOONO ; réactiver le graphique du prix tactique de 2h/3m sur une surface **920×420** à (35,130), en conservant les mêmes OHLC, MA200 et échelle monétaire non déformée. L'ancien plan était **520×296**.
+4. Modifier uniquement les options de rendu du graphique tactique dans `scene/app.js` : ajuster son ancrage vertical au format 420 px (55 %), diminuer le `pricePadPct` à 0.025 en V2. Ne pas modifier le renderer partagé, ni le modèle de données, ni les décisions de trading.
+5. Enquêter sur la divergence observée entre le tick `snapshot.market.price` et les dernières bougies 3m. Le tick `80451.4` portait un timestamp environ 150.75h ancien tandis que les dernières clôtures 3m étaient vers `77729.1`. Éviter la compression de la courbe si le ticker est désynchronisé : **en affichage V2 uniquement**, utiliser la dernière clôture 3m comme ancre et étiqueter `TICKER ANCIEN`, sans présenter cette clôture comme un nouveau prix live ni remplacer les données.
+6. Contrôler en JS les branches tick frais, tick ancien, restauration V1 ; contrôler deux drawWave et drawPrice sur 40-41 bougies 3m, HTTP 200, le sourceOnline et l'intégrité de `projection-config.json`.
+7. Publier sur Git le CSS V2 conforme aux octets OVH, la différence source `boono-v2-wave-price-app.patch`, le rapport de déploiement et le registre OD, sans committer d'autres modifications de code ou de BOONOTRADE.
+8. Conserver la restauration de scène via `?sceneV1=1` et les backups OVH. L'inspection visuelle dans le navigateur distant demeure ouverte.

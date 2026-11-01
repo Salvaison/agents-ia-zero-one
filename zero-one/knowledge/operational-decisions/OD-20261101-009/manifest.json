@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261101-009",
+  "title": "BOONO-TV restauration rideau MCB et agrandissement prix",
+  "createdAtUtc": "2026-11-01T19:25:21+00:00",
+  "authorization": "Mandat explicite de rétablir MCB et prix avec amplitude visuelle accrue sur scène OVH",
+  "reference": "Conversation BOONO-TV, 1er novembre 2026, rideau MCB et prix",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "1a5c70061eee221f88ab4c0d9ce1e600cf4be7847c4bb52a096f258114f21098",
+      "bytes": 120
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "ba6f4dcd618500bd0b867eeaab5b42403d5606a38fdc88fa0eba2396cb1ee097",
+      "bytes": 2624
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "9113771e357d2ed80e11131f0f53ed56fc604d3026e3874a87c48c7d5203ae30",
+      "bytes": 2360
+    }
+  }
+}

@@ -1,0 +1,39 @@
+--- app.js.backup
++++ app.js
+@@ -84,6 +84,21 @@
+  if(!Number.isFinite(latest))return;
+  const t1=latest,tWave0=t1-6*3600000,tPrice0=t1-2*3600000;
+  const priceRows=a.filter(r=>Number(r.ts)>=tPrice0&&Number(r.ts)<=t1);
++ // Some legacy sidecar snapshots expose a market tick older than the OHLC stream.
++ // For the V2 chart ONLY, anchor display to the most recent 3m candle when stale.
++ // Preserve the market field, historical candles and all trading state unchanged.
++ const v2Chart=$('#room')?.classList.contains('boono-v2')===true;
++ const tickForChart=Number(snapshot?.market?.price);
++ const tickTimestamp=Number(snapshot?.market?.marketTimestamp);
++ const latest3mClose=Number(priceRows[priceRows.length-1]?.close);
++ const sourceTickFresh=Number.isFinite(tickForChart)&&tickForChart>0&&
++   Number.isFinite(tickTimestamp)&&Math.abs(tickTimestamp-t1)<=6*60*1000;
++ const chartAnchor=v2Chart&&!sourceTickFresh&&Number.isFinite(latest3mClose)?
++   latest3mClose:tickForChart;
++ const priceHeader=$('#pricePanelLive');
++ if(priceHeader&&v2Chart)priceHeader.textContent=sourceTickFresh?
++   'LIVE '+fmt(tickForChart,1):
++   '3m '+fmt(latest3mClose,1)+' · TICKER ANCIEN';
+  // Only the current intra-candle visual closes at the actual live market price,
+  // keeping its high/low causal. No MCB source or historical OHLC is overwritten.
+  const tick=Number(snapshot?.market?.price),marketTs=Number(snapshot?.market?.marketTimestamp);
+@@ -99,7 +114,13 @@
+  const priceInfo=window.BoonoCharts.drawPrice($('#pricePanelCanvas'),priceRows,{
+    theme:'tv-neon',t0:tPrice0,t1,candleMs:180000,grid:false,hourGrid:false,padding:{left:8,right:138,top:12,bottom:8},
+    maxBodyWidth:13,maAbove:'#38d982',maBelow:'#ff4f5f',maWidth:2.6,
+-   livePrice:snapshot?.market?.price,livePriceLine:true,anchorLiveY:154,
++   livePrice:v2Chart?chartAnchor:snapshot?.market?.price,
++   livePriceLine:v2Chart?sourceTickFresh:true,
++   // V2 has a taller price viewport, centered around a fresh tick (or latest 3m
++   // close if that legacy ticker has gone stale). No underlying prices are warped.
++   anchorLiveY:$('#room')?.classList.contains('boono-v2')?
++     Math.round(($('#pricePanelCanvas')?.clientHeight||420)*.55):154,
++   pricePadPct:$('#room')?.classList.contains('boono-v2') ? 0.025 : undefined,
+    tradeSpans:window.BoonoTVCharts?.tradeSpans(t1)||[],tradeFlowStyle:true
+  });
+  const priceTag=$('#priceLiveTag');

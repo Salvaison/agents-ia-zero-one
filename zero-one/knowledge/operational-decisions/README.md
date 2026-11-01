@@ -135,3 +135,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — recadrage plein canevas (1er novembre 2026)
 
 - [OD-20261101-008 — Reformatage loft et dix poses BOONO, conservation de l’échelle de l’établi](OD-20261101-008/03-origine-et-justification.md) : message source et capture, prompt rétrospectif, statuts implémentation/tests/service et limites ; [rapport technique](../BOONO_TV_reformatage_scene_1200x1080_2026-11-01.md) et [sources Python/JS/CSS/manifest](../../boono-tv/scene-v2/README.md). **19 images 1200×1080 installées sur OVH, rollback V2/V1 opérationnel ; prolongement du sol et détourage BOONO encore à valider graphiquement.**
+
+## BOONO-TV — rideau MCB et prix à grande amplitude (1er novembre 2026)
+
+- [OD-20261101-009 — retour des vagues MCB 15m/3m et prix visuel 920×420](OD-20261101-009/03-origine-et-justification.md) : demande verbatim, intervention, garde de ticker ancien, tests et limites ; [rapport d’installation](../BOONO_TV_rideau_MCB_prix_amplitude_2026-11-01.md). Code V2 dans [scene-v2](../../boono-tv/scene-v2/README.md) et modification `app.js` journalisée par patch. **Vérification finale du rendu noVNC encore ouverte ; aucun changement des moteurs PAPER.**

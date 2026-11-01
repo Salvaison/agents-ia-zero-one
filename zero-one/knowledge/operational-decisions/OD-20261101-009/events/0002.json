@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-01T19:26:36+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Vagues 15m/3m réaffichées en V2 par CSS ; prix 920x420; adapter ancre et padding graphique, ticker déphasé affiché comme ancien sans mutation des OHLC",
+  "evidence": "OVH scene/boono-v2.css et scene/app.js ; code exact dans boono-tv/scene-v2/boono-v2.css et boono-v2-wave-price-app.patch",
+  "previousEventSha256": "18b9ee9ed4afbd72ec9853b98bd174652d636127ecc067690cd448bf7f979553"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-01T19:26:36+00:00",
+  "status": "AUTORISE",
+  "description": "Demande de remise du rideau de vagues MarketCipher et du prix, ce dernier avec amplitude visuelle accrue",
+  "evidence": "01-demande-utilisateur-integrale.txt, demande du 1er novembre",
+  "previousEventSha256": null
+}

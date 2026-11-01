@@ -51,3 +51,15 @@ Cette version ajuste le cadrage après comparaison avec une capture du studio. *
 **QA :** 19 SHA conformes, tests d'initialisation JS simulée sur quatre URLs, flux MarketCipher et snapshot Amsterdam conservés. Le prolongement de sol sous y=700 constitue une **retouche de compositing**, non une illustration finale. Plusieurs sprites gardent des fonds de chaise résiduels. Ne pas présenter ces défauts comme corrigés sans nouveau masque vérifié.
 
 [Récit de l'intervention et statut](../../knowledge/BOONO_TV_reformatage_scene_1200x1080_2026-11-01.md) · [Registre OD-20261101-008](../../knowledge/operational-decisions/OD-20261101-008/03-origine-et-justification.md).
+
+## Retour du rideau MCB et du graphique Prix (OD-20261101-009)
+
+**Réglages actifs en V2 sur OVH :** les deux vagues de MarketCipher (15m et 3m) sont remises dans leur rideau translucide (`z=7`, `opacity=.80`). Le plan prix 3m tactique occupe désormais `920×420` à `x=35,y=130` (`z=8`), contre l'ancienne surface `520×296`, pour des fluctuations affichées avec davantage de résolution verticale. BOONO et ses mains restent au premier plan.
+
+**Code déployé :** `boono-v2.css` (copie Git byte-identique à OVH) et une correction limitée à `scene/app.js`, documentée comme [patch](boono-v2-wave-price-app.patch). Le renderer partagé des graphiques n'est pas modifié. La fenêtre prix reste 2h ; les vagues conservent 6h.
+
+**Anomalie observée :** le ticker `market.price=80451.4` peut être daté de plus de 150h tandis que les nouvelles bougies 3m se situent autour de `77729`. La V2 ne doit pas déformer le graphique en s'ancrant sur une valeur obsolète : elle prend la dernière **clôture 3m** comme ancre de *vue* et affiche `TICKER ANCIEN`. Ni les décisions de BOONOTRADE, ni les données OHLC, ni l'État vivant ne sont modifiés.
+
+**Tests :** JS syntaxique, deux `drawWave`, un `drawPrice`, trois scénarios ticker ancien/récent/V1, captures et API côté studio en HTTP 200 et calibration historique intacte. **Disposition réelle dans le navigateur noVNC à confirmer.**
+
+[Rapport complet et statut](../../knowledge/BOONO_TV_rideau_MCB_prix_amplitude_2026-11-01.md) · [OD-20261101-009](../../knowledge/operational-decisions/OD-20261101-009/03-origine-et-justification.md).

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-01T19:26:36+00:00",
+  "status": "TESTE",
+  "description": "Node check, 3 tests unitaires stale/fresh/V1, 2 drawWave et ~41 bougies, endpoints HTTP 200, sourceOnline et calibration inchangée, retour V1 préservé ; contrôle visuel distant ouvert",
+  "evidence": "knowledge/BOONO_TV_rideau_MCB_prix_amplitude_2026-11-01.md ; test_wave_price_restore.js OVH",
+  "previousEventSha256": "4ab217646b997bde307d71f622526fa369a673334f7e05b9a0f91be931234b97"
+}

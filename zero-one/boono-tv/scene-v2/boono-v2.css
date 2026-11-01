@@ -78,3 +78,26 @@
 #room.boono-v2.boono-reframed #boonoV2Cat {
  left:0!important;top:0!important;width:1200px!important;height:1080px!important;object-fit:fill!important
 }
+
+/* BOONO-TV V2 · restored MCB curtains and expanded tactical price plane.
+   Visual-only charts: real 15m/3m MCB and original 3m OHLC/MA200 data.
+   Price is physically taller: wider and larger fluctuations on screen,
+   while retaining every genuine candle and its relative scale.
+   Planes remain behind the BOONO layer and in front of the loft. */
+#room.boono-v2 #marketCurtain {
+ display:block!important; visibility:visible!important; opacity:.80!important;
+ z-index:7!important; width:940px; height:560px;
+ pointer-events:none; background:transparent!important;
+}
+#room.boono-v2 #marketCurtain .curtain-band,
+#room.boono-v2 #marketCurtain canvas {visibility:visible!important;opacity:1!important}
+#room.boono-v2 #pricePanel {
+ display:block!important;visibility:visible!important;opacity:1!important;
+ position:absolute;left:35px!important;top:130px!important;
+ width:920px!important;height:420px!important;z-index:8!important;
+ pointer-events:none;background:transparent!important;
+ filter:drop-shadow(0 0 7px rgba(25,195,220,.27));
+}
+#room.boono-v2 #pricePanelCanvas {display:block!important;width:100%!important;height:100%!important}
+#room.boono-v2 #pricePanel > span:first-child {color:#c3f4ff;text-shadow:0 0 6px #001921}
+#room.boono-v2 #priceLiveTag {display:none!important}

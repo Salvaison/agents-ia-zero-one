@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-01T19:26:36+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Couches graphiques activées dans la scène BOONO-TV V2 sur OVH preview en lecture seule ; aucun changement du trading",
+  "evidence": "OVH studio port 3091, /boono-v2.css et /app.js HTTP 200, /api/health sourceOnline=true",
+  "previousEventSha256": "9702c0bfd727a5165d4ed620c7fd444f7ce01e7b7f0c6abff9da36c7c1fc0f56"
+}
