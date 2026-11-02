@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-02T10:43:51+00:00",
+  "status": "TESTE",
+  "description": "372885 pixels RGBA de premier plan comparés, zéro perdu, zéro modifié ; aperçu JPG servi HTTP 200 ; aucune intégration live",
+  "evidence": "Rapport knowledge/BOONO_TV_recadrage_strict_bureau_2026-11-02.md ; réponse HTTP 200 de http://127.0.0.1:8310/assets/boonotv-v2-20261101/reframed-20261101/desk_reframe_droit_scene_apercu_v1.jpg",
+  "previousEventSha256": "cb4f06a6cb39ada94c9e6cf0576a3cc812684903d7d354b8f2211dab1af7f331"
+}

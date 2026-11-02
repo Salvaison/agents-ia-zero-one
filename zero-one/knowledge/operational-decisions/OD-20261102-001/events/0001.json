@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-02T10:43:51+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Nouveau calque transparent bureau sur OVH, translation pixel à pixel +120/-42 ; original et CSS inchangés",
+  "evidence": "OVH asset desk_reframe_droit_sans_redessin_v1.png et manifest JSON ; SHA-256 cible 0511a42d5b036167e98954c39e0bc7ceb6a589ad29d099e193415397e0fc759e",
+  "previousEventSha256": null
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261102-001",
+  "title": "Recadrage strict du bureau canonique BOONO-TV, sans redessin",
+  "createdAtUtc": "2026-11-02T10:35:18+00:00",
+  "authorization": "Demande explicite du propriétaire, création de variante visuelle uniquement sans déploiement",
+  "reference": "Conversation BOONO-TV du 2 novembre 2026 — recadrage du bureau",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c25c291b61999d7fe701b323677002f9efa9a89881f0b337d9cef9c63b642c97",
+      "bytes": 558
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "d6b90c7f7548d0395fe1e43c18803f6d2be736c7d395eec7431764a9b17b8ed4",
+      "bytes": 1161
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2fb3e4dc8d4d7309de5c44105441ed8b20f235623793c95e91794203d49f7e70",
+      "bytes": 1163
+    }
+  }
+}
