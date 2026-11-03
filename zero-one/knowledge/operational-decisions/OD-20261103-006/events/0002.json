@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T22:13:55+00:00",
+  "status": "TESTE",
+  "description": "Alpha windows, dimensions, empreintes de transport, HTTP asset/CSS et rendu du nouveau fond verifiés Chromium; 12 poses et bureau inchangés.",
+  "evidence": "GdkPixbuf alpha-zero 82297 et partiels 38355; OVH HTTP 200 2884642 bytes; Chromium QA /tmp/boono_loft_after_gimp_qa_20261103.json affiche nouveau URL CSS, 1200x1080, aucune erreur; éditeur Penguin HTTP 200.",
+  "previousEventSha256": "af93887a75c5b1384f15b891d8c257fc76679ab8a2f3c1acd2afd4efddccc359"
+}

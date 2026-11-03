@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T22:13:55+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Sauvegarde du XCF courant GIMP; export direct image corrigée RGBA; transport Penguin/Amsterdam/OVH; installation nom versionne et CSS du loft uniquement.",
+  "evidence": "GIMP export PNG 1200x1080 sha 8881518e2ef5d183e4bd78edfb5ba2b39a36d42bb5963493cdbece3cf7a787c1; OVH assets/boonotv-v2-20261101/reframed-20261101/loft_GIMP_corrige_20261103_1200x1080.png; backup avant remplacement.",
+  "previousEventSha256": null
+}

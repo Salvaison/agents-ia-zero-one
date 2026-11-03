@@ -1,0 +1,1 @@
+Voilà j'ai corrigé tant bien que mal l'image du loft, merge les layers en préservant l'alpha, elle est ouverte dans Gimp mais elle doit etre sauvegarder dans le bon format et venir interchanger l'image du loft dans OVH

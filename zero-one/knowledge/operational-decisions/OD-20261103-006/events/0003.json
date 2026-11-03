@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T22:13:55+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Sprite du loft corrigé actif sur BOONO-TV OVH, ancien fond et CSS originaux conservés; source XCF sauvee sur Penguin.",
+  "evidence": "OVH scene/boono-v2.css url loft_GIMP_corrige_20261103_1200x1080.png et backup /home/ubuntu/boono-tv-studio/backups/loft-before-gimp-correction-20261103; capture QA navigateur.",
+  "previousEventSha256": "f269654219ea9c66f1628720cfc3dbd722ce98bc18ee7da38e879d055f37739f"
+}

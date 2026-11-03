@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-006",
+  "title": "Remplacement du loft BOONO-TV par image corrigee GIMP RGBA",
+  "createdAtUtc": "2026-11-03T22:13:55+00:00",
+  "authorization": "Demande utilisateur explicite de remplacement du loft apres retouche GIMP",
+  "reference": "Conversation BOONO Systems du 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c88fe78045d2c1be7300beef71cf127d64da1be1813ca27ff93460cd6fc51b48",
+      "bytes": 221
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a79d3dbc3d2593d71d00be2799b66eb667e9d8259c042e6539dd273a2ca885b5",
+      "bytes": 1363
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "6e425149c71cfc67d12c0c2159eca6418d871c2d833a5bddb000d5714ca0c27c",
+      "bytes": 1234
+    }
+  }
+}

@@ -1,0 +1,10 @@
+MISSION DE MISE EN SERVICE BOONO-TV — REFORMULATION RETROSPECTIVE PAR L'ASSISTANT, distincte du verbatim utilisateur.
+
+1. Récupérer depuis GIMP actif sur Penguin le document corrigé `BOONO_loft_nord_TRAVAIL_1200x1080.xcf`, sans confondre avec l'autre image de loft 1536×1024 éventuellement ouverte.
+2. Sauvegarder l'état courant XCF, produire un unique PNG RGBA 1200×1080, fusionnant les calques visibles par `clip-to-image` seulement si plusieurs calques sont présents et sans jamais faire `flatten-image`, qui détruirait l'alpha.
+3. Vérifier dimensions, transparence des fenêtres, SHA-256 et transmission Penguin→Amsterdam→OVH. Éviter de modifier le XCF d'un autre loft.
+4. Préserver sur OVH le sprite de fond précédent et la CSS avant substitution. Installer le nouveau PNG sous un nom versionné, et changer uniquement la référence CSS du loft actif ; ne pas modifier BOONO, chat, bureau, données de marché ni calibration.
+5. Valider l'accès HTTP, le rendu réel de la scène dans Chromium et les réglages préexistants. Ne pas déployer un fichier dont la source GIMP n'est pas disponible.
+6. Consigner les faits, les limites et le chemin de restauration en Knowledge Base.
+
+Le présent texte a été rédigé après exécution pour tracer précisément l'opération et n'a pas été un prompt externe préalable à l'intervention.
