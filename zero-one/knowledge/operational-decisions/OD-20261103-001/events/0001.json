@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T10:54:51+00:00",
+  "status": "AUTORISE",
+  "description": "Mandat documentaire explicite reçu du propriétaire ; aucune autorisation de modifier le trading ou le studio.",
+  "evidence": "01-demande-utilisateur-integrale.txt et 02-prompt-operationnel-integral.txt dans OD-20261103-001",
+  "previousEventSha256": null
+}

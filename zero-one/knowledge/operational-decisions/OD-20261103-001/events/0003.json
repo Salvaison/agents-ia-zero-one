@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T10:54:51+00:00",
+  "status": "TESTE",
+  "description": "Vérification locale des liens relatifs, de la présence des fichiers et de l’absence de modification des sources du trading par cette opération.",
+  "evidence": "Contrôle Python sur deux documents : 115 et 247 lignes, aucune cible de lien manquante ; git status ciblé",
+  "previousEventSha256": "b4d55677712dc63ed39ea771ec09c541147788ceb0cfe4e59115e2a5d132b524"
+}

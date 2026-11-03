@@ -139,3 +139,8 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — rideau MCB et prix à grande amplitude (1er novembre 2026)
 
 - [OD-20261101-009 — retour des vagues MCB 15m/3m et prix visuel 920×420](OD-20261101-009/03-origine-et-justification.md) : demande verbatim, intervention, garde de ticker ancien, tests et limites ; [rapport d’installation](../BOONO_TV_rideau_MCB_prix_amplitude_2026-11-01.md). Code V2 dans [scene-v2](../../boono-tv/scene-v2/README.md) et modification `app.js` journalisée par patch. **Vérification finale du rendu noVNC encore ouverte ; aucun changement des moteurs PAPER.**
+
+
+## BOONO-TV — incidents sprites / accès Chromebook et passation technique (3 novembre 2026)
+
+- [OD-20261103-001 — synthèse des difficultés de production graphique, réparations Chromebook/Linux et passation technique](OD-20261103-001/03-origine-et-justification.md) : demandes utilisateur intégrales, consigne de cette opération, justification et événements documentaires. Deux livrables : [rétrospective des incidents 2–3 novembre](../BOONO_TV_incidents_sprites_GIMP_ChromeOS_2026-11-03.md) ; [passation purement technique BOONO Systems (03/11)](../BOONO_Systems_passation_purement_technique_2026-11-03.md). **Rapports documentaires : pas de changement PAPER, pas de mise en service du bureau GIMP ; asset OVH transféré sous un nom distinct et toujours candidat.**

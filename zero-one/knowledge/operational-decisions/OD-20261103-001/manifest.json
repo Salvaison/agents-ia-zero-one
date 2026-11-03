@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-001",
+  "title": "Incident de production sprites, environnement Chromebook et passation technique BOONO Systems",
+  "createdAtUtc": "2026-11-03T10:49:16+00:00",
+  "authorization": "Demande explicite du propriétaire de documenter et de transmettre",
+  "reference": "Conversation BOONO des 2 et 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "e26d2a9db5053b58936a9e0ea51d345cd6138eecca75a68fa6cf07e8dc819b9d",
+      "bytes": 495
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "0ed6fb65dd48edbcb371ad031fabf7934f635bbab8aad09f517badece78cac99",
+      "bytes": 2133
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "5d12d04065e89dd8be45158a6787d759e5f6f3d535e5aca87c9995273999b5ff",
+      "bytes": 1449
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T10:54:51+00:00",
+  "status": "DOCUMENTE",
+  "description": "Deux rapports Markdown écrits, index thématique et registre mis à jour ; états anciens et contrôle du 03/11 distingués.",
+  "evidence": "BOONO_TV_incidents_sprites_GIMP_ChromeOS_2026-11-03.md ; BOONO_Systems_passation_purement_technique_2026-11-03.md ; BOONOLAB_INDEX.md",
+  "previousEventSha256": "420fd3942677f2b2d4d1e00e57f69e22ed692725a6eed91e9e0b59bd21b4b0b5"
+}
