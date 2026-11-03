@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T16:56:55+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Studio OVH local : scene V2 avec nouveau bureau, douze poses/10 s en showcase et editeur calibre accessible via tunnel prive Amsterdam 8310.",
+  "evidence": "OVH HTTP 200 127.0.0.1:3091; Amsterdam curl HTTP 200 vers 127.0.0.1:8310; URL privee ?layoutEdit=1&showcase=1&showcaseHold=1&showcaseStart=10&panel=state",
+  "previousEventSha256": "0ac5b470f0c0bc7a93a2d3d0b6655be0b808be3b74231f05cbd19e8d7f3ab133"
+}

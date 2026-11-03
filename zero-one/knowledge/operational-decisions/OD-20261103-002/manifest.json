@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-002",
+  "title": "Sprite du bureau GIMP, cinq postures debout et defilement 10 s BOONO-TV",
+  "createdAtUtc": "2026-11-03T16:56:55+00:00",
+  "authorization": "Demande explicite du proprietaire, execution retrospective documentee",
+  "reference": "Conversation BOONO Systems du 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "3607fd76780a3afe3e27025c417b69dd76e3bbc1adf5bd1fdfb3c5e071e0ffc5",
+      "bytes": 550
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a6d253e90deb984e0d689816811e450b8c781086332ddd29a1fd10bae1800605",
+      "bytes": 1482
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "a056159b76db03c74aba706e535e7a4654f6b946447532dfaad255cefd303c55",
+      "bytes": 1321
+    }
+  }
+}

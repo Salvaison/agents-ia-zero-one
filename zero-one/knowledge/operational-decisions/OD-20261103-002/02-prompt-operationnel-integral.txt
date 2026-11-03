@@ -1,0 +1,11 @@
+CONSIGNE D'EXECUTION — REFORMULATION RETROSPECTIVE PAR L'ASSISTANT (ce texte n'a pas été envoyé tel quel à un agent externe avant l'exécution).
+
+L'utilisateur a explicitement demandé de :
+1. Libérer la partition Linux en transférant les XCF déjà mis à la corbeille Linux vers la corbeille du Chromebook, sans suppression définitive et sans détruire les sources approuvées PNG.
+2. Remplacer sur la scène BOONO-TV OVH le bureau ancien par le sprite corrigé/exporté depuis GIMP, puis ajouter les cinq poses debout dans l'ordre dubitatif, surpris, inquiet, neutre, enthousiaste APRÈS les sept états working, thinking, worried, concentrated, confident, observe, execute.
+3. Faire défiler les douze images à intervalle de 10 secondes dans la démonstration.
+4. Conserver séparées les couches loft, bureau, écrans dynamiques, corps et mains ; ne jamais générer de fausses données de marché.
+5. Sauvegarder les fichiers runtime et la calibration avant toute intervention ; vérifier les URL, assets, alphas, navigateur et calibration ; ne pas modifier le trading ni les services Amsterdam.
+6. Après contrôle, fournir le lien privé à l'éditeur de calibration, via le navigateur d'Amsterdam accessible par noVNC.
+
+Cette reformulation sert de traçabilité a posteriori. Le texte utilisateur figure intégralement dans 01. Le rapport décrit précisément les opérations réellement observées ; toute opération non testée doit être nommée comme telle.

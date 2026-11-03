@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T16:56:55+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Runtime OVH modifie : bureau GIMP, 7+5 postures, mains sur ecrans, cycle 10 s; XCF deplaces vers corbeille ChromeOS, originals PNG preserves.",
+  "evidence": "OVH /home/ubuntu/boono-tv-studio/runtime/boono-tv/scene/{boono-v2.css,boono-v2.js,app.js}; asset manifest standing; ping HTTP 200; 6 XCF SHA verifies dans .Trash de MyFiles/Downloads.",
+  "previousEventSha256": null
+}

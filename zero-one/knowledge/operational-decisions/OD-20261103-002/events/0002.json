@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T16:56:55+00:00",
+  "status": "TESTE",
+  "description": "Verification navigateur headless, edition des quads avec Annuler, et transitions 7/12 vers 8/12 vers 9/12 observees a 10 s; hash et PNG RGBA conformes.",
+  "evidence": "OVH /tmp/boono_qa_final_10sec_report.json; apres 9873 ms puis 19873 ms; premiere calib rebasee apres sauvegarde originale.",
+  "previousEventSha256": "4aa0fb053242cb0201774a20207c73df3b66a77558412dd3f36c9174838da415"
+}
