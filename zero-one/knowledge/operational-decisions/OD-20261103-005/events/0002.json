@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T18:07:56+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Remplacement bridge V4.10.10 par adaptateur V543 PAPER read-only avec controle de fraicheur; editeur 12/5/4 variantes avec durées/position/taille individuelles et prix déplaçable.",
+  "evidence": "Amsterdam bridge.js normalise V543 et PM2 boono-tv; OVH layout-editor.js, app.js, boono-v2.js, boono-v2.css, styles.css, studio-server.js et JSON sequences; sauvegardes bridge-pose-price-20261103 et boono-poses-prices-20261103.",
+  "previousEventSha256": "43eb9b6238434608da22498bb730d4fd61f5157b52362dbcbf0572754cefd864"
+}

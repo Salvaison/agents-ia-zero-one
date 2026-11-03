@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-03T18:07:57+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Studio OVH et bridge Amsterdam locaux en service. Sources V543 fraîches uniquement, éditeur privé via 127.0.0.1:8310 sur Penguin. Moteurs PAPER inchangés.",
+  "evidence": "Amsterdam PM2 boono-tv online apres restart ciblé; V494 et V543 online; OVH boono-studio.service active; verifier README et rapport BOONO_TV_postures_individuelles_durees_prix_V543_2026-11-03.md.",
+  "previousEventSha256": "bf9aa578dd486f7e00477eb4de67714ad9a941e38be0d31936e36a837a56a560"
+}

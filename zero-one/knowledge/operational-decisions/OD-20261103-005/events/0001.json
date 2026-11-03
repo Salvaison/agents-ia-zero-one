@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T17:53:36+00:00",
+  "status": "AUTORISE",
+  "description": "Studio poses indépendantes et prix frais read-only, tests et rollback requis.",
+  "evidence": "Original prompt 01 et sauvegardes OVH boono-poses-prices-20261103, Amsterdam bridge-pose-price-20261103.",
+  "previousEventSha256": null
+}

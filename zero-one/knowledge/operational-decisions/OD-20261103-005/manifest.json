@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-005",
+  "title": "BOONO-TV poses individuelles durees et prix V543 frais",
+  "createdAtUtc": "2026-11-03T17:53:36+00:00",
+  "authorization": "Demande utilisateur explicite du 3 novembre 2026",
+  "reference": "Conversation BOONO Systems du 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "9e487960f0592c403f0d73e4eaac705bd37f2390cfa758f7ad058e4e5281ac3b",
+      "bytes": 366
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "def8f3e26c610e1e9dfdedf73d403f737a907e7311094f3960f45c1fe2ed75f8",
+      "bytes": 1640
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "727449d05d79f0ef2a12185c8e758f7b97abd4c63a7c7eaa857debb48aa50df7",
+      "bytes": 1465
+    }
+  }
+}

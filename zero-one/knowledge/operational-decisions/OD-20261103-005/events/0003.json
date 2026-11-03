@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T18:07:57+00:00",
+  "status": "TESTE",
+  "description": "Chromium : live V543 au lieu de 80451.4, prix visible et movable/scalable, 12/5/4 poses et durées par variante; cycles indépendants BOONO, chat et bulles, Annuler propre; durée 0 refusée HTTP 400.",
+  "evidence": "OVH /tmp/boono_new_pose_editor_QA.json, /tmp/boono_qa_independent_timings.json, 2 secondes simulées uniquement dans le navigateur, aucun prix fictif injecté, POST 200 avec config inchangée; pageerrors=[]; Penguin tunnel HTTP 200.",
+  "previousEventSha256": "587ab6d2175611450467c1173b8960bc1cbc2d1a6f30c5a562ad478e700538e6"
+}
