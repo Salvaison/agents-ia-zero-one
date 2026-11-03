@@ -1,0 +1,10 @@
+MANDAT D'EXECUTION rédigé par l'assistant le 3 novembre 2026 sur la base exacte de la demande ci-jointe.
+
+1. Étendre l'éditeur privé BOONO-TV sur OVH pour rendre déplaçables le chat, BOONO (les sept états existants et les cinq debout), l'établi et les projections associées, le plan de chandeliers/prix et le rideau de vagues MCB. Les éléments doivent être contrôlables par des poignées distinctes, y compris une étiquette de prix si affichée.
+2. Augmenter l'amplitude VISUELLE des bougies avec réglage manuel dans l'éditeur, sans transformer les prix de marché, les temps, les décisions ou les signaux reçus.
+3. Conserver les remplissages cyan / bleu existants des chandeliers, mettre un contour vert sur bougies haussières (close >= open) et rouge sur baissières (close < open), avec le MÊME glow cyan des deux côtés.
+4. Conserver exactement les positions déjà calibrées à l'écran par le propriétaire (quads, prix, rideau, bulles). Toute nouvelle configuration a des valeurs initiales non décalantes, sauf l'amplitude accrue explicitement demandée.
+5. Sauvegarder tous les fichiers runtime et le JSON de calibrage avant intervention, valider les entrées dans l'API locale et n'exposer aucun nouveau service publiquement. Tester depuis navigateur local puis via le tunnel Chromebook, avec tests de déplacement et annulation, et conserver un rollback.
+6. Documenter l'implémentation, ses limites et son état effectif dans la Knowledge Base, sans modifier trading, paper, audit, collecteurs ou flux authentiques.
+
+La présente consigne est la formulation de mise en œuvre de l'assistant, distincte du verbatim propriétaire, et ne constitue pas une autorisation de modifier les sources de trading.

@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouveaux contrôles actifs dans studio OVH privé, editeur et API accessibles depuis Chromebook via tunnel 8310.",
+  "evidence": "OVH boono-studio.service active, Chromium 200, Penguin editor HTTP 200 and /api/layout HTTP 200.",
+  "previousEventSha256": "ab3f7be2a4d9db6ed8b9a31b0baad3c8f0c7ea0f7981a2cd88df7d1a82bdb3e8"
+}

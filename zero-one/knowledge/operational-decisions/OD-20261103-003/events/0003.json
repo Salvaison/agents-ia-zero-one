@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "TESTE",
+  "description": "Tests Chrome : quinze poignées dont six objets, deplacement chat, reset, rendu contour vert/rouge et glow cyan commun, sauvegarde sans perte des coords.",
+  "evidence": "OVH /tmp/boono_editor_extended_qa.json : cat +28/+24, contour green/red/cyan, errors=[], layout quads before==afterSave, POST /api/layout HTTP 200.",
+  "previousEventSha256": "5895ecadfd8467abe58f335a1a9f71af464c53b71ea32b149a80ac7f30b4924d"
+}

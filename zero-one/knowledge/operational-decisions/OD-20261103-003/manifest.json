@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-003",
+  "title": "Editeur spatial autonome BOONO-TV et chandeliers couleurs/ampleur",
+  "createdAtUtc": "2026-11-03T17:22:19+00:00",
+  "authorization": "Demande utilisateur explicite du 3 novembre 2026",
+  "reference": "Conversation BOONO Systems du 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2a549cdfe1c6e0cd239dd823c3f8acf63961c8e724650f5cc488050b3df50c2a",
+      "bytes": 346
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "7284294071d3607ba07cdcaa0ec367f74fbeb136516a46224c3d1097c8a33416",
+      "bytes": 1737
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "7a49629ccbf5438b3a3f9b056a2b1c262070b126fbb2f4eaca9920565a4fa24f",
+      "bytes": 1394
+    }
+  }
+}

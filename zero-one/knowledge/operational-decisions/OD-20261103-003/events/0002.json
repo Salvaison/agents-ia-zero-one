@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Editeur prive OVH etendu : objets chat, BOONO, etabli avec quads, chandeliers, rideau MCB, prix ; bordures directionnelles et zoom vertical distinct.",
+  "evidence": "OVH scene/layout-editor.js, studio-server.js, shared/boono-chart-renderer.js, scene/app.js et styles; backup avant changement boono-editor-elements-20261103-v1.",
+  "previousEventSha256": "8d3216c995e16db6c8699cca430998a5e7ba6c4ac6fd27f8343e38d350cafe54"
+}

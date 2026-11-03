@@ -1,0 +1,5 @@
+Mandat complémentaire explicite du 3 novembre 2026 : ajouter à l'éditeur BOONO-TV privé le changement de taille des objets visuels dont le déplacement vient d'être demandé dans OD-20261103-003.
+
+Consignes d'implémentation rédigées par l'assistant : pour BOONO, le chat, l'établi, le plan des bougies, le rideau de vagues et l'étiquette de prix, fournir un menu de sélection et un curseur de taille. Conserver les valeurs de taille initiales à 100 % hors zoom vertical des bougies (145 %), les positions déjà calibrées et toutes les données du marché intègres. Synchroniser les deux couches BOONO et les projections d'écran de l'établi lors de la mise à l'échelle. Tester le changement d'échelle, l'annulation et la sauvegarde dans Chromium, laisser une sauvegarde réversible et documenter les chemins.
+
+Cette consigne est le prompt de mise en œuvre de l'assistant, non un verbatim utilisateur et non un changement des moteurs de trading.

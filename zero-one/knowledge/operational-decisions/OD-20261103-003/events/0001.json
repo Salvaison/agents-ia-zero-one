@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T17:22:20+00:00",
+  "status": "AUTORISE",
+  "description": "Editeur et esthétique chandeliers autorisés ; travail OVH seulement, sauvegarde préalable réalisée.",
+  "evidence": "Message utilisateur integral archivé et backup OVH /home/ubuntu/boono-tv-studio/backups/boono-editor-elements-20261103-v1.",
+  "previousEventSha256": null
+}

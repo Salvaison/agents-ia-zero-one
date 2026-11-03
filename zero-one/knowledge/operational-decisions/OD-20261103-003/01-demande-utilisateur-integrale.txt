@@ -1,0 +1,1 @@
+Super, j'aimerais pouvoir déplacer moi même le chat, Boono, l'établi, le prix et la vague de bougie. Cette dernière devrait montrer une plus grande amplitude. Aussi je propose que les bougies long garde la même couleur mais aie une bordure verte, les bougies short ont la même couleur mais une bordure rouge. Les bougies avec le même glow

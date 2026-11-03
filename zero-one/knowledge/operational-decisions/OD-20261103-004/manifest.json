@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261103-004",
+  "title": "Redimensionnement interactif des objets du studio BOONO-TV",
+  "createdAtUtc": "2026-11-03T17:31:56+00:00",
+  "authorization": "Demande complementaire explicite du proprietaire",
+  "reference": "Conversation BOONO Systems du 3 novembre 2026 (sans URL fournie)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "bc1e4431dd384a0bcd56895dd97c7c8f360b2ef12c99167100b4a21ff34d6610",
+      "bytes": 61
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "6f3bd80e2b5d4f8be5aee31a0358cf8f3bce2279812ffe9ab69133882c754ad9",
+      "bytes": 964
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "bf3ca25a59cd916572dda45167bd2b1890763407f9337229cdee80eb4485a4e4",
+      "bytes": 1137
+    }
+  }
+}

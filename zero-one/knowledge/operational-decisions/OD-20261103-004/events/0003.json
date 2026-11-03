@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "TESTE",
+  "description": "Tests navigateur redimensionnement etabli, calques robot, curseurs 120%/130% et amplitude 172%, annulation et conservation des coordonnées utilisateur.",
+  "evidence": "/tmp/boono_editor_extended_qa.json; scaledDesk desk===screens, scaledBoono front===back, reset values unchanged, errors [].",
+  "previousEventSha256": "a53eec323ed1b5a9425a5dfb39c7736c97868c736a0b53077f3f3018639497d7"
+}

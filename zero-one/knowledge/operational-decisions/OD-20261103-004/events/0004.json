@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Agrandissement et reduction objets BOONO-TV disponibles dans le menu Taille du studio; propriété sauvee via /api/layout.",
+  "evidence": "Editeur private local 127.0.0.1:8310 accessible de Penguin, studio OVH active, echelles default 100%, bougies amplitude 145%.",
+  "previousEventSha256": "d879aa93fbb8873fcf7fe212bcb96377b6b9776e8cccbca07a824993cd3bd665"
+}

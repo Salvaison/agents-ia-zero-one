@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-03T17:33:05+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Curseur Taille par objet et couplage géométrique : deux écrans suivent etabli ; deux calques BOONO restent alignés.",
+  "evidence": "OVH layout-editor.js set scale, scene boono-v2 css unaffected geometry, render sampled 120pct desk/130pct BOONO.",
+  "previousEventSha256": "54bdb57002ac4443f6649cfa8921ace7ad63b0a9a577caeb635e04e08dbdbd11"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-03T17:31:56+00:00",
+  "status": "AUTORISE",
+  "description": "Pouvoir agrandir ou réduire les objets depuis éditeur privé BOONO-TV, sans toucher aux moteurs, avec maintien perspective.",
+  "evidence": "Message utilisateur integral 01, sauvegarde OVH boono-editor-elements-20261103-v1.",
+  "previousEventSha256": null
+}
