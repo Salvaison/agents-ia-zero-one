@@ -1,0 +1,9 @@
+# OD-20261104-001 — Préserver les logiques existantes et tester l'hypothèse d'une adaptation au régime
+
+**Déclencheur :** l'utilisateur constate la cohérence provisoire de V494 et V543 à partir de campagnes réussies et de faux départs, puis exprime explicitement la crainte du surajustement : des interdictions ciblées des mauvais trades élimineraient aussi des trades gagnants. Il refuse de modifier les seuils immédiatement et demande d'éprouver les logiques dans diverses conditions avant toute modification. L'idée d'un réglage de seuils/logiques selon le régime est une **hypothèse à valider ou infirmer**, pas un mandat de déploiement.
+
+**Mandat autorisé :** formaliser la méthode de recherche et publier le document de connaissance. L'archive opérationnelle enregistre le texte source complet, le prompt de documentation effectivement rédigé par l'assistant et l'état. **Aucun nouveau veto, seuil, promotion de shadow ou changement PAPER n'est autorisé.**
+
+**Origine analytique :** comparaison du 4 novembre, notamment long V494 #96 +29,7922 USD et short V543 #161 +23,0572 USD, contre faux départs #95 et #158–160 ; grandes différences d'exposition entre moteurs et shadows. Archives Bâton : dimanche peu productif mais #76 SHORT gagnant à faible débit ; le veto `CHOP_SHADOW`/volume serait faussement discriminant. Ces exemples n'impliquent pas une rentabilité générale. Références : `knowledge/BOONOLAB_marche_contradictoire_liquidite_active_campagnes_2026-11-01.md`, `knowledge/BOONOLAB_admission_marche_sterile_protocole_no_trade_2026-11-01.md`, `knowledge/BOONOLAB_methodes_analyse_et_criteres_2026-10-28.md`.
+
+**Choix de méthode :** comparer sans modifier les règles actuelles sur plusieurs régimes, et prévoir seulement une recherche as-of et walk-forward. Séparer résultat observé, causalité hypothétique et résultat simulé. Toute proposition future sera archivée dans un nouvel OD avec approbation spécifique.

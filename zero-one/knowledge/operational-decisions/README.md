@@ -144,3 +144,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — incidents sprites / accès Chromebook et passation technique (3 novembre 2026)
 
 - [OD-20261103-001 — synthèse des difficultés de production graphique, réparations Chromebook/Linux et passation technique](OD-20261103-001/03-origine-et-justification.md) : demandes utilisateur intégrales, consigne de cette opération, justification et événements documentaires. Deux livrables : [rétrospective des incidents 2–3 novembre](../BOONO_TV_incidents_sprites_GIMP_ChromeOS_2026-11-03.md) ; [passation purement technique BOONO Systems (03/11)](../BOONO_Systems_passation_purement_technique_2026-11-03.md). **Rapports documentaires : pas de changement PAPER, pas de mise en service du bureau GIMP ; asset OVH transféré sous un nom distinct et toujours candidat.**
+
+## BOONOLAB — Observation sans surajustement et hypothèse régime-adaptative (4 novembre 2026)
+
+- [OD-20261104-001 — conserver 494/543 inchangés et éprouver une adaptation éventuelle aux régimes](OD-20261104-001/03-origine-et-justification.md). Décision validée : **observer plusieurs régimes sans nouveaux seuils ciblés** ; hypothèse d'un éventuel ajustement conditionnel **à valider ou infirmer**, et non autorisation d'implémentation. [Protocole méthodologique](../BOONOLAB_hypothese_adaptation_regimes_moteurs_intacts_2026-11-04.md).

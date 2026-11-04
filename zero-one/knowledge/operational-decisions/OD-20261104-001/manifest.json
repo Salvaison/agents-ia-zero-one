@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261104-001",
+  "title": "Observer V494 V543 sans surajuster et tester adaptation conditionnelle des logiques au regime",
+  "createdAtUtc": "2026-11-04T08:57:15+00:00",
+  "authorization": "Décision utilisateur de méthode : ne pas ajuster maintenant seuils et moteurs ; hypothèse adaptative ouverte à validation ou infirmation",
+  "reference": "Conversation BoonoLab 4 novembre 2026 et audits des premiers jours de novembre",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "fd3a6f72272be510724dade4b5994ab6715621f1b756b4f5d2f663011636c75d",
+      "bytes": 956
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5d728181a410e33a03345fe8808e3604192a2cdac7f296e6731d1a24d45f599a",
+      "bytes": 2655
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "8ec67213a14b7526f99c6c99d2169afc520f6bf4fab879d1f342ab687726b32d",
+      "bytes": 1979
+    }
+  }
+}

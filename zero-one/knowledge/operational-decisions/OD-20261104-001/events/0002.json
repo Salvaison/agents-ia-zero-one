@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-04T08:59:08+00:00",
+  "status": "DOCUMENTE",
+  "description": "Protocole publié localement : observation des règles PAPER inchangées, hypothèses H0/H1, régimes as-of et tests hors échantillon à prévoir; aucune autorité de nouveau filtre",
+  "evidence": "zero-one/knowledge/BOONOLAB_hypothese_adaptation_regimes_moteurs_intacts_2026-11-04.md ; registre OD-20261104-001 ; moteurs et services inchangés",
+  "previousEventSha256": "3ba81943b67494c158115d93ea0ef055e11c3123b244ee28c7237360be6c68ff"
+}
