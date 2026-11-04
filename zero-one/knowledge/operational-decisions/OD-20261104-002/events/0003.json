@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-04T19:18:36+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Prévisualisation BOONO-TV locale sur OVH ; studio 3091 et bridge Amsterdam 3090 lisibles et en ligne ; validation esthétique du propriétaire restant ouverte.",
+  "evidence": "HTTP 200 studio et bridge, PM2 boono-tv ONLINE, deux PAPER ONLINE et calibration SHA-256 inchangé",
+  "previousEventSha256": "37ca200a295eeaa106362943fec9e98c16ab3fa954f7443ed3fa50a1d43a0ba6"
+}

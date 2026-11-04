@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-04T19:18:36+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Bridge TV autonome read-only, conversion et événements sur OVH, code activé. Enregistrement OD rétrospectif.",
+  "evidence": "Amsterdam boono-tv/bridge.js et OVH scene/app.js chart-views.js index.html boono-v2.css tv-mini-conversion.js, copies avant modification",
+  "previousEventSha256": null
+}

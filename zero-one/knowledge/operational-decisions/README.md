@@ -148,3 +148,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONOLAB — Observation sans surajustement et hypothèse régime-adaptative (4 novembre 2026)
 
 - [OD-20261104-001 — conserver 494/543 inchangés et éprouver une adaptation éventuelle aux régimes](OD-20261104-001/03-origine-et-justification.md). Décision validée : **observer plusieurs régimes sans nouveaux seuils ciblés** ; hypothèse d'un éventuel ajustement conditionnel **à valider ou infirmer**, et non autorisation d'implémentation. [Protocole méthodologique](../BOONOLAB_hypothese_adaptation_regimes_moteurs_intacts_2026-11-04.md).
+
+## BOONO-TV — prix direct, conversion mini et repères de trades (4 novembre 2026)
+
+- [OD-20261104-002 — BOONO-TV prix OKX LIVE et écran Conversion mini](OD-20261104-002/03-origine-et-justification.md) : demande intégrale, mission rétrospective explicite, correctifs en service Amsterdam/OVH, tests Chromium, séparation strictement read-only ; [rapport technique](../BOONO_TV_live_conversion_evenements_2026-11-04.md). **Moteurs PAPER et projection validée inchangés.**

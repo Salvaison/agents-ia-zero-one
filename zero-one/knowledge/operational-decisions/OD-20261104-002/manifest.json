@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261104-002",
+  "title": "BOONO-TV : prix OKX LIVE, conversion écran, E15/E3 et fourchettes PAPER",
+  "createdAtUtc": "2026-11-04T19:18:36+00:00",
+  "authorization": "Demande explicite utilisateur 4 novembre 2026, scène BOONO-TV seulement",
+  "reference": "Conversation BOONOTRADE du 04/11/2026 ; capture et quatre passations fournies en pièces jointes",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "69daeeea9653a0d16c913549c92d4a902d9cb981bbf4984027075530b24b2464",
+      "bytes": 886
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "dc608cc91618c31847724e25ab82387a3bce425563d6eb54b4c1fbecedb79a1c",
+      "bytes": 2055
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "4d34e40f6f381d037088a54b3d602d051862ef914282fe5922af2d5405a938dd",
+      "bytes": 4629
+    }
+  }
+}

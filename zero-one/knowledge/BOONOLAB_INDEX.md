@@ -60,3 +60,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 **Pour le prochain chat :** partir de [BOONOLAB_START_HERE](../BOONOLAB_START_HERE.md), sélectionner ici **2 à 4 sources maximum** correspondant à la question, consulter le checkpoint actif, contrôler l'état réel, et ne remonter dans la conversation que les résultats nécessaires.
 
 - [V543 sans gain-floor : invalidation + transfert, shadow v0.3 (30/10)](BOONOLAB_V543_sans_gainfloor_invalidation_et_transfert_2026-10-30.md) — règle conjointe, essais et limites (OD-20261030-010).
+
+## BOONO-TV — stabilité prix et conversion mini (4 novembre 2026)
+
+- [BOONO-TV conversion mini / prix OKX LIVE / vagues E3-E15 (04/11)](BOONO_TV_live_conversion_evenements_2026-11-04.md) — correction de la cadence/prix LIVE et du clignotement de l’état V543, écran intérieur de conversion, qualité, E3/E15, bandes de trades PAPER 5 px, rideau comprimé ; OD-20261104-002.

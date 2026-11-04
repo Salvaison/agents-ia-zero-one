@@ -1,0 +1,7 @@
+Lis bien les document ci joint: Je désire que le deuxième panneau de l'ordi de Boono intégre le graphe de conversion et l'affichage de la qualité "Qualité UNCLASSIFIED" en bas d'écran et le graphe de conversion au dessus.
+
+Aprés il y a un souci avec l'état vivant qui pratiquement toute les 30s dit pendant qqe seconde dit "data unavalaible", avec plus de data??? Aussi je remarque que le Prix n'est pas Live et se met à jour que toutes les 30 secondes?
+
+Aussi sur les vagues il manque les E15 et E3 qui doivent apparaitre rouge et vert. Aussi il faut indiqué les trades avec des fourchettes tel dans l'interface avec la différence que les bandes supérieur et inférieur serons de l'épaisseur de 5px et de couleur bleue ciel en haut et en bas
+
+Aussi le rideau vague est trop étiré, il faudrait comprimer la vague et pas de fourchettes sur ce dernier mais bien les E15 E3

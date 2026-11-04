@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-04T19:18:36+00:00",
+  "status": "TESTE",
+  "description": "Puppeteer 43 s : 0 état indisponible, 0 prix vide, 13 prix distincts, E15/E3 et 5px brackets validés, aucune exception JS.",
+  "evidence": "OVH tests/verify-live-continuity-43s-result.json et tests/verify-20261104-final.json ; PM2 PAPER online",
+  "previousEventSha256": "312e851ecf6743778f569ea3bb59f5d768de31e7e661e604f9aa3a0ef9858dbd"
+}
