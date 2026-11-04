@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-04T20:01:53+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Previsualisation locale BOONO-TV et bridge read-only actualises, moteur PAPER preserve. Relecture esthetique dans noVNC a venir",
+  "evidence": "OVH local :3091; bridge Amsterdam PM2 boono-tv :3090, fichiers scene servis; deux runners papier inchanges",
+  "previousEventSha256": "0e9bd167b2bab4e2a8a253707bedf3291bfc73a0bcb4e77bd7fb078487425746"
+}

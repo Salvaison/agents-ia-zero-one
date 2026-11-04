@@ -152,3 +152,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — prix direct, conversion mini et repères de trades (4 novembre 2026)
 
 - [OD-20261104-002 — BOONO-TV prix OKX LIVE et écran Conversion mini](OD-20261104-002/03-origine-et-justification.md) : demande intégrale, mission rétrospective explicite, correctifs en service Amsterdam/OVH, tests Chromium, séparation strictement read-only ; [rapport technique](../BOONO_TV_live_conversion_evenements_2026-11-04.md). **Moteurs PAPER et projection validée inchangés.**
+
+## BOONO-TV — points E3/E15, SVG des écrans et cycle trois panneaux (4 novembre 2026)
+
+- [OD-20261104-003 — BOONO-TV points, titres vectoriels et troisième panneau](OD-20261104-003/03-origine-et-justification.md) : demande intégrale archivée avant les changements, textes SVG recalés sur les quadrilatères, mini-conversion agrandie, vues PAPER réalisées et cycle 12 s ; [rapport technique](../BOONO_TV_points_vecteurs_trades_3_panneaux_2026-11-04.md). Aucune décision des runners PAPER modifiée.

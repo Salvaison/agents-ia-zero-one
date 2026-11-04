@@ -1,0 +1,3 @@
+Trés bien! Sur les vagues  il suffit d'afficher les points rouge et vert, ecrire E15 et E3 est encombrant et inutile. Dommage que l'on ne puisse lire la qualité indiquée, le texte ressort tout flou. Est-ce que l'on peux mettre se texte comme couche vectorisée par dessus? Celà concerne aussi l'autre panneau qui devrait affiché "MarketCipher B - 15min" Est-ce possible de faire un zoom dans le graphe conversion afin que les 2 cubes ressortent le plus grand possible.
+
+Finalement une dernière amélioration, il faut un 3ème panneau dans l'état vivant avec la liste des trades accompli et les 3 panneaux vont défilés toutes les 12 secondes

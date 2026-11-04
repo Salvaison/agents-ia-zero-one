@@ -1,0 +1,6 @@
+BOONO-TV 4 novembre 2026 — mandat assistant, à exécuter sur OVH/bridge Amsterdam en lecture seule :
+- Remplacer les étiquettes écrites E15/E3 par des points verts/rouges sur les vagues 15m/3m et sur le rideau ; ne pas modifier la preuve native ni la calibration.
+- Résoudre le flou du libellé Qualité par une couche de texte SVG/vectorielle non déformée par la matrice 3D, alignée sur l'écran de conversion ; améliorer pareil l'autre écran avec MarketCipher B - 15min quand c'est effectivement le TF capturé (titre dynamique si capture 3m).
+- Agrandir visuellement les deux cubes de conversion avec la surface déjà approuvée, sans changer volumes, données ou valeurs.
+- Ajouter un 3e panneau de liste de trades accomplis (clôturés), données des vrais ledgers PAPER V494 et V543 avec heure, sens, prix et net après frais lorsqu'il est disponible ; conserver les deux panneaux existants et les faire défiler dans l'ordre État vivant → Vagues/Prix → Trades, 12 secondes par panneau. Les requêtes forcées de démonstration doivent être respectées.
+- Préserver assets validés, homographies et fichier desk/projection-config.json ; ne toucher ni aux runners ni au risk. Sauvegarder code actif avant intervention, valider JS/HTTP/Captures Puppeteer/chrono et rollback. Archiver statut et rapport dans la Knowledge Base, avec commit Git ciblé uniquement après contrôle.

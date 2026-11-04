@@ -64,3 +64,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV — stabilité prix et conversion mini (4 novembre 2026)
 
 - [BOONO-TV conversion mini / prix OKX LIVE / vagues E3-E15 (04/11)](BOONO_TV_live_conversion_evenements_2026-11-04.md) — correction de la cadence/prix LIVE et du clignotement de l’état V543, écran intérieur de conversion, qualité, E3/E15, bandes de trades PAPER 5 px, rideau comprimé ; OD-20261104-002.
+
+## BOONO-TV — points et textes vectoriels 04/11
+
+- [Vagues E3/E15 points seuls, labels SVG et trades sur trois panneaux 12 s](BOONO_TV_points_vecteurs_trades_3_panneaux_2026-11-04.md) — écran Conversion mini agrandi, MarketCipher authentique, PANEL=trades, traçabilité OD-20261104-003.

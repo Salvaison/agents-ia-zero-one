@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-04T20:01:53+00:00",
+  "status": "TESTE",
+  "description": "Chromium a verifie l absence de texte E15 E3, les points natifs, 13 trades clotures visibles sur 27, qualite et libelles SVG, passage 3m vers 15m et cycle de 37.74s sans erreurs",
+  "evidence": "OVH tests/vector-trades-20261104-result.json et verify-3-panels-12sec-20261104-result.json; screenshot jpg; calibration SHA256 inchange",
+  "previousEventSha256": "ed6eeeba804639b2e98ff6ccc425fc18686796099482abd6e51ea71d18a3d874"
+}

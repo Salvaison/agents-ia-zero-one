@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261104-003",
+  "title": "BOONO-TV points E3/E15, textes vectoriels, cubes et trois panneaux 12s",
+  "createdAtUtc": "2026-11-04T19:52:19+00:00",
+  "authorization": "Demande utilisateur explicite le 4 novembre 2026 pour BOONO-TV uniquement",
+  "reference": "Conversation BOONOTRADE du 04/11/2026, suite directe de OD-20261104-002",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "0832905f5b334bf9314535a5d39b3eee85d2da27dd192c086a3e73968e8fe6b4",
+      "bytes": 650
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8e26edf5adeecbfd07cc7d47a5832cd14bb71ee4d6142ad20fd37d732829fec1",
+      "bytes": 1401
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "5a368c0a9a8b04bd97a6357763fbbf2a0a0d05337008d5a0d6cd4ba946889853",
+      "bytes": 1501
+    }
+  }
+}
