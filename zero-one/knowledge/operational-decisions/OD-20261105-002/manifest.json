@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-002",
+  "title": "BOONO-TV : Chronologie dynamique, volumes SVG et centrage MCB3",
+  "createdAtUtc": "2026-11-05T10:41:02+00:00",
+  "authorization": "Message explicite utilisateur le 05/11/2026, ajustements BOONO-TV exclusivement",
+  "reference": "Conversation BOONO-TV du 5 novembre 2026, correction après OD-20261105-001",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b3319b23dea4ddf431b69e10f6186eae63127a61fe751a5e6e7e99a7ac0f7d10",
+      "bytes": 514
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "608178403909b48787758e307c594ac21f91e8c436b5bfcef582bc18dd62fb57",
+      "bytes": 973
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "fe13fb81c4b4a91e19900ceb199d12caf112d6d8199006d88f43fe38452c0ef3",
+      "bytes": 954
+    }
+  }
+}

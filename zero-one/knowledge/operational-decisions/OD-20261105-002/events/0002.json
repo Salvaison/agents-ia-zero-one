@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T10:53:38+00:00",
+  "status": "TESTE",
+  "description": "Puppeteer vérifie UP, DN, CROSS et expiration en mémoire sans modifier source, deux textes SVG dont deux couleurs de volume, zéro erreur JS, source OKX 3m et calibration intacte",
+  "evidence": "OVH tests/verify-chronology-dynamic-and-vector-20261105.js, résultat JSON et boono-20261105-chronologie-final.jpg ; sha256 calibration 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "1c6a4c10f49d14bd16d6bca88e56ac5fad24847e638242bef37d77def0fda1ef"
+}

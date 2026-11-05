@@ -72,3 +72,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV scénarios et source TA vérifiée 05/11
 
 - [Finition : MCB3 TradingView authentique, conversion, 12 dialogues, accessoires](BOONO_TV_finalisation_capture_dialogue_bureau_2026-11-05.md) — passage capture TA à 60 s, vraie source OKX 3m, chronologie sans date ni heure, textes et styles, panneaux PAPER et éditeur privé ; OD-20261105-001.
+
+## Chronologie BOONO-TV dynamique (05/11)
+
+- [Dernier événement observé, volumes et qualité en SVG, MCB3 recentré](BOONO_TV_chronologie_dynamique_volume_svg_centrage_2026-11-05.md) — source native Chronologie, aucun horaire sur le panneau, visualisation autonome sans changement PAPER ; OD-20261105-002.

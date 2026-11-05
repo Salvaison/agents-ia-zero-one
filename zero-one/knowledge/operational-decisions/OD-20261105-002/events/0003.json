@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T10:53:38+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Bridge BOONO-TV Amsterdam actualisé et studio OVH actif, aucune intervention sur PAPER ni collection MCB ; validation esthétique finale utilisateur reste ouverte",
+  "evidence": "API snapshot HTTP 200, source chronology.latest en service, PM2 boono-tv et PAPER online, assets de scène valides",
+  "previousEventSha256": "e155cde987bfc6e4e202871b6c77e9e61609086ceaf872e9c1e2c6c67953cd90"
+}

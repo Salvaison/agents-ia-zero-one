@@ -1,0 +1,5 @@
+Ok bien! le report de "Chronologie" doit bien sur etre dynamique est rapporté le dernier relevé de Chronologie qui actuellement est "MCB3 / E3 CONFIRMED UP"
+
+Le texte "164.755 BTC242.162 BTC" du graphe conversion est illisible, place le aussi comme couche de texte vectorisée indépendante. Ces 2 lignes de texte pourrait être le même module text avec un formatage adéquat, une décimale suffise comme ça la police peut être agrandie
+
+La vague mcb3 est mal centrée dans l'écran de Boono entre les textes
