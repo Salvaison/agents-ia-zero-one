@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T23:03:46+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Avant MP4, la premiere posture BOONO est chargee et decodee. Dans ?windowVideo=clemens, les sprites originaux des 12 postures sont peints dans un vrai img DOM, avec fallback CSS intact tant que nouveau sprite non decode. Aucun changement des images, calibration et marche.",
+  "evidence": "OVH scene/window-local-video.js et scene/boono-v2.css; backups/OD-20261105-015",
+  "previousEventSha256": null
+}

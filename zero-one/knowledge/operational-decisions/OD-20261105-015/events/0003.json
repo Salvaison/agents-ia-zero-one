@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T23:03:51+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Correctif visuel actif en video test Clemens, source MP4 privee et son sous controle utilisateur; mode normal inchange. Cause specifique du symptome ChromeOS reste a confirmer dans le navigateur utilisateur; trading PAPER non modifie.",
+  "evidence": "OVH studio HTTP 200, postures de test du serveur 12 sur 12, endpoint prive video intact, scripts JS valides, moteurs V494 V543 non touches",
+  "previousEventSha256": "3284f84d859e026a0f174b02aea1dbc5238cdcee88760ece5656494754342459"
+}

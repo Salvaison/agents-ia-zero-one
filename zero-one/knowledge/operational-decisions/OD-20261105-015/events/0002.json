@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T23:03:48+00:00",
+  "status": "TESTE",
+  "description": "Tests Chromium comparent mode normal/video, ressources sprite toutes HTTP200; echec initial sur ChromeOS non reproductible serveur; apres correctif, toutes les 12 postures visibles pendant MP4 playing, foregroundStatus ready, aucun message JS. Source PNG original 1200x1080, calibration strictement inchangee.",
+  "evidence": "OVH tests/diagnose-pose-video-load-20261105-result.json, verify-OD-20261105-015-video-pose-foreground-result.json, captures normal-after-fix et video-after-fix, SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "03a6f5f7e9f73cc2d3f31066db083046c16cb05c0cdc85a24067af8a2963a368"
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-015",
+  "title": "BOONO-TV: fiabiliser les postures dans le mode vidéo Clemens Costa",
+  "createdAtUtc": "2026-11-05T22:59:58+00:00",
+  "authorization": "Demande utilisateur du 05/11/2026 de rétablir l affichage des postures en mode vidéo",
+  "reference": "Conversation BOONO-TV du 05/11/2026 après installation MP4 Clemens Costa",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c72d08320fcef00ba0dff8e1a609d610d0e4eea07f0620b67848798a12e69780",
+      "bytes": 127
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "70879b9ee07b1a72c8e64a8d60a359afa57a4e07683f5f5e956b54db37ded182",
+      "bytes": 1147
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0d0e3a11330adf2ed78862a9e171a6ef352c19e29748dd151a5e8eeddcc40e2b",
+      "bytes": 1149
+    }
+  }
+}

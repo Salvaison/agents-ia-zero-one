@@ -124,3 +124,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV vidéo test Clemens Costa derrière les vitrages (05/11)
 
 - [Installation privée du MP4 Clemens Costa, lecteur et commandes audiovisuelles](BOONO_TV_Clemens_Costa_video_fenetres_test_2026-11-05.md) — vraie vidéo fournie par le propriétaire, lecture derrière les alpha, audio actionné par clic, retour au skyline normal, test sans diffusion publique ; OD-20261105-014.
+
+## BOONO-TV postures et vidéo ChromeOS (05/11)
+
+- [Restauration robuste des 12 postures pendant le MP4 Clemens Costa](BOONO_TV_postures_video_charge_2026-11-05.md) — sprite de premier plan rendu en image explicite après décodage, vidéo différée, fallback CSS original, aucune modification des dessins ; OD-20261105-015.
