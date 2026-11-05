@@ -172,3 +172,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — pastilles de volume rouges et capture réelle 3m (5 novembre 2026)
 
 - [OD-20261105-004 — Pastilles rouges grandes et capture MarketCipher 3m](OD-20261105-004/03-origine-et-justification.md) : réalisation d’une bande blanche complète de dix rectangles volume (rouges actifs, bord noir), maintien de la capture 3m sur l’onglet TA seulement, graphique MCB mieux centré ; [rapport technique et preuves](../BOONO_TV_pastilles_rouges_MCB3_capture_2026-11-05.md). Runners V494/V543 et calibration préservés.
+
+## BOONO-TV — tunnel du Chromebook et scénarios légers (5 novembre 2026)
+
+- [OD-20261105-005 — Tunnel Penguin et scénarios à gauche](OD-20261105-005/03-origine-et-justification.md) : port SSH 8310 rétabli et service utilisateur activé, éditeur des 12 poses dans la surface État vivant et tests répétés de prévisualisation ; [rapport technique](../BOONO_TV_tunnel_penguin_editeur_bulles_gauche_2026-11-05.md). Cause exacte du plantage Chromebook non encore démontrée.

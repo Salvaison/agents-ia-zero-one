@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T12:10:34+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Service tunnel Penguin et editeur de bulles dans Etat vivant installes en mode preview leger",
+  "evidence": "OVH scene app.js dialogue-editor.js layout-editor.js chart-views.js styles.css ; Penguin boono-tv-studio-tunnel.service",
+  "previousEventSha256": null
+}

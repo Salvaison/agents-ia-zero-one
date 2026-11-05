@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T12:10:57+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Tunnel Penguin 8310 servi par autossh utilisateur systemd actif ; editeur allégé sur la gauche publié OVH, vrai plantage Chromebook encore à revalider",
+  "evidence": "Penguin systemctl --user enabled active et tunnel localhost 8310 HTTP 200 ; OVH studio 3091 HTTP 200 ; projection validée inchangée",
+  "previousEventSha256": "53468b960e5980efde3b1814cfd5888afd7af111d7db5dcfd3e9a9cfc5aef1d5"
+}

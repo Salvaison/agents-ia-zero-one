@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T12:10:46+00:00",
+  "status": "TESTE",
+  "description": "44 previews de bulles et douze postures sans erreurs, sauvegarde inchangée, rotation normale conservée, connexion locale 8310 valide apres redemarrage du service",
+  "evidence": "OVH tests/verify-editor-left-stable-20261105-result.json et verify-editor-stress-44-views-20261105-result.json et verify-bubble-editor-regression-20261105-result.json ; tunnel HTTP 200",
+  "previousEventSha256": "0440aef9eb7bc0c9a40896762c098159778669d73d3e56eaf6afec3e54a6b033"
+}

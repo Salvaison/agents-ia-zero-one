@@ -1,0 +1,4 @@
+J'ai dû redémarrer le chromebook mais je n'ai pas réussi à redémarrer le tunnel SSH avec le bash "export PATH="$HOME/.local/opt/node-v22.12.0-linux-x64/bin:$PATH"
+npx @wonderwhy-er/desktop-commander@latest remote" ???
+
+Oui aussi je dois mentionner que l'ordi s'est planté quand j'ai essayé le nouvelle editeur de bulle, quand j'ai voulu utiliser la fonction pour visualiser le résultat avant enregistrement. Tu pourrait aussi utiliser la surface de l'état vivant où placé ces éditeur

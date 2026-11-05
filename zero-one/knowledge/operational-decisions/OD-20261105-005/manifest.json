@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-005",
+  "title": "BOONO-TV: tunnel Chromebook et éditeur de bulles allégé sur Etat vivant",
+  "createdAtUtc": "2026-11-05T11:56:25+00:00",
+  "authorization": "Utilisateur signale crash Chromebook et demande éditeur sur Etat vivant, 5 novembre 2026",
+  "reference": "Discussion BOONO-TV 05/11/2026, restauration SSH et correctif interface",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "188779875b97837a39872573303c4e16a80aac4a764a9f206bba024c24ac3d70",
+      "bytes": 496
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "e5e4a9bdb23e7e57eaff84a156b5c6c1b9f3b33885327eea124c18d958d4040b",
+      "bytes": 947
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "255b9df1f7a9793ca13f70591859f517498e3282f299d63636149aae04d5a09a",
+      "bytes": 1472
+    }
+  }
+}

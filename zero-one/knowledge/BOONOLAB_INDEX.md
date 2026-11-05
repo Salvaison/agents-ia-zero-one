@@ -84,3 +84,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV pastilles rouges et capture 3m (05/11)
 
 - [Dix grandes pastilles volume et maintien d’un véritable MarketCipher 3m](BOONO_TV_pastilles_rouges_MCB3_capture_2026-11-05.md) — bande droite du graphe dédiée, couleur par seuil volume réel ; source TA requalifiée 3m et centrage visuel, sans impact PAPER, OD-20261105-004.
+
+## BOONO-TV éditeur de scénarios sur État vivant (05/11)
+
+- [Tunnel Chromebook 8310 et éditeur de bulles léger dans le panneau gauche](BOONO_TV_tunnel_penguin_editeur_bulles_gauche_2026-11-05.md) — réparation des connexions, 12 poses, bouton Voir sans sauvegarde, suppression du showcase coûteux pendant édition ; OD-20261105-005.
