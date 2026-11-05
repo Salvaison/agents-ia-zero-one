@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T23:16:39+00:00",
+  "status": "TESTE",
+  "description": "Chromium: video playing et audio continu, canvas frames evolutives 12 vers 37, hashes differents, 12 postures toutes visibles, Pause/Lire/Son fonctionnent, mode natif de comparaison preserve, zero erreur JS. CPU ralenti 4x: env 9.5fps, video progressant 4.2sec sur 4.2sec, aucun dessin invalide. ChromeOS utilisateur pas encore valide.",
+  "evidence": "OVH tests/verify-OD-20261106-001-video-canvas-final-result.json, verify-OD-20261106-001-canvas-cpu-result.json, captures canvas-frame et canvas-all-poses, projection sha inchange",
+  "previousEventSha256": "fe13d68e6f40ab95d92602e7c3743bc33c5c40119de1252f546b4fdfc228675a"
+}

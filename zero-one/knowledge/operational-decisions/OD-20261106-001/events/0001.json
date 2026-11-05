@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T23:16:23+00:00",
+  "status": "IMPLEMENTE",
+  "description": "MP4 Clemens conserve audio HTML5 mais sa couche video native est masquee dans le mode prive, les frames sont composees en Canvas 2D 640x360 a 12fps. Les 12 PNG BOONO originaux restent en premier plan, mode de comparaison videoRender=native. Aucun trading ni loft/calibration modifies.",
+  "evidence": "OVH scene/window-local-video.js, scene/boono-v2.css, scene/index.html ; backups OD-20261106-001 ; aucun fichier de sprite modifie",
+  "previousEventSha256": null
+}

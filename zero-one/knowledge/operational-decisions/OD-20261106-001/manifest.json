@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-001",
+  "title": "BOONO-TV composition vidéo canvas et sprites visibles dans ChromeOS",
+  "createdAtUtc": "2026-11-05T23:10:18+00:00",
+  "authorization": "User reports BOONO sprites disappear only while local MP4 is playing; requests corrective investigation",
+  "reference": "BOONO-TV followup 2026-11-06, video playing versus paused",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "a9e8d7126d5f4cf778f40601c4c61d28a412d82d6fe34dab86cc63c7562fb844",
+      "bytes": 76
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "47a2e2ee5be669464617efa85742d4fb08562c863d99f7035e35387571331ba9",
+      "bytes": 1371
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "34c8bb866a0af2f3b235ddfbd48ae01db2ce03e47000a5384dfe85715dda189a",
+      "bytes": 1368
+    }
+  }
+}

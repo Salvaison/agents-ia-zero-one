@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T23:16:42+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Correctif experimental de rendu canvas sur OVH actif pour windowVideo=clemens; mode normal intact. Rapport final en attente du test du proprietaire sur ChromeOS qui constate disparition des postures seulement en lecture MP4. Retour natif par &videoRender=native et mode leger &videoFps=8.",
+  "evidence": "OVH studio HTTP 200, tests Chromium canvas et sprites, source video privee, BOONO V494/V543 et collecteurs intacts",
+  "previousEventSha256": "ce3318341e25643ebbd339513b55ee6bc901131af8060ae0bff280c42fb2a42d"
+}

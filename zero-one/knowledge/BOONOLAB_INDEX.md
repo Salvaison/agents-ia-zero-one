@@ -128,3 +128,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV postures et vidéo ChromeOS (05/11)
 
 - [Restauration robuste des 12 postures pendant le MP4 Clemens Costa](BOONO_TV_postures_video_charge_2026-11-05.md) — sprite de premier plan rendu en image explicite après décodage, vidéo différée, fallback CSS original, aucune modification des dessins ; OD-20261105-015.
+
+## BOONO-TV vidéo canvas et postures Chromebook (06/11)
+
+- [Compositing vidéo Canvas : éviter le masquage de BOONO pendant la lecture](BOONO_TV_video_canvas_postures_2026-11-06.md) — test 12 postures avec audio continu, cadence limitée et comparaison réversible avec lecteur natif ; OD-20261106-001.

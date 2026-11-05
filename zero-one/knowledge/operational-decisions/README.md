@@ -216,3 +216,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — postures et composition vidéo ChromeOS (nuit 5/6 novembre 2026)
 
 - [OD-20261105-015 — postures fiabilisées en mode vidéo Clemens](OD-20261105-015/03-origine-et-justification.md) : 12 PNG d’origine toujours présents, erreur non reproduite dans Chromium OVH, nouvelle couche PNG DOM explicite et déclenchement de la vidéo après décodage du premier sprite, mode normal intact ; [rapport de contrôles](../BOONO_TV_postures_video_charge_2026-11-05.md). Validation finale sur Chromebook ouverte.
+
+## BOONO-TV — lecture MP4 via canvas sur ChromeOS (6 novembre 2026)
+
+- [OD-20261106-001 — lecture MP4 via canvas pour préserver BOONO](OD-20261106-001/03-origine-et-justification.md) : suite au signalement « postures visibles à la pause uniquement », vidéo native masquée et frames dessinées dans canvas à 12 ips, audio continu et 12 postures vérifiées en Chromium ; [rapport et limites ChromeOS](../BOONO_TV_video_canvas_postures_2026-11-06.md). Validation sur appareil utilisateur encore nécessaire.
