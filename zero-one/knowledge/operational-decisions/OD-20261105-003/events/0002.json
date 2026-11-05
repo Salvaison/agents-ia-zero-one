@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T11:08:48+00:00",
+  "status": "TESTE",
+  "description": "Tests Chromium 3 variantes, rendu retenu A, capture rapprochée du bureau, validation volume backing none, quality backing noir conserve, image JPEG complète 1195x165, source OKX 3m, zéro erreur JavaScript et Chronologie sans régression",
+  "evidence": "OVH tests/OD-20261105-003-MCB-A/B/C.jpg, boono-od-20261105-003-close.jpg, verify-OD-20261105-003-result.json, OD-20261105-003-regression.json ; sha256 de calibration inchangé",
+  "previousEventSha256": "2d576e2b668d1031b7a7f113cc9c5240f9bb7d9925af532c98f0994541964941"
+}

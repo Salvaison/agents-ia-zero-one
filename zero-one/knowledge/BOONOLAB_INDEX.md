@@ -76,3 +76,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## Chronologie BOONO-TV dynamique (05/11)
 
 - [Dernier événement observé, volumes et qualité en SVG, MCB3 recentré](BOONO_TV_chronologie_dynamique_volume_svg_centrage_2026-11-05.md) — source native Chronologie, aucun horaire sur le panneau, visualisation autonome sans changement PAPER ; OD-20261105-002.
+
+## Volumes BTC transparents et cadrage MCB3 (05/11)
+
+- [Retouche locale des volumes SVG et du rendu MarketCipher](BOONO_TV_volumes_transparents_cadrage_MCB3_2026-11-05.md) — BTC descendu vers Qualité immobile, sans fond noir sur les chiffres, graphe MCB3 complet centré entre titres, OD-20261105-003.

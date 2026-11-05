@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T11:08:48+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Volume BACKING noir désactivé seulement sur chiffres BTC, contour noir des glyphes et bande Qualité maintenus, volumes déplacés vers Qualité fixe ; MCB3 décadré re-projeté en blend screen sans perte horizontale",
+  "evidence": "OVH scene/desk-vector-titles.js et boono-v2.css ; sauvegarde backups/OD-20261105-003 ; aucun fichier source ni moteurs modifiés",
+  "previousEventSha256": null
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-003",
+  "title": "BOONO-TV : volumes BTC transparents rapprochés de Qualité et cadrage MCB3",
+  "createdAtUtc": "2026-11-05T11:04:40+00:00",
+  "authorization": "Correction utilisateur 05/11/2026 : volume rapproché de Qualité et MCB visible",
+  "reference": "Conversation BOONO-TV du 05/11/2026, capture du bureau jointe puis correction de position",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "58bc9446e4580d2598d6261435b9f271cdb6db533b32a68b594772fed2f3a8b3",
+      "bytes": 337
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "bb31653627c2d2c8660be6e2c511c62aeafa8ff20961588b6a30ce6696a2009b",
+      "bytes": 1178
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c3fa2e6e15526f296a42c1d32240d440d73ee55d549d2d1369e81bc2b0b03c08",
+      "bytes": 1027
+    }
+  }
+}

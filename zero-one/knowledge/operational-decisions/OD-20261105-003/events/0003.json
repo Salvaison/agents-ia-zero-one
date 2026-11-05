@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T11:08:48+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Retouches graphiques actives dans la prévisualisation OVH, sans redémarrage TradingView ni PAPER ; validation esthétique utilisateur encore ouverte",
+  "evidence": "OVH studio HTTP 200 et Javascript node --check OK ; PM2 Amsterdam boono-tv et V494/V543 PAPER online ; calibration SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "ab6cd8439dc56a1f998cfbff9c7bc48206643d12e1e28a7aa50b7a0d7d1adc02"
+}

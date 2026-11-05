@@ -164,3 +164,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — dernier relevé de Chronologie et textes vectoriels (5 novembre 2026)
 
 - [OD-20261105-002 — Chronologie dynamique et volumes SVG](OD-20261105-002/03-origine-et-justification.md) : dernier événement natif et direction en remplacement du seul BW/LBW cross ; volumes acheteurs/vendeurs regroupés dans un même élément SVG à une décimale, qualité sur la seconde ligne ; MCB3 recentré, aucune date/heure sur l’écran. [Rapport technique](../BOONO_TV_chronologie_dynamique_volume_svg_centrage_2026-11-05.md). Aucun changement aux moteurs PAPER.
+
+## BOONO-TV — volumes BTC transparents et cadrage MCB3 (5 novembre 2026)
+
+- [OD-20261105-003 — volumes BTC transparents et vague MCB3](OD-20261105-003/03-origine-et-justification.md) : correction de la direction du déplacement (BTC vers Qualité, et non l’inverse) ; retrait du bandeau noir derrière les chiffres, maintien du fond noir de Qualité, source MCB complète recentrée par composition uniquement ; [rapport et contrôles](../BOONO_TV_volumes_transparents_cadrage_MCB3_2026-11-05.md). PAPER et calibration inchangés.

@@ -1,0 +1,7 @@
+Enléve le fond noir derrière le texte btcxxx . btcxxx, ce texte peut garder sa bordure noir mais est en transparence au dessus du graphe, réduit l'espace entre les lignes, qualités peut rester sur fond noir.
+
+La vague MCB3 est cachée par un bandeau noir et je n'en vois pas le début
+
+---
+
+Non tu rapproche la ligne btc de qualité

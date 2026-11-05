@@ -1,0 +1,5 @@
+BOONO-TV : retouche locale du 05/11/2026 en lecture seule et sans redessin. Écrans projetés sur le bureau validé.
+1. NE PAS déplacer la ligne Qualité : conserver sa place et son fond noir. Abaisser SEULEMENT la ligne des deux volumes BTC vers Qualité, pour réduire l'intervalle.
+2. Retirer le gros fond sombre horizontal qui suit le texte de volumes (SVG path stroke épais) ; conserver un fin contour noir autour des glyphes. Les volumes restent en tspan vert/rouge à une décimale et suivent les données réelles.
+3. Diagnostiquer l'image authentique TradingView MCB3 (1195×165), qui présente un bandeau noir dans la zone supérieure et dont le tracé devient visible surtout vers la fin de la hauteur. Repositionner et recadrer uniquement la projection image (ne pas rogner les côtés de la source) de manière à voir son début horizontal et la vague entière entre les deux labels. Conserver écran droit et homographie validés.
+4. Sauvegarder avant modifications, contrôler une capture d'écran Chromium, l’absence de chevauchement et la provenance/fraîcheur capture, puis archiver la décision/test. Aucune modification de trading ni du flux Amsterdam.
