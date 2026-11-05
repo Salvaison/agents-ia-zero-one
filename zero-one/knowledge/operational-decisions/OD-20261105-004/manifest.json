@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-004",
+  "title": "BOONO-TV dix grandes pastilles rouges et capture MarketCipher 3m",
+  "createdAtUtc": "2026-11-05T11:21:58+00:00",
+  "authorization": "Demande explicite de finition BOONO-TV 05/11/2026, source inchangée",
+  "reference": "Conversation BOONO-TV du 5 novembre 2026, demande de pastilles et MCB3",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "e12f763ef8e6bb0c8ba78c99d4d6b8e66d6b4c98950fee6e387ab49ccdb3db35",
+      "bytes": 387
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "d821c3face5ebb2abc08e41baa0aa9f3591e5b1b5d2709a6801f1cb188bb5a73",
+      "bytes": 1499
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "f0eb0e10f74ac1a383d862f82c081cad04741b2dd06b10c574ee3627f1dfc300",
+      "bytes": 1388
+    }
+  }
+}

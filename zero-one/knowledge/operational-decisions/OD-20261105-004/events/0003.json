@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T11:28:56+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Correction active sur OVH et source TV Amsterdam ; l onglet TA sera remis en 3m à sa prochaine capture même après changement manuel, collecteurs et moteurs PAPER intacts",
+  "evidence": "OVH HTTP studio 200, PM2 boono-desk-capture et V494/V543 PAPER online, source 3m OKX 60s vérifiée, calibration 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "c2f27bfe27404fde8259d35a51b7bfb2a94e2c9371c11a64ac1d040eaaf99295"
+}

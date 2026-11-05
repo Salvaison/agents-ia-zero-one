@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T11:28:56+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Indicateur volume TV spécifique 10 pastilles agrandies sur bande droite, rouge si actif ; capture TA rétablie en 3m OKX à chaque cycle et MCB3 recentré entre ses labels",
+  "evidence": "Amsterdam boono-tv/desk/desk-capture-daemon.js ; OVH scene/tv-mini-conversion.js boono-v2.css ; sauvegardes OD-20261105-004 ; calibration inchangée",
+  "previousEventSha256": null
+}

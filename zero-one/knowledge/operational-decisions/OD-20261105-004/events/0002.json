@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T11:28:56+00:00",
+  "status": "TESTE",
+  "description": "Capture TradingView d abord 15m puis 3m réel corrigé, cycle suivant toujours 3m ; 10 pastilles, 95,26 pourcent de la bande, nombre rouge égal niveau réel, comparatif 3 cadrages, Chromium zéro erreur",
+  "evidence": "OVH tests/verify-OD-20261105-004-result.json, OD-20261105-004-close.jpg, od20261105-004-MCB-close-I/II/III.jpg ; AMD boono-tv/assets/desk-live/state.json ; sha256 calibration conservée",
+  "previousEventSha256": "0e26a8d24b63966bb73cc9f75dcc90004216ead4895f97db8e7b47e5aaccbbc8"
+}

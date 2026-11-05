@@ -168,3 +168,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — volumes BTC transparents et cadrage MCB3 (5 novembre 2026)
 
 - [OD-20261105-003 — volumes BTC transparents et vague MCB3](OD-20261105-003/03-origine-et-justification.md) : correction de la direction du déplacement (BTC vers Qualité, et non l’inverse) ; retrait du bandeau noir derrière les chiffres, maintien du fond noir de Qualité, source MCB complète recentrée par composition uniquement ; [rapport et contrôles](../BOONO_TV_volumes_transparents_cadrage_MCB3_2026-11-05.md). PAPER et calibration inchangés.
+
+## BOONO-TV — pastilles de volume rouges et capture réelle 3m (5 novembre 2026)
+
+- [OD-20261105-004 — Pastilles rouges grandes et capture MarketCipher 3m](OD-20261105-004/03-origine-et-justification.md) : réalisation d’une bande blanche complète de dix rectangles volume (rouges actifs, bord noir), maintien de la capture 3m sur l’onglet TA seulement, graphique MCB mieux centré ; [rapport technique et preuves](../BOONO_TV_pastilles_rouges_MCB3_capture_2026-11-05.md). Runners V494/V543 et calibration préservés.

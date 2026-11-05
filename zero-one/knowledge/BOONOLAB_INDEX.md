@@ -80,3 +80,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## Volumes BTC transparents et cadrage MCB3 (05/11)
 
 - [Retouche locale des volumes SVG et du rendu MarketCipher](BOONO_TV_volumes_transparents_cadrage_MCB3_2026-11-05.md) — BTC descendu vers Qualité immobile, sans fond noir sur les chiffres, graphe MCB3 complet centré entre titres, OD-20261105-003.
+
+## BOONO-TV pastilles rouges et capture 3m (05/11)
+
+- [Dix grandes pastilles volume et maintien d’un véritable MarketCipher 3m](BOONO_TV_pastilles_rouges_MCB3_capture_2026-11-05.md) — bande droite du graphe dédiée, couleur par seuil volume réel ; source TA requalifiée 3m et centrage visuel, sans impact PAPER, OD-20261105-004.

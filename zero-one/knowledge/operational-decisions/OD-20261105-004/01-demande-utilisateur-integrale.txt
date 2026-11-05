@@ -1,0 +1,3 @@
+Ca commence à être super! les pastilles volume sont trop petite, fait un design indépendant pour ce graphe avec des pastille volume qui occupe toute la plage blanche à droite du graphe, les pastille active serons rouge avec bordure noir
+
+La vague MCB3 n'est pas encore centrée entre les textes et maintenant il est affiché "MarketCipher 15min", nous voulons avoir le 3min affiché

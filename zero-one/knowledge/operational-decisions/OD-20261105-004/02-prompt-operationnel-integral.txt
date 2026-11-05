@@ -1,0 +1,7 @@
+BOONO-TV atelier, 5 novembre 2026. Opération strictement présentation et capture TradingView TA.
+1. Sauvegarder le module de conversion SVG, l'affichage MCB et le fichier de calibration OVH, ainsi que le daemon de capture Amsterdam et son état.
+2. Sur BOONO-TV seulement, réaliser un nouveau design de 10 grandes pastilles dans toute la marge blanche droite du graphe de conversion : pastilles actives rouges à bord noir, inactives blanches à bord noir. Conserver les seuils observés de volume total OKX et aucune modification des logiques de trading ni du renderer Watch.
+3. Vérifier la résolution réelle de la cible TradingView TA qljTf3vu, séparée des collecteurs 2AqpEMfD. Si la cible a dérivé vers 15m, rétablir et maintenir 3m authentique sur la capture TV (OKX:BTCUSDT.P), en conservant la cadence de 60 s. Ne pas falsifier l'étiquette et ne jamais toucher aux collecteurs. Signaler que la cible TA sera requalifiée en 3m si l'utilisateur la déplace.
+4. Centrer visuellement la vague MCB3 entre son titre vectorisé et la ligne de Chronologie, en préservant l'image source complète et la perspective/calibration du bureau. Contrôler différents rendus navigateur.
+5. Node check, service health, test Chromium (dix pastilles, rouge actif, sources, position et légende, absence d'erreurs), preuves, rollback, archive de décision. Validation esthétique utilisateur ensuite.
+6. Pas de changements aux runners PAPER, au risque, aux ledgers, ni aux assets visuels validés.
