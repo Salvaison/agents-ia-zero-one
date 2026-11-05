@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T13:32:40+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Ecran droit affiche la serie MCB3 du collecteur Watch identique a la vue Vagues, mode JPEG TradingView mcbNative=1 conserve; jauge volume 10 pastilles independante au bord droit; iframe YouTube muet opt-in sous la fenetre avec mode poster",
+  "evidence": "OVH scene/app.js index.html tv-mini-conversion.js boono-v2.css window-video-test.js, backups OD-20261105-007, daemon Amsterdam et moteurs PAPER inchanges",
+  "previousEventSha256": null
+}

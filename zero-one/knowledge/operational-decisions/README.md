@@ -180,3 +180,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — bulle par posture et cadrage harmonieux du MCB3 (5 novembre 2026)
 
 - [OD-20261105-006 — Bulle par posture et cadrage MCB3 harmonieux](OD-20261105-006/03-origine-et-justification.md) : douze géométries indépendantes des bulles dans les scénarios, écran Conversion titré en SVG, pastilles déportées à droite ; capture TF3 OKX recadrée sur le début et toute l’amplitude des oscillations récentes, pas tout l’historique ; [rapport de tests](../BOONO_TV_postures_bulles_MCB3_cadrage_2026-11-05.md). PAPER et calibration intacts.
+
+## BOONO-TV — MCB3 commun à Watch, volume et essai fenêtre vidéo (5 novembre 2026)
+
+- [OD-20261105-007 — MCB3 commun Watch/TV, jauge indépendante et essai vidéo](OD-20261105-007/03-origine-et-justification.md) : source MCB3 partagée entre les deux graphiques, ancienne capture TradingView en comparaison, dix pastilles au bord de l’écran et vidéo YouTube réversible avec repli poster ; [rapport technique](../BOONO_TV_MCB3_sync_pastilles_video_fenetre_2026-11-05.md). Le lecteur YouTube ne fonctionnait pas en Chromium OVH.

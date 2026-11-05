@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-007",
+  "title": "BOONO-TV MCB3 comparatif, pastilles volume et video YouTube dans la fenetre",
+  "createdAtUtc": "2026-11-05T13:08:42+00:00",
+  "authorization": "Demande explicite de test YouTube reversible et comparaison des vagues MCB3, 05/11/2026",
+  "reference": "Conversation BOONO-TV 05/11/2026, capture Etat vivant et bureau",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "3a2e16b31d1cdc113ce6256e7124917f143be6678f479b6fcce86bb2e6d8dc4b",
+      "bytes": 508
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "e98dad55a6562a993268a336c71f8dbcb9111b3bbcf79f53487adcefb94b8294",
+      "bytes": 1181
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "db606293180ff24456ca5b491884571ab4c8af47d345dcb3df5f9f624b259db4",
+      "bytes": 1735
+    }
+  }
+}

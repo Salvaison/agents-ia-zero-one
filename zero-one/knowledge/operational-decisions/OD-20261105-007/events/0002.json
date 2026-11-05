@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T13:32:45+00:00",
+  "status": "TESTE",
+  "description": "Comparaison JPEG MCB et courbe BW CSV : forte correlation sur decalage temporel mais pas en live; Chromium identite du timestamp MCB3 entre bureau et Watch, dix pastilles DOM, video iframe inaccessible affiche indisponible et poster de repli au bout de 15s; zero erreur JS",
+  "evidence": "OVH tests/verify-OD-20261105-007-collector-poster-result.json, verify-OD-20261105-007-video-fallback-result.json, captures collector-wave, native-wave, poster-wave et youtube-after-fallback; calibration SHA256 inchangee",
+  "previousEventSha256": "ad71c90f7be4287e0fce48f8564f986fd92522e62dcc192dcf6a85aeef7040a2"
+}

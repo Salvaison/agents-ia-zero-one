@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T13:32:49+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "OVH studio et tunnel Chromebook 8310 en service, MCB3 aligne aux memes donnees que Watch, pastilles a droite. Video YouTube en TEST uniquement, echec embed sur Chromium OVH donc repli image et aucune conclusion sur lecture Chromebook",
+  "evidence": "OVH studio HTTP 200; Penguin autossh active HTTP 200; PM2 Amsterdam V494 V543 et collecteurs en ligne; desk/projection-config.json SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "3d2194b794959bfce1c39fedb71ca589c753418dd65e826bf9d39df3ff0d682c"
+}

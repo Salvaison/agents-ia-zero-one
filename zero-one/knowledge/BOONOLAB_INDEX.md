@@ -92,3 +92,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV géométrie bulles et cadrage MCB3 (05/11)
 
 - [Emplacement et taille des bulles par posture, cadrage MCB3, titre CONVERSION](BOONO_TV_postures_bulles_MCB3_cadrage_2026-11-05.md) — capture réelle OKX 3m recentrée sans perdre les extrêmes, jauge volume droite et SVG net ; décision OD-20261105-006.
+
+## BOONO-TV MCB3 synchronisé et vidéo fenêtre (05/11)
+
+- [Concordance des vagues MCB3, jauge volume droite, test vidéo dans la baie vitrée](BOONO_TV_MCB3_sync_pastilles_video_fenetre_2026-11-05.md) — rendu Watch partagé en lecture seule, mode comparatif TradingView, vidéo opt-in et poster de repli ; décision OD-20261105-007.
