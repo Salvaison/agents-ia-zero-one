@@ -116,3 +116,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV superposition des bulles et vagues (05/11)
 
 - [Bulles entre les graphiques du marché et BOONO/chat/bureau](BOONO_TV_ordre_couches_bulles_vagues_bougies_2026-11-05.md) — correction locale du stacking CSS, contrôles de 3 postures, aucune modification de géométrie ; OD-20261105-012.
+
+## BOONO-TV atelier stop-motion unifié (05/11)
+
+- [Postures, paroles et accessoires temporisés dans un seul éditeur](BOONO_TV_ATELIER_SCENARIOS_UNIFIE_2026-11-05.md) — 12 poses et durées de référence, bulles et accessoires visibles sur des intervalles début/fin en %, lecture d’aperçu, validation et sauvegarde sans toucher au trading ; OD-20261105-013.

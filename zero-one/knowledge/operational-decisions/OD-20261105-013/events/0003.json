@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T22:12:54+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Atelier scenarisation unifie active dans BOONO-TV OVH via dialogueEdit=1 ou storyboardEdit=1 et depuis calibration technique. Stop-motion visuel uniquement; textes anciens et 12 poses preserves, logos tiers non actives, mug provisoire ; Chromebook validation esthetique finale ouverte",
+  "evidence": "OVH studio service actif routes HTTP200, tunnel Penguin 8310 actif HTTP200, PM2 V494/V543 PAPER et collecteurs online, aucun fichier calibration modifie",
+  "previousEventSha256": "6f15c2db56955da2712d9c7d3f89d4341e4a24c38173371b43f5b286834019eb"
+}

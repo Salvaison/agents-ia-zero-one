@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T22:12:50+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Atelier unique sur Etat vivant : duree et deplacement par posture, bulle type texte et fenetre 0-100%, accessoires Mug maquette Like Subscribe et emplacements marques verrouilles, sliders debut fin et apercu temporel; configuration dans JSON scenarios distinct de la calibration",
+  "evidence": "OVH studio-server.js, desk/dialogue-script.json, scene/dialogue-editor.js, storyboard-timeline.js, layout-editor.js, app.js, chart-views.js, index.html, styles.css ; backup OD-20261105-013",
+  "previousEventSha256": null
+}

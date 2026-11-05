@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T22:12:52+00:00",
+  "status": "TESTE",
+  "description": "Chromium 12 postures, 6 accessoires, chronologie 20-70% bulle 25-55% Like, 65-95% Subscribe, transition auto apres duree reference, navigation et reprise trois panneaux. API 403 sans autorisation 400 logo non approuve ou fenetre inversee 409 revision perimee et POST 200 restoration identique. Zero erreur JS et calibration SHA identique",
+  "evidence": "OVH tests/verify-OD-20261105-013-workshop-initial-result.json, timing-edit-result.json, runtime-timing-result.json, storyboard-api-result.json, regression-result.json ; captures atelier ; projection SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "5d920051946d56c59fc6f57bad986f682d9c6be1c09d6446f50644ddd2ae1ab1"
+}

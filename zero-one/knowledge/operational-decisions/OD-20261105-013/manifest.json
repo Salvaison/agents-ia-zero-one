@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-013",
+  "title": "BOONO-TV atelier unique postures, bulles, accessoires et fenêtres temporelles",
+  "createdAtUtc": "2026-11-05T21:49:52+00:00",
+  "authorization": "Demande du propriétaire du 05/11/2026 : éditeurs réunis et chronologie relative par posture",
+  "reference": "BOONO-TV atelier scénarios et stop-motion, message 05/11/2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f6c0e1039d51e21000af59db8b0678532087d174e8846be9ebf708b29fa09552",
+      "bytes": 642
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b3d214365fff7369f6745801e5604a440f8a615cb639f6d611015e48c436e277",
+      "bytes": 1572
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "19c877be5748f997def7620be281691bdddbae081019c90f6472e902f679d721",
+      "bytes": 1569
+    }
+  }
+}

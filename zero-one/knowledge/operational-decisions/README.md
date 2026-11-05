@@ -204,3 +204,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — ordre des couches rideau/bougies/bulles (5 novembre 2026)
 
 - [OD-20261105-012 — Rideau et bougies derrière les bulles](OD-20261105-012/03-origine-et-justification.md) : remplacement de l’ancien empilement parent z6 des bulles par z9, entre les graphiques z7/z8 et le bureau/BOONO/chat z10–13 ; [rapport et tests Chromium](../BOONO_TV_ordre_couches_bulles_vagues_bougies_2026-11-05.md). Poses, calibration et PAPER inchangés.
+
+## BOONO-TV — atelier de scénarios stop-motion et fenêtres temporelles (5 novembre 2026)
+
+- [OD-20261105-013 — Atelier unifié des scénarios postures, bulles et accessoires](OD-20261105-013/03-origine-et-justification.md) : durée et décalages par posture, texte et forme de bulle, accessoires et plages 0–100 % à deux curseurs, aperçu temporel sur la surface État vivant ; [rapport technique et tests](../BOONO_TV_ATELIER_SCENARIOS_UNIFIE_2026-11-05.md). Calibrage du bureau et PAPER inchangés, logos en attente de droits.
