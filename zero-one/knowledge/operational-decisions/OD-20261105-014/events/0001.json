@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T22:40:32+00:00",
+  "status": "IMPLEMENTE",
+  "description": "MP4 original 136905428 octets transfere via tunnel Penguin vers depot prive OVH avec controle SHA256, endpoint upload unique supprime; routes privees HTTP Range, video HTML5 optionnelle derriere alpha fenetres, commandes son manuel et lecture, skyline ordinaire conserve",
+  "evidence": "OVH private-media/clemens-costa-kitchen-club-20261105.mp4, studio-server.js, scene/window-local-video.js, boono-v2.css, index.html, window-video-test.js ; backup OD-20261105-014",
+  "previousEventSha256": null
+}

@@ -208,3 +208,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — atelier de scénarios stop-motion et fenêtres temporelles (5 novembre 2026)
 
 - [OD-20261105-013 — Atelier unifié des scénarios postures, bulles et accessoires](OD-20261105-013/03-origine-et-justification.md) : durée et décalages par posture, texte et forme de bulle, accessoires et plages 0–100 % à deux curseurs, aperçu temporel sur la surface État vivant ; [rapport technique et tests](../BOONO_TV_ATELIER_SCENARIOS_UNIFIE_2026-11-05.md). Calibrage du bureau et PAPER inchangés, logos en attente de droits.
+
+## BOONO-TV — MP4 Clemens Costa privé derrière les fenêtres (5 novembre 2026)
+
+- [OD-20261105-014 — vidéo Clemens Costa test privé derrière les fenêtres](OD-20261105-014/03-origine-et-justification.md) : récupération du MP4 original Chromebook, contrôle SHA-256, streaming privé avec HTTP Range sur OVH et player HTML5 muet par défaut avec activation audio manuelle ; [rapport technique et tests](../BOONO_TV_Clemens_Costa_video_fenetres_test_2026-11-05.md). Les droits de diffusion publique ne sont pas établis. Bureau, masques et PAPER intacts.

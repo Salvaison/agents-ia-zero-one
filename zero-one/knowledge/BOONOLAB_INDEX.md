@@ -120,3 +120,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV atelier stop-motion unifié (05/11)
 
 - [Postures, paroles et accessoires temporisés dans un seul éditeur](BOONO_TV_ATELIER_SCENARIOS_UNIFIE_2026-11-05.md) — 12 poses et durées de référence, bulles et accessoires visibles sur des intervalles début/fin en %, lecture d’aperçu, validation et sauvegarde sans toucher au trading ; OD-20261105-013.
+
+## BOONO-TV vidéo test Clemens Costa derrière les vitrages (05/11)
+
+- [Installation privée du MP4 Clemens Costa, lecteur et commandes audiovisuelles](BOONO_TV_Clemens_Costa_video_fenetres_test_2026-11-05.md) — vraie vidéo fournie par le propriétaire, lecture derrière les alpha, audio actionné par clic, retour au skyline normal, test sans diffusion publique ; OD-20261105-014.

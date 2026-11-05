@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T22:40:39+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Mode essai prive ?windowVideo=clemens en service derriere transparence fenetres via studio OVH localhost et tunnel 8310; controle audio manuel, video complete; skyline standard et masques GIMP inchanges; diffusion publique non autorisee sans accord ayant droit; dernier controle Chromebook utilisateur ouvert",
+  "evidence": "OVH studio 3091 actif HTTP200, stream range 206 via Penguin 8310, route import temp supprime, aucun asset video public, V494 V543 PAPER et collecteurs online, calibration SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "4c55ad698d10b502ecb6ac711eab1e82337660d025f6d6dd2a5366c5ab7825ac"
+}

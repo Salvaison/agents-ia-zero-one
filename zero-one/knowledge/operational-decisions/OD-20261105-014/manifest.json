@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-014",
+  "title": "BOONO-TV video Clemens Costa locale dans les fenêtres et import privé de MP4",
+  "createdAtUtc": "2026-11-05T22:26:29+00:00",
+  "authorization": "User explicitly asks private test audiovisual with attached MP4 on 05/11/2026",
+  "reference": "BOONO-TV media layer 05/11/2026; no public broadcast license implied",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "80dbd0e98644ebbcda192622b27899a85b33c436e6791aa95e98ab97b8ac134c",
+      "bytes": 454
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "e7849a343abc89b267054648496288a1bf01af09deda203f7b7904d51a421f20",
+      "bytes": 1440
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2b9e2e476e6d8a23c73aa97ed90f2b70142ee6b8d5f7ded6374ae3744c7a392a",
+      "bytes": 1510
+    }
+  }
+}

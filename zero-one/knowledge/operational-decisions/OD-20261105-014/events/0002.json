@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T22:40:35+00:00",
+  "status": "TESTE",
+  "description": "Hash source et dest identique; range HTTP 206/416, Host externe 403 et route import 404, mode normal sans video, mode Clemens joue H264 640x360 50m47 muted par defaut, activation son pause reprise fonctionnent, difference visuelle fenetre 44.01, zero erreur JS; tunnel Chromebook 206; calibration identique",
+  "evidence": "OVH tests/verify-OD-20261105-014-local-video-result.json, photos normal-loft/clemens-loft, FFprobe, curl de test ranges et hash SHA256 6cc415c586e546293ff320d150c882ee973efa011aa693ddfb155c6dbe1f7904",
+  "previousEventSha256": "80a5a84c42da89b52d61574335167a0151ef7a6132fb72ad25c9a0195c6e0c7d"
+}
