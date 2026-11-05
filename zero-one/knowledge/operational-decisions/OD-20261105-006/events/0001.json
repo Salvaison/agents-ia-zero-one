@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T12:51:39+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Douze bulles gardent un placement X Y taille par posture dans dialogue-script, validation API, glisser deplacer, titre SVG Conversion, jauge droite decalee, capture TA recadree MCB3 sans noir",
+  "evidence": "Amsterdam boono-tv/desk/desk-capture-daemon.js ; OVH scene/dialogue-editor.js layout-editor.js desk-vector-titles.js tv-mini-conversion.js boono-v2.css studio-server.js desk/dialogue-script.json ; backups OD-20261105-006",
+  "previousEventSha256": null
+}

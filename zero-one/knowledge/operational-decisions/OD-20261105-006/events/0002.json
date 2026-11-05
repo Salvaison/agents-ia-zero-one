@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T12:51:41+00:00",
+  "status": "TESTE",
+  "description": "Sources CDP OKX BTCUSDT.P TF3 et study MarketCipher_B verifies, clip 580x159; poses Working Thinking geom independent, drag preview, POST 200 et hors borne 400, zero erreurs Chromium, calibration SHA inchange",
+  "evidence": "OVH tests/verify-OD-20261105-006-result.json, verify-OD-20261105-006-drag-save-result.json, OD-20261105-006-desk-close.jpg ; AMD CDP TA 3m et PM2 en ligne",
+  "previousEventSha256": "a5886259530382ca6a555672ef55e19ddbfac6e9e3bdbb40b0cc81486a339053"
+}

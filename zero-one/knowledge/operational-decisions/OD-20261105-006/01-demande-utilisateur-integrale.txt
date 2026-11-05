@@ -1,0 +1,5 @@
+Alors pour chaque posture, je peux maintenant choisir quel bulle et y inscrire un texte, Bien mais je dois aussi pouvoir donner à la bulle un emplacement associé à la posture en question et en changer la grandeur
+
+Aussi je vois que la vague MCB reste sur le 4h et encore un large bandeau noir couvre un tiers de son écran
+
+Applique le text vectorisé "Conversion" sur le haut du graphe conversion. Aussi les pastilles volume doivent être déplacée vers la droite et non ainsi coincé contre le graphe

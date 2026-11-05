@@ -176,3 +176,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — tunnel du Chromebook et scénarios légers (5 novembre 2026)
 
 - [OD-20261105-005 — Tunnel Penguin et scénarios à gauche](OD-20261105-005/03-origine-et-justification.md) : port SSH 8310 rétabli et service utilisateur activé, éditeur des 12 poses dans la surface État vivant et tests répétés de prévisualisation ; [rapport technique](../BOONO_TV_tunnel_penguin_editeur_bulles_gauche_2026-11-05.md). Cause exacte du plantage Chromebook non encore démontrée.
+
+## BOONO-TV — bulle par posture et cadrage harmonieux du MCB3 (5 novembre 2026)
+
+- [OD-20261105-006 — Bulle par posture et cadrage MCB3 harmonieux](OD-20261105-006/03-origine-et-justification.md) : douze géométries indépendantes des bulles dans les scénarios, écran Conversion titré en SVG, pastilles déportées à droite ; capture TF3 OKX recadrée sur le début et toute l’amplitude des oscillations récentes, pas tout l’historique ; [rapport de tests](../BOONO_TV_postures_bulles_MCB3_cadrage_2026-11-05.md). PAPER et calibration intacts.

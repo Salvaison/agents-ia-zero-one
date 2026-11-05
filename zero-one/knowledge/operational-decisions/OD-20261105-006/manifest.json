@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-006",
+  "title": "BOONO-TV : bulle position taille par posture, capture MCB3 et titre Conversion SVG",
+  "createdAtUtc": "2026-11-05T12:32:06+00:00",
+  "authorization": "Demande du propriétaire du 5 novembre 2026 : paramètres scénario et rendu bureau uniquement",
+  "reference": "Conversation BOONO-TV 05/11/2026, capture jointe",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "dfb184fdc4b6b5ae3520d2c1c9e1af6c58d3756bbe94f7a280ab3d8f64723280",
+      "bytes": 507
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "683cce78e28e2d29a9ef6309e851f6150fa51f1664e94031548e6b338d37b75c",
+      "bytes": 2309
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "d3069929a67b64c45e8257a2a2e76b21e32a2dc6f07c83542fc50944ec2ca758",
+      "bytes": 1493
+    }
+  }
+}

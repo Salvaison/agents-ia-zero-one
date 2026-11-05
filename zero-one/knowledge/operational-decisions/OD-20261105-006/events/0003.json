@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T12:51:44+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Previsualisation BOONO-TV affiche MCB3 3m recadre, textes vectoriels, geometries des bulles par pose ; derniere validation esthetique utilisateur encore ouverte, moteurs PAPER et calibration inchanges",
+  "evidence": "OVH boono-studio.service active, HTTP 200; Amsterdam boono-desk-capture online cadence 60 secondes, V494 V543 online, pas de modification de trading",
+  "previousEventSha256": "7241709c79ca91f17cb17ab713cf2754f8ad0a53f4d695f8742e943c17c0f9cc"
+}

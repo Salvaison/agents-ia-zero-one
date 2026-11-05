@@ -88,3 +88,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV éditeur de scénarios sur État vivant (05/11)
 
 - [Tunnel Chromebook 8310 et éditeur de bulles léger dans le panneau gauche](BOONO_TV_tunnel_penguin_editeur_bulles_gauche_2026-11-05.md) — réparation des connexions, 12 poses, bouton Voir sans sauvegarde, suppression du showcase coûteux pendant édition ; OD-20261105-005.
+
+## BOONO-TV géométrie bulles et cadrage MCB3 (05/11)
+
+- [Emplacement et taille des bulles par posture, cadrage MCB3, titre CONVERSION](BOONO_TV_postures_bulles_MCB3_cadrage_2026-11-05.md) — capture réelle OKX 3m recentrée sans perdre les extrêmes, jauge volume droite et SVG net ; décision OD-20261105-006.
