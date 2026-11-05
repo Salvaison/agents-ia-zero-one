@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T20:06:19+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Surveillance de fenêtre Chrome indépendante du zoom noVNC active sur Amsterdam, configuration de lancement futur modifiée. Chrome existant et moteurs PAPER non redémarrés. Tenue de la taille après prochain vrai recycle reste à vérifier",
+  "evidence": "PM2 chrome-autoresize online PID3552187 ; Chrome PID3493097 conservé ; collecteur-3m/tab2 et V494/V543 paper online ; source MarketCipher_B TV authentique conservée",
+  "previousEventSha256": "b0f58291ce63b8299dff1ed983ffa806f45c230cad045c5c1e01c7620f111abe"
+}

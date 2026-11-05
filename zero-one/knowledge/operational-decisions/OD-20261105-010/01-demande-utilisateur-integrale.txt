@@ -1,0 +1,3 @@
+Ah c'est mieux! C'était une bonne initiative de faire un variant avec les 2 masks ensemble aussi. Donc si je comprend bien il y a 4 images l'une sur l'autre qui peuvent être activée alternativement celon le niveau de transparence que l'on veux obtenir
+
+Comme tu vois sur l'image le MCB3 se décale de sa fenêtre. Chaque fois que le systéme redémare le chrome sur Amsterdam, sa fenêtre se redimensionne à la fenêtre de l'ordi à Amsterdam qui est plus grand que mon ordi. Quand je redémarre novmc aprés ce redémarage je dois utiliser la fonction zoom du chrome à Amsterdam et là la fenêtre se redimmensionne par rapport à mon écran. Il faudrait figé la grandeur du Chrome de Amsterdam à une grandeur similaire à la grandeur de l'onglet de mon Chrome

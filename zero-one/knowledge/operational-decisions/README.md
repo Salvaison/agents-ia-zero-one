@@ -192,3 +192,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — nouveau loft à deux masques GIMP (5 novembre 2026)
 
 - [OD-20261105-009 — loft GIMP à deux masques séparés](OD-20261105-009/03-origine-et-justification.md) : XCF 1200×1080 avec calques FENETRES et AFFICHES indépendants, quatre variantes alpha et deux PNG de masque sur OVH, alternance configurable sans fusion ; [rapport et preuves](../BOONO_TV_LOFT_2_MASQUES_GIMP_2026-11-05.md). Original GIMP et calibration intacts.
+
+## BOONO-TV — Chrome Amsterdam figé, indépendant du zoom noVNC (5 novembre 2026)
+
+- [OD-20261105-010 — fenêtre Chrome Amsterdam fixée à 1366×743](OD-20261105-010/03-origine-et-justification.md) : diagnostic des reflows 1920×1080 / xrandr, neutralisation du redimensionnement à chaque zoom noVNC, gabarit conservé au prochain recycle ; [rapport technique](../BOONO_TV_Chrome_Amsterdam_geometrie_fixe_2026-11-05.md). Collecteurs et PAPER non redémarrés.

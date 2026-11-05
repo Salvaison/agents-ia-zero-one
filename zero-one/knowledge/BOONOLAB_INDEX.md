@@ -104,3 +104,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV loft XCF à deux masques (05/11)
 
 - [Loft GIMP — alpha fenêtres et affiches éditables séparément](BOONO_TV_LOFT_2_MASQUES_GIMP_2026-11-05.md) — sauvegarde XCF maître non aplatie, exports SVG/PNG alpha alignés sur la scène, bascule indépendante des surfaces et contrôle Chromium ; OD-20261105-009.
+
+## Chrome Amsterdam figé et noVNC (05/11)
+
+- [BOONO-TV — fenêtre Chrome fixe et capture TradingView stable](BOONO_TV_Chrome_Amsterdam_geometrie_fixe_2026-11-05.md) — dimension 1366×743 persistante au lancement, surveillance à dérive seulement, sans redimensionnement lié au zoom noVNC ; OD-20261105-010.

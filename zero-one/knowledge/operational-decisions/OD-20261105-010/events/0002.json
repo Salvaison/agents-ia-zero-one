@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T20:06:16+00:00",
+  "status": "TESTE",
+  "description": "Bash et Node syntaxe valides, CDP sur TA montre Chrome 1365x742, viewport 1365x655 à DPR1 et zoom1, clip JPEG 580x159 à l interieur, PM2 monitor corrected=false; 3m/15m heartbeat récent, PIDs Chrome et collecteurs inchangés après 18s",
+  "evidence": "CDP Browser.getWindowForTarget et Page.getLayoutMetrics ; PM2 log Chrome locked 1366x743 corrected=false ; /run/boono-mcb-3m.heartbeat, boono-mcb-tab2.heartbeat, état capture TA OKX 3m",
+  "previousEventSha256": "0e9c1eba8b3044771d3dc3963029aaa2284656dcce5976458f2303fae4e0e23c"
+}

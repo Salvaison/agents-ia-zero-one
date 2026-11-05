@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-010",
+  "title": "BOONO-TV : fenêtre Chrome Amsterdam fixe, sans suivi du zoom noVNC",
+  "createdAtUtc": "2026-11-05T20:02:21+00:00",
+  "authorization": "Demande explicite utilisateur 05/11/2026 de figer taille Chrome Amsterdam sans perturber trading",
+  "reference": "Conversation BOONO-TV 05/11/2026 capture MCB3 dépassant écran et gestion noVNC",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "17fdb35e1d3adefc5c46a41f890b16c73fe00d31808155078ba4440098bef626",
+      "bytes": 769
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "0d42a89df32be54ca16b070f4d81f161248437c3110d27b66448dd06b726519b",
+      "bytes": 1624
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "f22badeeecc74983af814dabeb5770347b0ee1d5462a677406cc34bc5633d0b0",
+      "bytes": 1904
+    }
+  }
+}

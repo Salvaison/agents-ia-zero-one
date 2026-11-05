@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T20:06:13+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Chrome Amsterdam lancé au prochain recycle en 1366x743; chrome-autoresize PM2 fixe cette taille, sans suivi des changements xrandr/noVNC et sans forcer un reflow si fenêtre déjà conforme",
+  "evidence": "zero-one/chrome-watchdog.sh, zero-one/chrome-autoresize.js ; sauvegardes boono-tv/backups/OD-20261105-010 ; seule relance PM2 chrome-autoresize",
+  "previousEventSha256": null
+}
