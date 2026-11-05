@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T13:56:13+00:00",
+  "status": "TESTE",
+  "description": "Chromium : JPEG TW OKX BTCUSDT.P 3m 580x159 visible par defaut, canvas maison masque ; mode comparison inverse ; iframe YouTube embed Referer present ; videos controle LOGIN_REQUIRED antibo t, video utilisateur unavailable sans code ; aucune erreur JS",
+  "evidence": "OVH tests/verify-OD-20261105-008-native-and-youtube-result.json et diagnose-OD-20261105-008-youtube-player-result.json ; captures JPG ; documentation officielle YouTube erreurs 101 150 153",
+  "previousEventSha256": "eff72ce18cd7d85bb742c487dcb392e4e5e817f453be577e9119cde916ee7326"
+}

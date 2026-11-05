@@ -96,3 +96,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV MCB3 synchronisé et vidéo fenêtre (05/11)
 
 - [Concordance des vagues MCB3, jauge volume droite, test vidéo dans la baie vitrée](BOONO_TV_MCB3_sync_pastilles_video_fenetre_2026-11-05.md) — rendu Watch partagé en lecture seule, mode comparatif TradingView, vidéo opt-in et poster de repli ; décision OD-20261105-007.
+
+## BOONO-TV retour du vrai MarketCipher B et YouTube (05/11)
+
+- [Source MarketCipher B TradingView rétablie, diagnostic YouTube OVH](BOONO_TV_retour_MarketCipher_TW_Youtube_diagnostic_2026-11-05.md) — image TW authentique de nouveau par défaut, source maison seulement opt-in ; intégration YouTube bloquée sur Chromium OVH, contrôles anti-bot et Referer vérifiés ; OD-20261105-008.

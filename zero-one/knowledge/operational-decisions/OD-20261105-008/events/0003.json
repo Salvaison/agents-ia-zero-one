@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T13:56:16+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Source MarketCipher B TW restauree sur le bureau BOONO-TV ; diagnostic de blocage YouTube OVH headless, test video reste opt-in, alpha utilisateur intact. Lecture native sur Chromebook et cadrage temporel TW restent ouverts",
+  "evidence": "Studio OVH HTTP 200 ; PM2 BOONO V494 et V543 en ligne ; calibration SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "012997846362db1b761cd9d2358b84d8aec0bc6104a5c66adf95a9ae297dcccd"
+}

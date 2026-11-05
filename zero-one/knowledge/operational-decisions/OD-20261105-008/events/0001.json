@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T13:56:11+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Restauration du vrai screenshot MarketCipher B TradingView sur le bureau OVH par defaut ; MCB3 maison uniquement via mcbCollector=1 ; loft alpha, projection et collecteurs inchanges",
+  "evidence": "OVH scene/app.js et scene/boono-v2.css ; backup OD-20261105-008 ; actif sur studio 3091",
+  "previousEventSha256": null
+}

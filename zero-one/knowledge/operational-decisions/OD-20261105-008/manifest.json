@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-008",
+  "title": "BOONO-TV vraie capture MarketCipher TradingView et diagnostic lecture YouTube OVH",
+  "createdAtUtc": "2026-11-05T13:49:46+00:00",
+  "authorization": "Correction explicite du propriétaire du 05/11/2026, écran de bureau et diagnostic YouTube",
+  "reference": "Discussion BOONO-TV du 5 novembre 2026, rectification OD-20261105-007",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "91ab0523ea49526815bb743058335ddba92a37b710c7cd87e26b12195518cb9f",
+      "bytes": 210
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8f3386ea33485243e3d5214ff5b986219b980c0e5f060cece04f09e64f9b2144",
+      "bytes": 1065
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "7fcd77b85fb289e631d6eb91e00ef9eedc3aa5bbea624e5e19eb4049c9e9ec25",
+      "bytes": 1472
+    }
+  }
+}

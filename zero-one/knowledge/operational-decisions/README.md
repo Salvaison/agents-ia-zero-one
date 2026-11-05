@@ -184,3 +184,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — MCB3 commun à Watch, volume et essai fenêtre vidéo (5 novembre 2026)
 
 - [OD-20261105-007 — MCB3 commun Watch/TV, jauge indépendante et essai vidéo](OD-20261105-007/03-origine-et-justification.md) : source MCB3 partagée entre les deux graphiques, ancienne capture TradingView en comparaison, dix pastilles au bord de l’écran et vidéo YouTube réversible avec repli poster ; [rapport technique](../BOONO_TV_MCB3_sync_pastilles_video_fenetre_2026-11-05.md). Le lecteur YouTube ne fonctionnait pas en Chromium OVH.
+
+## BOONO-TV — véritable MarketCipher B et refus de lecture YouTube (5 novembre 2026)
+
+- [OD-20261105-008 — MarketCipher B de TradingView et diagnostic YouTube](OD-20261105-008/03-origine-et-justification.md) : correction de la substitution non autorisée du MCB3 maison, retour au screenshot TradingView en source par défaut ; diagnostic Referer présent et LOGIN_REQUIRED antiprobots en navigateur OVH de contrôle ; [rapport technique](../BOONO_TV_retour_MarketCipher_TW_Youtube_diagnostic_2026-11-05.md). Alpha et PAPER inchangés.
