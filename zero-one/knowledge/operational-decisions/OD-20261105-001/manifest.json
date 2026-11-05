@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-001",
+  "title": "BOONO-TV finition MCB réel, conversion, risques, bulles, accessoires",
+  "createdAtUtc": "2026-11-05T09:58:51+00:00",
+  "authorization": "Cahier des charges BOONO-TV explicite du propriétaire le 5 novembre 2026",
+  "reference": "Conversation BOONOTRADE 05/11/2026 capture 08:57 jointe",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "37aaba06c01b452aa044f65e411c35e98a7aeacd04bc8ccd3ca0e9ce98b05f9a",
+      "bytes": 2343
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "c4cf264c90bd4487682a22e74a915871a38056e29e33fc219d756ac0d668b544",
+      "bytes": 2156
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "d86ac0b63b42b1308f16c228f8d767413dec50f736a123cad1b60430cc52ae2c",
+      "bytes": 1414
+    }
+  }
+}

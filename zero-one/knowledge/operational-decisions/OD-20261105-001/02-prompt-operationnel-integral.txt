@@ -1,0 +1,10 @@
+BOONO-TV — intervention sous mandat explicite 5 novembre 2026. Préserver les scripts PAPER, les ledgers, les collecteurs et calibration utilisateur. 
+1. Sauvegarder code actif OVH et bridge/capture Amsterdam, établir un registre décisionnel avant exécution.
+2. Contrôler provenance réelle TA/TV de la capture. Résoudre décalage trompeur du titre et faire revenir la capture TA dédiée sur MCB 3m / OKX BTCUSDT, sans toucher à l'onglet collecteur. Passer sa cadence de capture à 60 secondes et inclure source et fraîcheur; réduire l'amplitude et recentrer le rendu.
+3. Ajouter chronologie réelle MCB3 / BW_LBW_CROSS OBSERVED si connue, horodatée ; si non disponible ne pas inventer.
+4. Recaler les titres vectoriels, les volumes acheteurs/vendeurs réels (en vert/rouge), les 10 pastilles de volume à droite du graphe conversion, et réduire légèrement le zoom des cubes en accentuant l'axe et la bande bleue de conversion.
+5. Rendre les fourchettes PAPER V494 vs V543 distinguables et expliquer la légende ; ajouter au panneau trades la taille notionnelle effectivement observée, le risque cible « environ 1% » uniquement si corroboré, les avertissements PAPER/viabilité non démontrée et lisibilité des dates/prix.
+6. Ajouter un éditeur de scénario pour chacun des 12 états BOONO : sélectionner la bulle parmi les 4 validées et un texte libre via sous-menus, sauvegarde propre sur studio OVH ; laisser les 5 postures du chat et la calibration indépendantes, ne pas transformer la fiction scénarisée en décision technique.
+7. Préparer groupe indépendant d'accessoires pour les logos et icônes Like/Subscribe ; ne pas inventer des logos officiels ni une affiliation ; vérification de licence et provenance avant activation. Préparer seulement la future ligne musicale, sans artiste/titre fictif, audiowave si flux réel autorisé, mais respecter priorité recherche partenaires.
+8. Tester syntaxe, services, temps de rendu, provenance/fraîcheur, opérabilité de l'éditeur, scène en Chrome. Archiver tests, rollbacks et limites, cibler tout commit Git à la documentation validée sans inclure le dépôt sale.
+

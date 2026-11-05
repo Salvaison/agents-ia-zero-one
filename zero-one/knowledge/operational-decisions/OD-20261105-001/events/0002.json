@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T10:19:44+00:00",
+  "status": "TESTE",
+  "description": "Source TA CDP lue réellement OKX:BTCUSDT.P et 3m, 60s ; 10 pastilles droites, volumes vrais, chronologie sans heure/date, moteur par ligne ; API dialogues autorisée 200/403, preview non persistée, zéro erreur JS",
+  "evidence": "OVH tests/verify-finalization-20261105-result.json et verify-dialogue-save-accessories-20261105-result.json, captures JPG, PM2 PAPER toujours online, calibration SHA-256 inchangé",
+  "previousEventSha256": "cdf3df4b13e8948ae57e01f0481a51ea19064b0a3befd47c7f1dca2fab8d967a"
+}

@@ -68,3 +68,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV — points et textes vectoriels 04/11
 
 - [Vagues E3/E15 points seuls, labels SVG et trades sur trois panneaux 12 s](BOONO_TV_points_vecteurs_trades_3_panneaux_2026-11-04.md) — écran Conversion mini agrandi, MarketCipher authentique, PANEL=trades, traçabilité OD-20261104-003.
+
+## BOONO-TV scénarios et source TA vérifiée 05/11
+
+- [Finition : MCB3 TradingView authentique, conversion, 12 dialogues, accessoires](BOONO_TV_finalisation_capture_dialogue_bureau_2026-11-05.md) — passage capture TA à 60 s, vraie source OKX 3m, chronologie sans date ni heure, textes et styles, panneaux PAPER et éditeur privé ; OD-20261105-001.

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T10:19:44+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Capture TA corrigée OKX BTCUSDT 3m toutes les 60 secondes, chronologie sans date/heure, calques bureau, fourchettes moteurs et avertissements, éditeur 12 postures, accessoires en staging",
+  "evidence": "Amsterdam boono-tv/desk/desk-capture-daemon.js, chrome-watchdog.sh, boono-tv/bridge.js ; OVH scene/app.js, desk-vector-titles.js, chart-views.js, tv-mini-conversion.js, index.html, styles.css, boono-v2.css, layout-editor.js, dialogue-editor.js, accessory-sprites.js, studio-server.js, desk/dialogue-script.json et backups OD-20261105-001",
+  "previousEventSha256": null
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T10:19:44+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Source TV corrigée et studio preview en service, dossiers marques tierces et musique reportés. Éditeur privé disponible mais appréciation esthétique propriétaire ouverte",
+  "evidence": "PM2 Amsterdam boono-tv + boono-desk-capture online ; OVH boono-studio.service user active, HTTP 200 /api/dialogue-script et /api/snapshot ; sources de trading inchangées",
+  "previousEventSha256": "47d7759d58e8c480051bcf866aab0c3bb7ff863208f0c85e27e2b59965eef0d1"
+}

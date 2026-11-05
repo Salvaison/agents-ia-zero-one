@@ -156,3 +156,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — points E3/E15, SVG des écrans et cycle trois panneaux (4 novembre 2026)
 
 - [OD-20261104-003 — BOONO-TV points, titres vectoriels et troisième panneau](OD-20261104-003/03-origine-et-justification.md) : demande intégrale archivée avant les changements, textes SVG recalés sur les quadrilatères, mini-conversion agrandie, vues PAPER réalisées et cycle 12 s ; [rapport technique](../BOONO_TV_points_vecteurs_trades_3_panneaux_2026-11-04.md). Aucune décision des runners PAPER modifiée.
+
+## BOONO-TV — capture authentique 3m, mise en scène et accessoires (5 novembre 2026)
+
+- [OD-20261105-001 — BOONO-TV capture MCB 3m et scénarios](OD-20261105-001/03-origine-et-justification.md) : demande verbatim, correction de la provenance TA 4h BYBIT vers 3m OKX, cadence 60s, volumes/pastilles, E3 chrono sans date/heure, fourchettes V494/V543, éditeur 12 postures et accessoires staging ; [rapport technique](../BOONO_TV_finalisation_capture_dialogue_bureau_2026-11-05.md). Les moteurs PAPER et la calibration ne changent pas.

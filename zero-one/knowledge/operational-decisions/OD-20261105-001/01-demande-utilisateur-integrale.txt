@@ -1,0 +1,11 @@
+Oui c'est beau à voir! Au faite nous avons là 12 états pour Boono et 5 états pour son chat, de quoi réaliser des scénario complet en stop motion, géniale! La prochaine étape sera de pouvoir associer à chaque posture Boono une des 4 bulles de dialogue puis de pouvoir y associer un texte via des sous menu.
+
+Qqe amélioration sur le bureau: déplace "MarketCipher B - 3min" qqe px vers le haut, réduire la grandeur de la police, réduire l'amplitude du diagram MCB et recentrer sa capture, mettre en dessous de la vague MCB3 le résultat de chronologie "MCB3 / BW_LBW_CROSS OBSERVE&#x44;**"**, réduire la fréquence de capture sur TW à toutes les 60s. Je ne reconnais pas  l'apparence de MCB3, controle la provenance et la fraicheur du rendu Tradingview. Le tab de TA est programmé à revenir vers MCB15, nous pourrions changé ce default à MCB3. Déplace "qualité:unclassified" vers le bas de qqe pixel vers le bas, réduire un petit peu la grandeur de la police. Rajoute au dessus  "5.397 BTC - 3.229 BTC" en vert et rouge. Zoom out un peu le diagram conversion, accentue sa ligne bleue du milieu et aussi la plage bleu ciel qui montre la conversion. Rendre bien visible sur le panneau conversion de BoonoTv les 10 pastilles de volume, placé les 10 pastilles de volume sur la marge droite du graphe (celle la plus proche du module centrale de l'ordi).
+
+Dans l'état vivant, les fourchettes de trades sur les vagues ont leur ligne horizontale de 5px à la fois en haut et en bas pour le même trade/moteur, ce qui fait que l'on ne peut plus différencier les moteurs.
+
+Dans le panneau trades accompli ajoute en début de liste une déclaration sur la taille des positions, 1% de risque et Papper trading - viabilité économique non démontré. Agrandir les toutes petites polices de dates et prix de cette liste
+
+Finalement, il faut aussi ajouter les logos de MarketCypher, OKX et Tradingview, les symboles "Like & Subscribe". Ces derniers serons placé comme des Sprites indépendant dans un groupe d'objets "accessoire." Je désire aussi sur le haut de l'image de placé un texte défilant avec "BOONO feats Lofi artistXX, title XX" et un petit graphe audiowave branché sur la musique actuelle. Mais avant ça nous allons trouver des partenaires musiquaux
+
+Voilà, le cahier des charges de BoonoTv pour sa finalisation :-)
