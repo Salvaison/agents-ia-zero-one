@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-05T19:38:58+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Controle post-deploiement : tunnel Penguin autossh indique actif mais transfert 8310 expirait ; segment Amsterdam 8310 et studio OVH 3091 etaient joignables. Redemarrage du seul service utilisateur boono-tv-studio-tunnel sur Penguin, acces au studio et nouvel asset HTTP 200. Aucune action sur PAPER.",
+  "evidence": "Penguin systemctl --user restart boono-tv-studio-tunnel.service puis curl HTTP200 localhost:8310/ et assets/loft-dual-masks-20261105 ; AMS 8310 HTTP200 ; OVH studio 3091 HTTP200",
+  "previousEventSha256": "15ddedd885cf08ee957fca244eb0a8fed4afe6aff2d86283004ace05898acf0f"
+}

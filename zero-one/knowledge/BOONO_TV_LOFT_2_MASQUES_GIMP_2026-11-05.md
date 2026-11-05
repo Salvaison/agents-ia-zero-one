@@ -59,3 +59,7 @@ L'archive signée par SHA-256 sur Penguin a été envoyée par le tunnel privé 
 **Calibration rigoureusement inchangée :** SHA-256 de desk/projection-config.json = 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f. GIMP source et moteur PAPER V494/V543 inchangés. Le site garde ses scripts et données de marché antérieurs.
 
 **Traçabilité :** l’entrée OD-20261105-009 et son prompt opérationnel ont été rédigés **rétrospectivement après le début des travaux** ; ils ne constituent pas un enregistrement antérieur. Les étapes réellement effectuées et vérifiées sont distinguées dans le registre d’événements.
+
+## Contrôle du tunnel Chromebook après publication
+
+Après le déploiement, Penguin signalait son service autossh 8310 comme actif, mais la réponse HTTP expirait. Le relais Amsterdam 8310 et le studio OVH 3091 répondaient bien HTTP 200 : la partie Penguin de la connexion était périmée. Le seul service utilisateur boono-tv-studio-tunnel.service a été redémarré, puis les URLs du studio et du nouveau masque ont répondu HTTP 200 à travers le Chromebook. Aucune configuration ni processus PAPER n’a été modifié.
