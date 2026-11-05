@@ -112,3 +112,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV cadrage MCB3 natif depuis le panneau DOM (05/11)
 
 - [Cadrage MarketCipher B authentique et centré sur son panneau TradingView](BOONO_TV_MCB3_CADRAGE_PANE_TRADINGVIEW_2026-11-05.md) — clip DOM dynamique, image TV 3m complète dans l’écran sans changement des collecteurs ni de la calibration ; OD-20261105-011.
+
+## BOONO-TV superposition des bulles et vagues (05/11)
+
+- [Bulles entre les graphiques du marché et BOONO/chat/bureau](BOONO_TV_ordre_couches_bulles_vagues_bougies_2026-11-05.md) — correction locale du stacking CSS, contrôles de 3 postures, aucune modification de géométrie ; OD-20261105-012.

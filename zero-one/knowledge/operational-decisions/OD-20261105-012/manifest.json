@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-012",
+  "title": "BOONO-TV profondeur des bulles devant les graphiques et derrière BOONO, chat et bureau",
+  "createdAtUtc": "2026-11-05T20:25:57+00:00",
+  "authorization": "Modification visuelle explicite du propriétaire le 05/11/2026",
+  "reference": "Conversation BOONO-TV 05/11/2026, ordre des plans graphiques/bulles/BOONO",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "42e8f6cb97bbc86a314bc758b0298205cddee4ec41849743fe64422e92cc36d3",
+      "bytes": 195
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a67ec55c952257d04d6ae787cdb0e106069fb22705296f31f6bc4881677093b2",
+      "bytes": 993
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "4806960260341378a54b464bda4a272926e7e9e4e1d0df281b168a7ab7c41699",
+      "bytes": 937
+    }
+  }
+}

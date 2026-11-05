@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T20:28:31+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Couches de dialogue devant graphiques et derriere BOONO/chat/bureau mises en service OVH par CSS ; verification visuelle du proprietaire sur Chromebook reste ouverte ; PAPER et capture inchanges",
+  "evidence": "OVH studio HTTP200, modes CSS verifies par Chromium et captures, aucun redemarrage des moteurs",
+  "previousEventSha256": "78d4d4c9b78328824b649704564aee2dd28be9f9ee0e3e2801d1d6880de2e7e3"
+}

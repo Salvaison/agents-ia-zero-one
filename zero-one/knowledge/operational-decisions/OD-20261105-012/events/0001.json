@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T20:28:27+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Bulles au niveau z9 devant rideau z7 et bougies z8 mais derriere bureau z10, ecrans z11, BOONO z12 et chat z13; sprite arriere de BOONO debout z10 derriere bureau par ordre DOM",
+  "evidence": "OVH scene/styles.css et boono-v2.css ; sauvegarde backups/OD-20261105-012 ; aucune modification des donnees ou du bureau",
+  "previousEventSha256": null
+}

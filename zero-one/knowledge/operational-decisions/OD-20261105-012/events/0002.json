@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T20:28:29+00:00",
+  "status": "TESTE",
+  "description": "Chromium verifie zIndex effectifs 7 8 9 10 11 12 13 en postures assise, debout et editeur ; bougies et rideaux canvas intacts, aucune erreur JS, projection calibration SHA inchange",
+  "evidence": "OVH tests/verify-OD-20261105-012-layer-order-result.json, OD-20261105-012-seated-layering.jpg, standing-layering.jpg, editor-layering.jpg ; calibration 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "b217ce860efa9e78398826a5553f04a1319006125fa1423e50ce82a91da462a2"
+}

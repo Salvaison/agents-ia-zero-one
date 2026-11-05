@@ -200,3 +200,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — découpe MarketCipher B ancrée au panneau TradingView (5 novembre 2026)
 
 - [OD-20261105-011 — capture du panneau MarketCipher B réancrée au DOM](OD-20261105-011/03-origine-et-justification.md) : ancienne coupe y480..639 décentrée, vrai pane y404..588 ; rectangle dynamique x606/y429/610×152 et projection au bon ratio, sans substituer MCB3 interne. [Rapport technique](../BOONO_TV_MCB3_CADRAGE_PANE_TRADINGVIEW_2026-11-05.md).
+
+## BOONO-TV — ordre des couches rideau/bougies/bulles (5 novembre 2026)
+
+- [OD-20261105-012 — Rideau et bougies derrière les bulles](OD-20261105-012/03-origine-et-justification.md) : remplacement de l’ancien empilement parent z6 des bulles par z9, entre les graphiques z7/z8 et le bureau/BOONO/chat z10–13 ; [rapport et tests Chromium](../BOONO_TV_ordre_couches_bulles_vagues_bougies_2026-11-05.md). Poses, calibration et PAPER inchangés.
