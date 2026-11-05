@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T20:19:39+00:00",
+  "status": "IMPLEMENTE",
+  "description": "MarketCipher_B reel TradingView decoupe selon second pane-canvas DOM a chaque capture, anciennes coordonnees fixes y480 retirees; projection OVH 400x100 ratio natif; aucune modification Watch ni PAPER",
+  "evidence": "zero-one/boono-tv/desk/desk-capture-daemon.js ; OVH scene/boono-v2.css ; sauvegardes OD-20261105-011",
+  "previousEventSha256": null
+}

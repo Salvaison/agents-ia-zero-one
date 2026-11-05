@@ -196,3 +196,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — Chrome Amsterdam figé, indépendant du zoom noVNC (5 novembre 2026)
 
 - [OD-20261105-010 — fenêtre Chrome Amsterdam fixée à 1366×743](OD-20261105-010/03-origine-et-justification.md) : diagnostic des reflows 1920×1080 / xrandr, neutralisation du redimensionnement à chaque zoom noVNC, gabarit conservé au prochain recycle ; [rapport technique](../BOONO_TV_Chrome_Amsterdam_geometrie_fixe_2026-11-05.md). Collecteurs et PAPER non redémarrés.
+
+## BOONO-TV — découpe MarketCipher B ancrée au panneau TradingView (5 novembre 2026)
+
+- [OD-20261105-011 — capture du panneau MarketCipher B réancrée au DOM](OD-20261105-011/03-origine-et-justification.md) : ancienne coupe y480..639 décentrée, vrai pane y404..588 ; rectangle dynamique x606/y429/610×152 et projection au bon ratio, sans substituer MCB3 interne. [Rapport technique](../BOONO_TV_MCB3_CADRAGE_PANE_TRADINGVIEW_2026-11-05.md).

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T20:19:41+00:00",
+  "status": "TESTE",
+  "description": "CDP pane y404..588 vs ancien clip y480..639 demontre; nouveau clip DOM x606 y429 610x152 preservant deux extremums, title TW B 3min, screenshot Chromium sans debordement ni JS erreurs et calibration SHA inchangée; collecteurs PAPER PIDs conserves",
+  "evidence": "OVH tests/verify-OD-20261105-011-centered-native-result.json, centered-desk.jpg et centered-full.jpg ; Amsterdam /tmp/boono-TA-source-layout-current-20261105.json",
+  "previousEventSha256": "629039499a6da8a4aca0c17e32ba283b122fa8d4fef91e77593b9a651609f49a"
+}

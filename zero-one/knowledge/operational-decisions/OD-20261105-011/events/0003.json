@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T20:19:43+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "BOONO-TV sur OVH affiche vrai MarketCipher_B TradingView recadre depuis panneau DOM, capture Amsterdam toutes les 60s. Validation estetique utilisateur reste ouverte, ne pas confondre JPEG et tick-LIVE.",
+  "evidence": "capture state clipMode=MARKETCIPHER_B_PANE_DOM_ANCHORED et OKX BTCUSDT.P TF3 ; OVH HTTP200 ; daemon seul redemarre, moteurs et collecteurs intacts",
+  "previousEventSha256": "f61c3f47e5d8a15ccfc71a139082657569d9ed1227baa2f00ce5bf69ca102054"
+}

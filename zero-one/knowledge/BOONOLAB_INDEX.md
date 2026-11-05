@@ -108,3 +108,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## Chrome Amsterdam figé et noVNC (05/11)
 
 - [BOONO-TV — fenêtre Chrome fixe et capture TradingView stable](BOONO_TV_Chrome_Amsterdam_geometrie_fixe_2026-11-05.md) — dimension 1366×743 persistante au lancement, surveillance à dérive seulement, sans redimensionnement lié au zoom noVNC ; OD-20261105-010.
+
+## BOONO-TV cadrage MCB3 natif depuis le panneau DOM (05/11)
+
+- [Cadrage MarketCipher B authentique et centré sur son panneau TradingView](BOONO_TV_MCB3_CADRAGE_PANE_TRADINGVIEW_2026-11-05.md) — clip DOM dynamique, image TV 3m complète dans l’écran sans changement des collecteurs ni de la calibration ; OD-20261105-011.

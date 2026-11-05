@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-011",
+  "title": "BOONO-TV : cadrage dynamique du vrai MarketCipher B dans le pane TradingView",
+  "createdAtUtc": "2026-11-05T20:16:45+00:00",
+  "authorization": "Demande explicite utilisateur du 05/11/2026 : MCB3 encore décentré",
+  "reference": "BOONO-TV 05/11/2026 suite de OD-20261105-010 et capture TA CDP",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f2e54ab986876487dfa809a81e6b2acf3438ece21b9ad39aa5743a58b4faae4b",
+      "bytes": 32
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "0ed112f106ad1b1ba4b383e50bec09f2df610cd26931ce7e17ba0dce07901fdb",
+      "bytes": 1257
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e8a340cefe45971f30b4f8d7fc662b134ab7523902e4c5185157e8718715f94a",
+      "bytes": 1005
+    }
+  }
+}
