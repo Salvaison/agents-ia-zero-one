@@ -100,3 +100,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV retour du vrai MarketCipher B et YouTube (05/11)
 
 - [Source MarketCipher B TradingView rétablie, diagnostic YouTube OVH](BOONO_TV_retour_MarketCipher_TW_Youtube_diagnostic_2026-11-05.md) — image TW authentique de nouveau par défaut, source maison seulement opt-in ; intégration YouTube bloquée sur Chromium OVH, contrôles anti-bot et Referer vérifiés ; OD-20261105-008.
+
+## BOONO-TV loft XCF à deux masques (05/11)
+
+- [Loft GIMP — alpha fenêtres et affiches éditables séparément](BOONO_TV_LOFT_2_MASQUES_GIMP_2026-11-05.md) — sauvegarde XCF maître non aplatie, exports SVG/PNG alpha alignés sur la scène, bascule indépendante des surfaces et contrôle Chromium ; OD-20261105-009.

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-05T19:35:48+00:00",
+  "status": "TESTE",
+  "description": "Relecture du XCF 1200x1080 dans GIMP confirme deux masques independants editables et trois calques; hashes du transfert et fichiers PNG valides; alpha fenetres et affiches independant; Chromium quatre modes et alternance runtime sans erreur, video poster confirme trous independants",
+  "evidence": "Penguin mask-diagnostics.json, named-xcf-status.json, boono_gimp_reopen_master_verification.json; OVH tests/verify-OD-20261105-009-loft-mask-independence-result.json, verify-OD-20261105-009-loft-video-compositing-result.json, captures JPG, PNG alpha test sharp",
+  "previousEventSha256": "f74ff95c4327a2e41f3998367205aa09dcdc500aeb37ca3d6621dd320fbeb9b3"
+}

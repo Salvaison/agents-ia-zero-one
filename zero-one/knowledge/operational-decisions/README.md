@@ -188,3 +188,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — véritable MarketCipher B et refus de lecture YouTube (5 novembre 2026)
 
 - [OD-20261105-008 — MarketCipher B de TradingView et diagnostic YouTube](OD-20261105-008/03-origine-et-justification.md) : correction de la substitution non autorisée du MCB3 maison, retour au screenshot TradingView en source par défaut ; diagnostic Referer présent et LOGIN_REQUIRED antiprobots en navigateur OVH de contrôle ; [rapport technique](../BOONO_TV_retour_MarketCipher_TW_Youtube_diagnostic_2026-11-05.md). Alpha et PAPER inchangés.
+
+## BOONO-TV — nouveau loft à deux masques GIMP (5 novembre 2026)
+
+- [OD-20261105-009 — loft GIMP à deux masques séparés](OD-20261105-009/03-origine-et-justification.md) : XCF 1200×1080 avec calques FENETRES et AFFICHES indépendants, quatre variantes alpha et deux PNG de masque sur OVH, alternance configurable sans fusion ; [rapport et preuves](../BOONO_TV_LOFT_2_MASQUES_GIMP_2026-11-05.md). Original GIMP et calibration intacts.

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-05T19:35:46+00:00",
+  "status": "IMPLEMENTE",
+  "description": "XCF GIMP nommé et sauvegardé sans fusion, deux vrais masques fenêtres/affiches extraits séparément, quatre PNG de transparence GIMP installés sur OVH; site passe en mode fenêtres par défaut avec bascules indépendantes en JS et URL",
+  "evidence": "Penguin fichier partage BOONO_loft_nord_MASQUES_NOMMES_2026-11-05.xcf; OVH source-art/loft-20261105 et assets/loft-dual-masks-20261105; scene/boono-v2.css, index.html, loft-mask-switcher.js",
+  "previousEventSha256": null
+}

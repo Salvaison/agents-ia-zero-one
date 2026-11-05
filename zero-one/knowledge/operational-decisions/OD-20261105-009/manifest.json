@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261105-009",
+  "title": "BOONO-TV loft GIMP deux masques indépendants fenêtre et affiches sur OVH",
+  "createdAtUtc": "2026-11-05T19:34:18+00:00",
+  "authorization": "Demande explicite propriétaire du 5 novembre 2026, conservation masques GIMP et changement loft OVH",
+  "reference": "Conversation BOONO-TV du 05/11/2026 à 20h, artwork GIMP alpha fenêtres et affiches",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "8026596b6aa6a2e354a4da7b478d32b46a0cc07451f0f0787af54d1248065889",
+      "bytes": 348
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "afb453999b1fce15ce3862a59aabe89b42dc5333204fc78c603b238440805fa7",
+      "bytes": 1777
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "ede0d99b7c3945b4eb7f2bdfaad76613be9da784b633154e9cd98d0561ccdc05",
+      "bytes": 2123
+    }
+  }
+}

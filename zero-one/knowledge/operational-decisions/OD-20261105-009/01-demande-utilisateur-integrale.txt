@@ -1,0 +1,1 @@
+Voilà, j'ai refait le canal alpha des fenêtres du loft et j'y ai ajouté un lagermask separé pour les affiches. ces 2 masques doivent rester séparé que les surfaces transparentes puissent alterner. Peut tu récuperer l'image dans Gimp, la sauvegarder de maniére adéquat pour conserver les 2 masks séparé et changer l'image du loft sur OVH

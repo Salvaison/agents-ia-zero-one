@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-05T19:35:51+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Image loft active sur BOONO-TV OVH (fenêtres transparentes par defaut), affiches et double transparence disponibles sans reload; master XCF privé non aplati, original GIMP et calibration intacts; endpoint upload éphémère supprimé et studio revenu a son source exact",
+  "evidence": "OVH studio 3091 HTTP 200, route upload temporaire 404, copy XCF et assets sous dossiers definitifs, SHA256 projection-config.json 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "467be78832d53077e40be40b54af6a02785f54d401d83e5ec8966b2d72e081a6"
+}
