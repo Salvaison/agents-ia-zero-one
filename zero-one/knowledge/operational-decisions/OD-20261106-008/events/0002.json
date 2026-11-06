@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T10:35:43+00:00",
+  "status": "TESTE",
+  "description": "Chromium: spectre Live second audio AAC-only via HTTP206 blocs 2MiB, AudioContext running sur clic, drift video/audio environ -1ms a +44ms, 16 bandes variables, pause/seek et reprise synchronises, bouton Activer le son active automatiquement Live, secours offline n ouvre aucun second decodeur. Bandeau mesure exactement 1/3 du loft rendu (333.3/1000), top25 scene, fond transparent, police21 bleu. CPU ralentissement x4 avec decodeurs et Canvas actifs : video/audio +4.61s sur 4.61s, source 45 frames, spectrum 42 frames, BOONO pret, JS errors0. Cycle 21.2s intact sans pause/source change; six scenes regression OK.",
+  "evidence": "OVH tests/verify-OD-20261106-008-live-audio-final-result.json, gesture-fallback-result.json, live-audio-cpu-final.json, scene-regression-result.json, actual-21s-result.json; image blue-400-top25-live.jpg; SHA256 projection-config 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "e2977a97239ed3c26d95ffd6c3d17886242a117a9caa5744e6e9e02d3dbe153b"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T10:35:40+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Bandeau du loft passe de 680px a 400px (un tiers de 1200), descendu explicitement de 20px top5 vers top25, hauteur27px, police21 bleu intense #167dff, fond transparent, histogramme 16 bandes 96x20. Second decodeur audio AAC-only 49.3MB extrait sans reencondage du MP4 prive, source separée WebAudio Analyser + gain0 silencieux, synchronise video.currentTime, bouton Activer spectre LIVE et secours precalcule etiquete; video/BOONO inchanges.",
+  "evidence": "OVH studio-server.js, scene/music-ticker.js, scene/boono-v2.css, scene/index.html, media prive clemens-costa-kitchen-audio-only-20261106.m4a SHA256 450da9927699237dd8756c5d393d4dc3379b85df388ae429ca3412a87aec419a ; backup OD-20261106-008",
+  "previousEventSha256": null
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-008",
+  "title": "BOONO-TV bandeau compact bleu transparent et histogramme audio temps reel",
+  "createdAtUtc": "2026-11-06T10:22:59+00:00",
+  "authorization": "Demande explicite utilisateur 6 novembre 2026 : bandeau 400px, +20px top et second decodeur audio",
+  "reference": "OD-20261106-007 ancienne FFT precompute, complement user sur live et 3h",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b24a38133ac1c7ded249f2f622fa6849a2df7badc0c8ce205b33912dcd1267ed",
+      "bytes": 517
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a4029e65c957cf9f536e163a101d8bca048399b10bc20719d587205b9f8f640b",
+      "bytes": 1729
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e8f27ab6a15a41a57a2ec8bab08fcd3c62cd6935e4db005fc807bb8f865dc4ad",
+      "bytes": 1636
+    }
+  }
+}

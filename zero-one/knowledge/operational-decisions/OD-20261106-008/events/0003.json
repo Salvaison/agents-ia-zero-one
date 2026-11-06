@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T10:35:47+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouveau bandeau compact bleu transparent et second decodeur audio reel en service sur BOONO-TV OVH uniquement dans mode prive Clemens; initialement spectre de secours jusqu a geste utilisateur puis LIVE, flux original et quatre surfaces video/market trading intacts. Emission Live future requiert source audio agreee/CORS, elle n est pas automatiquement integree. Validation charge ChromeOS et lisibilite finale utilisateur ouvertes.",
+  "evidence": "Studio OVH 3091 actif, route audio-only localhost/tunnel HTTP206 + Host externe403, M4A copie exacte AAC privee, V494/V543 PAPER et collecteurs en ligne, calibration bureau et grand ecran intactes",
+  "previousEventSha256": "49bdfeed41f4b8e572ab1f399cc7713c6b060eac0f5a2891d825d90360d5c578"
+}

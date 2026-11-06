@@ -148,3 +148,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV bandeau musical et histogramme de Clemens (06/11)
 
 - [Bandeau titre défilant, histogramme audio 16 bandes, retrait SHOWCASE du loft](BOONO_TV_bandeau_musical_histogramme_audio_2026-11-06.md) — analyse FFT privée du vrai MP4, animation synchronisée par video.currentTime, couche de 27 px sans changer le moteur audio, retrait des anciennes qualifications de postures ; OD-20261106-007.
+
+## BOONO-TV spectre Live indépendant et bandeau compact (06/11)
+
+- [Bandeau musical 400×27 bleu sans fond, 20 px plus bas, second décodeur AAC Live](BOONO_TV_bandeau_bleu_400px_spectre_audio_live_2026-11-06.md) — titre défilant, 16 bandes mesurées en temps réel, décodeur audio-only silencieux avec activation par clic, vrai secours offline, vidéo et trading inchangés ; OD-20261106-008.
