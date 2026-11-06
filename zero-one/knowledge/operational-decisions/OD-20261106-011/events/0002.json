@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T11:31:35+00:00",
+  "status": "TESTE",
+  "description": "Chromium avec preload volontairement retarde: avant correctif ancienne scene BOONO visible; apres correctif loft et bureau actuels des premier paint, ancien robot/bulle/price tags caches; aucune requete vers les trois anciens assets et aucun getContext des cinq anciens Canvas en V2 contre trois appels par Canvas en diagnostic V1. Scènes normales, quatre surfaces Clemens, editeur a cinq ancres, histogramme Live160px, cycle 21.2s un lecteur sans pause et aucun JS error.",
+  "evidence": "OVH tests/diagnose-OD-20261106-011-legacy-flash-result.json, verify-OD-20261106-011-bootstrap-and-legacy-canvas-final.json, verify-OD-20261106-011-video-boot-no-old-flash-result.json, verify-OD-20261106-011-scene-regression.json, verify-OD-20261106-011-editor-regression.json, verify-OD-20261106-011-actual-21s.json, images avant/apres; calibration SHA 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "5a9939fd1242a9bc051e6a4c290e671357651be7d30f77abed0808c1b15ce23e"
+}

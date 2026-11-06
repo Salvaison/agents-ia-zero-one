@@ -1,0 +1,7 @@
+# OD-20261106-011 — Retirer l'ancienne scène du chemin de chargement BOONO-TV
+
+**Demande :** l'utilisateur observe l'ancienne scène de BOONO visible sous la nouvelle lors du rechargement et s'interroge sur la surcharge.
+
+**Diagnostic avéré :** dans `scene/index.html`, la structure historique (anciens personnages CSS et console, anciennes couches graphiques) existe encore pour le mode de diagnostic. `boono-v2.js` ne donne au conteneur la classe `.boono-v2` qu'après `await preload()` de nombreux PNG. Une capture Chromium avec délais artificiels de 1,9s sur cinq PNG montre la maquette historique (ancien BOONO au bureau et fonds graphiques) avant le loft V2, puis le nouveau loft une fois préchargé. L'ancienne maquette est masquée par la CSS en V2, mais `app.js` continue de dessiner à chaque snapshot des anciens Canvas de bougies, d'oscillateur, de vagues et de la vieille console, inutiles en V2.
+
+**Correction conservatrice :** afficher immédiatement le loft et le bureau validés dès le boot V2 (éviter le flash), masquer les éléments historiques pendant ce délai et supprimer les calculs Canvas hérités en V2. Préserver explicitement les fonctions de diagnostic `?sceneV1=1`, les vrais graphes MCB/prix et leurs couches, le robot/chat/desk validés, vidéo 4 surfaces, éditeur, calibration, PAPER et collecteurs. Les gains précis sur Chromebook ne peuvent pas être affirmés sans mesure sur son appareil.

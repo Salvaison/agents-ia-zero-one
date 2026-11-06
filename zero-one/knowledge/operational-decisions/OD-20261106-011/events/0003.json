@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T11:31:38+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "BOONO-TV OVH utilise la scene actuelle pendant le chargement et ne dessine plus les cinq canvases legacy sous V2. Mode ancien explicitement disponible avec sceneV1=1. Services de marche/PAPER inchanges; aucun gain CPU/RAM sur vrai Chromebook quantifie et validation de la disparition du flash par utilisateur encore ouverte.",
+  "evidence": "OVH studio HTTP200, CSS/JS vOD20261106-011 servis, PM2 V494/V543 PAPER et collecteurs Amsterdam intacts, bureau/grand ecran calibrations identiques, rapport knowledge BOONO_TV_boot_unique_scene_et_legacy_canvas_2026-11-06.md",
+  "previousEventSha256": "c1ab859f75a9b8221e0bcff50e19d26f762345095ef7f4a7e5da79539d7a31ff"
+}

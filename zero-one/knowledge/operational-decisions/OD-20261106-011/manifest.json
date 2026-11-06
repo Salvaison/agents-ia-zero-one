@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-011",
+  "title": "BOONO-TV suppression du flash ancien decor et rendu Canvas legacy inutile",
+  "createdAtUtc": "2026-11-06T11:20:49+00:00",
+  "authorization": "Diagnostic et optimisation apres signalement utilisateur du 06/11/2026",
+  "reference": "Studio OVH sceneV1 vs scene V2, multi-surface video/TV et archive des scripts",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "0aea455f3c490a00ab96518818d26735d6dbe927a39c92ea92f17f08c4b45cef",
+      "bytes": 162
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "f784a23c348968e0bed8e785f3fc81bbb06d119527be02a8b2104b6817c56414",
+      "bytes": 1369
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "69e2891f5e850782fe9c371236011de1dba0c365aa6c5105c354816350d63605",
+      "bytes": 1440
+    }
+  }
+}

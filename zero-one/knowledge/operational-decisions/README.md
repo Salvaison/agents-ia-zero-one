@@ -249,3 +249,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 
 - [OD-20261106-009 — reprise automatique de la capture native MCB3](OD-20261106-009/03-origine-et-justification.md) : dernier JPG le 06/11 à 02:59 UTC, chart TA TradingView devenu blanc après Chrome recycle ; Page.bringToFront uniquement sur le TA en cas de JPEG suspect puis recapture. Images fraîches vérifiées sur Amsterdam et dans BOONO-TV OVH. [Rapport d’incident et tests](../BOONO_TV_MCB3_TradingView_capture_reprise_2026-11-06.md). Collecteurs et PAPER intacts.
 - [OD-20261106-010 — histogramme musical élargi à 160 px](OD-20261106-010/03-origine-et-justification.md) : 16 barres Live de 7 px et 3 px d’écart, 40 % du bandeau de 400 px ; titre bleu intense et fond transparent inchangés. [Rapport de mise à jour](../BOONO_TV_histogramme_elargi_160px_2026-11-06.md).
+
+## BOONO-TV — suppression du flash de l’ancienne scène (6 novembre 2026)
+
+- [OD-20261106-011 — lancement direct de la scène V2 sans maquette héritée](OD-20261106-011/03-origine-et-justification.md) : ancien robot et ancien bureau visibles avant le préchargement des PNG V2, ancien code redessinant cinq Canvas cachés ; bootstrap affichant immédiatement le loft/bureau approuvés, ancien chargement et calculs Canvas supprimés sous V2. [Rapport et preuves des tests](../BOONO_TV_boot_unique_scene_et_legacy_canvas_2026-11-06.md). V1 reste accessible comme diagnostic.

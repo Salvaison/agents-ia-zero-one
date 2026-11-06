@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T11:31:30+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Sur OVH, bootstrap visuel V2 des le premier paint avec loft GIMP et bureau approuve; masque ancien robot, console historique, vieux panneaux, labels pendant preload PNG; liberation apres montage des vrais sprites. En V2 aucune execution des cinq anciennes routines Canvas et aucun prechargement des sept poses casting-poses; ?sceneV1=1 diagnostic preserve. Aucune retouche des arts ou du trading.",
+  "evidence": "OVH scene/index.html, scene/boono-v2.css, scene/boono-v2.js, scene/app.js, backup /home/ubuntu/boono-tv-studio/backups/OD-20261106-011",
+  "previousEventSha256": null
+}

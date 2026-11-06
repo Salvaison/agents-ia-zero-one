@@ -157,3 +157,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 
 - [MarketCipher B TradingView 3m figé : cause et récupération ciblée](BOONO_TV_MCB3_TradingView_capture_reprise_2026-11-06.md) — onglet TA blanc après recycle Chrome, réveil ciblé et validation de captures différentes à une minute, sans substitution par MCB interne ; OD-20261106-009.
 - [Histogramme audio 160 px (40 % du bandeau)](BOONO_TV_histogramme_elargi_160px_2026-11-06.md) — 16 bandes plus larges, titre Clemens inchangé et second décodeur AAC en place ; OD-20261106-010.
+
+## BOONO-TV chargement direct V2 sans ancienne scène (06/11)
+
+- [Suppression du flash de la maquette précédente et des Canvas invisibles](BOONO_TV_boot_unique_scene_et_legacy_canvas_2026-11-06.md) — le loft et le bureau canonisés dès la première image, plus de sprites historiques téléchargés ni de vieux Canvas redessinés en V2 ; décision OD-20261106-011.
