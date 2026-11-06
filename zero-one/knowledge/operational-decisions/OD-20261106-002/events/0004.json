@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-06T07:45:27+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Correctif actif dans studio OVH prive HTTP 200; effet sur Chromebook encore a valider, aucun changement PAPER",
+  "evidence": "OVH boono-studio.service active PID 1296218; checks curl HTTP 200; SHA projection-config original identique",
+  "previousEventSha256": "cfbdc45c55ce1ce5da50a9cfcce4fef9b8dd8be7b6370e8381c6e168509217af"
+}

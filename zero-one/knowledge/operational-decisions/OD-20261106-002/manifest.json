@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-002",
+  "title": "Maintenance video ChromeOS: postures, debit MP4 et controle positions du chat",
+  "createdAtUtc": "2026-11-06T07:43:56+00:00",
+  "authorization": "Demande explicite de diagnostic et tentative de solution, pas de changement trading",
+  "reference": "Conversation BOONO Systems maintenance, 6 novembre 2026; archivage retroactif expressement declare",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c6b859a757fa83ea15ea46b265fa5b7065812d4e69cf622d01c4a0da37b05ae5",
+      "bytes": 584
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "572505fb88ffbb4bd61c52f57c225bcf6bef4af56fc6e534f38cb1f0f3ec0783",
+      "bytes": 564
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "198337bd4293719aa393b3b2d34287d0e818369f48f07e41578f88d33480558e",
+      "bytes": 2812
+    }
+  }
+}

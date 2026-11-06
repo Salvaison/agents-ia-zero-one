@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T07:45:27+00:00",
+  "status": "IMPLEMENTE",
+  "description": "OVH: chargement PNG direct DOM, cache-buster script, limitation des ranges MP4 ouverts a 2 MiB et redemarrage boono-studio utilisateur",
+  "evidence": "Backups OVH BOONO_AV_SPRITES_20261106; SHA256 dans rapport technique; systemctl --user active",
+  "previousEventSha256": "82a05ee2851e522bbbce2a7f6011fd4ffca69ddb19e38c9525c64ed3e8e1f36b"
+}

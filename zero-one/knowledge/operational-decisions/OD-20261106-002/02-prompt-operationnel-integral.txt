@@ -1,0 +1,3 @@
+Je vais comparer la scène BOONO-TV avec la vidéo en lecture et en pause, puis examiner le code de composition, les postures, les coordonnées du chat et les ressources du Chromebook. Le fait que BOONO réapparaisse dès que la vidéo est en pause est un indice important : cela peut venir du rendu graphique, et pas forcément d'une surcharge réseau.
+
+Je commencerai par identifier la cause sans modifier les éléments validés. Si une correction ciblée est possible, je la testerai en préservant les réglages actuels et une possibilité de retour arrière.

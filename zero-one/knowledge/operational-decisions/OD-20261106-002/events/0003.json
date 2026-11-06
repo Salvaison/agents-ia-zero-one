@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T07:45:27+00:00",
+  "status": "TESTE",
+  "description": "Puppeteer: 12 poses plus video Canvas, 5 chats identiques avec/sans video, CPU ralentissement x4; zero erreur; Range HTTP 206 vers OVH et Amsterdam",
+  "evidence": "OVH tests/BOONO-AV-20261106-*-result.json et tests/verify-BOONO-AV-20261106-*.js; rapport knowledge/BOONO_TV_incident_video_sprites_charge_2026-11-06.md; ChromeOS non teste",
+  "previousEventSha256": "43a0e0690f6de2b22056e587b8d8245e01a2ac0fc7b72c424040e6f800e9716a"
+}
