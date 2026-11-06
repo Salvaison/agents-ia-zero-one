@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T12:03:02+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Passerelle privee spectateur GET/HEAD/WebSocket en lecture seule en 127.0.0.1:3092, services user systemd boono-mobile-viewer et boono-tailscale userspace installes. Tailscale client 1.104.5 sur OVH, sans port public ni changement route. Appareil boono-tv-ovh attend approbation du tailnet utilisateur. Ne pas confondre installation avec activation HTTPS Serve.",
+  "evidence": "OVH /home/ubuntu/boono-tv-mobile/viewer.js et service user boono-mobile-viewer.service; ~/.config/systemd/user/boono-tailscale.service, client Tailscale officiel statique, app studio 127.0.0.1:3091 inchangee",
+  "previousEventSha256": null
+}

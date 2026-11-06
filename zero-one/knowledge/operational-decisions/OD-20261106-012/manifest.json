@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-012",
+  "title": "BOONO-TV accès Android privé avec passerelle spectateur et Tailscale Serve",
+  "createdAtUtc": "2026-11-06T11:50:42+00:00",
+  "authorization": "Demande d’accès sur téléphone Android et installation Tailscale par utilisateur",
+  "reference": "BOONO-TV studio OVH 3091, Android Tailscale, consentement à la connexion du tailnet requis",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "9a825fcd3cada9cf0c45e357877836e230fe6c30c02a5e80f157f9dd417a2f9c",
+      "bytes": 214
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8cb51351ea84b17288238269a3e36675b450c2d83bcfe671c8bd3bbaa827bc93",
+      "bytes": 1389
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c400ed5df4b0b885100bbacbb06ec67f943efef71e4534fafc945c6b405bc58f",
+      "bytes": 1412
+    }
+  }
+}

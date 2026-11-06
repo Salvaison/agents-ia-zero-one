@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T12:03:08+00:00",
+  "status": "TESTE",
+  "description": "Passerelle localhost 3092 HTTP200 avec redirect vers showcase+video+projectionCycle, HTTP405 toutes mutations POST, GET editeur refuse HTTP403, APIs controlees, media Range HTTP206, WebSocket serveur-vers-client 113763 octets. Chromium Android paysage 915x412 affiche V2, PNG BOONO, video Clemens en Canvas en lecture, aucun JS error, aucun acces d'ecriture. Tailscale status Logged out et Serve No serve config : authentification et URL HTTPS encore non realises.",
+  "evidence": "OVH boono-tv-mobile/mobile-diagnose-result2.json et android-diagnostic.jpg, curl ports 3091/3092 127.0.0.1, ws proxy test, status boono-mobile-viewer et boono-tailscale actifs, authorization URL remise au proprietaire dans le chat",
+  "previousEventSha256": "2970628fc0e622055ddfac8a45be75623d2c545fe3cd95fb64eb98d6e1f1ebd6"
+}

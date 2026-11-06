@@ -253,3 +253,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — suppression du flash de l’ancienne scène (6 novembre 2026)
 
 - [OD-20261106-011 — lancement direct de la scène V2 sans maquette héritée](OD-20261106-011/03-origine-et-justification.md) : ancien robot et ancien bureau visibles avant le préchargement des PNG V2, ancien code redessinant cinq Canvas cachés ; bootstrap affichant immédiatement le loft/bureau approuvés, ancien chargement et calculs Canvas supprimés sous V2. [Rapport et preuves des tests](../BOONO_TV_boot_unique_scene_et_legacy_canvas_2026-11-06.md). V1 reste accessible comme diagnostic.
+
+## BOONO-TV — accès Android privé (6 novembre 2026)
+
+- [OD-20261106-012 — préparation accès Android privé via Tailscale](OD-20261106-012/03-origine-et-justification.md) : passerelle 127.0.0.1:3092 en lecture seule avec vidéo privée et WS, démon Tailscale userspace OVH installé sans modifier les réseaux du trading. **Serveur non encore approuvé dans le tailnet ; HTTPS Serve et accès Android en attente**. [Rapport technique et étapes restantes](../BOONO_TV_ANDROID_TAILSCALE_VUE_SPECTATEUR_2026-11-06.md).

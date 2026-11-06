@@ -1,0 +1,1 @@
+L'utilisateur possède un téléphone Android et souhaite regarder BOONO-TV depuis celui-ci, sans dépendre du Chromebook. Après recommandation de Tailscale, il confirme : « Voilà télécharger et installé ».

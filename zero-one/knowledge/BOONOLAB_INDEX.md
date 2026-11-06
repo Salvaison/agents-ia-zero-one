@@ -161,3 +161,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV chargement direct V2 sans ancienne scène (06/11)
 
 - [Suppression du flash de la maquette précédente et des Canvas invisibles](BOONO_TV_boot_unique_scene_et_legacy_canvas_2026-11-06.md) — le loft et le bureau canonisés dès la première image, plus de sprites historiques téléchargés ni de vieux Canvas redessinés en V2 ; décision OD-20261106-011.
+
+## BOONO-TV spectateur Android et Tailscale (06/11)
+
+- [Passerelle mobile privée en lecture seule et raccordement OVH à Tailscale](BOONO_TV_ANDROID_TAILSCALE_VUE_SPECTATEUR_2026-11-06.md) — port local 3092, flux vidéo/WS testés, éditorial et calibration interdits, Tailscale Serve HTTPS à configurer après approbation du nœud par utilisateur ; OD-20261106-012.
