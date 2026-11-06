@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T08:37:03+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Ajout client optionnel BOONO-TV ?windowVideo=clemens&projectionCycle=21 : 4 surfaces fenetres, affiches, bureau deux moniteurs comme une surface, nouvel ecran geant derriere BOONO. Meme lecteur MP4/horloge et Canvas source, pas de seconde video, changement par video.currentTime toutes les 21 secondes, boucle 84s. Loft masks alternes sans fusion; chart/MCB sous overlay bureau gardes actifs.",
+  "evidence": "OVH scene/projection-cycle.js nouveau, scene/boono-v2.css, scene/index.html, backups/OD-20261106-003 ; quad grand [[195,10],[965,72],[945,637],[195,742]], z5 devant loft et derriere BOONO et bureau",
+  "previousEventSha256": null
+}

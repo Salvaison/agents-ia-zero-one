@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-003",
+  "title": "BOONO-TV surface murale et rotation video continue des quatre surfaces toutes les 21s",
+  "createdAtUtc": "2026-11-06T08:21:25+00:00",
+  "authorization": "Demande utilisateur du 6 novembre 2026 : écran géant et rotation 21 secondes",
+  "reference": "BOONO-TV développement audiovisual 2026-11-06, image du loft avec contours rouges",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "cf4a1e2bd832d8c19594ea82cdb4f90e394fdab2f914058e71cbcb958cf83fe1",
+      "bytes": 459
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "1ff3c8a7d7405cb8da8f00b162cd06f4474934b48de08a1233f266712118a6dc",
+      "bytes": 1594
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "8a31d86277471d64b77b63489b6ee6b3e6387fb417b728eef55de14560b08eb3",
+      "bytes": 2079
+    }
+  }
+}

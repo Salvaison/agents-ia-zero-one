@@ -220,3 +220,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — lecture MP4 via canvas sur ChromeOS (6 novembre 2026)
 
 - [OD-20261106-001 — lecture MP4 via canvas pour préserver BOONO](OD-20261106-001/03-origine-et-justification.md) : suite au signalement « postures visibles à la pause uniquement », vidéo native masquée et frames dessinées dans canvas à 12 ips, audio continu et 12 postures vérifiées en Chromium ; [rapport et limites ChromeOS](../BOONO_TV_video_canvas_postures_2026-11-06.md). Validation sur appareil utilisateur encore nécessaire.
+
+## BOONO-TV — écran géant et quatre surfaces de projection vidéo (6 novembre 2026)
+
+- [OD-20261106-003 — écran géant et quatre surfaces vidéo toutes les 21 secondes](OD-20261106-003/03-origine-et-justification.md) : un seul MP4/CANVAS et une seule horloge pour fenêtres, affiches, moniteurs de bureau groupés, écran mural derrière BOONO ; 21s par surface, boucle 84s, sans pause ni changement de source, [rapport de déploiement et tests](../BOONO_TV_projection_quatre_surfaces_21s_2026-11-06.md). Validation visuelle du grand écran sur Chromebook ouverte.

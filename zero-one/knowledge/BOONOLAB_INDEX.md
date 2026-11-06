@@ -132,3 +132,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV vidéo canvas et postures Chromebook (06/11)
 
 - [Compositing vidéo Canvas : éviter le masquage de BOONO pendant la lecture](BOONO_TV_video_canvas_postures_2026-11-06.md) — test 12 postures avec audio continu, cadence limitée et comparaison réversible avec lecteur natif ; OD-20261106-001.
+
+## BOONO-TV rotation vidéo entre quatre surfaces (06/11)
+
+- [Grand écran mural et vidéo continue sur fenêtres, affiches, deux moniteurs, nouveau screen](BOONO_TV_projection_quatre_surfaces_21s_2026-11-06.md) — mode privé à changement de surface toutes les 21s selon video.currentTime, sans recharger MP4 ; OD-20261106-003.

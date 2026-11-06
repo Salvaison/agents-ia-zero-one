@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T08:37:09+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Mode de projection 21s en service opt-in pour video privee Clemens dans BOONO-TV sur OVH. Cycle 84s; les donnees de trading PAPER et chart sources ne sont pas modifiees. Grand ecran approximate selon dessin utilisateur, validation artistique et test Chromebook reel encore ouverts.",
+  "evidence": "OVH studio 3091 HTTP200 et script projection-cycle.js HTTP200, node syntax valide, nouveau module client opt-in, aucune modification des runners V494/V543 et collecteurs MCB",
+  "previousEventSha256": "214d09508bff3804bd60d912a69158848d22544f92957a114a2855b23fb25c3b"
+}

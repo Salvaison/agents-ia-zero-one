@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T08:37:06+00:00",
+  "status": "TESTE",
+  "description": "Chromium : les 4 surfaces affichent la vraie video avec masques corrects, 2 moniteurs panoramiques, grand ecran. Test reel sans pause ni rechargement : fenetres vers affiches a 21.3s, pause events0 src changes0 video elements1, recherche 42.4 bureau 63.4 grand 84.4 retour fenetres. 4 images video lumineuses a 125s. Mode normal et ancien test video sans rotation intacts, CPU ralenti4x avec BOONO visible, zero erreurs JS et calibration SHA inchange.",
+  "evidence": "OVH tests/verify-OD-20261106-003-four-projections-result.json, actual-21s-result.json, projection-video-frames-result.json, regression-result.json, cpu-result.json, captures JPG quatre surfaces; SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "ac980e34b4ae20513e1e2e855526d8f6bcac39a6c96d22aead3a1fc8cecdb664"
+}
