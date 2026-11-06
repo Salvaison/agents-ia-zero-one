@@ -2,7 +2,7 @@
 
 **6 novembre 2026 — BOONO Systems / maintenance initiale, OD-20261106-002.**
 **Portée :** prévisualisation privée OVH uniquement ; pas de modification des moteurs PAPER V494/V543, collecteurs MCB, TradingView, réglages GIMP ou calibration.
-**Statuts :** DIAGNOSTIQUÉ et CORRIGÉ EN CODE ; TESTÉ SUR CHROMIUM ; ACTIF DANS LE STUDIO PRIVÉ ; **VALIDATION EFFECTIVE CHROMEOS ENCORE OUVERTE**.
+**Statuts :** DIAGNOSTIQUÉ et CORRIGÉ EN CODE ; TESTÉ SUR CHROMIUM ; ACTIF DANS LE STUDIO PRIVÉ ; **CONFIRMATION UTILISATEUR SUR CHROMEBOOK REÇUE LE 06/11** pour le fonctionnement du test audiovisuel après correction. La conformité précise des cinq positions du chat n'a pas été confirmée individuellement par ce retour bref.
 
 ## Incident rapporté
 Sur Chromebook, au lancement du MP4 Clemens Costa dans les fenêtres du loft, les sprites BOONO disparaissent mais reviennent à la pause. Les cinq chat(s) apparaissent, mais semblent déplacés par rapport aux positions sauvegardées ; bulles et État vivant restent fonctionnels. Le signalement est cohérent avec une difficulté de rendu/décodage/composition dans ChromeOS ou un conflit de ressources, mais n'en prouve pas la cause GPU précise.
@@ -42,5 +42,8 @@ Sur Chromebook, au lancement du MP4 Clemens Costa dans les fenêtres du loft, le
 3. Si ChromeOS échoue encore : relever captures avant/après, état du gestionnaire de tâches Chrome (Maj+Échap), erreurs de décodage et charge GPU ; ne pas conclure à un simple débit réseau ou redessiner des sprites sans preuve.
 4. Ne déclarer `RÉSOLU SUR CHROMEOS` qu'après validation explicite de l'utilisateur. Sinon conserver le mode Canvas comme contournement expérimental et étudier l'accélération matérielle / les limites GPU.
 5. Rollback uniquement si nécessaire : restaurer les trois fichiers OVH depuis `backups/BOONO_AV_SPRITES_20261106/*.before`, puis redémarrer **seulement** le service systemd utilisateur `boono-studio`, et refaire tests HTTP. Ne jamais toucher à `projection-config.json` ni aux moteurs PAPER.
+
+## Validation utilisateur après intervention
+Le 6 novembre 2026, à la suite des correctifs déployés et de la procédure de test sur Chromebook, le propriétaire confirme textuellement : **« Superbe, ça marche!! »**. Nous considérons donc le dysfonctionnement principal de la lecture audiovisuelle **résolu selon le retour utilisateur**. Ce constat ne permet pas d'affirmer à lui seul que chaque position du chat a été examinée et validée individuellement. La cause exacte du comportement du compositeur graphique ChromeOS demeure non démontrée ; les deux corrections restent conservées et réversibles.
 
 **Provenance :** OD-20261106-002, dossier créé rétrospectivement après l'exécution ; cet écart à la procédure préalable est documenté explicitement dans son fichier d'origine, sans prétention d'horodatage antérieur.
