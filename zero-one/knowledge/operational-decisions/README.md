@@ -228,3 +228,11 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — grand écran en perspective (6 novembre 2026)
 
 - [OD-20261106-004 — perspective du grand écran, MCB et bougies en arrière](OD-20261106-004/03-origine-et-justification.md) : nouvel écran plus étroit et foisonnement perspective du clip; rideau MCB et bougies derrière uniquement pendant les 21 secondes du grand plan, sans perturber les trois autres surfaces. [Rapport et preuves Chromium](../BOONO_TV_grand_ecran_perspective_2026-11-06.md). Glitch fugace au premier chargement maintenu sous observation.
+
+## BOONO-TV — éditeur manuel du grand écran à cinq ancres (6 novembre 2026)
+
+- [OD-20261106-005 — demande initiale d’éditeur mural, étendue par OD-20261106-006](OD-20261106-005/03-origine-et-justification.md) : HG, HS, HD, BD, BG, décroché supérieur réglable sans déborder du loft ; vidéo continue en deux panneaux perspectifs raccordés à partir d’un seul lecteur, sauvegarde distincte du bureau, et [rapport technique avec preuves Chromium](../BOONO_TV_grand_ecran_cinq_ancres_editeur_2026-11-06.md). Acceptation artistique utilisateur ouverte.
+
+## BOONO-TV — cinquième ancre haute : suite à OD-20261106-005 (6 novembre 2026)
+
+- [OD-20261106-006 — cinquième ancre haute, vidéo en deux panneaux](OD-20261106-006/03-origine-et-justification.md) : ajout demandé en cours de chantier d’une poignée HS sur la ligne haute, sans déformer le coin HG hors du loft ; deux panneaux homographiques partageant l’unique MP4 et le même son, [rapport de tests et réglages](../BOONO_TV_grand_ecran_cinq_ancres_editeur_2026-11-06.md). Les originaux OD005 demeurent inchangés.

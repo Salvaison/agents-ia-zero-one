@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-006",
+  "title": "BOONO-TV cinquieme ancre superieure et projection video en deux panneaux raccordes",
+  "createdAtUtc": "2026-11-06T09:45:52+00:00",
+  "authorization": "User explicitly updates previous four-handle request with fifth top-edge anchor on 2026-11-06",
+  "reference": "Follow-up to OD-20261106-005, private BOONO-TV wall projection editor",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b34e32764df3161bcd915db3f0034c48596147981799bac92c06268407b8c34a",
+      "bytes": 290
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "83df45118e41afd58f016bc9acecf30fc544a813363e693ee3af3700ad4194d3",
+      "bytes": 1120
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "5fb0cebc5f621a4a9ac40448e83066db984c2cdf266a89efe6b7a3a2f0f41eac",
+      "bytes": 1231
+    }
+  }
+}

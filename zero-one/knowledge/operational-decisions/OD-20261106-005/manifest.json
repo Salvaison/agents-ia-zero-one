@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-005",
+  "title": "BOONO-TV editeur quatre poignees pour le grand ecran independant de la calibration",
+  "createdAtUtc": "2026-11-06T09:20:36+00:00",
+  "authorization": "Demande utilisateur 2026-11-06 : régler lui-même la perspective du grand écran comme les moniteurs",
+  "reference": "BOONO-TV atelier calibration / OD-20261106-004",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "9150b9d57da1d11fa53517ebb200bc47944f8da43c8b2ee588fdb24cfca38126",
+      "bytes": 167
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "9b745409ccde0f92734aba71ab760983c79e92fc0c25e14d7348a1336861f9df",
+      "bytes": 1377
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "05be8b4ce2d9dac2c0bb2c5ae6d2c71df489410c10e4aca3367bbd305450fa46",
+      "bytes": 1487
+    }
+  }
+}

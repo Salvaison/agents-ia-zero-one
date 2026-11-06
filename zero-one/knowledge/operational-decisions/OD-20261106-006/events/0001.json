@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T09:46:28+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Suite explicite a OD-20261106-005 : cinquieme point HS ajouté au bord superieur, controle independant de HG,HD,BD,BG; video d'un seul MP4 projetee par deux panneaux homographiques gauche et droite partageant seam superieur HS et pied inferieur derive automatiquement. Cinq poignees reellement deplacables et sauvegardables sur OVH; calibration du bureau inchangee.",
+  "evidence": "OVH scene/projection-cycle.js et wall-editor.js, scene/boono-v2.css, desk/grand-screen-config.json, studio-server.js, layout-editor.js, index.html; backup OD-20261106-005",
+  "previousEventSha256": null
+}

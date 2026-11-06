@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T09:43:40+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Atelier BOONO-TV grand écran à cinq ancres HG/HS/HD/BD/BG installé dans l'Etat vivant, cinq poignées déplaçables, X/Y et Voir/Enregistrer/Annuler/Quitter. Contour supérieur pliable par HS, rendu vidéo unique en deux panneaux projectifs 320x360 raccordés sans nouveau décodeur. Configuration séparée desk/grand-screen-config.json et API GET/POST validée, bouton depuis layoutEdit=1, bureau non modifié.",
+  "evidence": "OVH scene/wall-editor.js, scene/projection-cycle.js, scene/boono-v2.css, scene/layout-editor.js, scene/index.html, studio-server.js, desk/grand-screen-config.json ; sauvegardes OD-20261106-005",
+  "previousEventSha256": null
+}

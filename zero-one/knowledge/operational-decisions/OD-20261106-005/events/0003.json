@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T09:43:46+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Mode d'édition grand écran cinq ancres déployé sur studio OVH ; URL simple ?wallEdit=1 ouvre l'écran grand en prévisualisation vidéo privée avec commandes sur Etat vivant. Ancien quad conservé par défaut jusqu'à sauvegarde utilisateur. Cycle vidéo 21s et données de trading indépendants. Dernier rendu artistique sur Chromebook en attente.",
+  "evidence": "Studio OVH 3091 HTTP200 et Amsterdam relais 8310 HTTP200, GET api/grand-screen HTTP200, studio.service actif, PM2 V494/V543 PAPER et collecteurs online, CSS/JS en service, fichier canonique du bureau inchangé",
+  "previousEventSha256": "c423819dcdae12f877bc1e3d2433a990e222dbd7e9906cfe42c380d740412299"
+}

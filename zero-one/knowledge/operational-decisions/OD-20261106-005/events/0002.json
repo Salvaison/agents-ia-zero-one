@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T09:43:43+00:00",
+  "status": "TESTE",
+  "description": "Chromium: cinq ancres et points projetés corrects, jonction haut/bas inférieure à 0.2 px, aperçu HS +50 et Annuler exact, drag réel HS de 535.1/52.88 à 557/131 ; protection API 403 non autorisé 400 géométrie invalide 409 révision 200 sauvegarde/rechargement, rollback intact ; six modes de scène et bouton technique validés, lien court wallEdit=1 redirige correctement, 21.19s sans pause/retour audio, un lecteur, 4x CPU 41 frames en 4.41s, aucun JS error.",
+  "evidence": "OVH tests/verify-OD-20261106-005-initial-five-anchors-result.json, pointer-drag-result.json, api-persistence-result.json, regression-result.json, short-link-result.json, actual-21s-result.json, cpu-result.json, captures five-anchors-initial et preview ; projection-config.json SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "336dce792067c875678bd5dab74271f47f1f90520903f0543ac241e95c3964c9"
+}

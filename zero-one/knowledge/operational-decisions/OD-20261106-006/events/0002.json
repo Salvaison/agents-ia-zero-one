@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T09:46:32+00:00",
+  "status": "TESTE",
+  "description": "Chromium : vrai drag HS de [535.1,52.88] a [557,131], jonctions inter-panneaux exactes <0.2 unite, changements de perspective et annulation sans pause video; GET/POST persistant et reload, 403/400/409 valide, cinq ancres initiales restaurees; quatre projections, 21.19s sans interruption, CPU ralenti 4x ~41 images en 4.41s, pas d'erreur JS.",
+  "evidence": "OVH tests/verify-OD-20261106-005-initial-five-anchors-result.json, pointer-drag-result.json, api-persistence-result.json, regression-result.json, short-link-result.json, actual-21s-result.json, cpu-result.json; photos five-anchors-initial et preview",
+  "previousEventSha256": "55aca24df65352548ffdbc8835c73de467866a5d0e04cacaaa9098a610b4c03c"
+}

@@ -1,0 +1,1 @@
+Il faudrait que tu place une ancre sur la ligne supérieur du quadrilatère sinon le coin supérieur gauche devra être étiré en dehors de la surface du loft ce qui peutêtre poserais des problème. Donc 5 ancres pour définir le quadrilatère dont 2 sur la ligne supérieur de ce dernier

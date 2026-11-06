@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T09:46:35+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Code actif dans studio OVH : lien simple ?wallEdit=1 ouvre l'editeur de cinq ancres sur Etat vivant avec video live, bouton depuis ?layoutEdit=1, save et undo. Perspective definitivement choisie par le proprietaire reste a valider. Un seul media audio, aucune modification du trading PAPER, glitch initial surveille seulement.",
+  "evidence": "OVH studio 3091 et relais Amsterdam 8310 HTTP200, PM2 V494/V543 collecteurs online, projection-config SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "0da896b0083f2408252f03d58bcab4d8908f60ce2023b08d43f2382e851221d2"
+}

@@ -140,3 +140,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV grand écran perspective et couches MCB (06/11)
 
 - [Grand écran mural et vidéo en perspective, rideau/vagues et bougies derrière](BOONO_TV_grand_ecran_perspective_2026-11-06.md) — homographie CSS du même Canvas, profondeur conditionnelle du seul grand écran, boucle 21 secondes continue ; OD-20261106-004.
+
+## BOONO-TV grand écran à 5 ancres éditables (06/11)
+
+- [Éditeur de perspective à 5 points du grand écran BOONO-TV](BOONO_TV_grand_ecran_cinq_ancres_editeur_2026-11-06.md) — manipulation directe des coins et d’une ancre haute supplémentaire, deux homographies raccordées, brouillon/Voir/Enregistrer/Annuler, stockage autonome ; décisions OD-20261106-005 et OD-20261106-006.
