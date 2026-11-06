@@ -136,3 +136,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV rotation vidéo entre quatre surfaces (06/11)
 
 - [Grand écran mural et vidéo continue sur fenêtres, affiches, deux moniteurs, nouveau screen](BOONO_TV_projection_quatre_surfaces_21s_2026-11-06.md) — mode privé à changement de surface toutes les 21s selon video.currentTime, sans recharger MP4 ; OD-20261106-003.
+
+## BOONO-TV grand écran perspective et couches MCB (06/11)
+
+- [Grand écran mural et vidéo en perspective, rideau/vagues et bougies derrière](BOONO_TV_grand_ecran_perspective_2026-11-06.md) — homographie CSS du même Canvas, profondeur conditionnelle du seul grand écran, boucle 21 secondes continue ; OD-20261106-004.

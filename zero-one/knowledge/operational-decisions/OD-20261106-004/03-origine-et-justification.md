@@ -1,0 +1,7 @@
+# OD-20261106-004 — Perspective grand écran, rideau/bougies derrière
+
+**Autorisation :** propriétaire le 6 novembre 2026, approuve le fonctionnement fluide des quatre projections et confirme « un glitch au premier chargement » comme **négligeable à surveiller**. Il demande explicitement que la forme du grand écran reproduise davantage son tracé rouge, que la vidéo soit elle-même en perspective et que le rideau MCB et les bougies passent derrière le grand écran.
+
+**Constat avant changement :** source code OVH scene/projection-cycle.js quad [[195,10],[965,72],[945,637],[195,742]], Canvas vidéo 640×360 enfant du plan transformé par une matrice projective, écran à z5 ; rideau z7 et bougies z8 passaient donc devant lui. Le marquage rouge de l'image donne un écran plus étroit et nettement raccourci à droite, finissant au-dessus de BOONO, sans occuper le poster HOWLIN' WOLF. Nouvelle première estimation quad [[178,8],[757,74],[690,465],[159,610]], à contrôler visuellement dans Chromium. Aucun changement de scène d'origine.
+
+**Méthode :** réduire le quad du **seul écran mural** et appliquer la même homographie au Canvas vidéo enfant. Modifier uniquement l'ordre des couches lors de sa projection, en gardant les autres surfaces intactes. Les tests doivent confirmer la vérité géométrique des coins et la continuité de 21s avec 1 vidéo. La calibration d'origine reste référence. Le glitch observé au tout premier chargement reste sous surveillance, sans nouveau correctif.

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T09:11:46+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouveau grand ecran perspective et video perspective en service opt-in sur studio OVH; rideau vague et bougies derriere cet ecran exclusivement pendant son segment de 21s. Validation visuelle Chromebook de geometrie reste ouverte. Petit glitch premier chargement accepte par utilisateur comme negligeable et consigne seulement en observation.",
+  "evidence": "OVH studio 3091 HTTP200, projection-cycle.js?v=OD20261106-004 HTTP200, commit documentaire KB, aucune relance Amsterdam/PAPER ni changement du MP4/masques du loft",
+  "previousEventSha256": "4f89996ff73ac80fdd738ccf35495db6d2b956d64b1dafb22e697ac1ddd44f2e"
+}

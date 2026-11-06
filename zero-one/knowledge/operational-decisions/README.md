@@ -224,3 +224,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — écran géant et quatre surfaces de projection vidéo (6 novembre 2026)
 
 - [OD-20261106-003 — écran géant et quatre surfaces vidéo toutes les 21 secondes](OD-20261106-003/03-origine-et-justification.md) : un seul MP4/CANVAS et une seule horloge pour fenêtres, affiches, moniteurs de bureau groupés, écran mural derrière BOONO ; 21s par surface, boucle 84s, sans pause ni changement de source, [rapport de déploiement et tests](../BOONO_TV_projection_quatre_surfaces_21s_2026-11-06.md). Validation visuelle du grand écran sur Chromebook ouverte.
+
+## BOONO-TV — grand écran en perspective (6 novembre 2026)
+
+- [OD-20261106-004 — perspective du grand écran, MCB et bougies en arrière](OD-20261106-004/03-origine-et-justification.md) : nouvel écran plus étroit et foisonnement perspective du clip; rideau MCB et bougies derrière uniquement pendant les 21 secondes du grand plan, sans perturber les trois autres surfaces. [Rapport et preuves Chromium](../BOONO_TV_grand_ecran_perspective_2026-11-06.md). Glitch fugace au premier chargement maintenu sous observation.

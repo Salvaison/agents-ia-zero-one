@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T09:11:43+00:00",
+  "status": "TESTE",
+  "description": "Chromium DOMMatrix : quatre coins projetes [174,12],[757.02,78],[688.02,462.02],[158,610.01] et poids w variables, vraie homographie du Canvas; rideau/bougies niveaux 3/4 quand grand, niveaux 7/8 pour trois autres surfaces, bulles/BOONO/chat devant. MP4 un seul lecteur sans pause ni src change a 21.2s, surfaces 42.6/63.6/84.6; zero erreur JS, projection-config SHA intact.",
+  "evidence": "OVH tests/verify-OD-20261106-004-perspective-result.json, verify-OD-20261106-004-depth-only-grand-result.json, OD-20261106-004-four-surfaces-regression.json, OD-20261106-004-normal-rotation-regression.json, verify-OD-20261106-004-actual-21s-result.json et screenshots grand-scene/full; SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "c4175fc438f2b431b100ebe0188d986f3219378b6096dba05453a1aa510f910c"
+}

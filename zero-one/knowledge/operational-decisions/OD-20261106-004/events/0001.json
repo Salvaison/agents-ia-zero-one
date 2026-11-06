@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T09:11:39+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Grand ecran BOONO-TV rectifie selon trace rouge : quad mural [[174,12],[757,78],[688,462],[158,610]] au lieu de [[195,10],[965,72],[945,637],[195,742]]. Video Canvas enfant du matrix3d projectif. Durant projection grand seulement, rideau MCB z3 et bougies z4 derriere ecran z5; autres plans inchanges. Cache JS version OD20261106-004.",
+  "evidence": "OVH scene/projection-cycle.js, scene/boono-v2.css, scene/index.html ; backup /home/ubuntu/boono-tv-studio/backups/OD-20261106-004 ; calibration physique non modifiee",
+  "previousEventSha256": null
+}

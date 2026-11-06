@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-004",
+  "title": "BOONO-TV perspective du grand ecran et vagues/bougies derriere projection",
+  "createdAtUtc": "2026-11-06T09:04:22+00:00",
+  "authorization": "Demande explicite du propriétaire du 6 novembre 2026, perspective mural et ordre des plans",
+  "reference": "Capture BOONO-TV avec trace rouge + retour utilisateur, OD-20261106-003",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "037011466e61242020a9c8f0b9ac80e8fc4051da9394c0193bb4130ba869a17f",
+      "bytes": 447
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "e0fa46fb47011511e586a5186dd9a75ccd24f87e09fc0ed3acb34762054103c2",
+      "bytes": 1336
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "110c7c2c02bc7015d9657823c00a34e15f3071601ebe9f9d1773ede2609f66a2",
+      "bytes": 1523
+    }
+  }
+}
