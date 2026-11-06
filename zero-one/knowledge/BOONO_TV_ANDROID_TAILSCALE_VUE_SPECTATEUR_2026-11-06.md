@@ -39,3 +39,15 @@ L'utilisateur doit ouvrir Tailscale sur Android, se connecter au compte souhait�
 Les règles d'accès du tailnet Tailscale restent à contrôler si plusieurs membres sont autorisés. Le MP4 Clemens est un essai privé uniquement. Le projet BOONO/V494/V543 PAPER, les collecteurs, la configuration des deux moniteurs et les cinq ancres du grand écran n'ont pas été modifiés.
 
 **Statuts de décision :** IMPLEMENTE et TESTE pour la passerelle locale et le daemon Tailscale installé ; la mise en service du Serve HTTPS et validation sur Android restent OUVERTES.
+
+## Complément 6 novembre 2026 — correction HTTPS Tailscale sur OVH
+
+Après connexion du serveur au tailnet, Chrome Android ne pouvait pas ouvrir BOONO-TV et l'application Android affichait l'avertissement MagicSock ReceiveIPv4 not running.
+
+Diagnostic : le serveur OVH détectait l'appareil Android ele-l29 et communiquait avec lui par DERP Helsinki (ping 122–156 ms), mais ses logs HTTPS montraient plusieurs erreurs TLS "no TailscaleVarRoot" provenant du téléphone. Le service utilisateur boono-tailscale.service lançait le démon en userspace avec --state mais sans --statedir, ce qui empêchait la création et la conservation de certificats HTTPS. Cette erreur est indépendante du warning Android.
+
+Correction : sauvegarde préalable /home/ubuntu/boono-tv-mobile/backups/boono-tailscale-before-statedir-20261106.service, ajout de --statedir=/home/ubuntu/.local/share/boono-tailscale sans modifier l'adresse du socket, le fichier --state, les routes, les ports ou les options SSH. Redémarrage du seul démon Tailscale OVH. Aucun changement des moteurs PAPER ni de la passerelle.
+
+Vérification : le démon a enregistré ACME, validé DNS-01 et reçu le certificat à 13:22:13 UTC le 6 novembre 2026. Certificat pour boono-tv-ovh.tail6abdc1.ts.net, valide du 6 novembre 2026 au 4 février 2027. Après le redémarrage, pas de nouvelles erreurs "no TailscaleVarRoot" dans les journaux. Serve affiche bien HTTPS (tailnet only) vers 127.0.0.1:3092. Passerelle lecture seule HTTP200 ; POST calibration refusé HTTP405 ; trois services user actifs.
+
+Statut restant : la véritable ouverture HTTPS depuis Chrome Android après ce correctif n'a pas encore été confirmée par le propriétaire. L'avertissement MagicSock ReceiveIPv4 peut nécessiter de déconnecter puis reconnecter le VPN Android. En cas de nouvel échec, collecter le message exact de Chrome et distinguer transport Tailscale et DNS MagicDNS. Aucun Funnel public ; droits de diffusion du MP4 Clemens Costa non établis.

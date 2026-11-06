@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T13:24:50+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Apres approbation OVH le TLS Serve bloquait les connexions Android avec no TailscaleVarRoot car tailscaled utilisait state sans statedir. Ajout statedir, redemarrage seul daemon Tailscale, certificat ACME obtenu a 13:22:13 UTC et Serve HTTPS prive actif. Ouverture Chrome Android encore a confirmer.",
+  "evidence": "OVH boono-tailscale.service et backup avant fix; journal got cert a 13:22:13 UTC; openssl valid 2026-11-06 a 2027-02-04; Serve HTTPS tailnet-only -> 127.0.0.1:3092; read-only GET200 POST405",
+  "previousEventSha256": "298c020217425ca63497ed400b921de3713cbf4c8914beb75b8ac4a69d52ffe3"
+}
