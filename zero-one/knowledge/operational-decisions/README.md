@@ -244,3 +244,8 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — Bandeau compact et audio réel (6 novembre 2026)
 
 - [OD-20261106-008 — bandeau 400px bleu transparent et spectre Live](OD-20261106-008/03-origine-et-justification.md) : titre Clemens Costa en grand bleu transparent, abaissé de 20px, histogramme 16 bandes mesuré par **un second décodeur AAC audio seul** avec WebAudio et synchronisation à la vidéo ; secours FFT conservé et explicitement étiqueté. [Rapport technique et tests](../BOONO_TV_bandeau_bleu_400px_spectre_audio_live_2026-11-06.md). Les flux Live futurs exigent encore une source audio autorisée.
+
+## BOONO-TV — capture MarketCipher 3m et bandeau musical (6 novembre 2026)
+
+- [OD-20261106-009 — reprise automatique de la capture native MCB3](OD-20261106-009/03-origine-et-justification.md) : dernier JPG le 06/11 à 02:59 UTC, chart TA TradingView devenu blanc après Chrome recycle ; Page.bringToFront uniquement sur le TA en cas de JPEG suspect puis recapture. Images fraîches vérifiées sur Amsterdam et dans BOONO-TV OVH. [Rapport d’incident et tests](../BOONO_TV_MCB3_TradingView_capture_reprise_2026-11-06.md). Collecteurs et PAPER intacts.
+- [OD-20261106-010 — histogramme musical élargi à 160 px](OD-20261106-010/03-origine-et-justification.md) : 16 barres Live de 7 px et 3 px d’écart, 40 % du bandeau de 400 px ; titre bleu intense et fond transparent inchangés. [Rapport de mise à jour](../BOONO_TV_histogramme_elargi_160px_2026-11-06.md).

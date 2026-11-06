@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T11:02:30+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Nouveau spectre plus large en service dans bandeau prive Clemens Costa, titre scroll et position du bandeau inchanges, fallback FFT et second decodeur AAC live inchanges. Acceptation visuelle reelle sur Chromebook reste ouverte.",
+  "evidence": "OVH HTTP200 scene index et music-ticker.js vOD20261106-010, studio actif, MP4 unique et tous moteurs PAPER/collecteurs indemnes",
+  "previousEventSha256": "397f6bc51d5666cc1b7c7d83526d82e4f12c69c6231450e87491a12a7fa190e7"
+}

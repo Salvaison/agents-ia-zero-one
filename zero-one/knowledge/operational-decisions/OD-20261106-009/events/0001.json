@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T11:02:11+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Le daemon BOONO-TV Amsterdam a ete modifie pour reprendre automatiquement une capture TradingView TA qljTf3vu si le premier JPEG est suspect (<12000 octets): Page.bringToFront de ce seul onglet, attente 2.4s, seconde capture puis validation. Metadonnees autoActivatedTABecauseBlank et firstCaptureBytes. Aucun changement sur les onglets collecteurs 2AqpEMfD.",
+  "evidence": "Amsterdam zero-one/boono-tv/desk/desk-capture-daemon.js, backup boono-tv/backups/OD-20261106-009, seulement PM2 boono-desk-capture redemarre",
+  "previousEventSha256": null
+}

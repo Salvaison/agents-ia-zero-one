@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-010",
+  "title": "BOONO-TV histogramme 16 bandes elargi dans le bandeau 400px",
+  "createdAtUtc": "2026-11-06T10:53:36+00:00",
+  "authorization": "Demande utilisateur du 06/11/2026 histogramme musical plus large",
+  "reference": "Suite du bandeau music OD-20261106-008",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "a9342e2f80b18743251ff9c466340763418d6e607e67fe3b7dbde58196ad5561",
+      "bytes": 185
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "62cbe4aa2168ae695c965a0830750dec831cc381667492ac836c2bf6c1f7c06c",
+      "bytes": 473
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e3d1f4d41f9ab9138835cc73e78b96413e7491bb9811d45155cd80d1f6076507",
+      "bytes": 371
+    }
+  }
+}

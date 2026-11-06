@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T11:02:21+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Histogramme musique BOONO-TV elargi de 96x20 a 160x20 (40pct du bandeau 400x27), 16 bandes barres 7px et ecarts3px, CSS et Canvas en accord, titre 21px bleu transparent scroll top25 conserve; version script OD20261106-010.",
+  "evidence": "OVH runtime/boono-tv/scene/music-ticker.js boono-v2.css index.html, backup /home/ubuntu/boono-tv-studio/backups/OD-20261106-010",
+  "previousEventSha256": null
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T11:02:14+00:00",
+  "status": "TESTE",
+  "description": "Cause isolee apres Chrome recycle: dernier JPEG du 06/11 02:59 UTC, zone TA blanche, erreur CAPTURE_JPEG_SUSPECT_TOO_SMALL, collecteurs sains. Rechargement TA seul ne suffisait pas ; son activation permet du vrai MCB B 3m. Test de reprise automatique avec TA arriere-plan: premier JPEG 1343 octets, apres activation JPEG 21381 octets ok=true a 10:52:27 UTC. Deux images consecutives differentes a 10:54:21 et 10:55:21, puis 10:56:21. Relay OVH source JPEG SHA identique, et Chromium front end MC 3m opacite .96 stale false age11s, zero JS errors.",
+  "evidence": "Amsterdam state.json autoActivatedTABecauseBlank=true firstCaptureBytes1343, marketcipher-live.jpg 21381; sha captures ad9e2ada/4fb3ccca/60cef451; OVH tests/verify-OD-20261106-009-restored-frontend-result.json et JPG; collecteur PIDs 3585609/3602894 et PAPER 3123676/3123690 inchanges",
+  "previousEventSha256": "77a75a2c6223ecaaf40affcc55ebf789422ca6c566feee3c9d0d2e01b5364a82"
+}

@@ -152,3 +152,8 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV spectre Live indépendant et bandeau compact (06/11)
 
 - [Bandeau musical 400×27 bleu sans fond, 20 px plus bas, second décodeur AAC Live](BOONO_TV_bandeau_bleu_400px_spectre_audio_live_2026-11-06.md) — titre défilant, 16 bandes mesurées en temps réel, décodeur audio-only silencieux avec activation par clic, vrai secours offline, vidéo et trading inchangés ; OD-20261106-008.
+
+## BOONO-TV reprise de capture TV et histogramme élargi (06/11)
+
+- [MarketCipher B TradingView 3m figé : cause et récupération ciblée](BOONO_TV_MCB3_TradingView_capture_reprise_2026-11-06.md) — onglet TA blanc après recycle Chrome, réveil ciblé et validation de captures différentes à une minute, sans substitution par MCB interne ; OD-20261106-009.
+- [Histogramme audio 160 px (40 % du bandeau)](BOONO_TV_histogramme_elargi_160px_2026-11-06.md) — 16 bandes plus larges, titre Clemens inchangé et second décodeur AAC en place ; OD-20261106-010.

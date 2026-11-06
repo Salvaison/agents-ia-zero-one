@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T11:02:25+00:00",
+  "status": "TESTE",
+  "description": "Chromium: largeur du bandeau 333.33 sur loft 1000, histogramme 133.33 sur bandeau 333.33 =40pct, Canvas intrinseque 160x20, audio WebAudio live OK drift environ -10ms, pixel somme RGB change 290934 vers 465108 sur 1.1s, sprite BOONO actif, aucune erreur JS.",
+  "evidence": "OVH tests/verify-OD-20261106-010-wider-histogram-result.json, capture OD-20261106-010-histogram-160px-live.jpg, hashes projection-config et grand-screen-config inchanges",
+  "previousEventSha256": "062bac7cc822aa733c84011a43630f84038ae7ef53e07309455c85f21e0c9263"
+}

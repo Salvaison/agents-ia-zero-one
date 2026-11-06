@@ -1,0 +1,1 @@
+OD-20261106-010. After OD-20261106-008 (400x27 ticker, 21px bright-blue title, transparent background, top25 and second AAC decoder), the user requests only a larger frequency histogram. Increase from 96x20 (24% of ticker) to 160x20 (40%) and keep the remaining 240px for scrolling text. Authentic audio FFT Live/backup remains unchanged. Independent small visual change.

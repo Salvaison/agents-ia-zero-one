@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-009",
+  "title": "BOONO-TV recuperation des captures TradingView 3m apres Chrome",
+  "createdAtUtc": "2026-11-06T10:50:36+00:00",
+  "authorization": "Signalement MCB3 figé du 06/11/2026",
+  "reference": "BOONO-TV capture TA chart qljTf3vu et image du bureau",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "43adca3df8254a7dfca86716da40e16457297be7493b5ac27ac84e1855109e5c",
+      "bytes": 327
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "62db4de367ca477c4f667dd1d96693e1c543d371d5a845dc88bc0cfc4d18820f",
+      "bytes": 398
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "fec6f5436839e5a24c80dcdfb1e73bb018fc92c9c22fec574c059f38cb34f79b",
+      "bytes": 535
+    }
+  }
+}

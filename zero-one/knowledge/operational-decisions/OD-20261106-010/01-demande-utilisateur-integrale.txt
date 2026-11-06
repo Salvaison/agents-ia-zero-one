@@ -1,0 +1,1 @@
+L'utilisateur trouve le nouveau bandeau bon mais souhaite que l'histogramme occupe davantage de largeur, tout en gardant le bandeau musical compact bleu/transparent à un tiers du loft.

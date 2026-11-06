@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T11:02:18+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Capture MCB3 native TradingView sur BOONO bureau retablie et active en mode automatique, relais OVH retrouve image fraiche et TF reel3m. Fonction auto-recuperation limitee au seul TA quand premier JPEG est blank. Verification prochain vrai redemarrage Chrome reste ouverte, aucun changement calibration ni trading.",
+  "evidence": "Amsterdam PM2 boono-desk-capture nouveau PID3622409, capture ok=true et actualSymbol OKX:BTCUSDT.P, OVH state et image frais; studio HTTP200; rendu BOONO screenshot 610x152; calibration bureau inchangee",
+  "previousEventSha256": "7cd62a5a5aefdb60e2f0f5c26d9f9264c3f29723d974e4660072091dfcd22a47"
+}

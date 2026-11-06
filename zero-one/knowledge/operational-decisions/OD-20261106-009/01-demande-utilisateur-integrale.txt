@@ -1,0 +1,1 @@
+MCB3 sur le second écran de BOONO-TV est figé depuis hier soir. Lors de la vérification du 6/11, le JPG MarketCipher authentique date du 06/11/2026 à 02:59 UTC et le daemon signale CAPTURE_JPEG_SUSPECT_TOO_SMALL. En parallèle je souhaite continuer de disposer du véritable MCB3 TradingView, pas de notre rendu MCB maison.
