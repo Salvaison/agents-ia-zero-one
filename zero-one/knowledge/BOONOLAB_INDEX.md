@@ -144,3 +144,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV grand écran à 5 ancres éditables (06/11)
 
 - [Éditeur de perspective à 5 points du grand écran BOONO-TV](BOONO_TV_grand_ecran_cinq_ancres_editeur_2026-11-06.md) — manipulation directe des coins et d’une ancre haute supplémentaire, deux homographies raccordées, brouillon/Voir/Enregistrer/Annuler, stockage autonome ; décisions OD-20261106-005 et OD-20261106-006.
+
+## BOONO-TV bandeau musical et histogramme de Clemens (06/11)
+
+- [Bandeau titre défilant, histogramme audio 16 bandes, retrait SHOWCASE du loft](BOONO_TV_bandeau_musical_histogramme_audio_2026-11-06.md) — analyse FFT privée du vrai MP4, animation synchronisée par video.currentTime, couche de 27 px sans changer le moteur audio, retrait des anciennes qualifications de postures ; OD-20261106-007.

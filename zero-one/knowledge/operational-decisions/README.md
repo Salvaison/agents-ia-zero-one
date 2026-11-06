@@ -236,3 +236,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — cinquième ancre haute : suite à OD-20261106-005 (6 novembre 2026)
 
 - [OD-20261106-006 — cinquième ancre haute, vidéo en deux panneaux](OD-20261106-006/03-origine-et-justification.md) : ajout demandé en cours de chantier d’une poignée HS sur la ligne haute, sans déformer le coin HG hors du loft ; deux panneaux homographiques partageant l’unique MP4 et le même son, [rapport de tests et réglages](../BOONO_TV_grand_ecran_cinq_ancres_editeur_2026-11-06.md). Les originaux OD005 demeurent inchangés.
+
+## BOONO-TV — bandeau musical et histogramme audio Clemens Costa (6 novembre 2026)
+
+- [OD-20261106-007 — bandeau musical et histogramme réel du son](OD-20261106-007/03-origine-et-justification.md) : titre Clemens Costa défilant dans un bandeau 27 px au centre du haut du loft, FFT authentique 16 bandes synchronisée à la vidéo privée ; retrait visuel des deux petits prix du loft et des badges de posture/SHOWCASE devenus obsolètes. [Rapport technique et preuves](../BOONO_TV_bandeau_musical_histogramme_audio_2026-11-06.md). L’État vivant et les signaux réels demeurent.

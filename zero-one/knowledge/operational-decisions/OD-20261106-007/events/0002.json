@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-06T10:15:19+00:00",
+  "status": "TESTE",
+  "description": "Analyse audio reelle 16 bandes 8Hz 24379 frames, 50m47, spectre prive HTTP200 390080 octets, Host exterieur HTTP403, FFT en amont. Chromium verifies scroll titre exact, histogramme change aux t=0 2 35 125 268 et fige a la pause, bandeau centre 27px, trois badges de posture et deux prix du loft caches, prix de l Etat vivant visible, six modes incluant mur 5 ancres, aucun JS error. Cycle video 21.2s sans interruption, CPU 4x ~41 images en 4.4s et BOONO visible.",
+  "evidence": "OVH tests/verify-OD-20261106-007-music-banner-result.json, inspect-OD-20261106-007-toplabels-result.json, verify-OD-20261106-007-scene-regression-result.json, verify-OD-20261106-007-actual-21s.json, verify-OD-20261106-007-cpu-regression.json, screenshot OD-20261106-007-final-grand-with-music.jpg, hashes bureau et mur inchanges",
+  "previousEventSha256": "ee192d8ac122c82758ab80b99ac5f53f844db36740d93f6635b6da88b8afd701"
+}

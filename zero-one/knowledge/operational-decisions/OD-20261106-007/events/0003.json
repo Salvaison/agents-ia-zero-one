@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-06T10:15:22+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Bandeau musical et histogramme deployes OVH uniquement dans mode prive windowVideo=clemens et sur toutes projections 21s, etat normal sans credits inappropries. Prix Live central du Watch conserve, labels SHOWCASE du loft caches sans toucher aux poses ou scenario. Aucun processeur PAPER/collecteur redemarre. Validation visuelle sur ChromeOS ouverte; glitch 1er chargement en observation.",
+  "evidence": "Studio OVH 3091 actif, GET /api/private/clemens-video/spectrum protégé local/tunnel, relai Amsterdam 8310 disponible, boono-v494-paper et boono-v543-paper online, calibration SHA256 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f",
+  "previousEventSha256": "926ea3ee3438cb6b52fc96f87b6c177f84515e3908c1472fa7ca59fa15673e76"
+}

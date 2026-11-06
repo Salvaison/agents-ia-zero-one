@@ -1,0 +1,3 @@
+C'est absolument super!! et ta construction du grand écran fonctionne trés bien, Bravo! Reste encore un détail ;-) je veux un bandeau roulant horizontalement avec "Clemens Costa - We turned my kitchen into a club" donc le titre du morceau qui défile et un histogram dynamique de son. Le tout un bandeau de 20-30 pixels. Je voudrais qu'il soit placé tout en haut de l'image du loft centré au milieu à la place du petit prix Live qui traine là haut
+
+Aussi tu peux enlever les 2 "showcase" au bas de l'image du loft. Je les aimait bien mais vu que nous allons changé les postures, crée différents set de postures, nous aurons des problème à tout le temps califié correctement les différentes postures.

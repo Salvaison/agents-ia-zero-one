@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-06T10:15:16+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Bandeau BOONO-TV 27px centre tout en haut du loft, titre Clemens Costa - We turned my kitchen into a club defilant en CSS, histogramme de 16 vraies bandes audio FFT issues du MP4 prive, liees a video.currentTime sans AudioContext ni second decodeur. Deux petits prix redondants et badges SHOWCASE scene V2 caches dans le loft; prix Live Etat vivant et marche inchanges.",
+  "evidence": "OVH scene/music-ticker.js nouveau, scene/boono-v2.css, scene/index.html, studio-server.js ; spectrum 390080 bytes SHA256 a0ac3114b20374301fd25ef8ea87841ef3a81fcd9007e10e2ef6201974cee5e7 ; backups OD-20261106-007",
+  "previousEventSha256": null
+}

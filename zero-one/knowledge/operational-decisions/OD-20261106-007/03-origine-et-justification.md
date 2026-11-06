@@ -1,0 +1,7 @@
+# OD-20261106-007 — Bandeau musical et retrait des étiquettes SHOWCASE
+
+**Demande utilisateur (6 novembre 2026) :** ajouter en haut du loft, à la place du petit prix Live, un bandeau de 20–30 pixels avec titre défilant exact « Clemens Costa - We turned my kitchen into a club » et un histogramme dynamique du son. Retirer les deux marquages SHOWCASE du bas, car les postures et séries de postures vont évoluer et leurs qualifications deviendraient trompeuses.
+
+**Source et frontière :** le MP4 Clemens privé est déjà installé sur OVH, un lecteur audio/vidéo unique et Canvas de projection sur quatre surfaces toutes les 21 secondes. Le correctif ChromeOS a déjà montré qu'un changement de routage audio/vidéo peut perturber les sprites ; préférer un véritable spectre pré-calculé côté serveur à partir du son MP4, synchronisé à video.currentTime et dessiné dans un minuscule canvas sans brancher de nouveau décodeur ou AudioContext. Le bandeau doit apparaître uniquement en mode vidéo Clemens ; le prix LIVE réel reste dans l'État vivant et la composition de marché.
+
+**Portée :** suppression visuelle des anciens badges de posture/SHOWCASE du loft seulement, sans toucher à la logique des postures, du chat, aux fichiers d'art, aux trois panneaux de gauche, aux masques GIMP, à la calibration ni aux moteurs PAPER. Conserver le clip privé et éviter toute publication publique non autorisée. Tests Chromium obligatoires et dernier contrôle réel ChromeOS ouvert.

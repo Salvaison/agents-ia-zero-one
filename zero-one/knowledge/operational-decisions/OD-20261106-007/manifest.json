@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261106-007",
+  "title": "BOONO-TV bandeau musical defilant histogramme audio et suppression labels Showcase",
+  "createdAtUtc": "2026-11-06T10:01:20+00:00",
+  "authorization": "Demande explicite du proprietaire 2026-11-06, bandeau musical et retrait des showcases",
+  "reference": "BOONO-TV audiovisuel Clemens Costa; quatre surfaces projection OD-20261106-003 a 006",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "aa32679407b4fe33eb331c11c4af1e88bfdb3d34f3162b47314310b19d86398f",
+      "bytes": 713
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "071b63e227f90843eec7b73f915ff976ae97ba28e05480c813a7e5e75003574c",
+      "bytes": 1603
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0aae0ee56a1339b5fd94723ada9d80a29802b0257eb3f04cbf19efcb163a58b4",
+      "bytes": 1508
+    }
+  }
+}
