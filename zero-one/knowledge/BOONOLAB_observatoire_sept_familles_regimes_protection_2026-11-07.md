@@ -30,6 +30,8 @@ Accès BOONO Watch → TRADES → SHADOWS → **Ouvrir l’observatoire BOONOLAB
 
 SHORT #182 entré à 75 941 $ BTC. Observation Bâton du **06/11 16h05m44s** au creux **74 939,5 $** ; une minute après, **16h06m44s** au prix **75 146,1 $** : rebond **+206,6 BTC$**, débit relatif **4,18**, environ **20,6 %** du mouvement de cours acquis rendu. Le shadow détecte **COUNTERATTACK_WITH_AGGRESSIVE_FLOW**. Valorisation hypothétique au prix réellement observé **+14,2089 $ net**, contre **+3,8891 $ net PAPER** à la clôture 16h45 (frais taker modélisés ; ni slippage ni fill garanti).
 
+**Corroboration PAPER retrouvée à 16h06m39s (connue AVANT l'alerte 16h06m44s) :** PM Live **+217,2 $ BTC**, alors que PM3 **−128,9**, PM5 **−303,8**, MF3 **−3,6** et MF15 **−4,6** étaient encore vendeurs ; décision PAPER **HOLD**. La détection price+flow du shadow n'a pas utilisé artificiellement ce relevé dans le replay historique ; il confirme néanmoins l'intuition utilisateur qu'une réponse acheteuse forte apparaissait **avant** l'inversion des horizons 3m/5m et MF. Cette corroboration doit rester liée à la source journaux V543 pour éviter une fausse preuve indépendante.
+
 **Contre-exemple crucial :** ce détecteur déclenche **déjà plus tôt** dans la même campagne, première alerte historique vers **14h32** à 75 799,5 $ (net hypothétique +1,2963 $), puis le prix poursuit fortement sa baisse. Il serait faux de revendiquer une sortie miraculeuse uniquement à 16h06 : il faut mesurer toute la série d'alertes, les éventuels faux exits et les réentrées manquées avant promotion d'un contrat EXIT.
 
 ## Validation et mise en service

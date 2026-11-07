@@ -1,0 +1,8 @@
+{
+  "sequence": 6,
+  "recordedAtUtc": "2026-11-07T12:00:45+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Corroboration as-of #182 ajoutée au rapport: 16h06m39 PM Live +217.2, PM3 -128.9, PM5 -303.8, MF3 -3.6 MF15 -4.6, decision HOLD, shadow prix+flux alerte 16h06m44",
+  "evidence": "Journaux data/v52-paper-decisions.segment-20261106*.ndjson et decisions.ndjson, derniere decision V543 2026-11-06 16:06:39 Europe/Stockholm, les derniers PM/MF sont connus avant 16h06:44 ; documentation BOONOLAB_observatoire_sept_familles_regimes_protection_2026-11-07.md enrichie, pas de changement de code PAPER ni shadow",
+  "previousEventSha256": "a874f240de7f1f33ed5a5ecbb948d05a2657670cf6589146d3beddee613c54f1"
+}
