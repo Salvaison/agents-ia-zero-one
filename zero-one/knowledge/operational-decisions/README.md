@@ -261,3 +261,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## OD-20261107-001 — BOONOLAB · sept familles, régimes, menace de position
 
 - [OD-20261107-001 — Décision, message original, mission exécutée, statut](OD-20261107-001/03-origine-et-justification.md) : trois observateurs indépendants et lecture chronologique stable (sans rafraîchissement automatique). [Rapport d'implémentation](../BOONOLAB_observatoire_sept_familles_regimes_protection_2026-11-07.md) : chronologie événementielle MCB15/MCB3/FLOW/MA/CONVERSION/BOUNDARY/CONTEXT, shadow de contre-offensive à 30–60s, quatre régimes fondés sur mémoire 4×15 et 2h, tests, fausses alertes #182, limites. **PAPER 494 et 543 intacts ; aucune règle EXIT nouvelle.**
+
+## PM5/PM3/PM Live et trois niveaux de marché — 7 novembre 2026
+
+- [OD-20261107-002 — Recherche rétrospective depuis 01/11, régimes faible/médian/fort × productif/improductif](OD-20261107-002/03-origine-et-justification.md). [Rapport synthétique avec les 25 dissonances, les résultats +3/+15/+45 min et les qualités Elastic](../BOONOLAB_PM3_PM5_PMLive_dissonance_regimes_2026-11-07.md) ; [données de recherche reproductibles](../BOONOLAB_PM_dissonance_study_results_2026-11-07.json). **Seuils exploratoires 0,226 / 0,552 BTC/s, aucune modification de PAPER ni des shadows en service.**

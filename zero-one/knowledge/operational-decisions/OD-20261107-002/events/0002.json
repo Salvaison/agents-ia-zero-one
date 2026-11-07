@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-07T19:16:10+00:00",
+  "status": "DOCUMENTE",
+  "description": "Inventaire complet 25 dissonances PM3 PM5 PM Live forte depuis Nov1, issues as-of a 3/15/45min, 11 episodes dedoublonnes, et 3 bandes intensite 6 qualites experimentales; aucune regle PAPER modifiee",
+  "evidence": "zero-one/knowledge/BOONOLAB_PM3_PM5_PMLive_dissonance_regimes_2026-11-07.md ; zero-one/knowledge/BOONOLAB_PM_dissonance_study_results_2026-11-07.json (163 heures + 25 occurrences) ; zero-one/scripts/boonolab_pm_dissonance_study_20261107.py, scripts/boonolab_pm_dissonance_report_20261107.py",
+  "previousEventSha256": "b101f6945bccce76f8eed2c18201415299d118c2dc30da1c1482d2bbb1d367a1"
+}

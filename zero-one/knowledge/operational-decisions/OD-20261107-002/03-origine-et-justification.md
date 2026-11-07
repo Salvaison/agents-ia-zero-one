@@ -1,0 +1,11 @@
+# OD-20261107-002 — Recherche intensité médiane et dissonances PM5/PM3/PM Live
+
+**Décision/motivation :** le propriétaire propose une recherche sur six qualités de marché (trois intensités avec deux frontières entourant le régime médian et productif/improductif conditionnel) et demande une étude historisée des dissonances PM5, PM3 et PM Live à trois chiffres à +3/+15/+45 minutes depuis le 01/11/2026. Il a corrigé immédiatement une coquille : **PM5, et non PM15**. Il propose une divergence haussière possible sur sa capture TradingView du 07/11 à ~18h11 ; la capture ne suffit pas à confirmer un retournement.
+
+**Autorisé :** recherche/mesure rétrospective, documentation et publication. **Non autorisé :** réglage PAPER de seuils de volume, six régimes autoritaires, priorité de sortie sur dissonance, modification des entrées/sorties, réinitialisation des positions, changement de backend V494/V543 ou BOONO-TV. Le classement de marché actuel (quatre régimes) demeure observateur, et ses résultats ne sont pas effacés. Les seuils sont à rechercher, pas à déployer.
+
+**Méthodologie d'audit :** archives V494 Elastic snapshots 30s depuis 30/10 incluant PM3/PM5/PMLive, Audit14D historiques de débit et prix; événements V543 journalisés quand ils existent pour vérifier la comparabilité des sources. Signatures de même amplitude sur trois horizons; points bruts et épisodes espacés 45min, résultats de cours et équivalent frais, contrôles du fait que le PM Live 543 ajoute le prix depuis le Baton au pas 5s. Recherche qualitative des modes courant SILENT / EASY / POWERFUL / CONTESTED etc directement dans le classifieur source, non par interprétation a posteriori.
+
+**Pourquoi ce contrôle est crucial :** #182 SHORT (06/11 16h06m39s) PM Live +217,2, PM3 −128,9, PM5 −303,8 et position vendeuse déjà engagée depuis >2h, contre-attaque acheteuse très rapide ; ce phénomène ne doit pas devenir un signal d'entrée LONG autonome. Le contre-exemple de la forte chute précédente interdit de considérer toute dissonance comme un retournement confirmé.
+
+**Statuts :** analyse/protocole documentés ; aucun code de trading implémenté ni shadow de décisions reconfiguré. Les scripts sont des reproducteurs hors ligne, exécutés en lecture seule.

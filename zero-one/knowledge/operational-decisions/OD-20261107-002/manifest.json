@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261107-002",
+  "title": "Recherche PM5 PM3 PMLive dissonances et six qualites de marche avec regime median",
+  "createdAtUtc": "2026-11-07T19:13:03+00:00",
+  "authorization": "Demande utilisateur de recherche depuis 2026-11-01, six classes experimentales, interpretation des qualites Elastic, sans modification des moteurs",
+  "reference": "User chart 2026-11-07 18:11 CET, demande principale et precision PM5/PM3/PMLive",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c681cabb6733b13ca2e8388aff8cb854ce4dbb7e220bb63a2be4c3bd4b858ce6",
+      "bytes": 2281
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "3c6a1e156b5585e4535cf19183e6f3a69a91bcb05e89e0222ec0484e76d67ae5",
+      "bytes": 2369
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "79011590246295f6f432043e034da01474e97f8d67672f4b5cbb8ef6943e9c0b",
+      "bytes": 2310
+    }
+  }
+}

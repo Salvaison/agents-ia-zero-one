@@ -1,0 +1,6499 @@
+{
+  "study": "PM3_PM5_PMLIVE_DISSONANCE_FROM_2026_11_01",
+  "startLocal": "2026-11-01 00:00:00",
+  "endLocal": "2026-11-07 19:55:46",
+  "dataSource": "V494 elastic-state 30s archived snapshots with independent but related PM measures",
+  "nSnapshots": 19661,
+  "nAuditRows": 19544,
+  "hourly": {
+    "n": 163,
+    "q20": 0.1735,
+    "q25": 0.2017,
+    "q33": 0.2621,
+    "medianFlow": 0.3555,
+    "q67": 0.4582,
+    "q75": 0.5675,
+    "q90": 0.7851,
+    "logKMeansCentersBtcSec": [
+      0.1453,
+      0.3523,
+      0.8648
+    ],
+    "tentativeLowerBoundary": 0.2262,
+    "tentativeUpperBoundary": 0.552,
+    "perIntensity": {
+      "LOW": {
+        "nHours": 46,
+        "medFlow": 0.1511,
+        "medCadence": 2.58,
+        "medRange": 151.1,
+        "medAbsNet": 61.6,
+        "medPath": 679.5,
+        "medianEfficiency": 0.0753,
+        "medianRetention": 0.5261,
+        "productiveHours": 15,
+        "improductiveHours": 31
+      },
+      "MEDIUM": {
+        "nHours": 72,
+        "medFlow": 0.3565,
+        "medCadence": 8.24,
+        "medRange": 314.1,
+        "medAbsNet": 117.4,
+        "medPath": 1892.0,
+        "medianEfficiency": 0.0618,
+        "medianRetention": 0.5135,
+        "productiveHours": 30,
+        "improductiveHours": 42
+      },
+      "HIGH": {
+        "nHours": 45,
+        "medFlow": 0.7088,
+        "medCadence": 17.78,
+        "medRange": 543.2,
+        "medAbsNet": 248.7,
+        "medPath": 3253.9,
+        "medianEfficiency": 0.0655,
+        "medianRetention": 0.5038,
+        "productiveHours": 20,
+        "improductiveHours": 25
+      }
+    }
+  },
+  "thresholds": {
+    "75": {
+      "snapshots": 324,
+      "patterns": {
+        "ALIGNED_ALL": 263,
+        "LIVE_OPPOSES_BOTH": 49,
+        "PM3_LIVE_VS_PM5": 8,
+        "PM5_LIVE_VS_PM3": 4
+      },
+      "independent45m": 24
+    },
+    "100": {
+      "snapshots": 154,
+      "patterns": {
+        "ALIGNED_ALL": 129,
+        "LIVE_OPPOSES_BOTH": 23,
+        "PM3_LIVE_VS_PM5": 1,
+        "PM5_LIVE_VS_PM3": 1
+      },
+      "independent45m": 11,
+      "note": "Independent per pattern; repeated runs/overlap across different patterns possible",
+      "LIVE_OPPOSES_BOTH": {
+        "snapshotN": 23,
+        "episodesN": 11,
+        "perDay": {
+          "2026-11-02": 1,
+          "2026-11-04": 8,
+          "2026-11-05": 10,
+          "2026-11-06": 4
+        },
+        "intensityAtEvent": {
+          "HIGH": 11
+        },
+        "outcomes": {
+          "3": {
+            "n": 11,
+            "censored": 0,
+            "favorable": 2,
+            "favorablePct": 18.2,
+            "afterFeesCount": 1,
+            "afterFeesPct": 9.1,
+            "medianSignedUsd": -41.2,
+            "meanSignedUsd": -98.95,
+            "q25": -221.6,
+            "q75": -5.6
+          },
+          "15": {
+            "n": 11,
+            "censored": 0,
+            "favorable": 4,
+            "favorablePct": 36.4,
+            "afterFeesCount": 3,
+            "afterFeesPct": 27.3,
+            "medianSignedUsd": -44.1,
+            "meanSignedUsd": -164.47,
+            "q25": -346.4,
+            "q75": 55.9
+          },
+          "45": {
+            "n": 11,
+            "censored": 0,
+            "favorable": 6,
+            "favorablePct": 54.5,
+            "afterFeesCount": 4,
+            "afterFeesPct": 36.4,
+            "medianSignedUsd": 21.9,
+            "meanSignedUsd": -242.03,
+            "q25": -234.0,
+            "q75": 192.9
+          }
+        }
+      },
+      "PM3_LIVE_VS_PM5": {
+        "snapshotN": 1,
+        "episodesN": 1,
+        "perDay": {
+          "2026-11-05": 1
+        },
+        "intensityAtEvent": {
+          "HIGH": 1
+        },
+        "outcomes": {
+          "3": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 1,
+            "favorablePct": 100.0,
+            "afterFeesCount": 1,
+            "afterFeesPct": 100.0,
+            "medianSignedUsd": 440.0,
+            "meanSignedUsd": 440.0,
+            "q25": 440.0,
+            "q75": 440.0
+          },
+          "15": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 1,
+            "favorablePct": 100.0,
+            "afterFeesCount": 1,
+            "afterFeesPct": 100.0,
+            "medianSignedUsd": 803.2,
+            "meanSignedUsd": 803.2,
+            "q25": 803.2,
+            "q75": 803.2
+          },
+          "45": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 1,
+            "favorablePct": 100.0,
+            "afterFeesCount": 1,
+            "afterFeesPct": 100.0,
+            "medianSignedUsd": 1663.1,
+            "meanSignedUsd": 1663.1,
+            "q25": 1663.1,
+            "q75": 1663.1
+          }
+        }
+      },
+      "PM5_LIVE_VS_PM3": {
+        "snapshotN": 1,
+        "episodesN": 1,
+        "perDay": {
+          "2026-11-06": 1
+        },
+        "intensityAtEvent": {
+          "HIGH": 1
+        },
+        "outcomes": {
+          "3": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 0,
+            "favorablePct": 0.0,
+            "afterFeesCount": 0,
+            "afterFeesPct": 0.0,
+            "medianSignedUsd": -160.3,
+            "meanSignedUsd": -160.3,
+            "q25": -160.3,
+            "q75": -160.3
+          },
+          "15": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 0,
+            "favorablePct": 0.0,
+            "afterFeesCount": 0,
+            "afterFeesPct": 0.0,
+            "medianSignedUsd": -516.9,
+            "meanSignedUsd": -516.9,
+            "q25": -516.9,
+            "q75": -516.9
+          },
+          "45": {
+            "n": 1,
+            "censored": 0,
+            "favorable": 0,
+            "favorablePct": 0.0,
+            "afterFeesCount": 0,
+            "afterFeesPct": 0.0,
+            "medianSignedUsd": -617.2,
+            "meanSignedUsd": -617.2,
+            "q25": -617.2,
+            "q75": -617.2
+          }
+        }
+      },
+      "ALIGNED_ALL": {
+        "snapshotN": 129,
+        "episodesN": 35,
+        "perDay": {
+          "2026-11-01": 3,
+          "2026-11-02": 10,
+          "2026-11-03": 4,
+          "2026-11-04": 38,
+          "2026-11-05": 52,
+          "2026-11-06": 22
+        },
+        "intensityAtEvent": {
+          "LOW": 4,
+          "MEDIUM": 12,
+          "HIGH": 19
+        },
+        "outcomes": {
+          "3": {
+            "n": 35,
+            "censored": 0,
+            "favorable": 14,
+            "favorablePct": 40.0,
+            "afterFeesCount": 8,
+            "afterFeesPct": 22.9,
+            "medianSignedUsd": -16.2,
+            "meanSignedUsd": -8.91,
+            "q25": -61.8,
+            "q75": 59.9
+          },
+          "15": {
+            "n": 35,
+            "censored": 0,
+            "favorable": 17,
+            "favorablePct": 48.6,
+            "afterFeesCount": 13,
+            "afterFeesPct": 37.1,
+            "medianSignedUsd": -5.1,
+            "meanSignedUsd": 63.74,
+            "q25": -106.8,
+            "q75": 105.2
+          },
+          "45": {
+            "n": 35,
+            "censored": 0,
+            "favorable": 15,
+            "favorablePct": 42.9,
+            "afterFeesCount": 12,
+            "afterFeesPct": 34.3,
+            "medianSignedUsd": -75.7,
+            "meanSignedUsd": 70.71,
+            "q25": -195.4,
+            "q75": 137.6
+          }
+        }
+      }
+    },
+    "125": {
+      "snapshots": 85,
+      "patterns": {
+        "ALIGNED_ALL": 71,
+        "LIVE_OPPOSES_BOTH": 12,
+        "PM3_LIVE_VS_PM5": 1,
+        "PM5_LIVE_VS_PM3": 1
+      },
+      "independent45m": 5
+    },
+    "150": {
+      "snapshots": 46,
+      "patterns": {
+        "ALIGNED_ALL": 43,
+        "LIVE_OPPOSES_BOTH": 3
+      },
+      "independent45m": 2
+    }
+  },
+  "sensitivityStrongReversal": {
+    "75": {
+      "episodes45m": 23,
+      "outcomes": {
+        "3": {
+          "n": 23,
+          "favorable": 10,
+          "favorablePct": 43.5,
+          "medianSignedUsd": -5.7
+        },
+        "15": {
+          "n": 23,
+          "favorable": 11,
+          "favorablePct": 47.8,
+          "medianSignedUsd": -2.3
+        },
+        "45": {
+          "n": 23,
+          "favorable": 15,
+          "favorablePct": 65.2,
+          "medianSignedUsd": 62.1
+        }
+      }
+    },
+    "100": {
+      "episodes45m": 11,
+      "outcomes": {
+        "3": {
+          "n": 11,
+          "favorable": 2,
+          "favorablePct": 18.2,
+          "medianSignedUsd": -41.2
+        },
+        "15": {
+          "n": 11,
+          "favorable": 4,
+          "favorablePct": 36.4,
+          "medianSignedUsd": -44.1
+        },
+        "45": {
+          "n": 11,
+          "favorable": 6,
+          "favorablePct": 54.5,
+          "medianSignedUsd": 21.9
+        }
+      }
+    },
+    "125": {
+      "episodes45m": 5,
+      "outcomes": {
+        "3": {
+          "n": 5,
+          "favorable": 1,
+          "favorablePct": 20.0,
+          "medianSignedUsd": -207.7
+        },
+        "15": {
+          "n": 5,
+          "favorable": 1,
+          "favorablePct": 20.0,
+          "medianSignedUsd": -250.1
+        },
+        "45": {
+          "n": 5,
+          "favorable": 2,
+          "favorablePct": 40.0,
+          "medianSignedUsd": -152.3
+        }
+      }
+    },
+    "150": {
+      "episodes45m": 2,
+      "outcomes": {
+        "3": {
+          "n": 2,
+          "favorable": 0,
+          "favorablePct": 0.0,
+          "medianSignedUsd": -263.05
+        },
+        "15": {
+          "n": 2,
+          "favorable": 0,
+          "favorablePct": 0.0,
+          "medianSignedUsd": -408.55
+        },
+        "45": {
+          "n": 2,
+          "favorable": 0,
+          "favorablePct": 0.0,
+          "medianSignedUsd": -917.55
+        }
+      }
+    }
+  },
+  "allRawContradictions": [
+    {
+      "local": "2026-11-02 14:38:58",
+      "ts": 1793626738125,
+      "price": 78091.8,
+      "pm3": 451.9,
+      "pm5": 490.6,
+      "pmLive": -117.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793626918125,
+          "deltaPrice": 24.6,
+          "pmLiveSignedUsd": -24.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78116.4,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "15": {
+          "at": 1793627638143,
+          "deltaPrice": -141.9,
+          "pmLiveSignedUsd": 141.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "45": {
+          "at": 1793629438179,
+          "deltaPrice": -261.5,
+          "pmLiveSignedUsd": 261.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77830.3,
+          "feeEquivalentPriceUsd": 78.09
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 04:03:30",
+      "ts": 1793761410678,
+      "price": 75943.6,
+      "pm3": -134.8,
+      "pm5": -474.2,
+      "pmLive": 112.6,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793761590692,
+          "deltaPrice": -41.2,
+          "pmLiveSignedUsd": -41.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902.4,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "15": {
+          "at": 1793762310710,
+          "deltaPrice": 19.6,
+          "pmLiveSignedUsd": 19.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75963.2,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "45": {
+          "at": 1793764110741,
+          "deltaPrice": 360.3,
+          "pmLiveSignedUsd": 360.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76303.9,
+          "feeEquivalentPriceUsd": 75.94
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 05:55:30",
+      "ts": 1793768130837,
+      "price": 77371.3,
+      "pm3": 187.3,
+      "pm5": 143.1,
+      "pmLive": -102.4,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793768310840,
+          "deltaPrice": 1.8,
+          "pmLiveSignedUsd": -1.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77373.1,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "15": {
+          "at": 1793769030855,
+          "deltaPrice": 10.7,
+          "pmLiveSignedUsd": -10.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77382,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "45": {
+          "at": 1793770830896,
+          "deltaPrice": 315.6,
+          "pmLiveSignedUsd": -315.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77686.9,
+          "feeEquivalentPriceUsd": 77.37
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 06:52:30",
+      "ts": 1793771550905,
+      "price": 77971.8,
+      "pm3": 158,
+      "pm5": 156.2,
+      "pmLive": -134.4,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793771730910,
+          "deltaPrice": -109.9,
+          "pmLiveSignedUsd": 109.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77861.9,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "15": {
+          "at": 1793772450922,
+          "deltaPrice": -154.7,
+          "pmLiveSignedUsd": 154.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77817.1,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "45": {
+          "at": 1793774250965,
+          "deltaPrice": -21.9,
+          "pmLiveSignedUsd": 21.9,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 77.97
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:06:41",
+      "ts": 1793804801286,
+      "price": 80275.7,
+      "pm3": 652.5,
+      "pm5": 733.8,
+      "pmLive": -172.3,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793804981289,
+          "deltaPrice": 260.8,
+          "pmLiveSignedUsd": -260.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80536.5,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "15": {
+          "at": 1793805701305,
+          "deltaPrice": 451.0,
+          "pmLiveSignedUsd": -451.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80726.7,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "45": {
+          "at": 1793807501328,
+          "deltaPrice": 152.3,
+          "pmLiveSignedUsd": -152.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80428,
+          "feeEquivalentPriceUsd": 80.28
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:11:11",
+      "ts": 1793805071290,
+      "price": 80540.1,
+      "pm3": 125.8,
+      "pm5": 264.4,
+      "pmLive": -134.9,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793805251294,
+          "deltaPrice": 248.9,
+          "pmLiveSignedUsd": -248.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80789,
+          "feeEquivalentPriceUsd": 80.54
+        },
+        "15": {
+          "at": 1793805971306,
+          "deltaPrice": -127.7,
+          "pmLiveSignedUsd": 127.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80412.4,
+          "feeEquivalentPriceUsd": 80.54
+        },
+        "45": {
+          "at": 1793807771328,
+          "deltaPrice": -300.7,
+          "pmLiveSignedUsd": 300.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80239.4,
+          "feeEquivalentPriceUsd": 80.54
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:21:11",
+      "ts": 1793805671304,
+      "price": 80774.7,
+      "pm3": -140.2,
+      "pm5": -176.4,
+      "pmLive": 119.6,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793805851306,
+          "deltaPrice": 7.5,
+          "pmLiveSignedUsd": 7.5,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 80782.2,
+          "feeEquivalentPriceUsd": 80.77
+        },
+        "15": {
+          "at": 1793806571312,
+          "deltaPrice": -158.4,
+          "pmLiveSignedUsd": -158.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80616.3,
+          "feeEquivalentPriceUsd": 80.77
+        },
+        "45": {
+          "at": 1793808371337,
+          "deltaPrice": -420.3,
+          "pmLiveSignedUsd": -420.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80354.4,
+          "feeEquivalentPriceUsd": 80.77
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:45:41",
+      "ts": 1793807141325,
+      "price": 80336.5,
+      "pm3": -113.6,
+      "pm5": -231,
+      "pmLive": 122.3,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EASY",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793807321327,
+          "deltaPrice": 155.4,
+          "pmLiveSignedUsd": 155.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80491.9,
+          "feeEquivalentPriceUsd": 80.34
+        },
+        "15": {
+          "at": 1793808041334,
+          "deltaPrice": 114.5,
+          "pmLiveSignedUsd": 114.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80451,
+          "feeEquivalentPriceUsd": 80.34
+        },
+        "45": {
+          "at": 1793809841378,
+          "deltaPrice": 183.6,
+          "pmLiveSignedUsd": 183.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80520.1,
+          "feeEquivalentPriceUsd": 80.34
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:50:11",
+      "ts": 1793807411327,
+      "price": 80441.7,
+      "pm3": 156.9,
+      "pm5": 105.2,
+      "pmLive": -104.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EASY",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793807591328,
+          "deltaPrice": -97.3,
+          "pmLiveSignedUsd": 97.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80344.4,
+          "feeEquivalentPriceUsd": 80.44
+        },
+        "15": {
+          "at": 1793808311337,
+          "deltaPrice": -137.4,
+          "pmLiveSignedUsd": 137.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80304.3,
+          "feeEquivalentPriceUsd": 80.44
+        },
+        "45": {
+          "at": 1793810111387,
+          "deltaPrice": 138.3,
+          "pmLiveSignedUsd": -138.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80580,
+          "feeEquivalentPriceUsd": 80.44
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 00:02:41",
+      "ts": 1793833361826,
+      "price": 80505.7,
+      "pm3": -158.3,
+      "pm5": -212.5,
+      "pmLive": 105.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793833541828,
+          "deltaPrice": -9.3,
+          "pmLiveSignedUsd": -9.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80496.4,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "15": {
+          "at": 1793834261850,
+          "deltaPrice": -44.1,
+          "pmLiveSignedUsd": -44.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80461.6,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "45": {
+          "at": 1793836061887,
+          "deltaPrice": 124.4,
+          "pmLiveSignedUsd": 124.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80630.1,
+          "feeEquivalentPriceUsd": 80.51
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 15:42:12",
+      "ts": 1793889732844,
+      "price": 79053.4,
+      "pm3": -144.5,
+      "pm5": -129,
+      "pmLive": 130.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793889912848,
+          "deltaPrice": -207.7,
+          "pmLiveSignedUsd": -207.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78845.7,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "15": {
+          "at": 1793890632858,
+          "deltaPrice": -793.1,
+          "pmLiveSignedUsd": -793.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78260.3,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "45": {
+          "at": 1793892432893,
+          "deltaPrice": -2833.4,
+          "pmLiveSignedUsd": -2833.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76220,
+          "feeEquivalentPriceUsd": 79.05
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:02:42",
+      "ts": 1793890962869,
+      "price": 77871.1,
+      "pm3": -338.2,
+      "pm5": -325.6,
+      "pmLive": 174.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793891142874,
+          "deltaPrice": -265.3,
+          "pmLiveSignedUsd": -265.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77605.8,
+          "feeEquivalentPriceUsd": 77.87
+        },
+        "15": {
+          "at": 1793891862886,
+          "deltaPrice": -366.1,
+          "pmLiveSignedUsd": -366.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77505,
+          "feeEquivalentPriceUsd": 77.87
+        },
+        "45": {
+          "at": 1793893662909,
+          "deltaPrice": -1682.8,
+          "pmLiveSignedUsd": -1682.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76188.3,
+          "feeEquivalentPriceUsd": 77.87
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:07:12",
+      "ts": 1793891232876,
+      "price": 77668.8,
+      "pm3": -164.5,
+      "pm5": -202.3,
+      "pmLive": 148.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793891412879,
+          "deltaPrice": -408.7,
+          "pmLiveSignedUsd": -408.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77260.1,
+          "feeEquivalentPriceUsd": 77.67
+        },
+        "15": {
+          "at": 1793892132890,
+          "deltaPrice": -598.1,
+          "pmLiveSignedUsd": -598.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77070.7,
+          "feeEquivalentPriceUsd": 77.67
+        },
+        "45": {
+          "at": 1793893932914,
+          "deltaPrice": -2058.6,
+          "pmLiveSignedUsd": -2058.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75610.2,
+          "feeEquivalentPriceUsd": 77.67
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:11:12",
+      "ts": 1793891472878,
+      "price": 77151.4,
+      "pm3": -349.3,
+      "pm5": -368.6,
+      "pmLive": 137.5,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793891652879,
+          "deltaPrice": -207.4,
+          "pmLiveSignedUsd": -207.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76944,
+          "feeEquivalentPriceUsd": 77.15
+        },
+        "15": {
+          "at": 1793892372893,
+          "deltaPrice": -672.0,
+          "pmLiveSignedUsd": -672.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76479.4,
+          "feeEquivalentPriceUsd": 77.15
+        },
+        "45": {
+          "at": 1793894172918,
+          "deltaPrice": -1342.7,
+          "pmLiveSignedUsd": -1342.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75808.7,
+          "feeEquivalentPriceUsd": 77.15
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:12:42",
+      "ts": 1793891562879,
+      "price": 77050,
+      "pm3": -210.1,
+      "pm5": -450.7,
+      "pmLive": 218.9,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793891742882,
+          "deltaPrice": 64.6,
+          "pmLiveSignedUsd": 64.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77114.6,
+          "feeEquivalentPriceUsd": 77.05
+        },
+        "15": {
+          "at": 1793892462893,
+          "deltaPrice": -903.4,
+          "pmLiveSignedUsd": -903.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76146.6,
+          "feeEquivalentPriceUsd": 77.05
+        },
+        "45": {
+          "at": 1793894262920,
+          "deltaPrice": -1137,
+          "pmLiveSignedUsd": -1137,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75913,
+          "feeEquivalentPriceUsd": 77.05
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:18:12",
+      "ts": 1793891892886,
+      "price": 77356.6,
+      "pm3": 242,
+      "pm5": 276.7,
+      "pmLive": -148.4,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793892072889,
+          "deltaPrice": -216.6,
+          "pmLiveSignedUsd": 216.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77140,
+          "feeEquivalentPriceUsd": 77.36
+        },
+        "15": {
+          "at": 1793892792895,
+          "deltaPrice": -779.0,
+          "pmLiveSignedUsd": 779.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76577.6,
+          "feeEquivalentPriceUsd": 77.36
+        },
+        "45": {
+          "at": 1793894592920,
+          "deltaPrice": -1409.0,
+          "pmLiveSignedUsd": 1409.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75947.6,
+          "feeEquivalentPriceUsd": 77.36
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:19:42",
+      "ts": 1793891982886,
+      "price": 77420.1,
+      "pm3": -139.1,
+      "pm5": 286.7,
+      "pmLive": -129.8,
+      "pattern": "PM3_LIVE_VS_PM5",
+      "quality": "CONTESTED",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793892162890,
+          "deltaPrice": -440.0,
+          "pmLiveSignedUsd": 440.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76980.1,
+          "feeEquivalentPriceUsd": 77.42
+        },
+        "15": {
+          "at": 1793892882897,
+          "deltaPrice": -803.2,
+          "pmLiveSignedUsd": 803.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76616.9,
+          "feeEquivalentPriceUsd": 77.42
+        },
+        "45": {
+          "at": 1793894682921,
+          "deltaPrice": -1663.1,
+          "pmLiveSignedUsd": 1663.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75757,
+          "feeEquivalentPriceUsd": 77.42
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:43:12",
+      "ts": 1793893392907,
+      "price": 76400.1,
+      "pm3": -118.3,
+      "pm5": -125.7,
+      "pmLive": 126.2,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793893572908,
+          "deltaPrice": -289.0,
+          "pmLiveSignedUsd": -289.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76111.1,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "15": {
+          "at": 1793894292920,
+          "deltaPrice": -442.6,
+          "pmLiveSignedUsd": -442.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75957.5,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "45": {
+          "at": 1793896092945,
+          "deltaPrice": 269.6,
+          "pmLiveSignedUsd": 269.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76669.7,
+          "feeEquivalentPriceUsd": 76.4
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:53:42",
+      "ts": 1793894022915,
+      "price": 75641.1,
+      "pm3": -277.7,
+      "pm5": -549.8,
+      "pmLive": 104.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793894202919,
+          "deltaPrice": 497.0,
+          "pmLiveSignedUsd": 497.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76138.1,
+          "feeEquivalentPriceUsd": 75.64
+        },
+        "15": {
+          "at": 1793894922925,
+          "deltaPrice": 101.1,
+          "pmLiveSignedUsd": 101.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75742.2,
+          "feeEquivalentPriceUsd": 75.64
+        },
+        "45": {
+          "at": 1793896722955,
+          "deltaPrice": 1078.9,
+          "pmLiveSignedUsd": 1078.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76720,
+          "feeEquivalentPriceUsd": 75.64
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:57:42",
+      "ts": 1793894262920,
+      "price": 75913,
+      "pm3": 175.2,
+      "pm5": 376.7,
+      "pmLive": -141,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793894442920,
+          "deltaPrice": 84.9,
+          "pmLiveSignedUsd": -84.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75997.9,
+          "feeEquivalentPriceUsd": 75.91
+        },
+        "15": {
+          "at": 1793895162926,
+          "deltaPrice": 119.6,
+          "pmLiveSignedUsd": -119.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76032.6,
+          "feeEquivalentPriceUsd": 75.91
+        },
+        "45": {
+          "at": 1793896962961,
+          "deltaPrice": 721,
+          "pmLiveSignedUsd": -721,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76634,
+          "feeEquivalentPriceUsd": 75.91
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 14:32:14",
+      "ts": 1793971934641,
+      "price": 75799.5,
+      "pm3": -201.4,
+      "pm5": -121.9,
+      "pmLive": 139.6,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "INEFFICIENT",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793972114642,
+          "deltaPrice": 6.6,
+          "pmLiveSignedUsd": 6.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75806.1,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "15": {
+          "at": 1793972834652,
+          "deltaPrice": 92.1,
+          "pmLiveSignedUsd": 92.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75891.6,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "45": {
+          "at": 1793974634693,
+          "deltaPrice": -209.4,
+          "pmLiveSignedUsd": -209.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75590.1,
+          "feeEquivalentPriceUsd": 75.8
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 15:39:14",
+      "ts": 1793975954716,
+      "price": 75651.9,
+      "pm3": 145.1,
+      "pm5": 361.9,
+      "pmLive": -157.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793976134720,
+          "deltaPrice": 235.5,
+          "pmLiveSignedUsd": -235.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75887.4,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "15": {
+          "at": 1793976854730,
+          "deltaPrice": 250.1,
+          "pmLiveSignedUsd": -250.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "45": {
+          "at": 1793978654763,
+          "deltaPrice": -69.3,
+          "pmLiveSignedUsd": 69.3,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75582.6,
+          "feeEquivalentPriceUsd": 75.65
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 16:06:44",
+      "ts": 1793977604745,
+      "price": 75146.1,
+      "pm3": -125.4,
+      "pm5": -296.3,
+      "pmLive": 166.5,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "POWERFUL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793977784748,
+          "deltaPrice": 95.5,
+          "pmLiveSignedUsd": 95.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75241.6,
+          "feeEquivalentPriceUsd": 75.15
+        },
+        "15": {
+          "at": 1793978504761,
+          "deltaPrice": 458.4,
+          "pmLiveSignedUsd": 458.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75604.5,
+          "feeEquivalentPriceUsd": 75.15
+        },
+        "45": {
+          "at": 1793980304786,
+          "deltaPrice": 665.4,
+          "pmLiveSignedUsd": 665.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75811.5,
+          "feeEquivalentPriceUsd": 75.15
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 16:08:14",
+      "ts": 1793977694747,
+      "price": 75128.9,
+      "pm3": 189.4,
+      "pm5": -142.6,
+      "pmLive": -187.9,
+      "pattern": "PM5_LIVE_VS_PM3",
+      "quality": "CONTESTED",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793977874749,
+          "deltaPrice": 160.3,
+          "pmLiveSignedUsd": -160.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75289.2,
+          "feeEquivalentPriceUsd": 75.13
+        },
+        "15": {
+          "at": 1793978594762,
+          "deltaPrice": 516.9,
+          "pmLiveSignedUsd": -516.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75645.8,
+          "feeEquivalentPriceUsd": 75.13
+        },
+        "45": {
+          "at": 1793980394788,
+          "deltaPrice": 617.2,
+          "pmLiveSignedUsd": -617.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75746.1,
+          "feeEquivalentPriceUsd": 75.13
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 16:41:14",
+      "ts": 1793979674775,
+      "price": 75487,
+      "pm3": 103.9,
+      "pm5": 173.3,
+      "pmLive": -123.9,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "quality": "EXCEPTIONAL",
+      "intensityPrior1h": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793979854779,
+          "deltaPrice": 135,
+          "pmLiveSignedUsd": -135,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75622,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "15": {
+          "at": 1793980574791,
+          "deltaPrice": 225.9,
+          "pmLiveSignedUsd": -225.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75712.9,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "45": {
+          "at": 1793982374846,
+          "deltaPrice": 258.6,
+          "pmLiveSignedUsd": -258.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75745.6,
+          "feeEquivalentPriceUsd": 75.49
+        }
+      }
+    }
+  ],
+  "globallyIndependentContradictionsN": 11,
+  "globallyIndependentOutcomes": {
+    "3": {
+      "eligible": 11,
+      "valid": 11,
+      "favorable": 2,
+      "pctFavorable": 18.2,
+      "medianSignedUsd": -41.2,
+      "afterFeeEquivalent": 1,
+      "afterFeePct": 9.1
+    },
+    "15": {
+      "eligible": 11,
+      "valid": 11,
+      "favorable": 4,
+      "pctFavorable": 36.4,
+      "medianSignedUsd": -44.1,
+      "afterFeeEquivalent": 3,
+      "afterFeePct": 27.3
+    },
+    "45": {
+      "eligible": 11,
+      "valid": 11,
+      "favorable": 6,
+      "pctFavorable": 54.5,
+      "medianSignedUsd": 21.9,
+      "afterFeeEquivalent": 4,
+      "afterFeePct": 36.4
+    }
+  },
+  "globalEvents": [
+    {
+      "local": "2026-11-02 14:38:58",
+      "price": 78091.8,
+      "pm3": 451.9,
+      "pm5": 490.6,
+      "pmLive": -117.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793626918125,
+          "deltaPrice": 24.6,
+          "pmLiveSignedUsd": -24.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78116.4,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "15": {
+          "at": 1793627638143,
+          "deltaPrice": -141.9,
+          "pmLiveSignedUsd": 141.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "45": {
+          "at": 1793629438179,
+          "deltaPrice": -261.5,
+          "pmLiveSignedUsd": 261.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77830.3,
+          "feeEquivalentPriceUsd": 78.09
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 04:03:30",
+      "price": 75943.6,
+      "pm3": -134.8,
+      "pm5": -474.2,
+      "pmLive": 112.6,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793761590692,
+          "deltaPrice": -41.2,
+          "pmLiveSignedUsd": -41.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902.4,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "15": {
+          "at": 1793762310710,
+          "deltaPrice": 19.6,
+          "pmLiveSignedUsd": 19.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75963.2,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "45": {
+          "at": 1793764110741,
+          "deltaPrice": 360.3,
+          "pmLiveSignedUsd": 360.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76303.9,
+          "feeEquivalentPriceUsd": 75.94
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 05:55:30",
+      "price": 77371.3,
+      "pm3": 187.3,
+      "pm5": 143.1,
+      "pmLive": -102.4,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793768310840,
+          "deltaPrice": 1.8,
+          "pmLiveSignedUsd": -1.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77373.1,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "15": {
+          "at": 1793769030855,
+          "deltaPrice": 10.7,
+          "pmLiveSignedUsd": -10.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77382,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "45": {
+          "at": 1793770830896,
+          "deltaPrice": 315.6,
+          "pmLiveSignedUsd": -315.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77686.9,
+          "feeEquivalentPriceUsd": 77.37
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 06:52:30",
+      "price": 77971.8,
+      "pm3": 158,
+      "pm5": 156.2,
+      "pmLive": -134.4,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793771730910,
+          "deltaPrice": -109.9,
+          "pmLiveSignedUsd": 109.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77861.9,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "15": {
+          "at": 1793772450922,
+          "deltaPrice": -154.7,
+          "pmLiveSignedUsd": 154.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77817.1,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "45": {
+          "at": 1793774250965,
+          "deltaPrice": -21.9,
+          "pmLiveSignedUsd": 21.9,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 77.97
+        }
+      }
+    },
+    {
+      "local": "2026-11-04 16:06:41",
+      "price": 80275.7,
+      "pm3": 652.5,
+      "pm5": 733.8,
+      "pmLive": -172.3,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793804981289,
+          "deltaPrice": 260.8,
+          "pmLiveSignedUsd": -260.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80536.5,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "15": {
+          "at": 1793805701305,
+          "deltaPrice": 451.0,
+          "pmLiveSignedUsd": -451.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80726.7,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "45": {
+          "at": 1793807501328,
+          "deltaPrice": 152.3,
+          "pmLiveSignedUsd": -152.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80428,
+          "feeEquivalentPriceUsd": 80.28
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 00:02:41",
+      "price": 80505.7,
+      "pm3": -158.3,
+      "pm5": -212.5,
+      "pmLive": 105.1,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793833541828,
+          "deltaPrice": -9.3,
+          "pmLiveSignedUsd": -9.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80496.4,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "15": {
+          "at": 1793834261850,
+          "deltaPrice": -44.1,
+          "pmLiveSignedUsd": -44.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80461.6,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "45": {
+          "at": 1793836061887,
+          "deltaPrice": 124.4,
+          "pmLiveSignedUsd": 124.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80630.1,
+          "feeEquivalentPriceUsd": 80.51
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 15:42:12",
+      "price": 79053.4,
+      "pm3": -144.5,
+      "pm5": -129,
+      "pmLive": 130.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793889912848,
+          "deltaPrice": -207.7,
+          "pmLiveSignedUsd": -207.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78845.7,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "15": {
+          "at": 1793890632858,
+          "deltaPrice": -793.1,
+          "pmLiveSignedUsd": -793.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78260.3,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "45": {
+          "at": 1793892432893,
+          "deltaPrice": -2833.4,
+          "pmLiveSignedUsd": -2833.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76220,
+          "feeEquivalentPriceUsd": 79.05
+        }
+      }
+    },
+    {
+      "local": "2026-11-05 16:43:12",
+      "price": 76400.1,
+      "pm3": -118.3,
+      "pm5": -125.7,
+      "pmLive": 126.2,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793893572908,
+          "deltaPrice": -289.0,
+          "pmLiveSignedUsd": -289.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76111.1,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "15": {
+          "at": 1793894292920,
+          "deltaPrice": -442.6,
+          "pmLiveSignedUsd": -442.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75957.5,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "45": {
+          "at": 1793896092945,
+          "deltaPrice": 269.6,
+          "pmLiveSignedUsd": 269.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76669.7,
+          "feeEquivalentPriceUsd": 76.4
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 14:32:14",
+      "price": 75799.5,
+      "pm3": -201.4,
+      "pm5": -121.9,
+      "pmLive": 139.6,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793972114642,
+          "deltaPrice": 6.6,
+          "pmLiveSignedUsd": 6.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75806.1,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "15": {
+          "at": 1793972834652,
+          "deltaPrice": 92.1,
+          "pmLiveSignedUsd": 92.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75891.6,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "45": {
+          "at": 1793974634693,
+          "deltaPrice": -209.4,
+          "pmLiveSignedUsd": -209.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75590.1,
+          "feeEquivalentPriceUsd": 75.8
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 15:39:14",
+      "price": 75651.9,
+      "pm3": 145.1,
+      "pm5": 361.9,
+      "pmLive": -157.8,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793976134720,
+          "deltaPrice": 235.5,
+          "pmLiveSignedUsd": -235.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75887.4,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "15": {
+          "at": 1793976854730,
+          "deltaPrice": 250.1,
+          "pmLiveSignedUsd": -250.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "45": {
+          "at": 1793978654763,
+          "deltaPrice": -69.3,
+          "pmLiveSignedUsd": 69.3,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75582.6,
+          "feeEquivalentPriceUsd": 75.65
+        }
+      }
+    },
+    {
+      "local": "2026-11-06 16:41:14",
+      "price": 75487,
+      "pm3": 103.9,
+      "pm5": 173.3,
+      "pmLive": -123.9,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "stateAtEvent": "HIGH",
+      "horizons": {
+        "3": {
+          "at": 1793979854779,
+          "deltaPrice": 135,
+          "pmLiveSignedUsd": -135,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75622,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "15": {
+          "at": 1793980574791,
+          "deltaPrice": 225.9,
+          "pmLiveSignedUsd": -225.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75712.9,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "45": {
+          "at": 1793982374846,
+          "deltaPrice": 258.6,
+          "pmLiveSignedUsd": -258.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75745.6,
+          "feeEquivalentPriceUsd": 75.49
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "ts": 1793535356340,
+      "price": 77767.4,
+      "pm3": -148.3,
+      "pm5": -170.5,
+      "pmLive": -112.7,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "short",
+      "flowBtcSec": 1.7401,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-01 13:15:56",
+      "regime": {
+        "intensity": "LOW",
+        "flowPriorOneHour": 0.1486,
+        "coverage": 120,
+        "asOf": 1793535356340,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793535536344,
+          "deltaPrice": -23.2,
+          "pmLiveSignedUsd": 23.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77744.2,
+          "feeEquivalentPriceUsd": 77.77
+        },
+        "15": {
+          "at": 1793536256357,
+          "deltaPrice": 12.6,
+          "pmLiveSignedUsd": -12.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77780,
+          "feeEquivalentPriceUsd": 77.77
+        },
+        "45": {
+          "at": 1793538056436,
+          "deltaPrice": 99.4,
+          "pmLiveSignedUsd": -99.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77866.8,
+          "feeEquivalentPriceUsd": 77.77
+        }
+      }
+    },
+    {
+      "ts": 1793542706577,
+      "price": 78086.1,
+      "pm3": 124.9,
+      "pm5": 119.9,
+      "pmLive": 133.3,
+      "quality": "EXCEPTIONAL",
+      "marketState": "LOW_EDGE_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 2.9753,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-01 15:18:26",
+      "regime": {
+        "intensity": "LOW",
+        "flowPriorOneHour": 0.2206,
+        "coverage": 120,
+        "asOf": 1793542706577,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793542886581,
+          "deltaPrice": -70.4,
+          "pmLiveSignedUsd": -70.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78015.7,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "15": {
+          "at": 1793543606588,
+          "deltaPrice": -106.1,
+          "pmLiveSignedUsd": -106.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77980,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "45": {
+          "at": 1793545406611,
+          "deltaPrice": -97.0,
+          "pmLiveSignedUsd": -97.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77989.1,
+          "feeEquivalentPriceUsd": 78.09
+        }
+      }
+    },
+    {
+      "ts": 1793560166858,
+      "price": 77649.5,
+      "pm3": -207.4,
+      "pm5": -219.2,
+      "pmLive": -201.8,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "short",
+      "flowBtcSec": 13.0574,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-01 20:09:26",
+      "regime": {
+        "intensity": "LOW",
+        "flowPriorOneHour": 0.1298,
+        "coverage": 120,
+        "asOf": 1793560166858,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793560346864,
+          "deltaPrice": 46.5,
+          "pmLiveSignedUsd": -46.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77696,
+          "feeEquivalentPriceUsd": 77.65
+        },
+        "15": {
+          "at": 1793561066876,
+          "deltaPrice": 94.5,
+          "pmLiveSignedUsd": -94.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77744,
+          "feeEquivalentPriceUsd": 77.65
+        },
+        "45": {
+          "at": 1793562866894,
+          "deltaPrice": 75.7,
+          "pmLiveSignedUsd": -75.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77725.2,
+          "feeEquivalentPriceUsd": 77.65
+        }
+      }
+    },
+    {
+      "ts": 1793576307129,
+      "price": 78297.7,
+      "pm3": 109.7,
+      "pm5": 169.8,
+      "pmLive": 111,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 4.3285,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-02 00:38:27",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.2698,
+        "coverage": 120,
+        "asOf": 1793576307129,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793576487132,
+          "deltaPrice": -49.1,
+          "pmLiveSignedUsd": -49.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78248.6,
+          "feeEquivalentPriceUsd": 78.3
+        },
+        "15": {
+          "at": 1793577207141,
+          "deltaPrice": 5.2,
+          "pmLiveSignedUsd": 5.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 78302.9,
+          "feeEquivalentPriceUsd": 78.3
+        },
+        "45": {
+          "at": 1793579007180,
+          "deltaPrice": -277.6,
+          "pmLiveSignedUsd": -277.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78020.1,
+          "feeEquivalentPriceUsd": 78.3
+        }
+      }
+    },
+    {
+      "ts": 1793589897404,
+      "price": 78667.5,
+      "pm3": 160.5,
+      "pm5": 169.2,
+      "pmLive": 117.6,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 3.3985,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-02 04:24:57",
+      "regime": {
+        "intensity": "LOW",
+        "flowPriorOneHour": 0.2224,
+        "coverage": 120,
+        "asOf": 1793589897404,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793590077405,
+          "deltaPrice": -44.4,
+          "pmLiveSignedUsd": -44.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78623.1,
+          "feeEquivalentPriceUsd": 78.67
+        },
+        "15": {
+          "at": 1793590797437,
+          "deltaPrice": 26.6,
+          "pmLiveSignedUsd": 26.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 78694.1,
+          "feeEquivalentPriceUsd": 78.67
+        },
+        "45": {
+          "at": 1793592597461,
+          "deltaPrice": -121.7,
+          "pmLiveSignedUsd": -121.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78545.8,
+          "feeEquivalentPriceUsd": 78.67
+        }
+      }
+    },
+    {
+      "ts": 1793626618124,
+      "price": 77815.5,
+      "pm3": 214.3,
+      "pm5": 192.1,
+      "pmLive": 175.6,
+      "quality": "EXCEPTIONAL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 19.4983,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-02 14:36:58",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.599,
+        "coverage": 120,
+        "asOf": 1793626618124,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793626798125,
+          "deltaPrice": 243.2,
+          "pmLiveSignedUsd": 243.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 78058.7,
+          "feeEquivalentPriceUsd": 77.82
+        },
+        "15": {
+          "at": 1793627518143,
+          "deltaPrice": 106.6,
+          "pmLiveSignedUsd": 106.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77922.1,
+          "feeEquivalentPriceUsd": 77.82
+        },
+        "45": {
+          "at": 1793629318178,
+          "deltaPrice": 51.2,
+          "pmLiveSignedUsd": 51.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77866.7,
+          "feeEquivalentPriceUsd": 77.82
+        }
+      }
+    },
+    {
+      "ts": 1793626738125,
+      "price": 78091.8,
+      "pm3": 451.9,
+      "pm5": 490.6,
+      "pmLive": -117.1,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 5.8381,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-02 14:38:58",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.6355,
+        "coverage": 120,
+        "asOf": 1793626738125,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793626918125,
+          "deltaPrice": 24.6,
+          "pmLiveSignedUsd": -24.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78116.4,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "15": {
+          "at": 1793627638143,
+          "deltaPrice": -141.9,
+          "pmLiveSignedUsd": 141.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 78.09
+        },
+        "45": {
+          "at": 1793629438179,
+          "deltaPrice": -261.5,
+          "pmLiveSignedUsd": 261.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77830.3,
+          "feeEquivalentPriceUsd": 78.09
+        }
+      }
+    },
+    {
+      "ts": 1793630278191,
+      "price": 77881,
+      "pm3": -162.9,
+      "pm5": -125.1,
+      "pmLive": -119.9,
+      "quality": "EXCEPTIONAL",
+      "marketState": "LOW_EDGE_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 0.9952,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-02 15:37:58",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.7802,
+        "coverage": 120,
+        "asOf": 1793630278191,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793630458192,
+          "deltaPrice": 25.6,
+          "pmLiveSignedUsd": -25.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77906.6,
+          "feeEquivalentPriceUsd": 77.88
+        },
+        "15": {
+          "at": 1793631178205,
+          "deltaPrice": -5.2,
+          "pmLiveSignedUsd": 5.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77875.8,
+          "feeEquivalentPriceUsd": 77.88
+        },
+        "45": {
+          "at": 1793632978256,
+          "deltaPrice": 9.6,
+          "pmLiveSignedUsd": -9.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77890.6,
+          "feeEquivalentPriceUsd": 77.88
+        }
+      }
+    },
+    {
+      "ts": 1793635108297,
+      "price": 77349.4,
+      "pm3": -317.6,
+      "pm5": -361.8,
+      "pmLive": -233.8,
+      "quality": "POWERFUL",
+      "marketState": "LOW_EDGE_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 11.4546,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-02 16:58:28",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.5182,
+        "coverage": 120,
+        "asOf": 1793635108297,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793635288299,
+          "deltaPrice": 159.0,
+          "pmLiveSignedUsd": -159.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77508.4,
+          "feeEquivalentPriceUsd": 77.35
+        },
+        "15": {
+          "at": 1793636008304,
+          "deltaPrice": 50.6,
+          "pmLiveSignedUsd": -50.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77400,
+          "feeEquivalentPriceUsd": 77.35
+        },
+        "45": {
+          "at": 1793637808326,
+          "deltaPrice": 130.4,
+          "pmLiveSignedUsd": -130.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77479.8,
+          "feeEquivalentPriceUsd": 77.35
+        }
+      }
+    },
+    {
+      "ts": 1793712599577,
+      "price": 77636.4,
+      "pm3": 226.8,
+      "pm5": 324,
+      "pmLive": 105,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 7.0173,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-03 14:29:59",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.4881,
+        "coverage": 120,
+        "asOf": 1793712599577,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793712779579,
+          "deltaPrice": 119.0,
+          "pmLiveSignedUsd": 119.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77755.4,
+          "feeEquivalentPriceUsd": 77.64
+        },
+        "15": {
+          "at": 1793713499591,
+          "deltaPrice": -58.1,
+          "pmLiveSignedUsd": -58.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77578.3,
+          "feeEquivalentPriceUsd": 77.64
+        },
+        "45": {
+          "at": 1793715299619,
+          "deltaPrice": -418.2,
+          "pmLiveSignedUsd": -418.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77218.2,
+          "feeEquivalentPriceUsd": 77.64
+        }
+      }
+    },
+    {
+      "ts": 1793716229637,
+      "price": 77269.8,
+      "pm3": 115.5,
+      "pm5": 104.9,
+      "pmLive": 149.7,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 2.2062,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-03 15:30:29",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.9468,
+        "coverage": 120,
+        "asOf": 1793716229637,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793716409640,
+          "deltaPrice": 14.0,
+          "pmLiveSignedUsd": 14.0,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77283.8,
+          "feeEquivalentPriceUsd": 77.27
+        },
+        "15": {
+          "at": 1793717129646,
+          "deltaPrice": 103.8,
+          "pmLiveSignedUsd": 103.8,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77373.6,
+          "feeEquivalentPriceUsd": 77.27
+        },
+        "45": {
+          "at": 1793718929677,
+          "deltaPrice": 94.3,
+          "pmLiveSignedUsd": 94.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77364.1,
+          "feeEquivalentPriceUsd": 77.27
+        }
+      }
+    },
+    {
+      "ts": 1793751630339,
+      "price": 77121.3,
+      "pm3": -143.9,
+      "pm5": -289.4,
+      "pmLive": -110.4,
+      "quality": "POWERFUL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "short",
+      "flowBtcSec": 6.0594,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 01:20:30",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.4841,
+        "coverage": 120,
+        "asOf": 1793751630339,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793751810342,
+          "deltaPrice": 4.9,
+          "pmLiveSignedUsd": -4.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77126.2,
+          "feeEquivalentPriceUsd": 77.12
+        },
+        "15": {
+          "at": 1793752530367,
+          "deltaPrice": -158.4,
+          "pmLiveSignedUsd": 158.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76962.9,
+          "feeEquivalentPriceUsd": 77.12
+        },
+        "45": {
+          "at": 1793754330448,
+          "deltaPrice": -206.0,
+          "pmLiveSignedUsd": 206.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76915.3,
+          "feeEquivalentPriceUsd": 77.12
+        }
+      }
+    },
+    {
+      "ts": 1793754360448,
+      "price": 76804.5,
+      "pm3": -230.1,
+      "pm5": -377.1,
+      "pmLive": -110.8,
+      "quality": "POWERFUL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 10.9279,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 02:06:00",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.8445,
+        "coverage": 120,
+        "asOf": 1793754360448,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793754540455,
+          "deltaPrice": 202.0,
+          "pmLiveSignedUsd": -202.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77006.5,
+          "feeEquivalentPriceUsd": 76.8
+        },
+        "15": {
+          "at": 1793755260481,
+          "deltaPrice": 107.4,
+          "pmLiveSignedUsd": -107.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76911.9,
+          "feeEquivalentPriceUsd": 76.8
+        },
+        "45": {
+          "at": 1793757060531,
+          "deltaPrice": 55.5,
+          "pmLiveSignedUsd": -55.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76860,
+          "feeEquivalentPriceUsd": 76.8
+        }
+      }
+    },
+    {
+      "ts": 1793761200673,
+      "price": 76135.4,
+      "pm3": -379.7,
+      "pm5": -440.8,
+      "pmLive": -233.4,
+      "quality": "POWERFUL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 18.4933,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 04:00:00",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.695,
+        "coverage": 120,
+        "asOf": 1793761200673,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793761380678,
+          "deltaPrice": -304.4,
+          "pmLiveSignedUsd": 304.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75831,
+          "feeEquivalentPriceUsd": 76.14
+        },
+        "15": {
+          "at": 1793762100705,
+          "deltaPrice": -260.9,
+          "pmLiveSignedUsd": 260.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75874.5,
+          "feeEquivalentPriceUsd": 76.14
+        },
+        "45": {
+          "at": 1793763900739,
+          "deltaPrice": 123.3,
+          "pmLiveSignedUsd": -123.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76258.7,
+          "feeEquivalentPriceUsd": 76.14
+        }
+      }
+    },
+    {
+      "ts": 1793761410678,
+      "price": 75943.6,
+      "pm3": -134.8,
+      "pm5": -474.2,
+      "pmLive": 112.6,
+      "quality": "INEFFICIENT",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 7.4613,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-04 04:03:30",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.7154,
+        "coverage": 120,
+        "asOf": 1793761410678,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793761590692,
+          "deltaPrice": -41.2,
+          "pmLiveSignedUsd": -41.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902.4,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "15": {
+          "at": 1793762310710,
+          "deltaPrice": 19.6,
+          "pmLiveSignedUsd": 19.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75963.2,
+          "feeEquivalentPriceUsd": 75.94
+        },
+        "45": {
+          "at": 1793764110741,
+          "deltaPrice": 360.3,
+          "pmLiveSignedUsd": 360.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76303.9,
+          "feeEquivalentPriceUsd": 75.94
+        }
+      }
+    },
+    {
+      "ts": 1793765430772,
+      "price": 76831.9,
+      "pm3": 177.7,
+      "pm5": 200.9,
+      "pmLive": 124.8,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 1.4676,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 05:10:30",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.4656,
+        "coverage": 120,
+        "asOf": 1793765430772,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793765610776,
+          "deltaPrice": 104.2,
+          "pmLiveSignedUsd": 104.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76936.1,
+          "feeEquivalentPriceUsd": 76.83
+        },
+        "15": {
+          "at": 1793766330805,
+          "deltaPrice": -133.5,
+          "pmLiveSignedUsd": -133.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76698.4,
+          "feeEquivalentPriceUsd": 76.83
+        },
+        "45": {
+          "at": 1793768130837,
+          "deltaPrice": 539.4,
+          "pmLiveSignedUsd": 539.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77371.3,
+          "feeEquivalentPriceUsd": 76.83
+        }
+      }
+    },
+    {
+      "ts": 1793768130837,
+      "price": 77371.3,
+      "pm3": 187.3,
+      "pm5": 143.1,
+      "pmLive": -102.4,
+      "quality": "INEFFICIENT",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 4.3009,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-04 05:55:30",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.2916,
+        "coverage": 120,
+        "asOf": 1793768130837,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793768310840,
+          "deltaPrice": 1.8,
+          "pmLiveSignedUsd": -1.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77373.1,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "15": {
+          "at": 1793769030855,
+          "deltaPrice": 10.7,
+          "pmLiveSignedUsd": -10.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77382,
+          "feeEquivalentPriceUsd": 77.37
+        },
+        "45": {
+          "at": 1793770830896,
+          "deltaPrice": 315.6,
+          "pmLiveSignedUsd": -315.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77686.9,
+          "feeEquivalentPriceUsd": 77.37
+        }
+      }
+    },
+    {
+      "ts": 1793770560889,
+      "price": 77634.2,
+      "pm3": 194.5,
+      "pm5": 254.1,
+      "pmLive": 114.6,
+      "quality": "POWERFUL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 17.4303,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 06:36:00",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.3111,
+        "coverage": 120,
+        "asOf": 1793770560889,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793770740895,
+          "deltaPrice": -42.0,
+          "pmLiveSignedUsd": -42.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 77592.2,
+          "feeEquivalentPriceUsd": 77.63
+        },
+        "15": {
+          "at": 1793771460904,
+          "deltaPrice": 403.4,
+          "pmLiveSignedUsd": 403.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 78037.6,
+          "feeEquivalentPriceUsd": 77.63
+        },
+        "45": {
+          "at": 1793773260939,
+          "deltaPrice": 180.8,
+          "pmLiveSignedUsd": 180.8,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77815,
+          "feeEquivalentPriceUsd": 77.63
+        }
+      }
+    },
+    {
+      "ts": 1793771550905,
+      "price": 77971.8,
+      "pm3": 158,
+      "pm5": 156.2,
+      "pmLive": -134.4,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 2.18,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-04 06:52:30",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.4194,
+        "coverage": 119,
+        "asOf": 1793771550905,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793771730910,
+          "deltaPrice": -109.9,
+          "pmLiveSignedUsd": 109.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77861.9,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "15": {
+          "at": 1793772450922,
+          "deltaPrice": -154.7,
+          "pmLiveSignedUsd": 154.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77817.1,
+          "feeEquivalentPriceUsd": 77.97
+        },
+        "45": {
+          "at": 1793774250965,
+          "deltaPrice": -21.9,
+          "pmLiveSignedUsd": 21.9,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 77949.9,
+          "feeEquivalentPriceUsd": 77.97
+        }
+      }
+    },
+    {
+      "ts": 1793802641242,
+      "price": 78499.8,
+      "pm3": 207.2,
+      "pm5": 163.6,
+      "pmLive": 185,
+      "quality": "EXCEPTIONAL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 2.474,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 15:30:41",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.2738,
+        "coverage": 120,
+        "asOf": 1793802641242,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793802821247,
+          "deltaPrice": 90.1,
+          "pmLiveSignedUsd": 90.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 78589.9,
+          "feeEquivalentPriceUsd": 78.5
+        },
+        "15": {
+          "at": 1793803541256,
+          "deltaPrice": 837.9,
+          "pmLiveSignedUsd": 837.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 79337.7,
+          "feeEquivalentPriceUsd": 78.5
+        },
+        "45": {
+          "at": 1793805341295,
+          "deltaPrice": 2350.9,
+          "pmLiveSignedUsd": 2350.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80850.7,
+          "feeEquivalentPriceUsd": 78.5
+        }
+      }
+    },
+    {
+      "ts": 1793804801286,
+      "price": 80275.7,
+      "pm3": 652.5,
+      "pm5": 733.8,
+      "pmLive": -172.3,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 6.4377,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-04 16:06:41",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.2052,
+        "coverage": 119,
+        "asOf": 1793804801286,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793804981289,
+          "deltaPrice": 260.8,
+          "pmLiveSignedUsd": -260.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80536.5,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "15": {
+          "at": 1793805701305,
+          "deltaPrice": 451.0,
+          "pmLiveSignedUsd": -451.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80726.7,
+          "feeEquivalentPriceUsd": 80.28
+        },
+        "45": {
+          "at": 1793807501328,
+          "deltaPrice": 152.3,
+          "pmLiveSignedUsd": -152.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80428,
+          "feeEquivalentPriceUsd": 80.28
+        }
+      }
+    },
+    {
+      "ts": 1793805341295,
+      "price": 80850.7,
+      "pm3": 103.1,
+      "pm5": 310.6,
+      "pmLive": 142.7,
+      "quality": "POWERFUL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 3.5988,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 16:15:41",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 2.9172,
+        "coverage": 119,
+        "asOf": 1793805341295,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793805521301,
+          "deltaPrice": 64.2,
+          "pmLiveSignedUsd": 64.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 80914.9,
+          "feeEquivalentPriceUsd": 80.85
+        },
+        "15": {
+          "at": 1793806241311,
+          "deltaPrice": -236.4,
+          "pmLiveSignedUsd": -236.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80614.3,
+          "feeEquivalentPriceUsd": 80.85
+        },
+        "45": {
+          "at": 1793808041334,
+          "deltaPrice": -399.7,
+          "pmLiveSignedUsd": -399.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80451,
+          "feeEquivalentPriceUsd": 80.85
+        }
+      }
+    },
+    {
+      "ts": 1793819111574,
+      "price": 80082.9,
+      "pm3": -125.4,
+      "pm5": -226.1,
+      "pmLive": -123.7,
+      "quality": "POWERFUL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 6.2352,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-04 20:05:11",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.4612,
+        "coverage": 120,
+        "asOf": 1793819111574,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793819291575,
+          "deltaPrice": 238.0,
+          "pmLiveSignedUsd": -238.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80320.9,
+          "feeEquivalentPriceUsd": 80.08
+        },
+        "15": {
+          "at": 1793820011598,
+          "deltaPrice": 148.4,
+          "pmLiveSignedUsd": -148.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80231.3,
+          "feeEquivalentPriceUsd": 80.08
+        },
+        "45": {
+          "at": 1793821811629,
+          "deltaPrice": -51.2,
+          "pmLiveSignedUsd": 51.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 80031.7,
+          "feeEquivalentPriceUsd": 80.08
+        }
+      }
+    },
+    {
+      "ts": 1793833361826,
+      "price": 80505.7,
+      "pm3": -158.3,
+      "pm5": -212.5,
+      "pmLive": 105.1,
+      "quality": "POWERFUL",
+      "marketState": "LOW_EDGE_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 1.5427,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-05 00:02:41",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.5671,
+        "coverage": 120,
+        "asOf": 1793833361826,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793833541828,
+          "deltaPrice": -9.3,
+          "pmLiveSignedUsd": -9.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80496.4,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "15": {
+          "at": 1793834261850,
+          "deltaPrice": -44.1,
+          "pmLiveSignedUsd": -44.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 80461.6,
+          "feeEquivalentPriceUsd": 80.51
+        },
+        "45": {
+          "at": 1793836061887,
+          "deltaPrice": 124.4,
+          "pmLiveSignedUsd": 124.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 80630.1,
+          "feeEquivalentPriceUsd": 80.51
+        }
+      }
+    },
+    {
+      "ts": 1793882382702,
+      "price": 79727.2,
+      "pm3": -164.9,
+      "pm5": -219.9,
+      "pmLive": -116.4,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 6.7731,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 13:39:42",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.5095,
+        "coverage": 119,
+        "asOf": 1793882382702,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793882562706,
+          "deltaPrice": -55.6,
+          "pmLiveSignedUsd": 55.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 79671.6,
+          "feeEquivalentPriceUsd": 79.73
+        },
+        "15": {
+          "at": 1793883282725,
+          "deltaPrice": -127.3,
+          "pmLiveSignedUsd": 127.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 79599.9,
+          "feeEquivalentPriceUsd": 79.73
+        },
+        "45": {
+          "at": 1793885082752,
+          "deltaPrice": -52.7,
+          "pmLiveSignedUsd": 52.7,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 79674.5,
+          "feeEquivalentPriceUsd": 79.73
+        }
+      }
+    },
+    {
+      "ts": 1793887062792,
+      "price": 79617.5,
+      "pm3": -160.5,
+      "pm5": -139,
+      "pmLive": -115.7,
+      "quality": "POWERFUL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 4.4443,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 14:57:42",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.7782,
+        "coverage": 120,
+        "asOf": 1793887062792,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793887242794,
+          "deltaPrice": 29.9,
+          "pmLiveSignedUsd": -29.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 79647.4,
+          "feeEquivalentPriceUsd": 79.62
+        },
+        "15": {
+          "at": 1793887962811,
+          "deltaPrice": -97.5,
+          "pmLiveSignedUsd": 97.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 79520,
+          "feeEquivalentPriceUsd": 79.62
+        },
+        "45": {
+          "at": 1793889762846,
+          "deltaPrice": -603.4,
+          "pmLiveSignedUsd": 603.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 79014.1,
+          "feeEquivalentPriceUsd": 79.62
+        }
+      }
+    },
+    {
+      "ts": 1793889732844,
+      "price": 79053.4,
+      "pm3": -144.5,
+      "pm5": -129,
+      "pmLive": 130.8,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 3.3851,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-05 15:42:12",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.188,
+        "coverage": 120,
+        "asOf": 1793889732844,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793889912848,
+          "deltaPrice": -207.7,
+          "pmLiveSignedUsd": -207.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78845.7,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "15": {
+          "at": 1793890632858,
+          "deltaPrice": -793.1,
+          "pmLiveSignedUsd": -793.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 78260.3,
+          "feeEquivalentPriceUsd": 79.05
+        },
+        "45": {
+          "at": 1793892432893,
+          "deltaPrice": -2833.4,
+          "pmLiveSignedUsd": -2833.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76220,
+          "feeEquivalentPriceUsd": 79.05
+        }
+      }
+    },
+    {
+      "ts": 1793890572858,
+      "price": 78374.9,
+      "pm3": -359.5,
+      "pm5": -207.4,
+      "pmLive": -125.8,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 2.8194,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 15:56:12",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.8107,
+        "coverage": 120,
+        "asOf": 1793890572858,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793890752860,
+          "deltaPrice": -141.2,
+          "pmLiveSignedUsd": 141.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 78233.7,
+          "feeEquivalentPriceUsd": 78.37
+        },
+        "15": {
+          "at": 1793891472878,
+          "deltaPrice": -1223.5,
+          "pmLiveSignedUsd": 1223.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 77151.4,
+          "feeEquivalentPriceUsd": 78.37
+        },
+        "45": {
+          "at": 1793893272903,
+          "deltaPrice": -1861.5,
+          "pmLiveSignedUsd": 1861.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76513.4,
+          "feeEquivalentPriceUsd": 78.37
+        }
+      }
+    },
+    {
+      "ts": 1793891982886,
+      "price": 77420.1,
+      "pm3": -139.1,
+      "pm5": 286.7,
+      "pmLive": -129.8,
+      "quality": "CONTESTED",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 5.2038,
+      "pattern": "PM3_LIVE_VS_PM5",
+      "local": "2026-11-05 16:19:42",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 3.4396,
+        "coverage": 120,
+        "asOf": 1793891982886,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793892162890,
+          "deltaPrice": -440.0,
+          "pmLiveSignedUsd": 440.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76980.1,
+          "feeEquivalentPriceUsd": 77.42
+        },
+        "15": {
+          "at": 1793892882897,
+          "deltaPrice": -803.2,
+          "pmLiveSignedUsd": 803.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76616.9,
+          "feeEquivalentPriceUsd": 77.42
+        },
+        "45": {
+          "at": 1793894682921,
+          "deltaPrice": -1663.1,
+          "pmLiveSignedUsd": 1663.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75757,
+          "feeEquivalentPriceUsd": 77.42
+        }
+      }
+    },
+    {
+      "ts": 1793893332905,
+      "price": 76335.9,
+      "pm3": -114.2,
+      "pm5": -224.2,
+      "pmLive": -101.4,
+      "quality": "EASY",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 5.8449,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 16:42:12",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 6.0789,
+        "coverage": 120,
+        "asOf": 1793893332905,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793893512909,
+          "deltaPrice": 8.8,
+          "pmLiveSignedUsd": -8.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76344.7,
+          "feeEquivalentPriceUsd": 76.34
+        },
+        "15": {
+          "at": 1793894232919,
+          "deltaPrice": -281.9,
+          "pmLiveSignedUsd": 281.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76054,
+          "feeEquivalentPriceUsd": 76.34
+        },
+        "45": {
+          "at": 1793896032944,
+          "deltaPrice": 434.1,
+          "pmLiveSignedUsd": -434.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76770,
+          "feeEquivalentPriceUsd": 76.34
+        }
+      }
+    },
+    {
+      "ts": 1793893392907,
+      "price": 76400.1,
+      "pm3": -118.3,
+      "pm5": -125.7,
+      "pmLive": 126.2,
+      "quality": "EXCEPTIONAL",
+      "marketState": "DIRECTIONAL",
+      "mcb15": "long",
+      "flowBtcSec": 1.5413,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-05 16:43:12",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 6.5141,
+        "coverage": 120,
+        "asOf": 1793893392907,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793893572908,
+          "deltaPrice": -289.0,
+          "pmLiveSignedUsd": -289.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76111.1,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "15": {
+          "at": 1793894292920,
+          "deltaPrice": -442.6,
+          "pmLiveSignedUsd": -442.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75957.5,
+          "feeEquivalentPriceUsd": 76.4
+        },
+        "45": {
+          "at": 1793896092945,
+          "deltaPrice": 269.6,
+          "pmLiveSignedUsd": 269.6,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 76669.7,
+          "feeEquivalentPriceUsd": 76.4
+        }
+      }
+    },
+    {
+      "ts": 1793897022960,
+      "price": 76406.8,
+      "pm3": -202.6,
+      "pm5": -329.3,
+      "pmLive": -191.7,
+      "quality": "INEFFICIENT",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 14.0716,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 17:43:42",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 5.5338,
+        "coverage": 120,
+        "asOf": 1793897022960,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793897202963,
+          "deltaPrice": 53.2,
+          "pmLiveSignedUsd": -53.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76460,
+          "feeEquivalentPriceUsd": 76.41
+        },
+        "15": {
+          "at": 1793897922975,
+          "deltaPrice": 5.1,
+          "pmLiveSignedUsd": -5.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76411.9,
+          "feeEquivalentPriceUsd": 76.41
+        },
+        "45": {
+          "at": 1793899723010,
+          "deltaPrice": -442.3,
+          "pmLiveSignedUsd": 442.3,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75964.5,
+          "feeEquivalentPriceUsd": 76.41
+        }
+      }
+    },
+    {
+      "ts": 1793899753011,
+      "price": 75803.2,
+      "pm3": -132.2,
+      "pm5": -223.2,
+      "pmLive": -161.3,
+      "quality": "INEFFICIENT",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 12.7892,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 18:29:13",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 1.211,
+        "coverage": 120,
+        "asOf": 1793899753011,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793899933015,
+          "deltaPrice": 220.8,
+          "pmLiveSignedUsd": -220.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76024,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "15": {
+          "at": 1793900653025,
+          "deltaPrice": 118.6,
+          "pmLiveSignedUsd": -118.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75921.8,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "45": {
+          "at": 1793902453052,
+          "deltaPrice": 321.7,
+          "pmLiveSignedUsd": -321.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76124.9,
+          "feeEquivalentPriceUsd": 75.8
+        }
+      }
+    },
+    {
+      "ts": 1793902573056,
+      "price": 75931.2,
+      "pm3": -129.2,
+      "pm5": -194.1,
+      "pmLive": -120.1,
+      "quality": "SILENT",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 2.3317,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 19:16:13",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.8525,
+        "coverage": 119,
+        "asOf": 1793902573056,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793902753057,
+          "deltaPrice": 4.8,
+          "pmLiveSignedUsd": -4.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75936,
+          "feeEquivalentPriceUsd": 75.93
+        },
+        "15": {
+          "at": 1793903473073,
+          "deltaPrice": 151.5,
+          "pmLiveSignedUsd": -151.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76082.7,
+          "feeEquivalentPriceUsd": 75.93
+        },
+        "45": {
+          "at": 1793905273144,
+          "deltaPrice": 151.2,
+          "pmLiveSignedUsd": -151.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76082.4,
+          "feeEquivalentPriceUsd": 75.93
+        }
+      }
+    },
+    {
+      "ts": 1793905603150,
+      "price": 75837.1,
+      "pm3": -187.9,
+      "pm5": -220.9,
+      "pmLive": -106.6,
+      "quality": "INEFFICIENT",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 2.8819,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 20:06:43",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.6029,
+        "coverage": 119,
+        "asOf": 1793905603150,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793905783151,
+          "deltaPrice": 202.9,
+          "pmLiveSignedUsd": -202.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76040,
+          "feeEquivalentPriceUsd": 75.84
+        },
+        "15": {
+          "at": 1793906503162,
+          "deltaPrice": 216.7,
+          "pmLiveSignedUsd": -216.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76053.8,
+          "feeEquivalentPriceUsd": 75.84
+        },
+        "45": {
+          "at": 1793908303189,
+          "deltaPrice": 591.7,
+          "pmLiveSignedUsd": -591.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76428.8,
+          "feeEquivalentPriceUsd": 75.84
+        }
+      }
+    },
+    {
+      "ts": 1793910853224,
+      "price": 76240.8,
+      "pm3": 321.5,
+      "pm5": 230.1,
+      "pmLive": 119.2,
+      "quality": "INEFFICIENT",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 11.2345,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-05 21:34:13",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.4614,
+        "coverage": 120,
+        "asOf": 1793910853224,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793911033227,
+          "deltaPrice": -196.5,
+          "pmLiveSignedUsd": -196.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76044.3,
+          "feeEquivalentPriceUsd": 76.24
+        },
+        "15": {
+          "at": 1793911753241,
+          "deltaPrice": -42.0,
+          "pmLiveSignedUsd": -42.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76198.8,
+          "feeEquivalentPriceUsd": 76.24
+        },
+        "45": {
+          "at": 1793913553287,
+          "deltaPrice": -307.7,
+          "pmLiveSignedUsd": -307.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75933.1,
+          "feeEquivalentPriceUsd": 76.24
+        }
+      }
+    },
+    {
+      "ts": 1793919703453,
+      "price": 75461.8,
+      "pm3": -212.7,
+      "pm5": -284.3,
+      "pmLive": -129.6,
+      "quality": "POWERFUL",
+      "marketState": "MIXED",
+      "mcb15": "long",
+      "flowBtcSec": 7.1896,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 00:01:43",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.3409,
+        "coverage": 120,
+        "asOf": 1793919703453,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793919883459,
+          "deltaPrice": 102.4,
+          "pmLiveSignedUsd": -102.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75564.2,
+          "feeEquivalentPriceUsd": 75.46
+        },
+        "15": {
+          "at": 1793920603467,
+          "deltaPrice": 13.5,
+          "pmLiveSignedUsd": -13.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75475.3,
+          "feeEquivalentPriceUsd": 75.46
+        },
+        "45": {
+          "at": 1793922403500,
+          "deltaPrice": 582.0,
+          "pmLiveSignedUsd": -582.0,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 76043.8,
+          "feeEquivalentPriceUsd": 75.46
+        }
+      }
+    },
+    {
+      "ts": 1793936053867,
+      "price": 75759.6,
+      "pm3": -122.2,
+      "pm5": -228.3,
+      "pmLive": -115.3,
+      "quality": "POWERFUL",
+      "marketState": "LOW_EDGE_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 4.8515,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 04:34:13",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.3818,
+        "coverage": 120,
+        "asOf": 1793936053867,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793936233871,
+          "deltaPrice": 16.2,
+          "pmLiveSignedUsd": -16.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75775.8,
+          "feeEquivalentPriceUsd": 75.76
+        },
+        "15": {
+          "at": 1793936953884,
+          "deltaPrice": 132.2,
+          "pmLiveSignedUsd": -132.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75891.8,
+          "feeEquivalentPriceUsd": 75.76
+        },
+        "45": {
+          "at": 1793938753913,
+          "deltaPrice": -87.1,
+          "pmLiveSignedUsd": 87.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75672.5,
+          "feeEquivalentPriceUsd": 75.76
+        }
+      }
+    },
+    {
+      "ts": 1793948564128,
+      "price": 75497.3,
+      "pm3": -156.1,
+      "pm5": -185,
+      "pmLive": -118.9,
+      "quality": "EXCEPTIONAL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 2.0541,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 08:02:44",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.2951,
+        "coverage": 120,
+        "asOf": 1793948564128,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793948744130,
+          "deltaPrice": -52.8,
+          "pmLiveSignedUsd": 52.8,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75444.5,
+          "feeEquivalentPriceUsd": 75.5
+        },
+        "15": {
+          "at": 1793949464140,
+          "deltaPrice": -100.5,
+          "pmLiveSignedUsd": 100.5,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75396.8,
+          "feeEquivalentPriceUsd": 75.5
+        },
+        "45": {
+          "at": 1793951264172,
+          "deltaPrice": 239.7,
+          "pmLiveSignedUsd": -239.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75737,
+          "feeEquivalentPriceUsd": 75.5
+        }
+      }
+    },
+    {
+      "ts": 1793971814640,
+      "price": 75751.9,
+      "pm3": -169.5,
+      "pm5": -138,
+      "pmLive": -249,
+      "quality": "EXCEPTIONAL",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 42.626,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 14:30:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.595,
+        "coverage": 120,
+        "asOf": 1793971814640,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793971994642,
+          "deltaPrice": 208.9,
+          "pmLiveSignedUsd": -208.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75960.8,
+          "feeEquivalentPriceUsd": 75.75
+        },
+        "15": {
+          "at": 1793972714648,
+          "deltaPrice": 55.7,
+          "pmLiveSignedUsd": -55.7,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75807.6,
+          "feeEquivalentPriceUsd": 75.75
+        },
+        "45": {
+          "at": 1793974514689,
+          "deltaPrice": -186.4,
+          "pmLiveSignedUsd": 186.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75565.5,
+          "feeEquivalentPriceUsd": 75.75
+        }
+      }
+    },
+    {
+      "ts": 1793971934641,
+      "price": 75799.5,
+      "pm3": -201.4,
+      "pm5": -121.9,
+      "pmLive": 139.6,
+      "quality": "INEFFICIENT",
+      "marketState": "MIXED",
+      "mcb15": "short",
+      "flowBtcSec": 20.7167,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-06 14:32:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.618,
+        "coverage": 120,
+        "asOf": 1793971934641,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793972114642,
+          "deltaPrice": 6.6,
+          "pmLiveSignedUsd": 6.6,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75806.1,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "15": {
+          "at": 1793972834652,
+          "deltaPrice": 92.1,
+          "pmLiveSignedUsd": 92.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75891.6,
+          "feeEquivalentPriceUsd": 75.8
+        },
+        "45": {
+          "at": 1793974634693,
+          "deltaPrice": -209.4,
+          "pmLiveSignedUsd": -209.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75590.1,
+          "feeEquivalentPriceUsd": 75.8
+        }
+      }
+    },
+    {
+      "ts": 1793975864715,
+      "price": 75627.8,
+      "pm3": 279.9,
+      "pm5": 231.4,
+      "pmLive": 126,
+      "quality": "POWERFUL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 6.8114,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 15:37:44",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.8882,
+        "coverage": 119,
+        "asOf": 1793975864715,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793976044717,
+          "deltaPrice": 313.1,
+          "pmLiveSignedUsd": 313.1,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75940.9,
+          "feeEquivalentPriceUsd": 75.63
+        },
+        "15": {
+          "at": 1793976764729,
+          "deltaPrice": 340.0,
+          "pmLiveSignedUsd": 340.0,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75967.8,
+          "feeEquivalentPriceUsd": 75.63
+        },
+        "45": {
+          "at": 1793978564761,
+          "deltaPrice": 93.4,
+          "pmLiveSignedUsd": 93.4,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75721.2,
+          "feeEquivalentPriceUsd": 75.63
+        }
+      }
+    },
+    {
+      "ts": 1793975954716,
+      "price": 75651.9,
+      "pm3": 145.1,
+      "pm5": 361.9,
+      "pmLive": -157.8,
+      "quality": "EXCEPTIONAL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 1.8871,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-06 15:39:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.8882,
+        "coverage": 119,
+        "asOf": 1793975954716,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793976134720,
+          "deltaPrice": 235.5,
+          "pmLiveSignedUsd": -235.5,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75887.4,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "15": {
+          "at": 1793976854730,
+          "deltaPrice": 250.1,
+          "pmLiveSignedUsd": -250.1,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75902,
+          "feeEquivalentPriceUsd": 75.65
+        },
+        "45": {
+          "at": 1793978654763,
+          "deltaPrice": -69.3,
+          "pmLiveSignedUsd": 69.3,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75582.6,
+          "feeEquivalentPriceUsd": 75.65
+        }
+      }
+    },
+    {
+      "ts": 1793977694747,
+      "price": 75128.9,
+      "pm3": 189.4,
+      "pm5": -142.6,
+      "pmLive": -187.9,
+      "quality": "CONTESTED",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 2.4345,
+      "pattern": "PM5_LIVE_VS_PM3",
+      "local": "2026-11-06 16:08:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 2.0197,
+        "coverage": 120,
+        "asOf": 1793977694747,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793977874749,
+          "deltaPrice": 160.3,
+          "pmLiveSignedUsd": -160.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75289.2,
+          "feeEquivalentPriceUsd": 75.13
+        },
+        "15": {
+          "at": 1793978594762,
+          "deltaPrice": 516.9,
+          "pmLiveSignedUsd": -516.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75645.8,
+          "feeEquivalentPriceUsd": 75.13
+        },
+        "45": {
+          "at": 1793980394788,
+          "deltaPrice": 617.2,
+          "pmLiveSignedUsd": -617.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75746.1,
+          "feeEquivalentPriceUsd": 75.13
+        }
+      }
+    },
+    {
+      "ts": 1793979044767,
+      "price": 75422.1,
+      "pm3": -206.9,
+      "pm5": -296.2,
+      "pmLive": -109.6,
+      "quality": "EASY",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 2.0903,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 16:30:44",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 2.5827,
+        "coverage": 120,
+        "asOf": 1793979044767,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793979224774,
+          "deltaPrice": 22.4,
+          "pmLiveSignedUsd": -22.4,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75444.5,
+          "feeEquivalentPriceUsd": 75.42
+        },
+        "15": {
+          "at": 1793979944780,
+          "deltaPrice": 271.2,
+          "pmLiveSignedUsd": -271.2,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75693.3,
+          "feeEquivalentPriceUsd": 75.42
+        },
+        "45": {
+          "at": 1793981744830,
+          "deltaPrice": 100.8,
+          "pmLiveSignedUsd": -100.8,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75522.9,
+          "feeEquivalentPriceUsd": 75.42
+        }
+      }
+    },
+    {
+      "ts": 1793979674775,
+      "price": 75487,
+      "pm3": 103.9,
+      "pm5": 173.3,
+      "pmLive": -123.9,
+      "quality": "EXCEPTIONAL",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "short",
+      "flowBtcSec": 0.4578,
+      "pattern": "LIVE_OPPOSES_BOTH",
+      "local": "2026-11-06 16:41:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 2.3503,
+        "coverage": 120,
+        "asOf": 1793979674775,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793979854779,
+          "deltaPrice": 135,
+          "pmLiveSignedUsd": -135,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75622,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "15": {
+          "at": 1793980574791,
+          "deltaPrice": 225.9,
+          "pmLiveSignedUsd": -225.9,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75712.9,
+          "feeEquivalentPriceUsd": 75.49
+        },
+        "45": {
+          "at": 1793982374846,
+          "deltaPrice": 258.6,
+          "pmLiveSignedUsd": -258.6,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75745.6,
+          "feeEquivalentPriceUsd": 75.49
+        }
+      }
+    },
+    {
+      "ts": 1793982194845,
+      "price": 75635.7,
+      "pm3": 261.9,
+      "pm5": 183.4,
+      "pmLive": 148.7,
+      "quality": "EASY",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 1.7396,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 17:23:14",
+      "regime": {
+        "intensity": "HIGH",
+        "flowPriorOneHour": 0.8253,
+        "coverage": 120,
+        "asOf": 1793982194845,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793982374846,
+          "deltaPrice": 109.9,
+          "pmLiveSignedUsd": 109.9,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75745.6,
+          "feeEquivalentPriceUsd": 75.64
+        },
+        "15": {
+          "at": 1793983094853,
+          "deltaPrice": 79.2,
+          "pmLiveSignedUsd": 79.2,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75714.9,
+          "feeEquivalentPriceUsd": 75.64
+        },
+        "45": {
+          "at": 1793984894912,
+          "deltaPrice": 312.7,
+          "pmLiveSignedUsd": 312.7,
+          "favorable": true,
+          "coveredFeesEquivalent": true,
+          "price": 75948.4,
+          "feeEquivalentPriceUsd": 75.64
+        }
+      }
+    },
+    {
+      "ts": 1793986604954,
+      "price": 75619.9,
+      "pm3": -158,
+      "pm5": -167.4,
+      "pmLive": -137,
+      "quality": "INEFFICIENT",
+      "marketState": "CHOP_SHADOW",
+      "mcb15": "long",
+      "flowBtcSec": 111.7945,
+      "pattern": "ALIGNED_ALL",
+      "local": "2026-11-06 18:36:44",
+      "regime": {
+        "intensity": "MEDIUM",
+        "flowPriorOneHour": 0.492,
+        "coverage": 120,
+        "asOf": 1793986604954,
+        "baselineNote": "CLUSTER_THRESHOLDS_FITTED_FULL_SAMPLE_DESCRIPTIVE_NOT_PROSPECTIVE"
+      },
+      "horizons": {
+        "3": {
+          "at": 1793986784958,
+          "deltaPrice": -1.8,
+          "pmLiveSignedUsd": 1.8,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75618.1,
+          "feeEquivalentPriceUsd": 75.62
+        },
+        "15": {
+          "at": 1793987504974,
+          "deltaPrice": -27.2,
+          "pmLiveSignedUsd": 27.2,
+          "favorable": true,
+          "coveredFeesEquivalent": false,
+          "price": 75592.7,
+          "feeEquivalentPriceUsd": 75.62
+        },
+        "45": {
+          "at": 1793989305002,
+          "deltaPrice": 101.3,
+          "pmLiveSignedUsd": -101.3,
+          "favorable": false,
+          "coveredFeesEquivalent": false,
+          "price": 75721.2,
+          "feeEquivalentPriceUsd": 75.62
+        }
+      }
+    }
+  ],
+  "hourlyTable": [
+    {
+      "hour": "2026-11-01T01:00:00+01:00",
+      "flow": 0.11505516434374509,
+      "cadence": 2.545,
+      "samples": 120,
+      "net": 119.60000000000582,
+      "path": 679.0000000000873,
+      "eff": 0.17614138438879298,
+      "retention": 0.9439621152327927,
+      "range": 167.8000000000029,
+      "medAbsBatonMove": 2.05,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T02:00:00+01:00",
+      "flow": 0.18148967906378055,
+      "cadence": 2.61,
+      "samples": 120,
+      "net": 40.5,
+      "path": 753.6999999999825,
+      "eff": 0.053734907788245904,
+      "retention": 0.4725787631272039,
+      "range": 124.39999999999418,
+      "medAbsBatonMove": 1.65,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T03:00:00+01:00",
+      "flow": 0.17548648157380864,
+      "cadence": 3.515,
+      "samples": 120,
+      "net": 7.900000000008731,
+      "path": 1212.900000000067,
+      "eff": 0.0065133151949940595,
+      "retention": 0.048347613219145096,
+      "range": 235.70000000001164,
+      "medAbsBatonMove": 6.699999999999999,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T04:00:00+01:00",
+      "flow": 0.15049194484042133,
+      "cadence": 2.275,
+      "samples": 120,
+      "net": 59.60000000000582,
+      "path": 539.2000000000116,
+      "eff": 0.11053412462908853,
+      "retention": 0.5000000000000611,
+      "range": 130.8000000000029,
+      "medAbsBatonMove": 1.55,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T05:00:00+01:00",
+      "flow": 0.09965611533853966,
+      "cadence": 2.2649999999999997,
+      "samples": 120,
+      "net": 17.10000000000582,
+      "path": 543.8999999999942,
+      "eff": 0.03143960286818533,
+      "retention": 0.22150259067365888,
+      "range": 135,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T06:00:00+01:00",
+      "flow": 0.13681363765276128,
+      "cadence": 2.26,
+      "samples": 120,
+      "net": 92.30000000000291,
+      "path": 521.9000000000669,
+      "eff": 0.17685380341059795,
+      "retention": 1.0,
+      "range": 130.90000000000873,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T07:00:00+01:00",
+      "flow": 0.2982138916750251,
+      "cadence": 3.95,
+      "samples": 120,
+      "net": 112.09999999999127,
+      "path": 933.1000000000204,
+      "eff": 0.12013717715141874,
+      "retention": 0.8636363636363739,
+      "range": 135.39999999999418,
+      "medAbsBatonMove": 3.0999999999999996,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T08:00:00+01:00",
+      "flow": 0.14653134091427536,
+      "cadence": 2.33,
+      "samples": 120,
+      "net": -15.0,
+      "path": 686.1999999999825,
+      "eff": 0.021859516176042527,
+      "retention": 0.10518934081347067,
+      "range": 158.0,
+      "medAbsBatonMove": 0.2,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T09:00:00+01:00",
+      "flow": 0.31182708333333337,
+      "cadence": 4.38,
+      "samples": 119,
+      "net": 253.1999999999971,
+      "path": 1194.9999999998981,
+      "eff": 0.21188284518830014,
+      "retention": 0.9776061776061664,
+      "range": 357.5,
+      "medAbsBatonMove": 5.8,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T10:00:00+01:00",
+      "flow": 0.364220503875969,
+      "cadence": 5.92,
+      "samples": 120,
+      "net": -118.19999999999709,
+      "path": 1089.9999999999854,
+      "eff": 0.10844036697247585,
+      "retention": 0.4347186465612344,
+      "range": 275.0,
+      "medAbsBatonMove": 6.199999999999999,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T11:00:00+01:00",
+      "flow": 0.17300905797101446,
+      "cadence": 3.3049999999999997,
+      "samples": 120,
+      "net": -63.60000000000582,
+      "path": 679.9999999999709,
+      "eff": 0.09352941176471845,
+      "retention": 0.6883116883117947,
+      "range": 150.89999999999418,
+      "medAbsBatonMove": 2.5,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T12:00:00+01:00",
+      "flow": 0.14398788610645818,
+      "cadence": 2.2699999999999996,
+      "samples": 120,
+      "net": -72.19999999999709,
+      "path": 387.59999999999127,
+      "eff": 0.18627450980391824,
+      "retention": 0.6234887737478787,
+      "range": 116.0,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T13:00:00+01:00",
+      "flow": 0.3016021603023098,
+      "cadence": 4.5,
+      "samples": 120,
+      "net": -98.5,
+      "path": 1192.7000000000116,
+      "eff": 0.08258572985662702,
+      "retention": 0.45059469350410514,
+      "range": 255.8000000000029,
+      "medAbsBatonMove": 7.65,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T14:00:00+01:00",
+      "flow": 0.20946681872553416,
+      "cadence": 3.23,
+      "samples": 120,
+      "net": 121.19999999999709,
+      "path": 972.3999999999796,
+      "eff": 0.12464006581653603,
+      "retention": 0.934464148033923,
+      "range": 129.6999999999971,
+      "medAbsBatonMove": 3.2,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T15:00:00+01:00",
+      "flow": 0.19688637408795467,
+      "cadence": 3.1550000000000002,
+      "samples": 120,
+      "net": 56.19999999999709,
+      "path": 1080.400000000067,
+      "eff": 0.05201777119584747,
+      "retention": 0.4190902311707282,
+      "range": 204.8000000000029,
+      "medAbsBatonMove": 4.95,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T16:00:00+01:00",
+      "flow": 0.17952032619279457,
+      "cadence": 2.725,
+      "samples": 120,
+      "net": -65.59999999999127,
+      "path": 797.0000000000146,
+      "eff": 0.08230865746548315,
+      "retention": 0.8631578947367272,
+      "range": 141.59999999999127,
+      "medAbsBatonMove": 2.8,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T17:00:00+01:00",
+      "flow": 0.17425882183392913,
+      "cadence": 2.84,
+      "samples": 120,
+      "net": 150.8000000000029,
+      "path": 817.7999999999738,
+      "eff": 0.18439716312057683,
+      "retention": 0.977950713359311,
+      "range": 172.1999999999971,
+      "medAbsBatonMove": 3.0,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T18:00:00+01:00",
+      "flow": 0.08178331533806994,
+      "cadence": 1.875,
+      "samples": 120,
+      "net": -165.1999999999971,
+      "path": 542.3999999999796,
+      "eff": 0.3045722713864368,
+      "retention": 0.929133858267761,
+      "range": 198.29999999998836,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T19:00:00+01:00",
+      "flow": 0.14541042931156528,
+      "cadence": 2.4,
+      "samples": 120,
+      "net": -92.39999999999418,
+      "path": 648.0,
+      "eff": 0.1425925925925836,
+      "retention": 0.8098159509202564,
+      "range": 126.59999999999127,
+      "medAbsBatonMove": 2.5,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T20:00:00+01:00",
+      "flow": 0.16176315675947506,
+      "cadence": 2.835,
+      "samples": 120,
+      "net": -81.09999999999127,
+      "path": 1229.6999999999098,
+      "eff": 0.0659510449703157,
+      "retention": 0.3404701931149969,
+      "range": 258.8000000000029,
+      "medAbsBatonMove": 3.3,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T21:00:00+01:00",
+      "flow": 0.12694556508959895,
+      "cadence": 2.7,
+      "samples": 120,
+      "net": 86.59999999999127,
+      "path": 714.7999999999447,
+      "eff": 0.12115277000559313,
+      "retention": 0.7616534740544721,
+      "range": 211.6999999999971,
+      "medAbsBatonMove": 2.3,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T22:00:00+01:00",
+      "flow": 0.09372195517419503,
+      "cadence": 2.355,
+      "samples": 120,
+      "net": -29,
+      "path": 666.799999999901,
+      "eff": 0.043491301739658525,
+      "retention": 0.36942675159235666,
+      "range": 133.1999999999971,
+      "medAbsBatonMove": 1.85,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-01T23:00:00+01:00",
+      "flow": 0.21151427587262706,
+      "cadence": 3.9699999999999998,
+      "samples": 120,
+      "net": -84.5,
+      "path": 1104.7000000000407,
+      "eff": 0.07649135511903402,
+      "retention": 0.3437754271765826,
+      "range": 248.6999999999971,
+      "medAbsBatonMove": 7.45,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T00:00:00+01:00",
+      "flow": 0.36737260536398464,
+      "cadence": 9.015,
+      "samples": 120,
+      "net": 425,
+      "path": 1913.1999999998952,
+      "eff": 0.22214091574326952,
+      "retention": 0.9463371186817958,
+      "range": 552.5,
+      "medAbsBatonMove": 12.350000000000001,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T01:00:00+01:00",
+      "flow": 0.4367092546454895,
+      "cadence": 8.575,
+      "samples": 120,
+      "net": -253.10000000000582,
+      "path": 2309.7000000000407,
+      "eff": 0.10958133090877661,
+      "retention": 0.7291846730049023,
+      "range": 478.0,
+      "medAbsBatonMove": 17.6,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T02:00:00+01:00",
+      "flow": 0.5189441176470588,
+      "cadence": 12.22,
+      "samples": 120,
+      "net": 263.6000000000058,
+      "path": 2496.0,
+      "eff": 0.10560897435897669,
+      "retention": 0.55134909014851,
+      "range": 510.3999999999942,
+      "medAbsBatonMove": 17.299999999999997,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T03:00:00+01:00",
+      "flow": 0.22241061174400298,
+      "cadence": 5.77,
+      "samples": 120,
+      "net": 15.5,
+      "path": 1610.299999999901,
+      "eff": 0.009625535614482365,
+      "retention": 0.15736040609137056,
+      "range": 188.60000000000582,
+      "medAbsBatonMove": 11.3,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T04:00:00+01:00",
+      "flow": 0.38040374069721894,
+      "cadence": 7.8149999999999995,
+      "samples": 120,
+      "net": 157.6999999999971,
+      "path": 2097.8999999999796,
+      "eff": 0.07517040850374118,
+      "retention": 0.46341463414632894,
+      "range": 373.5,
+      "medAbsBatonMove": 12.600000000000001,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T05:00:00+01:00",
+      "flow": 0.40834563413363556,
+      "cadence": 5.789999999999999,
+      "samples": 120,
+      "net": -198.10000000000582,
+      "path": 1188.100000000035,
+      "eff": 0.16673680666610555,
+      "retention": 1.0,
+      "range": 301.3000000000029,
+      "medAbsBatonMove": 7.5,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T06:00:00+01:00",
+      "flow": 0.26483077075098815,
+      "cadence": 5.595000000000001,
+      "samples": 120,
+      "net": -34.30000000000291,
+      "path": 1568.8999999999796,
+      "eff": 0.02186245139907155,
+      "retention": 0.22243839169911517,
+      "range": 204.6999999999971,
+      "medAbsBatonMove": 10.95,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T07:00:00+01:00",
+      "flow": 0.3264757512965102,
+      "cadence": 5.26,
+      "samples": 120,
+      "net": -206.90000000000873,
+      "path": 1234.8999999999796,
+      "eff": 0.1675439306826562,
+      "retention": 0.947778286761365,
+      "range": 249.59999999999127,
+      "medAbsBatonMove": 8.1,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T08:00:00+01:00",
+      "flow": 0.5591698481116585,
+      "cadence": 6.725,
+      "samples": 120,
+      "net": -84.30000000000291,
+      "path": 1713.9000000000378,
+      "eff": 0.049186066865045244,
+      "retention": 0.32942555685814784,
+      "range": 314.0,
+      "medAbsBatonMove": 13.6,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T09:00:00+01:00",
+      "flow": 0.42349411557434813,
+      "cadence": 7.25,
+      "samples": 120,
+      "net": 137.3000000000029,
+      "path": 1684.300000000003,
+      "eff": 0.08151754438045637,
+      "retention": 0.4732850741123756,
+      "range": 293.3000000000029,
+      "medAbsBatonMove": 11.55,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T10:00:00+01:00",
+      "flow": 0.3890747088901543,
+      "cadence": 5.93,
+      "samples": 120,
+      "net": -227.5,
+      "path": 1588.0999999999476,
+      "eff": 0.14325294376928877,
+      "retention": 0.8523791682277728,
+      "range": 313.5,
+      "medAbsBatonMove": 11.5,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T11:00:00+01:00",
+      "flow": 0.3628560613762208,
+      "cadence": 5.355,
+      "samples": 120,
+      "net": -64.60000000000582,
+      "path": 1156.799999999901,
+      "eff": 0.05584370677732654,
+      "retention": 0.7201783723523737,
+      "range": 112.0,
+      "medAbsBatonMove": 6.9,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T12:00:00+01:00",
+      "flow": 0.36214799370574347,
+      "cadence": 5.75,
+      "samples": 120,
+      "net": -96.5,
+      "path": 1295.7000000000116,
+      "eff": 0.07447711661650007,
+      "retention": 0.4953798767967072,
+      "range": 220.20000000001164,
+      "medAbsBatonMove": 8.15,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T13:00:00+01:00",
+      "flow": 0.49595294133726964,
+      "cadence": 8.54,
+      "samples": 120,
+      "net": -58.09999999999127,
+      "path": 1959.0999999999913,
+      "eff": 0.02965647491194504,
+      "retention": 0.24702380952377545,
+      "range": 403.1999999999971,
+      "medAbsBatonMove": 12.6,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T14:00:00+01:00",
+      "flow": 0.7087977544473607,
+      "cadence": 13.68,
+      "samples": 120,
+      "net": 120.5,
+      "path": 3196.699999999895,
+      "eff": 0.037695123095693665,
+      "retention": 0.28062412668840625,
+      "range": 625.6999999999971,
+      "medAbsBatonMove": 17.35,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T15:00:00+01:00",
+      "flow": 0.6326671950097147,
+      "cadence": 19.23,
+      "samples": 120,
+      "net": -47.19999999999709,
+      "path": 3948.9999999999854,
+      "eff": 0.01195239301088814,
+      "retention": 0.20441749675182028,
+      "range": 430.20000000001164,
+      "medAbsBatonMove": 26.4,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T16:00:00+01:00",
+      "flow": 0.5339370060790273,
+      "cadence": 19.84,
+      "samples": 120,
+      "net": -391.1999999999971,
+      "path": 3471.7999999999156,
+      "eff": 0.11267930180310116,
+      "retention": 0.7533217793183032,
+      "range": 710.5,
+      "medAbsBatonMove": 23.4,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T17:00:00+01:00",
+      "flow": 0.6140513098464317,
+      "cadence": 16.47,
+      "samples": 120,
+      "net": 30.0,
+      "path": 3759.0,
+      "eff": 0.007980845969672785,
+      "retention": 0.14292520247736423,
+      "range": 398.0,
+      "medAbsBatonMove": 25.25,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T18:00:00+01:00",
+      "flow": 0.7358318518518518,
+      "cadence": 16.909999999999997,
+      "samples": 120,
+      "net": -367.0,
+      "path": 3148.8000000000175,
+      "eff": 0.11655233739837334,
+      "retention": 0.5408990420044215,
+      "range": 730,
+      "medAbsBatonMove": 20.299999999999997,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T19:00:00+01:00",
+      "flow": 0.48969162210338685,
+      "cadence": 11.765,
+      "samples": 120,
+      "net": -114.80000000000291,
+      "path": 2703.2000000000844,
+      "eff": 0.04246818585380265,
+      "retention": 0.5026269702276963,
+      "range": 455.8999999999942,
+      "medAbsBatonMove": 21.35,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T20:00:00+01:00",
+      "flow": 0.39795797743755035,
+      "cadence": 12.17,
+      "samples": 120,
+      "net": 73.09999999999127,
+      "path": 2881.8999999998923,
+      "eff": 0.025365210451436207,
+      "retention": 0.2285803627266748,
+      "range": 392.8999999999942,
+      "medAbsBatonMove": 18.950000000000003,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T21:00:00+01:00",
+      "flow": 0.5446031062256553,
+      "cadence": 15.59,
+      "samples": 120,
+      "net": -265.3000000000029,
+      "path": 3128.699999999968,
+      "eff": 0.08479560200722525,
+      "retention": 0.8095819346963847,
+      "range": 482.6999999999971,
+      "medAbsBatonMove": 23.9,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T22:00:00+01:00",
+      "flow": 0.2621374874883664,
+      "cadence": 8.11,
+      "samples": 120,
+      "net": 71.5,
+      "path": 2429.9000000000233,
+      "eff": 0.029425079221366852,
+      "retention": 0.31168265039231596,
+      "range": 276.6000000000058,
+      "medAbsBatonMove": 15.2,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-02T23:00:00+01:00",
+      "flow": 0.23342567135549874,
+      "cadence": 5.59,
+      "samples": 120,
+      "net": 72.39999999999418,
+      "path": 1308.1999999999825,
+      "eff": 0.055343219691175005,
+      "retention": 0.47600262984877273,
+      "range": 214.6999999999971,
+      "medAbsBatonMove": 8.2,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T00:00:00+01:00",
+      "flow": 0.24610045413260673,
+      "cadence": 6.355,
+      "samples": 120,
+      "net": -14.5,
+      "path": 1556.8999999998487,
+      "eff": 0.009313379150877647,
+      "retention": 0.16237402015676963,
+      "range": 139.1999999999971,
+      "medAbsBatonMove": 8.149999999999999,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T01:00:00+01:00",
+      "flow": 0.5630296659953005,
+      "cadence": 11.835,
+      "samples": 120,
+      "net": 305.6000000000058,
+      "path": 2293.79999999993,
+      "eff": 0.13322870346151153,
+      "retention": 0.7131855309218339,
+      "range": 559.1999999999971,
+      "medAbsBatonMove": 14.399999999999999,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T02:00:00+01:00",
+      "flow": 0.2975502312996421,
+      "cadence": 9.155000000000001,
+      "samples": 120,
+      "net": 19.30000000000291,
+      "path": 2300.299999999974,
+      "eff": 0.00839020997261363,
+      "retention": 0.08752834467121501,
+      "range": 255.5,
+      "medAbsBatonMove": 16.4,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T03:00:00+01:00",
+      "flow": 0.4321960706093547,
+      "cadence": 12.325,
+      "samples": 120,
+      "net": -371.8000000000029,
+      "path": 2402.3999999999796,
+      "eff": 0.1547619047619073,
+      "retention": 1.0,
+      "range": 404.1999999999971,
+      "medAbsBatonMove": 14.95,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T04:00:00+01:00",
+      "flow": 0.5775214063621144,
+      "cadence": 11.235,
+      "samples": 120,
+      "net": 194.0,
+      "path": 2450.1999999999825,
+      "eff": 0.0791772100236721,
+      "retention": 0.7905460472697355,
+      "range": 415.90000000000873,
+      "medAbsBatonMove": 15.149999999999999,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T05:00:00+01:00",
+      "flow": 0.2926885692693594,
+      "cadence": 6.045,
+      "samples": 120,
+      "net": 38.19999999999709,
+      "path": 1681.800000000003,
+      "eff": 0.022713759067663826,
+      "retention": 0.1828626136907523,
+      "range": 361.3999999999942,
+      "medAbsBatonMove": 10.0,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T06:00:00+01:00",
+      "flow": 0.39314440387443583,
+      "cadence": 8.08,
+      "samples": 120,
+      "net": -291.8000000000029,
+      "path": 2258.6000000000204,
+      "eff": 0.12919507659612162,
+      "retention": 0.8169092945128594,
+      "range": 370.8000000000029,
+      "medAbsBatonMove": 13.8,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T07:00:00+01:00",
+      "flow": 0.6147354368932039,
+      "cadence": 11.95,
+      "samples": 120,
+      "net": -44.19999999999709,
+      "path": 2020.3999999999214,
+      "eff": 0.021876856068104737,
+      "retention": 0.20238095238094445,
+      "range": 415.6999999999971,
+      "medAbsBatonMove": 14.350000000000001,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T08:00:00+01:00",
+      "flow": 0.3490901209334014,
+      "cadence": 8.375,
+      "samples": 120,
+      "net": 202.39999999999418,
+      "path": 1906.8000000001339,
+      "eff": 0.10614642332702956,
+      "retention": 0.5768025078369836,
+      "range": 470.3000000000029,
+      "medAbsBatonMove": 14.1,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T09:00:00+01:00",
+      "flow": 0.4181478438532429,
+      "cadence": 8.5,
+      "samples": 120,
+      "net": -197.59999999999127,
+      "path": 1627.5999999999913,
+      "eff": 0.12140575079871734,
+      "retention": 0.6257124762507871,
+      "range": 315.79999999998836,
+      "medAbsBatonMove": 11.2,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T10:00:00+01:00",
+      "flow": 0.45674708514527007,
+      "cadence": 7.73,
+      "samples": 120,
+      "net": 449.3999999999942,
+      "path": 1957.999999999971,
+      "eff": 0.22951991828396368,
+      "retention": 1.0,
+      "range": 449.3999999999942,
+      "medAbsBatonMove": 12.899999999999999,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T11:00:00+01:00",
+      "flow": 0.3479147743045916,
+      "cadence": 6.615,
+      "samples": 120,
+      "net": 62.10000000000582,
+      "path": 1635.1000000000931,
+      "eff": 0.03797932848143984,
+      "retention": 0.6291793313070684,
+      "range": 160.8000000000029,
+      "medAbsBatonMove": 10.399999999999999,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T12:00:00+01:00",
+      "flow": 0.3574322269303202,
+      "cadence": 6.35,
+      "samples": 120,
+      "net": -16.5,
+      "path": 1364.899999999936,
+      "eff": 0.012088797714118818,
+      "retention": 0.11530398322850684,
+      "range": 197.60000000000582,
+      "medAbsBatonMove": 9.05,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T13:00:00+01:00",
+      "flow": 0.5662664442487468,
+      "cadence": 12.405000000000001,
+      "samples": 120,
+      "net": 375.1999999999971,
+      "path": 2397.599999999875,
+      "eff": 0.1564898231564968,
+      "retention": 0.8380612016975643,
+      "range": 499.59999999999127,
+      "medAbsBatonMove": 15.350000000000001,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T14:00:00+01:00",
+      "flow": 0.7405367361356412,
+      "cadence": 17.665,
+      "samples": 120,
+      "net": 18.5,
+      "path": 3113.300000000105,
+      "eff": 0.005942247775671917,
+      "retention": 0.03961456102783726,
+      "range": 532.1999999999971,
+      "medAbsBatonMove": 22.799999999999997,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T15:00:00+01:00",
+      "flow": 0.6541855912743972,
+      "cadence": 24.96,
+      "samples": 120,
+      "net": 42.29999999998836,
+      "path": 3705.500000000029,
+      "eff": 0.011415463500199171,
+      "retention": 0.19439338235288248,
+      "range": 323.8999999999942,
+      "medAbsBatonMove": 24.549999999999997,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T16:00:00+01:00",
+      "flow": 0.6081743939393939,
+      "cadence": 18.78,
+      "samples": 120,
+      "net": 360.6999999999971,
+      "path": 3225.099999999933,
+      "eff": 0.11184149328703127,
+      "retention": 0.7633862433862372,
+      "range": 543.1999999999971,
+      "medAbsBatonMove": 22.5,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T17:00:00+01:00",
+      "flow": 0.6006668660636125,
+      "cadence": 10.219999999999999,
+      "samples": 120,
+      "net": 17.5,
+      "path": 2529.7000000000116,
+      "eff": 0.006917816341858687,
+      "retention": 0.05429723859758186,
+      "range": 366.8999999999942,
+      "medAbsBatonMove": 18.2,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T18:00:00+01:00",
+      "flow": 0.3359819271930201,
+      "cadence": 7.76,
+      "samples": 120,
+      "net": -77.80000000000291,
+      "path": 1603.7999999999738,
+      "eff": 0.0485097892505326,
+      "retention": 0.824152542372963,
+      "range": 172.59999999999127,
+      "medAbsBatonMove": 11.15,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T19:00:00+01:00",
+      "flow": 0.2736301222081753,
+      "cadence": 5.95,
+      "samples": 120,
+      "net": -55.90000000000873,
+      "path": 1767.6999999999098,
+      "eff": 0.031623012954693434,
+      "retention": 0.24690812720852548,
+      "range": 308.1999999999971,
+      "medAbsBatonMove": 10.75,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T20:00:00+01:00",
+      "flow": 0.2440415413570852,
+      "cadence": 5.29,
+      "samples": 120,
+      "net": 18.20000000001164,
+      "path": 1471.600000000035,
+      "eff": 0.012367491166085355,
+      "retention": 0.230964467005258,
+      "range": 150.89999999999418,
+      "medAbsBatonMove": 7.85,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T21:00:00+01:00",
+      "flow": 0.40045659159196445,
+      "cadence": 6.675000000000001,
+      "samples": 120,
+      "net": 238.60000000000582,
+      "path": 1839.5999999998312,
+      "eff": 0.129702109154179,
+      "retention": 0.7479623824451593,
+      "range": 323.59999999999127,
+      "medAbsBatonMove": 13.5,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T22:00:00+01:00",
+      "flow": 0.26933070866141734,
+      "cadence": 5.95,
+      "samples": 119,
+      "net": 46.30000000000291,
+      "path": 1505.8999999999796,
+      "eff": 0.0307457334484385,
+      "retention": 0.2344303797468502,
+      "range": 226.60000000000582,
+      "medAbsBatonMove": 10.7,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-03T23:00:00+01:00",
+      "flow": 0.2017065579625963,
+      "cadence": 3.4050000000000002,
+      "samples": 120,
+      "net": -13.799999999988358,
+      "path": 785.3999999999942,
+      "eff": 0.017570664629473466,
+      "retention": 0.09400544959120881,
+      "range": 151.29999999998836,
+      "medAbsBatonMove": 3.6,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T00:00:00+01:00",
+      "flow": 0.2907982272418833,
+      "cadence": 6.58,
+      "samples": 120,
+      "net": -446.8000000000029,
+      "path": 1667.0000000000437,
+      "eff": 0.2680263947210505,
+      "retention": 1.0,
+      "range": 521.1000000000058,
+      "medAbsBatonMove": 9.7,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T01:00:00+01:00",
+      "flow": 0.818723908918406,
+      "cadence": 22.18,
+      "samples": 120,
+      "net": -231.59999999999127,
+      "path": 3912.599999999933,
+      "eff": 0.05919337524919369,
+      "retention": 0.4075312335034243,
+      "range": 658.8999999999942,
+      "medAbsBatonMove": 27.65,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T02:00:00+01:00",
+      "flow": 0.7413121588089331,
+      "cadence": 25.65,
+      "samples": 120,
+      "net": -210.0,
+      "path": 4673.399999999994,
+      "eff": 0.04493516497624861,
+      "retention": 0.5038387715930867,
+      "range": 471.1999999999971,
+      "medAbsBatonMove": 33.25,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T03:00:00+01:00",
+      "flow": 0.6949574432576769,
+      "cadence": 16.805,
+      "samples": 120,
+      "net": -642.0,
+      "path": 2889.1999999999534,
+      "eff": 0.22220683926346751,
+      "retention": 1.0,
+      "range": 809.1999999999971,
+      "medAbsBatonMove": 22.45,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T04:00:00+01:00",
+      "flow": 1.6803390343468467,
+      "cadence": 33.135,
+      "samples": 120,
+      "net": 325.6000000000058,
+      "path": 4814.999999999971,
+      "eff": 0.06762201453790401,
+      "retention": 0.7857142857143108,
+      "range": 790.5,
+      "medAbsBatonMove": 31.15,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T05:00:00+01:00",
+      "flow": 1.3116062424969988,
+      "cadence": 23.82,
+      "samples": 120,
+      "net": 908.0,
+      "path": 3834.1999999999825,
+      "eff": 0.2368160242032247,
+      "retention": 0.8722382324687801,
+      "range": 1101.1000000000058,
+      "medAbsBatonMove": 25.45,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T06:00:00+01:00",
+      "flow": 1.3948518518518518,
+      "cadence": 25.02,
+      "samples": 119,
+      "net": 374.1999999999971,
+      "path": 3917.1999999998807,
+      "eff": 0.09552741754314523,
+      "retention": 0.4921094160967911,
+      "range": 864.1999999999971,
+      "medAbsBatonMove": 26.4,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T07:00:00+01:00",
+      "flow": 0.6440708754903985,
+      "cadence": 13.059999999999999,
+      "samples": 120,
+      "net": 248.6999999999971,
+      "path": 2308.900000000038,
+      "eff": 0.10771362986703323,
+      "retention": 0.7989078059749269,
+      "range": 311.3000000000029,
+      "medAbsBatonMove": 16.85,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T08:00:00+01:00",
+      "flow": 0.7332688183421517,
+      "cadence": 11.69,
+      "samples": 120,
+      "net": 140.60000000000582,
+      "path": 1944.2000000000407,
+      "eff": 0.07231766279189532,
+      "retention": 0.4457831325301472,
+      "range": 433.29999999998836,
+      "medAbsBatonMove": 12.4,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T09:00:00+01:00",
+      "flow": 0.7046383080990146,
+      "cadence": 14.515,
+      "samples": 120,
+      "net": 302.8999999999942,
+      "path": 2507.699999999895,
+      "eff": 0.1207879730430302,
+      "retention": 0.8694029850746247,
+      "range": 348.3999999999942,
+      "medAbsBatonMove": 16.1,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T10:00:00+01:00",
+      "flow": 0.40323069053708444,
+      "cadence": 9.02,
+      "samples": 120,
+      "net": -91.19999999999709,
+      "path": 1642.3999999999796,
+      "eff": 0.055528494885532284,
+      "retention": 0.4610717896865645,
+      "range": 219.59999999999127,
+      "medAbsBatonMove": 10.149999999999999,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T11:00:00+01:00",
+      "flow": 0.3962038456366815,
+      "cadence": 7.07,
+      "samples": 120,
+      "net": 216.5,
+      "path": 1647.499999999971,
+      "eff": 0.13141122913505543,
+      "retention": 0.7223890557223961,
+      "range": 314.79999999998836,
+      "medAbsBatonMove": 9.85,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T12:00:00+01:00",
+      "flow": 0.3467307715139403,
+      "cadence": 6.075,
+      "samples": 120,
+      "net": -108.30000000000291,
+      "path": 1387.2999999999738,
+      "eff": 0.07806530671088081,
+      "retention": 0.8375870069606548,
+      "range": 239.1999999999971,
+      "medAbsBatonMove": 10.7,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T13:00:00+01:00",
+      "flow": 0.9304963768115943,
+      "cadence": 19.515,
+      "samples": 120,
+      "net": -165.5,
+      "path": 2858.100000000006,
+      "eff": 0.057905601623456024,
+      "retention": 0.37401129943502825,
+      "range": 456.79999999998836,
+      "medAbsBatonMove": 19.9,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T14:00:00+01:00",
+      "flow": 0.2912800228745711,
+      "cadence": 13.440000000000001,
+      "samples": 120,
+      "net": 55.5,
+      "path": 2503.2999999999884,
+      "eff": 0.02217073463028812,
+      "retention": 0.25995316159250587,
+      "range": 227.3000000000029,
+      "medAbsBatonMove": 16.25,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T15:00:00+01:00",
+      "flow": 0.9856666666666667,
+      "cadence": 42.31,
+      "samples": 120,
+      "net": 921.8999999999942,
+      "path": 4891.5,
+      "eff": 0.1884697945415505,
+      "retention": 0.7379332426158585,
+      "range": 1414.6000000000058,
+      "medAbsBatonMove": 27.2,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T16:00:00+01:00",
+      "flow": 3.4015625,
+      "cadence": 92.55,
+      "samples": 119,
+      "net": 890,
+      "path": 8499.00000000003,
+      "eff": 0.10471820214142805,
+      "retention": 0.4836168016084326,
+      "range": 1840.300000000003,
+      "medAbsBatonMove": 51.9,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T17:00:00+01:00",
+      "flow": 0.7925568027210885,
+      "cadence": 26.299999999999997,
+      "samples": 120,
+      "net": 101.5,
+      "path": 3887.899999999965,
+      "eff": 0.026106638545230307,
+      "retention": 0.3254248156460465,
+      "range": 390.1999999999971,
+      "medAbsBatonMove": 29.8,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T18:00:00+01:00",
+      "flow": 0.5899081950207469,
+      "cadence": 15.35,
+      "samples": 120,
+      "net": -118.90000000000873,
+      "path": 2633.300000000032,
+      "eff": 0.045152470284436745,
+      "retention": 0.3937086092715521,
+      "range": 307.3999999999942,
+      "medAbsBatonMove": 16.3,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T19:00:00+01:00",
+      "flow": 0.4577686189533806,
+      "cadence": 9.965,
+      "samples": 120,
+      "net": -166.3000000000029,
+      "path": 2325.099999999875,
+      "eff": 0.07152380542772864,
+      "retention": 0.7586678832117022,
+      "range": 393.3999999999942,
+      "medAbsBatonMove": 14.649999999999999,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T20:00:00+01:00",
+      "flow": 0.3889600844461901,
+      "cadence": 9.530000000000001,
+      "samples": 120,
+      "net": -331.8999999999942,
+      "path": 2355.100000000006,
+      "eff": 0.14092819837798537,
+      "retention": 0.8150785854616811,
+      "range": 430.6999999999971,
+      "medAbsBatonMove": 15.149999999999999,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T21:00:00+01:00",
+      "flow": 0.3715125672735601,
+      "cadence": 11.565000000000001,
+      "samples": 120,
+      "net": 124.09999999999127,
+      "path": 2564.099999999875,
+      "eff": 0.04839904839904736,
+      "retention": 0.40045175863179605,
+      "range": 374.8999999999942,
+      "medAbsBatonMove": 13.8,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T22:00:00+01:00",
+      "flow": 0.23658074229691878,
+      "cadence": 6.83,
+      "samples": 120,
+      "net": 88.30000000000291,
+      "path": 1576.8999999999214,
+      "eff": 0.05599594140402518,
+      "retention": 0.5274790919952568,
+      "range": 220.79999999998836,
+      "medAbsBatonMove": 9.45,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-04T23:00:00+01:00",
+      "flow": 0.5239211111111111,
+      "cadence": 9.745,
+      "samples": 120,
+      "net": 492.0,
+      "path": 2073.600000000035,
+      "eff": 0.23726851851851452,
+      "retention": 0.6761957119296262,
+      "range": 727.6000000000058,
+      "medAbsBatonMove": 11.9,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T00:00:00+01:00",
+      "flow": 0.32489517772582865,
+      "cadence": 8.67,
+      "samples": 120,
+      "net": -208,
+      "path": 2398.799999999901,
+      "eff": 0.08671002167750899,
+      "retention": 0.7005725833614149,
+      "range": 318.3999999999942,
+      "medAbsBatonMove": 15.0,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T01:00:00+01:00",
+      "flow": 0.3942538293771556,
+      "cadence": 10.57,
+      "samples": 120,
+      "net": 18.59999999999127,
+      "path": 2552.3999999999214,
+      "eff": 0.0072872590503023985,
+      "retention": 0.06707536963574134,
+      "range": 280.8000000000029,
+      "medAbsBatonMove": 19.05,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T02:00:00+01:00",
+      "flow": 0.6137465309898242,
+      "cadence": 14.809999999999999,
+      "samples": 120,
+      "net": 169.8000000000029,
+      "path": 2626.199999999968,
+      "eff": 0.06465615718528862,
+      "retention": 0.4644420131291219,
+      "range": 625.5,
+      "medAbsBatonMove": 18.15,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T03:00:00+01:00",
+      "flow": 0.3240981729284611,
+      "cadence": 10.335,
+      "samples": 120,
+      "net": -99.69999999999709,
+      "path": 2384.4999999999854,
+      "eff": 0.04181170056615546,
+      "retention": 0.5244608100999161,
+      "range": 305.6000000000058,
+      "medAbsBatonMove": 18.9,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T04:00:00+01:00",
+      "flow": 0.2359521414887794,
+      "cadence": 8.09,
+      "samples": 120,
+      "net": -27.59999999999127,
+      "path": 1877.1999999999389,
+      "eff": 0.014702748774766763,
+      "retention": 0.11621052631575271,
+      "range": 279.59999999999127,
+      "medAbsBatonMove": 13.75,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T05:00:00+01:00",
+      "flow": 0.3344669260700389,
+      "cadence": 6.91,
+      "samples": 119,
+      "net": 17.0,
+      "path": 1679.999999999971,
+      "eff": 0.010119047619047795,
+      "retention": 0.07737824305871746,
+      "range": 373.1000000000058,
+      "medAbsBatonMove": 10.6,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T06:00:00+01:00",
+      "flow": 0.2994341040664016,
+      "cadence": 9.35,
+      "samples": 120,
+      "net": -111.10000000000582,
+      "path": 1642.9000000000524,
+      "eff": 0.06762432284375329,
+      "retention": 0.9084219133279082,
+      "range": 214.5,
+      "medAbsBatonMove": 11.350000000000001,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T07:00:00+01:00",
+      "flow": 0.2991448105396455,
+      "cadence": 6.34,
+      "samples": 120,
+      "net": 239.5,
+      "path": 1507.9000000000233,
+      "eff": 0.15883016115126752,
+      "retention": 0.8063973063973064,
+      "range": 321.6000000000058,
+      "medAbsBatonMove": 9.85,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T08:00:00+01:00",
+      "flow": 0.4277410337552742,
+      "cadence": 13.215,
+      "samples": 120,
+      "net": -272.40000000000873,
+      "path": 1839.6000000000204,
+      "eff": 0.14807566862361693,
+      "retention": 0.9268458659407983,
+      "range": 460.8000000000029,
+      "medAbsBatonMove": 12.2,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T09:00:00+01:00",
+      "flow": 0.2787024703732839,
+      "cadence": 6.795,
+      "samples": 120,
+      "net": 116.59999999999127,
+      "path": 1624.199999999997,
+      "eff": 0.07178918852357559,
+      "retention": 0.4695932339911266,
+      "range": 254.39999999999418,
+      "medAbsBatonMove": 10.7,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T10:00:00+01:00",
+      "flow": 0.2840543896275135,
+      "cadence": 6.58,
+      "samples": 120,
+      "net": -52.19999999999709,
+      "path": 1566.2000000000262,
+      "eff": 0.033329076746262426,
+      "retention": 0.23471223021582038,
+      "range": 224.8000000000029,
+      "medAbsBatonMove": 9.65,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T11:00:00+01:00",
+      "flow": 0.21243310760140893,
+      "cadence": 4.28,
+      "samples": 120,
+      "net": -166.29999999998836,
+      "path": 1352.499999999971,
+      "eff": 0.12295748613677777,
+      "retention": 0.8907337975361058,
+      "range": 249.40000000000873,
+      "medAbsBatonMove": 8.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T12:00:00+01:00",
+      "flow": 0.2017721537427163,
+      "cadence": 4.08,
+      "samples": 120,
+      "net": 94.30000000000291,
+      "path": 1273.6999999998807,
+      "eff": 0.07403627227762562,
+      "retention": 0.7685411572942554,
+      "range": 171.6999999999971,
+      "medAbsBatonMove": 6.8,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T13:00:00+01:00",
+      "flow": 0.9649514563106796,
+      "cadence": 16.86,
+      "samples": 119,
+      "net": -706.6999999999971,
+      "path": 2979.499999999898,
+      "eff": 0.23718744755832227,
+      "retention": 0.8448296473401041,
+      "range": 836.5,
+      "medAbsBatonMove": 18.5,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T14:00:00+01:00",
+      "flow": 0.8069275053826581,
+      "cadence": 13.405000000000001,
+      "samples": 120,
+      "net": -24.30000000000291,
+      "path": 2547.0999999999913,
+      "eff": 0.009540261473834162,
+      "retention": 0.13366336633665823,
+      "range": 300.1999999999971,
+      "medAbsBatonMove": 15.950000000000001,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T15:00:00+01:00",
+      "flow": 1.873711344211344,
+      "cadence": 43.105000000000004,
+      "samples": 120,
+      "net": -1388.4000000000087,
+      "path": 5276.999999999898,
+      "eff": 0.263104036384316,
+      "retention": 0.9285093292315963,
+      "range": 1579.5,
+      "medAbsBatonMove": 35.4,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T16:00:00+01:00",
+      "flow": 7.644964285714286,
+      "cadence": 163.66500000000002,
+      "samples": 120,
+      "net": -2234.600000000006,
+      "path": 10827.59999999986,
+      "eff": 0.206379991872625,
+      "retention": 0.8359895248784159,
+      "range": 2673.0,
+      "medAbsBatonMove": 74.35,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T17:00:00+01:00",
+      "flow": 2.7180874999999998,
+      "cadence": 72.695,
+      "samples": 120,
+      "net": 381.20000000001164,
+      "path": 6518.199999999924,
+      "eff": 0.05848240311742752,
+      "retention": 0.39891167852658993,
+      "range": 1290,
+      "medAbsBatonMove": 43.4,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T18:00:00+01:00",
+      "flow": 0.9433520892687559,
+      "cadence": 33.019999999999996,
+      "samples": 120,
+      "net": -402.20000000001164,
+      "path": 4857.399999999965,
+      "eff": 0.08280149874418713,
+      "retention": 0.7917322834645898,
+      "range": 526.8999999999942,
+      "medAbsBatonMove": 35.0,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T19:00:00+01:00",
+      "flow": 0.6075180722891566,
+      "cadence": 28.54,
+      "samples": 119,
+      "net": 267.09999999999127,
+      "path": 4734.900000000009,
+      "eff": 0.05641090624933806,
+      "retention": 0.6256734598266454,
+      "range": 566.3000000000029,
+      "medAbsBatonMove": 36.1,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T20:00:00+01:00",
+      "flow": 0.5877743379790941,
+      "cadence": 19.060000000000002,
+      "samples": 120,
+      "net": 317.8999999999942,
+      "path": 3645.100000000035,
+      "eff": 0.08721297083756033,
+      "retention": 0.6467955239063972,
+      "range": 669.5,
+      "medAbsBatonMove": 25.700000000000003,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T21:00:00+01:00",
+      "flow": 0.45891666666666664,
+      "cadence": 20.235,
+      "samples": 120,
+      "net": -168.40000000000873,
+      "path": 3586.9999999999563,
+      "eff": 0.04694730972958204,
+      "retention": 0.4340206185567235,
+      "range": 424.6999999999971,
+      "medAbsBatonMove": 24.0,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T22:00:00+01:00",
+      "flow": 0.4582416417256734,
+      "cadence": 21.25,
+      "samples": 120,
+      "net": -316.6999999999971,
+      "path": 3464.099999999962,
+      "eff": 0.09142345775237451,
+      "retention": 0.790564153769356,
+      "range": 410.09999999999127,
+      "medAbsBatonMove": 24.5,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-05T23:00:00+01:00",
+      "flow": 0.3408936507936508,
+      "cadence": 10.35,
+      "samples": 120,
+      "net": -134.79999999998836,
+      "path": 2911.5999999999476,
+      "eff": 0.046297568347297285,
+      "retention": 0.4854159164565456,
+      "range": 489.20000000001164,
+      "medAbsBatonMove": 21.049999999999997,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T00:00:00+01:00",
+      "flow": 1.091336616161616,
+      "cadence": 32.285,
+      "samples": 120,
+      "net": 366.0,
+      "path": 5139.60000000018,
+      "eff": 0.07121176745271755,
+      "retention": 0.7749311878043569,
+      "range": 846.3000000000029,
+      "medAbsBatonMove": 30.0,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T01:00:00+01:00",
+      "flow": 0.5646630405676798,
+      "cadence": 16.17,
+      "samples": 120,
+      "net": 228.3000000000029,
+      "path": 2846.8999999999796,
+      "eff": 0.08019249007692737,
+      "retention": 0.74389051808409,
+      "range": 306.8999999999942,
+      "medAbsBatonMove": 18.3,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T02:00:00+01:00",
+      "flow": 0.35551913875598085,
+      "cadence": 20.115000000000002,
+      "samples": 120,
+      "net": -173.89999999999418,
+      "path": 3616.5,
+      "eff": 0.04808516521498526,
+      "retention": 0.46547109207706494,
+      "range": 458.1000000000058,
+      "medAbsBatonMove": 27.5,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T03:00:00+01:00",
+      "flow": 0.42415231147174864,
+      "cadence": 13.715,
+      "samples": 120,
+      "net": 73.69999999999709,
+      "path": 2706.699999999968,
+      "eff": 0.027228728710236804,
+      "retention": 0.43124634289057695,
+      "range": 292.8999999999942,
+      "medAbsBatonMove": 19.0,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T04:00:00+01:00",
+      "flow": 0.3486258971291867,
+      "cadence": 12.965,
+      "samples": 120,
+      "net": -259.5,
+      "path": 2805.2999999999593,
+      "eff": 0.09250347556411213,
+      "retention": 0.6630045988758155,
+      "range": 480.6999999999971,
+      "medAbsBatonMove": 21.4,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T05:00:00+01:00",
+      "flow": 0.42825576813249566,
+      "cadence": 11.295,
+      "samples": 120,
+      "net": -122.5,
+      "path": 2391.5,
+      "eff": 0.051223081747856995,
+      "retention": 0.4773967264224366,
+      "range": 256.6000000000058,
+      "medAbsBatonMove": 17.15,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T06:00:00+01:00",
+      "flow": 0.4773962367475686,
+      "cadence": 14.84,
+      "samples": 120,
+      "net": -119.39999999999418,
+      "path": 2776.000000000058,
+      "eff": 0.043011527377518614,
+      "retention": 0.2638091029606639,
+      "range": 452.59999999999127,
+      "medAbsBatonMove": 21.299999999999997,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T07:00:00+01:00",
+      "flow": 0.2925432194616977,
+      "cadence": 10.489999999999998,
+      "samples": 120,
+      "net": 38.5,
+      "path": 2222.5,
+      "eff": 0.01732283464566929,
+      "retention": 0.16871165644171995,
+      "range": 324.5,
+      "medAbsBatonMove": 15.350000000000001,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T08:00:00+01:00",
+      "flow": 0.5686975368640652,
+      "cadence": 16.905,
+      "samples": 120,
+      "net": -76.0,
+      "path": 2719.600000000006,
+      "eff": 0.02794528607148104,
+      "retention": 0.1989008113059454,
+      "range": 515.6999999999971,
+      "medAbsBatonMove": 17.299999999999997,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T09:00:00+01:00",
+      "flow": 0.35878370061544573,
+      "cadence": 11.92,
+      "samples": 120,
+      "net": 68.19999999999709,
+      "path": 2478.5999999999913,
+      "eff": 0.02751553296215498,
+      "retention": 0.37534397358281885,
+      "range": 312.0,
+      "medAbsBatonMove": 16.200000000000003,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T10:00:00+01:00",
+      "flow": 0.6138106442119032,
+      "cadence": 13.43,
+      "samples": 120,
+      "net": 514.3999999999942,
+      "path": 2584.79999999993,
+      "eff": 0.19900959455277317,
+      "retention": 0.856191744340865,
+      "range": 600.8000000000029,
+      "medAbsBatonMove": 18.0,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T11:00:00+01:00",
+      "flow": 0.26170342268498004,
+      "cadence": 9.600000000000001,
+      "samples": 120,
+      "net": -79.69999999999709,
+      "path": 2018.4999999999272,
+      "eff": 0.03948476591528361,
+      "retention": 0.6765704584040333,
+      "range": 197.5,
+      "medAbsBatonMove": 14.55,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T12:00:00+01:00",
+      "flow": 0.3272641561909,
+      "cadence": 8.379999999999999,
+      "samples": 120,
+      "net": 59.29999999998836,
+      "path": 2079.6999999999825,
+      "eff": 0.02851372794152467,
+      "retention": 0.3212351029251959,
+      "range": 292.0,
+      "medAbsBatonMove": 15.0,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T13:00:00+01:00",
+      "flow": 0.47218650329271933,
+      "cadence": 12.14,
+      "samples": 120,
+      "net": -89.80000000000291,
+      "path": 2330.6000000000495,
+      "eff": 0.03853085042478375,
+      "retention": 0.3730785209804902,
+      "range": 353,
+      "medAbsBatonMove": 15.95,
+      "intensity": "MEDIUM",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T14:00:00+01:00",
+      "flow": 0.7553242240215924,
+      "cadence": 17.78,
+      "samples": 120,
+      "net": -196.59999999999127,
+      "path": 3751.5999999999913,
+      "eff": 0.052404307495466394,
+      "retention": 0.5135841170323662,
+      "range": 382.8000000000029,
+      "medAbsBatonMove": 23.15,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T15:00:00+01:00",
+      "flow": 1.6361999999999999,
+      "cadence": 41.65,
+      "samples": 119,
+      "net": -366.40000000000873,
+      "path": 5596.199999999997,
+      "eff": 0.06547299953540062,
+      "retention": 0.6151779717931584,
+      "range": 753.6000000000058,
+      "medAbsBatonMove": 36.4,
+      "intensity": "HIGH",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T16:00:00+01:00",
+      "flow": 1.5173187739463603,
+      "cadence": 58.625,
+      "samples": 120,
+      "net": 294.0,
+      "path": 6285.399999999936,
+      "eff": 0.04677506602602905,
+      "retention": 0.5014497697424501,
+      "range": 898.8000000000029,
+      "medAbsBatonMove": 38.9,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T17:00:00+01:00",
+      "flow": 0.6799945445920303,
+      "cadence": 27.585,
+      "samples": 120,
+      "net": 173.09999999999127,
+      "path": 3782.0999999999913,
+      "eff": 0.04576822400253607,
+      "retention": 0.41560624249697786,
+      "range": 619.8999999999942,
+      "medAbsBatonMove": 28.25,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T18:00:00+01:00",
+      "flow": 0.5888529246344207,
+      "cadence": 17.15,
+      "samples": 120,
+      "net": -180.89999999999418,
+      "path": 3253.899999999965,
+      "eff": 0.05559482467193095,
+      "retention": 0.38853092783504634,
+      "range": 540.6999999999971,
+      "medAbsBatonMove": 20.75,
+      "intensity": "HIGH",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T19:00:00+01:00",
+      "flow": 0.19441595925297112,
+      "cadence": 11.14,
+      "samples": 120,
+      "net": 46.30000000000291,
+      "path": 2359.299999999974,
+      "eff": 0.01962446488365338,
+      "retention": 0.19315811430956809,
+      "range": 316.8999999999942,
+      "medAbsBatonMove": 16.200000000000003,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T20:00:00+01:00",
+      "flow": 0.16100364882795223,
+      "cadence": 6.135,
+      "samples": 120,
+      "net": 93.5,
+      "path": 1819.0999999999185,
+      "eff": 0.05139904348304337,
+      "retention": 0.9415911379657327,
+      "range": 192.8000000000029,
+      "medAbsBatonMove": 11.8,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T21:00:00+01:00",
+      "flow": 0.16855218760280088,
+      "cadence": 6.475,
+      "samples": 120,
+      "net": -12.80000000000291,
+      "path": 1820.599999999904,
+      "eff": 0.007030649236517404,
+      "retention": 0.07980049875313824,
+      "range": 264.8999999999942,
+      "medAbsBatonMove": 13.649999999999999,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T22:00:00+01:00",
+      "flow": 0.10626929709563596,
+      "cadence": 3.275,
+      "samples": 120,
+      "net": 54.80000000000291,
+      "path": 999.7999999999738,
+      "eff": 0.05481096219244284,
+      "retention": 0.3650899400399786,
+      "range": 204.90000000000873,
+      "medAbsBatonMove": 7.6,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-06T23:00:00+01:00",
+      "flow": 0.1785991006615592,
+      "cadence": 4.13,
+      "samples": 120,
+      "net": -34.5,
+      "path": 1319.7000000000116,
+      "eff": 0.02614230506933371,
+      "retention": 0.19071310116086848,
+      "range": 215.39999999999418,
+      "medAbsBatonMove": 6.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T00:00:00+01:00",
+      "flow": 0.15470424656172155,
+      "cadence": 2.68,
+      "samples": 120,
+      "net": -54.69999999999709,
+      "path": 766.2999999998574,
+      "eff": 0.0713819652877558,
+      "retention": 0.6473372781064745,
+      "range": 139.1999999999971,
+      "medAbsBatonMove": 3.8499999999999996,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T01:00:00+01:00",
+      "flow": 0.13416197560369358,
+      "cadence": 2.335,
+      "samples": 120,
+      "net": 52.89999999999418,
+      "path": 566.6999999998952,
+      "eff": 0.09334745014999817,
+      "retention": 0.44009983361061117,
+      "range": 123.69999999999709,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T02:00:00+01:00",
+      "flow": 0.13140247650107525,
+      "cadence": 2.39,
+      "samples": 120,
+      "net": 126.59999999999127,
+      "path": 636.9999999999854,
+      "eff": 0.19874411302981815,
+      "retention": 0.9350073855243479,
+      "range": 183.1999999999971,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T03:00:00+01:00",
+      "flow": 0.16903305966697502,
+      "cadence": 2.625,
+      "samples": 120,
+      "net": -23,
+      "path": 514.0000000001164,
+      "eff": 0.04474708171205212,
+      "retention": 0.4527559055117851,
+      "range": 86.69999999999709,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T04:00:00+01:00",
+      "flow": 0.1422059620652502,
+      "cadence": 2.775,
+      "samples": 120,
+      "net": -143,
+      "path": 956.2000000001572,
+      "eff": 0.14955030328380725,
+      "retention": 0.572,
+      "range": 308,
+      "medAbsBatonMove": 2.25,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T05:00:00+01:00",
+      "flow": 0.13098669459012774,
+      "cadence": 2.365,
+      "samples": 120,
+      "net": 19.59999999999127,
+      "path": 653.1999999999098,
+      "eff": 0.0300061236987048,
+      "retention": 0.552112676056092,
+      "range": 68.89999999999418,
+      "medAbsBatonMove": 1.8,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T06:00:00+01:00",
+      "flow": 0.15743001735106998,
+      "cadence": 2.36,
+      "samples": 120,
+      "net": 125.5,
+      "path": 555.100000000064,
+      "eff": 0.22608539001979017,
+      "retention": 0.899641577060932,
+      "range": 160.3000000000029,
+      "medAbsBatonMove": 0.8500000000000001,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T07:00:00+01:00",
+      "flow": 0.15179140953791487,
+      "cadence": 1.505,
+      "samples": 120,
+      "net": 1.5,
+      "path": 285.50000000023283,
+      "eff": 0.005253940455337221,
+      "retention": 0.0541516245487137,
+      "range": 50.60000000000582,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T08:00:00+01:00",
+      "flow": 0.1490718969282444,
+      "cadence": 2.4050000000000002,
+      "samples": 120,
+      "net": 78.10000000000582,
+      "path": 509.3000000001339,
+      "eff": 0.1533477321813966,
+      "retention": 1.0,
+      "range": 124.80000000000291,
+      "medAbsBatonMove": 0.2,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T09:00:00+01:00",
+      "flow": 0.16187716183145578,
+      "cadence": 2.1,
+      "samples": 120,
+      "net": 91.20000000001164,
+      "path": 297.20000000009895,
+      "eff": 0.30686406460289795,
+      "retention": 0.993464052287677,
+      "range": 91.80000000000291,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T10:00:00+01:00",
+      "flow": 0.23840082210662772,
+      "cadence": 3.025,
+      "samples": 120,
+      "net": -149.5,
+      "path": 685.7000000000116,
+      "eff": 0.21802537552865314,
+      "retention": 0.852823730747347,
+      "range": 212.5,
+      "medAbsBatonMove": 1.3,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T11:00:00+01:00",
+      "flow": 0.12555598495307424,
+      "cadence": 2.4050000000000002,
+      "samples": 120,
+      "net": -65.10000000000582,
+      "path": 571.9000000000233,
+      "eff": 0.11383108935129073,
+      "retention": 0.6746113989637909,
+      "range": 124.0,
+      "medAbsBatonMove": 0.6,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T12:00:00+01:00",
+      "flow": 0.08969749410648134,
+      "cadence": 2.0599999999999996,
+      "samples": 120,
+      "net": -8.60000000000582,
+      "path": 515.6000000000349,
+      "eff": 0.016679596586511324,
+      "retention": 0.15357142857153253,
+      "range": 109.60000000000582,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T13:00:00+01:00",
+      "flow": 0.09282917884990254,
+      "cadence": 2.0949999999999998,
+      "samples": 120,
+      "net": -97.59999999999127,
+      "path": 505.2000000000262,
+      "eff": 0.1931908155185792,
+      "retention": 0.6103814884302365,
+      "range": 177,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T14:00:00+01:00",
+      "flow": 0.13521851017554762,
+      "cadence": 2.41,
+      "samples": 120,
+      "net": 37.90000000000873,
+      "path": 484.49999999998545,
+      "eff": 0.07822497420022677,
+      "retention": 0.4321550741163478,
+      "range": 151.60000000000582,
+      "medAbsBatonMove": 0.95,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T15:00:00+01:00",
+      "flow": 0.08849072243946152,
+      "cadence": 1.8849999999999998,
+      "samples": 120,
+      "net": 10.700000000011642,
+      "path": 361.8999999999651,
+      "eff": 0.029566178502383737,
+      "retention": 0.27365728900281455,
+      "range": 46,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T16:00:00+01:00",
+      "flow": 0.25797533627954605,
+      "cadence": 3.215,
+      "samples": 120,
+      "net": -198.6999999999971,
+      "path": 885.8999999999505,
+      "eff": 0.2242916807766206,
+      "retention": 0.6289965178854091,
+      "range": 316.0,
+      "medAbsBatonMove": 3.5,
+      "intensity": "MEDIUM",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T17:00:00+01:00",
+      "flow": 0.16761014375080735,
+      "cadence": 2.625,
+      "samples": 120,
+      "net": -10.5,
+      "path": 687.8999999999651,
+      "eff": 0.015263846489316082,
+      "retention": 0.23542600896857915,
+      "range": 75.5,
+      "medAbsBatonMove": 3.7,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T18:00:00+01:00",
+      "flow": 0.09334216422545709,
+      "cadence": 1.5750000000000002,
+      "samples": 120,
+      "net": 76.39999999999418,
+      "path": 374.0,
+      "eff": 0.2042780748662946,
+      "retention": 0.736030828516301,
+      "range": 103.80000000000291,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "PRODUCTIF_EXPLORATOIRE"
+    },
+    {
+      "hour": "2026-11-07T19:00:00+01:00",
+      "flow": 0.09029684264028706,
+      "cadence": 1.4849999999999999,
+      "samples": 112,
+      "net": -6.399999999994179,
+      "path": 297.0000000000873,
+      "eff": 0.021548821548795616,
+      "retention": 0.12144212523705437,
+      "range": 83.5,
+      "medAbsBatonMove": 0.1,
+      "intensity": "LOW",
+      "quality": "IMPRODUCTIF_EXPLORATOIRE"
+    }
+  ],
+  "warnings": [
+    "PM Live is the V494 Elastic 30s snapshot, not necessarily exactly the V543 5s PM Live",
+    "Event intensity uses only trailing one hour of observed Audit, though its relative cluster thresholds are fitted ex-post and require walk-forward validation",
+    "Horizon outcomes measured in BTC price displacement, not actual PAPER trade PNL",
+    "Hourly intensity cutoffs fitted on whole observed sample, descriptive lookahead: NOT actionable as-of",
+    "Independent episodes use 45 min refractory; still not causal or independent market paths",
+    "Productivity labels use provisional per-intensity medians and one hour net move >~ roundtrip fees; no future leakage into event detection once calibrated separately",
+    "Missing or late future sources censored, no interpolation"
+  ]
+}

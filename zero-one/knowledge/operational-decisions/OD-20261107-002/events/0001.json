@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-07T19:13:04+00:00",
+  "status": "AUTORISE",
+  "description": "Recherche historique PM5/PM3/PMLive et trois niveaux intensite x deux etats productivite autorisee; aucun seuil de trading valide",
+  "evidence": "Prompt integral avec correction PM5 en 01, mission directe 02, contexte et limites en 03",
+  "previousEventSha256": null
+}

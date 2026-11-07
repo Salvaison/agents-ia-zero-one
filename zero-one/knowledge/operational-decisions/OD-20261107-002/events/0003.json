@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-07T19:16:10+00:00",
+  "status": "TESTE",
+  "description": "Reproduction data anonymises BTC: 19661 snapshots V494, 19544 snapshots Audit14D, 163 heures, 154 trois-PM a trois chiffres dont 25 contradictoires, 11 episodes 45min; horizons +/- verifies #182; scripts py_compile et assertions passent",
+  "evidence": "/tmp/boonolab_PM_dissonance_study_20261107.log ; scripts/boonolab_pm_dissonance_study_20261107.py source frozen 2026-11-07 19:56 CET ; sha256 JSON fed8ff82aabd54d06c8a70e0f92261a2d8541f1eb062d1ace7805865c52d79f3 ; no changes modules/paper/pm2/boono-tv",
+  "previousEventSha256": "5b05ac830f06d64714c6b69a23c4ca43cf68a39dd2d146de29a251dff4da2663"
+}
