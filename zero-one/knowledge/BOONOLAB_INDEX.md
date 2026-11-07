@@ -165,3 +165,7 @@ Le dossier `knowledge/operational-decisions/OD-…/` contient : `01-demande-util
 ## BOONO-TV spectateur Android et Tailscale (06/11)
 
 - [Passerelle mobile privée en lecture seule et raccordement OVH à Tailscale](BOONO_TV_ANDROID_TAILSCALE_VUE_SPECTATEUR_2026-11-06.md) — port local 3092, flux vidéo/WS testés, éditorial et calibration interdits, Tailscale Serve HTTPS à configurer après approbation du nœud par utilisateur ; OD-20261106-012.
+
+## BOONO-TV deuxième vidéo privée et éditeurs repliables (07/11)
+
+- [Sélecteur privé à deux vidéos, import local et nettoyage des panneaux](BOONO_TV_deux_videos_privees_et_interface_repliable_2026-11-07.md) — code en service pour sélectionner le média sans recharger la scène, commandes repliables, bandeau Studio supprimé ; transfert House Party encore en attente de reconnexion de Penguin ; OD-20261107-003.

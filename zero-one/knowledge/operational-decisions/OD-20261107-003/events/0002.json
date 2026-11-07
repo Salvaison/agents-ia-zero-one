@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-07T21:27:51+00:00",
+  "status": "TESTE",
+  "description": "Flux catalogue GET OVH et mobile 200, POST import depuis mobile 405 et sans Origin 403, fichier House absent 404. MP4 synthetique H264 AAC 16s de 1759055 octets importe avec succès, deux streams HTTP206 et piste AAC-only, Chromium selection Clemens -> test House -> Clemens sans rechargement scene ni 2nd video, titre et analyse audio mis a jour, zero erreur JS. Fixture video/audio/meta SUPPRIMEE ensuite avec vérification du nom; catalogue final Clemens ready true, House ready false. Trois ateliers repliables et bannière Studio disparue, bureaux/alpha calibration SHA inchangées.",
+  "evidence": "OVH tests/verify-OD-20261107-001-video-switch-result.json, verify-OD-20261107-001-ui-final.json, image video-controls-expanded.jpg ; studio+mobile catalogue et Range, read-only mobile POST405; SHA bureau 39922e2434c59e282d3ee64ff851c6b9def9c43a345d5c2f68cf56b87d112c2f ; mur 4cff3e82d4840f72a3006d5a9067508c5c8447af85f3ba954325cada02f0bd8a",
+  "previousEventSha256": "298fd27c239a45a0215e01c4ac620ad2e2193f1276ed22e084c089e4c231d3fb"
+}

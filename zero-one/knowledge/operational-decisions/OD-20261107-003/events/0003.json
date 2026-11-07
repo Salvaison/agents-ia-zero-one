@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-07T21:27:55+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Interface de sélection/repli et import local BOONO-TV en service sur OVH, l'ancien MP4 Clemens disponible, bandeau Studio supprimé, passerelle Android demeure read-only. INSTALLATION DU DEUXIEME FICHIER NON ACHEVEE : source de 423,2 Mo reste sur Chromebook YT dont Penguin est Offline. Nécessite reconnecter Linux/tunnel 8310, effectuer upload volontaire et valider codecs/hash avant activation de House Party. Aucun changement des runners PAPER.",
+  "evidence": "OVH boono-studio.service et boono-mobile-viewer.service actifs, GET catalogue House ready:false, import via Amsterdam 8310 HTTP200, aucun fichier house-party-private-20261107.mp4 sur OVH, documentation KB complète avec état ouvert",
+  "previousEventSha256": "347d48c72b60287f4379d96ec3b6a12341a83149094ec0c31b1989fd62ec71e2"
+}

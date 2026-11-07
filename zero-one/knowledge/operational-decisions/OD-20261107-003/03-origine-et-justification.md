@@ -1,0 +1,7 @@
+# OD-20261107-003 — Sélection de deux vidéos privées, contrôle compact et suppression de la pastille Studio
+
+**Origine :** capture du Chromebook fournie le 7 novembre 2026, dossier `YT`, fichier vidéo dont le nom visible est tronqué « The House Party You Wish You Were At... » et taille indiquée 423,2 Mo. L'utilisateur demande de transférer cette vidéo empruntée pour usage privé, de pouvoir choisir entre les deux morceaux, de rendre l'éditeur réductible à un bouton, et de supprimer la superposition « STUDIO BOONO-TV · SOURCE AMSTERDAM CONNECTÉE ».
+
+**Frontière de disponibilité :** le nouveau fichier MP4 n'a pas été trouvé sur OVH ni Amsterdam ; le device Penguin (ChromeOS Linux) est hors ligne depuis environ 39 heures. La capture est une image, pas la vidéo. L'implémentation d'import existe, mais **le transfert du véritable fichier utilisateur est en attente de reconnexion de Penguin / tunnel SSH Chromebook**. Ne pas déclarer l'installation du second clip achevée. La vidéo Clemens Costa, les 4 projections, les masques alpha et les deux décodeurs audio/vidéo existants sont conservés.
+
+**Choix :** sélection à un seul lecteur vidéo, catalogue privé, upload en streaming depuis navigateur ChromeOS via localhost, jamais exposé par la passerelle spectateur Tailscale. Contrôles repliables et retrait de la seule couche de statut inutile, sans supprimer les données d'Amsterdam ni les éditeurs. La première vérification utilisera une vidéo synthétique temporaire, à supprimer après test.

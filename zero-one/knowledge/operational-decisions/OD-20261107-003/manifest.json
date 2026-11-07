@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261107-003",
+  "title": "BOONO-TV deux videos privees selectionnables et panneaux repliables",
+  "createdAtUtc": "2026-11-07T21:24:06+00:00",
+  "authorization": "Demande explicite du propriétaire, 7 novembre 2026 : deuxième vidéo privée, changement de clip et nettoyage UI",
+  "reference": "Capture du gestionnaire de fichiers ChromeOS YT, source OVH studio, attente tunnel Penguin",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "1024df5ec4b3cc04579b6705ffce002c036bb4a62b4f4f5e8f5b4e56d3344869",
+      "bytes": 401
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b8bd54803c878f4f1d90934e69bcbc419ebdd7475fe9fed7177539af81488c5d",
+      "bytes": 1144
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "4d08875899c77a0ef604431fdb0775c5f6584d6e6b9336b7e8b2d0b9202171b2",
+      "bytes": 1549
+    }
+  }
+}

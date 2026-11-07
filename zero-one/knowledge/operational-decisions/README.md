@@ -265,3 +265,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## PM5/PM3/PM Live et trois niveaux de marché — 7 novembre 2026
 
 - [OD-20261107-002 — Recherche rétrospective depuis 01/11, régimes faible/médian/fort × productif/improductif](OD-20261107-002/03-origine-et-justification.md). [Rapport synthétique avec les 25 dissonances, les résultats +3/+15/+45 min et les qualités Elastic](../BOONOLAB_PM3_PM5_PMLive_dissonance_regimes_2026-11-07.md) ; [données de recherche reproductibles](../BOONOLAB_PM_dissonance_study_results_2026-11-07.json). **Seuils exploratoires 0,226 / 0,552 BTC/s, aucune modification de PAPER ni des shadows en service.**
+
+## BOONO-TV — sélection de deux vidéos et interfaces compactes (7 novembre 2026)
+
+- [OD-20261107-003 — Deux clips privés et panneaux repliables](OD-20261107-003/03-origine-et-justification.md) : catalogue Clemens/House Party, même lecteur vidéo, import privé ChromeOS avec progression, boutons pour replier vidéo/scénarios/calibration, et suppression de la pastille Studio Amsterdam ; [rapport et état réel](../BOONO_TV_deux_videos_privees_et_interface_repliable_2026-11-07.md). **Le vrai deuxième MP4 de 423,2 Mo n’est pas encore transféré : Penguin hors ligne.**

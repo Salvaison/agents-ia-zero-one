@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-07T21:27:48+00:00",
+  "status": "IMPLEMENTE",
+  "description": "BOONO-TV OVH a un catalogue privé 2 clips et sélecteur dans le même élément video/Canvas ; événement de bascule met à jour titre et décodeur audio-only. Import privé depuis ChromeOS localhost préparé avec validation MP4 H264, SHA256 et piste audio. Contrôles vidéo réduits par défaut à un bouton, ateliers postures/mur/layout repliables et badge fixe Studio Amsterdam supprimé ; API santé conservée. Vrai MP4 House Party absent, Penguin distant Offline.",
+  "evidence": "OVH studio-server.js, private-media-catalog.js, scene/window-local-video.js, music-ticker.js, projection-cycle.js, media-import.js, editor-minimize.js, boono-v2.css, index.html ; backup /home/ubuntu/boono-tv-studio/backups/OD-20261107-001",
+  "previousEventSha256": null
+}
