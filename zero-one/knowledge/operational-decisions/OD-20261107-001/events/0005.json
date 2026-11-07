@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-11-07T11:59:24+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Publication Github bc377c5 verifiee et continuation observateur confirmees apres douze snapshots 30s, les sept familles actives, PAPER inchanges",
+  "evidence": "Commit bc377c5 pousse sur main ; GitHub fetch_file valide rapport et OD ; 2026-11-07T11:58:47Z observations12, 7 familles MCB15/MCB3/FLOW/MA/CONVERSION/BOUNDARY/CONTEXT, age19s, source recente ; PM2 observer PID3729367, config PID3729400, PAPER494 PID3123676 PAPER543 PID3123690 et contrats/equity invariants ; UI sans polling et anonyme HTTP302 /login",
+  "previousEventSha256": "78048d3edc6b6dd47e786ffe795be1d2608efa9167defd75126a3e12d0e9ec4e"
+}
