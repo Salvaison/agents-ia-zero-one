@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BOONOLAB · Chronologie causale et régimes</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0c1621;color:#e8edf1}
+*{box-sizing:border-box}
+body{margin:0}header{position:sticky;top:0;z-index:3;background:#102231f5;border-bottom:1px solid #34536a;padding:12px max(16px,calc((100vw - 1120px)/2));box-shadow:0 4px 24px #0005}
+h1{font-size:18px;letter-spacing:.04em;margin:0}h2{font-size:13px;letter-spacing:.08em;color:#b8cedc;margin:15px 0 9px;text-transform:uppercase}
+header p{font-size:11px;color:#a0bacb;margin:5px 0 0}
+main{max-width:1120px;margin:0 auto;padding:14px 16px 60px}
+.card,.panel{border:1px solid #365061;background:#152332;border-radius:10px;padding:12px;margin-bottom:10px}
+.card h3{font-size:11px;color:#a7c3d2;letter-spacing:.055em;margin:0 0 8px;text-transform:uppercase}
+.value{font-size:20px;font-weight:700;overflow-wrap:anywhere}
+.meta{font-size:12px;line-height:1.5;color:#c1cbd1}
+.small{font-size:11px;color:#8da6b8}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:9px 0}
+select,button{border-radius:7px;background:#223b4d;color:#f0f4f8;border:1px solid #527287;padding:7px 10px;font:inherit;font-size:12px}
+button{cursor:pointer}button:hover{background:#315269}
+button:disabled{opacity:.45;cursor:not-allowed}
+a{color:#93cfef}a:hover{text-decoration:none}
+#eventList{display:grid;gap:7px}
+.event{display:grid;grid-template-columns:124px minmax(0,1fr);gap:10px;border:1px solid #304859;border-radius:8px;padding:9px 11px;background:#142638}
+.event .when{color:#aac5d5;font-size:12px;font-variant-numeric:tabular-nums}
+.event .kind{font-size:12px;font-weight:750}
+.event .details{margin-top:4px;font-size:12px;color:#b8cbd5;overflow-wrap:anywhere}
+.event details{margin-top:5px}.event pre{white-space:pre-wrap;word-break:break-word;color:#b8cad4;font-size:11px;line-height:1.45}
+blockquote{margin:4px 0;padding:8px 12px;border-left:3px solid #6c9ab3;font-size:12px;background:#1b3446}
+summary{cursor:pointer}
+#message{font-size:12px;color:#a8c7d8;padding:5px 0 10px}
+.win{color:#8fe4b4}.warn{color:#ffd398}.muted{color:#9eb1bc}
+.pill{padding:3px 7px;border:1px solid #527287;border-radius:99px;font-size:11px}
+@media(max-width:740px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.event{grid-template-columns:1fr;gap:4px}header{padding:10px 15px}main{padding:10px 12px}.value{font-size:17px}}
+</style></head><body>
+<header><h1>BOONOLAB · Chronologie causale</h1>
+<p>Sept familles événementielles · quatre états de marché · protection de position en shadow</p>
+<p><strong>LECTURE STABLE :</strong> aucun rafraîchissement automatique de cette page, même si le laboratoire produit des observations toutes les 30 secondes. Le défilement et les panneaux ouverts restent en place.</p>
+</header>
+<main>
+<div class="bar"><a href="/" title="Retour à BOONO Watch">← BOONO Watch</a>
+<button id="refreshSummary">Actualiser seulement le résumé</button>
+<button id="goLatest">Voir les événements les plus récents</button>
+<span class="pill">SHADOW UNIQUEMENT · aucun ordre</span></div>
+<div id="message" role="status">Lecture du dernier instantané…</div>
+<h2>Régime du marché et menace sur la position</h2>
+<div class="grid">
+<div class="card"><h3>État du marché</h3><div class="value" id="regime">—</div><div class="meta" id="regimeExtra">—</div></div>
+<div class="card"><h3>Intensité relative</h3><div class="value" id="intensity">—</div><div class="meta" id="flow">—</div></div>
+<div class="card"><h3>Productivité</h3><div class="value" id="productivity">—</div><div class="meta" id="efficiency">—</div></div>
+<div class="card"><h3>Position V543 · risque</h3><div class="value" id="threat">—</div><div class="meta" id="threatExtra">—</div></div>
+</div>
+<div class="grid2">
+<div class="panel"><h2>Mémoire 4 × 15 minutes</h2><div class="meta" id="slots">—</div></div>
+<div class="panel"><h2>Territoire 2h et contexte 4h</h2><div class="meta" id="territory">—</div></div>
+</div>
+<blockquote><strong>Attention :</strong> ce classement est une hypothèse descriptive relative à l'activité antérieure. Le débit BTC/s ne mesure pas la profondeur du carnet. Une contre-attaque signalée n'est ni un EXIT PAPER ni une preuve qu'une liquidation est terminée. Aucun seuil de trading n'a été ajouté.</blockquote>
+<h2>Sept familles — état connu au dernier relevé</h2>
+<div id="families" class="grid"></div>
+<h2>Registre horodaté</h2>
+<div class="bar">
+<label>Afficher <select id="kind"><option value="events">Événements / changements</option><option value="snapshots">Snapshots 30s</option></select></label>
+<label>Famille <select id="family"><option value="ALL">Toutes les familles</option><option>MCB15</option><option>MCB3</option><option>FLOW</option><option>MA</option><option>CONVERSION</option><option>BOUNDARY</option><option>CONTEXT</option></select></label>
+<label>Historique <select id="hours"><option value="6">6h</option><option value="24">24h</option><option value="48" selected>48h</option><option value="168">7 jours</option><option value="336">14 jours</option></select></label>
+<button id="read">Afficher selon ces filtres</button>
+</div>
+<div class="small">Heure de connaissance et heure de bougie source sont distinctes. Le journal commence lors de l'activation du shadow : aucune preuve antérieure n'a été inventée. Les fichiers rotatifs ne garantissent pas quatorze jours.</div>
+<div id="eventList" aria-live="off"></div>
+<div class="bar"><button id="older" disabled>Charger les événements plus anciens</button><span id="pagination" class="small"></span></div>
+</main>
+<script>
+'use strict';
+// Deliberately no interval, WebSocket or auto-repaint. Manual reading only.
+const $=id=>document.getElementById(id);
+const state={items:[],cursor:null,hasMore:false,busy:false};
+const labels={STERILE_HESITANT:'Stérile / hésitant',
+ SILENCIEUX_PRODUCTIF:'Silencieux productif',
+ DENSE_CONTRADICTOIRE:'Dense / contradictoire',
+ DIRECTIONNEL_PRODUCTIF:'Directionnel productif',
+ INDETERMINE:'Indéterminé',NO_POSITION:'Aucune position',
+ COUNTERATTACK_WITH_AGGRESSIVE_FLOW:'Contre-attaque rapide + flux',
+ MATERIAL_COUNTERATTACK:'Contre-attaque matérielle',
+ WATCH_GIVEBACK:'Restitution à surveiller',
+ MATURE_IMPULSE:'Impulsion mature',OBSERVING:'Observation'};
+function label(v){return labels[v]||String(v??'—')}
+function fmt(v,d=2){return typeof v==='number'&&Number.isFinite(v)?
+ v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'}
+function date(v){return v?new Date(v).toLocaleString('fr-FR',{
+ timeZone:'Europe/Stockholm',day:'2-digit',month:'2-digit',hour:'2-digit',
+ minute:'2-digit',second:'2-digit'}):'—'}
+function set(id,txt){$(id).textContent=txt}
+function describe(obj,keys){return keys.map(k=>k+': '+(obj?.[k]??'—')).join(' · ')}
+async function api(url){
+ const r=await fetch(url,{cache:'no-store',credentials:'same-origin'});
+ if(!r.ok)throw Error('HTTP '+r.status);
+ return r.json();
+}
+async function readSummary(){
+ try{
+  const x=await api('/api/shadows/boonolab-market');
+  if(x.decisionImpact!==false||x.brokerOrdersEnabled!==false)
+   throw Error('Contrat SHADOW non valide');
+  const r=x.regime||{},m=r.metrics||{},lh=m.lastHour||{},t=r.twoHour||{},
+   p=x.positionAttention||{};
+  set('regime',label(r.label));
+  set('regimeExtra',(r.uncertainty||'SOURCE INCONNUE')+
+   ' · relevé '+date(x.asOf));
+  set('intensity',label(r.intensity));
+  set('flow',fmt(lh.medianFlowBtcSec,3)+' BTC/s · référence précédente '+
+   fmt(m.baselineFlowBtcSec,3)+' BTC/s');
+  set('productivity',label(r.productivity));
+  set('efficiency','Trajet net / chemin : '+fmt((lh.pathEfficiency||0)*100,1)+
+   '% · rétention '+fmt((lh.retainedFraction||0)*100,1)+'%');
+  set('threat',label(p.status||'NO_POSITION'));
+  set('threatExtra',p.valid?('Reprise adverse 60s '+fmt(p.adverse60sUsd,1)+
+   ' $ BTC · rendu '+fmt((p.fractionGivenBack||0)*100,1)+
+   '% · résultat hypothétique '+fmt(p.netIfClosedOnObservedPriceUsd)+' $ net'):
+   'Aucun EXIT proposé, aucune position disponible');
+  const slots=(r.fourByFifteen||[]).map(s=>
+   date(s.slotStartAt)+' · Δ '+fmt(s.netUsd,1)+
+   ' BTC$ · eff. '+fmt((s.pathEfficiency||0)*100,1)+
+   '% · débit '+fmt(s.medianFlowBtcSec,3)+
+   ' BTC/s · couverture '+fmt((s.coverage||0)*100,0)+'%');
+  $('slots').replaceChildren(...slots.map(v=>{
+   const el=document.createElement('div');el.textContent=v;
+   el.style.padding='4px 0';return el;}));
+  set('territory','Range observé '+fmt(t.low,1)+' à '+fmt(t.high,1)+
+   ' $ BTC · Δ 2h '+fmt(t.netUsd,1)+' $ BTC · directeur '+
+   (t.MCB15Parent||'—')+' · contexte 4h '+(t.context4h||'—'));
+  const families=$('families');families.replaceChildren();
+  for(const f of x.sevenFamilies||[]){
+   const el=document.createElement('div');el.className='card';
+   const h=document.createElement('h3');h.textContent=f;el.append(h);
+   const v=document.createElement('div');v.className='value';
+   v.style.fontSize='14px';
+   v.textContent=x.current?.[f]?.status||'Non observé';el.append(v);
+   const c=document.createElement('div');c.className='small';
+   c.textContent='Événements : '+(x.counts?.[f]||0);el.append(c);
+   families.append(el);
+  }
+  $('message').textContent='Résumé lu à '+new Date().toLocaleTimeString('fr-FR')+
+   ' · source '+date(x.asOf)+' · '+(x.status||'sans vérification de fraîcheur')+
+   ' · observations '+(x.observations||0)+
+   ' · lecture du registre inchangée';
+ }catch(e){$('message').textContent='Résumé indisponible : '+e.message;}
+}
+function entry(e){
+ const row=document.createElement('article');row.className='event';
+ const when=document.createElement('div');when.className='when';
+ when.textContent=date(e.at??e.asOf);
+ const box=document.createElement('div');
+ const title=document.createElement('div');title.className='kind';
+ title.textContent=e.family?e.family+' · '+(e.type||'')+' · '+(e.key||''):
+  'SNAPSHOT · '+label(e.regimeLabel);
+ box.append(title);
+ const brief=document.createElement('div');brief.className='details';
+ brief.textContent=e.family?(String(e.value?.to??e.value?.status??
+  e.value?.direction??'')+' · provenance '+(e.origin||'—')+
+  ' · source '+date(e.sourceAt)):
+  'BTC '+fmt(e.price,1)+' · régime '+label(e.regimeLabel)+
+  ' · menace '+label(e.positionAttention);
+ box.append(brief);
+ const details=document.createElement('details');
+ const s=document.createElement('summary');s.textContent='Détails / horodatages';details.append(s);
+ const p=document.createElement('pre');p.textContent=JSON.stringify(e,null,2);
+ details.append(p);box.append(details);row.append(when,box);return row;
+}
+async function readHistory(older=false){
+ if(state.busy||older&&!state.hasMore)return;
+ state.busy=true;$('read').disabled=true;$('older').disabled=true;
+ try{
+  const params=new URLSearchParams({kind:$('kind').value,
+   hours:$('hours').value,family:$('kind').value==='snapshots'?'ALL':$('family').value,
+   limit:'40'});
+  if(older&&state.cursor)params.set('before',String(state.cursor));
+  const result=await api('/api/shadows/boonolab-market-history?'+params);
+  if(result.decisionImpact!==false||result.brokerOrdersEnabled!==false)
+   throw Error('Contrat SHADOW invalide');
+  if(!older){state.items=[];$('eventList').replaceChildren();}
+  for(const e of result.items||[]){state.items.push(e);$('eventList').append(entry(e));}
+  state.cursor=result.nextBefore;state.hasMore=result.hasMore;
+  $('pagination').textContent=state.items.length+' enregistrements affichés'+
+   (result.truncatedByScanBudget?' · limite de lecture atteinte':'')+
+   (state.hasMore?' · page suivante disponible':' · fin de la fenêtre');
+ }catch(e){$('pagination').textContent='Registre indisponible : '+e.message;}
+ finally{state.busy=false;$('read').disabled=false;$('older').disabled=!state.hasMore;}
+}
+$('kind').onchange=()=>{$('family').disabled=$('kind').value==='snapshots';};
+$('refreshSummary').onclick=readSummary;
+$('goLatest').onclick=()=>{readSummary();readHistory(false);};
+$('read').onclick=()=>readHistory(false);
+$('older').onclick=()=>readHistory(true);
+readSummary();readHistory(false);
+</script></body></html>

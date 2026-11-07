@@ -257,3 +257,7 @@ Pour OD-20261028-001, le document 01 est **exactement** le message utilisateur. 
 ## BOONO-TV — accès Android privé (6 novembre 2026)
 
 - [OD-20261106-012 — préparation accès Android privé via Tailscale](OD-20261106-012/03-origine-et-justification.md) : passerelle 127.0.0.1:3092 en lecture seule avec vidéo privée et WS, démon Tailscale userspace OVH installé sans modifier les réseaux du trading. **Serveur non encore approuvé dans le tailnet ; HTTPS Serve et accès Android en attente**. [Rapport technique et étapes restantes](../BOONO_TV_ANDROID_TAILSCALE_VUE_SPECTATEUR_2026-11-06.md).
+
+## OD-20261107-001 — BOONOLAB · sept familles, régimes, menace de position
+
+- [OD-20261107-001 — Décision, message original, mission exécutée, statut](OD-20261107-001/03-origine-et-justification.md) : trois observateurs indépendants et lecture chronologique stable (sans rafraîchissement automatique). [Rapport d'implémentation](../BOONOLAB_observatoire_sept_familles_regimes_protection_2026-11-07.md) : chronologie événementielle MCB15/MCB3/FLOW/MA/CONVERSION/BOUNDARY/CONTEXT, shadow de contre-offensive à 30–60s, quatre régimes fondés sur mémoire 4×15 et 2h, tests, fausses alertes #182, limites. **PAPER 494 et 543 intacts ; aucune règle EXIT nouvelle.**

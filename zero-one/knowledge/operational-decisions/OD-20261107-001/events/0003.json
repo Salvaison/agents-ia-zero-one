@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-07T11:57:23+00:00",
+  "status": "TESTE",
+  "description": "7 tests specialises reussis ; regression V5+Attention 325 executés = 313 reussis 12 ignores 0 echec en excluant test historique MA #66 non reproductible; 328 complets 315 pass 12 skip 1 old historical; JS Watch et HTML testes; replay #182 16h06m44s mais fausses alertes anterieures",
+  "evidence": "/tmp/boonolab-market-regression-except-old-ma.log ; /tmp/boonolab-market-test-suite-20261107.log ; tests/attention/boonolab-market-observer.test.js ; node --check ; --replay-182 ; routes anonymes 302 /login ; pas de timers HTML",
+  "previousEventSha256": "c253182f727c05535badf2d9beb173e66b9357a3f64703647f68939263a53dae"
+}

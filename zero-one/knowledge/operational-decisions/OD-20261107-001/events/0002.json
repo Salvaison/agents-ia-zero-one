@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-07T11:57:23+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Modules purs regime 4 quadrants, menaces position, chronologie 7 familles, runner read-only, NDJSON, page authentifiee sans auto-refresh, lien Watch Shadows",
+  "evidence": "zero-one/modules/attention/boonolab-regime-observer.js ; boonolab-position-attention.js ; boonolab-causal-chronicle.js ; boonolab-market-history.js ; boonolab-market-observer-runner.js ; boonolab-observatory.html ; zero-one/modules/config-server.js ; connaissance BOONOLAB_observatoire_sept_familles_regimes_protection_2026-11-07.md",
+  "previousEventSha256": "100a5c32b2322434d2f0a9a738223234b16f2976a95367943d95ba4597217a40"
+}

@@ -46,6 +46,8 @@ const v494DualUiSummary=require('./attention/v494-dual-ui-summary');
 const v494ElasticUiSummary=require('./attention/v494-elastic-ui-summary');
 const v494StateLayer=require('./attention/v494-elastic-state-layer');
 const v494StateHistory=require('./attention/v494-elastic-state-history');
+const boonoMarketHistory=require('./attention/boonolab-market-history');
+const boonoMarketChronicle=require('./attention/boonolab-causal-chronicle');
 const fibContextReadOnly=require('./v5/fib-context-readonly');
 const divergenceLineageShadow=require('./v3lab/experiments/divergence-lineage-shadow');
 const divergenceCausalShadow=require('./v4/experiments/divergence-causal-shadow');
@@ -1442,6 +1444,46 @@ app.get('/api/shadows/v494-state-history',requireAuth,(req,res)=>{
   res.status(400).json({error:'Historique des états indisponible',
    detail:'INVALID_QUERY_OR_HISTORY_UNAVAILABLE'});
  }
+});
+
+// BOONOLAB seven-family event OBSERVER, isolated from BOTH PAPER engines.
+app.get('/boonolab-observatoire',requireAuth,(req,res)=>{
+ try{
+  res.set('Cache-Control','private,no-store');
+  res.type('html').send(fs.readFileSync(path.join(__dirname,
+    'attention/boonolab-observatory.html'),'utf8'));
+ }catch(_){res.status(503).send('Observatoire BOONOLAB indisponible');}
+});
+app.get('/api/shadows/boonolab-market',requireAuth,(req,res)=>{
+ try{
+  const filename=path.join(__dirname,'../data/boonolab-market-observer-summary.json');
+  if(fs.statSync(filename).size>256*1024)throw Error('LAB_SUMMARY_TOO_LARGE');
+  const data=JSON.parse(fs.readFileSync(filename,'utf8'));
+  if(data.version!==boonoMarketChronicle.VERSION||
+    data.mode!=='SHADOW_ONLY'||data.decisionImpact!==false||
+    data.brokerOrdersEnabled!==false||!Array.isArray(data.sevenFamilies))
+    throw Error('LAB_INVALID_SHADOW_CONTRACT');
+  const age=Date.now()-Number(data.asOf);
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,{...data,ageMs:age,
+    status:age>=0&&age<=90000?'DATA_RECENT':'SOURCE_STALE'});
+ }catch(_){res.status(503).json({error:'Résumé BOONOLAB indisponible',
+   detail:'LAB_SUMMARY_UNAVAILABLE_OR_INCOMPATIBLE'});}
+});
+app.get('/api/shadows/boonolab-market-history',requireAuth,(req,res)=>{
+ try{
+  const kind=String(req.query.kind||'events');
+  const file=path.join(__dirname,'../data/',kind==='snapshots'?
+    'boonolab-market-snapshots.ndjson':'boonolab-market-events.ndjson');
+  const result=boonoMarketHistory.page(file,{
+    kind,hours:Number(req.query.hours||48),
+    family:String(req.query.family||'ALL'),
+    before:req.query.before||null,
+    limit:Number(req.query.limit||40)});
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,result);
+ }catch(_){res.status(400).json({error:'Historique BOONOLAB indisponible',
+   detail:'INVALID_QUERY_OR_NO_HISTORY'});}
 });
 
 // V494 entry/exit laboratory: small on-demand snapshot, no recent-NDJSON
@@ -3525,6 +3567,11 @@ app.get('/', requireAuth, (req, res) => {
   <div class="shadow-head">
     <div><div class="shadow-title">BOONO — SHADOWS</div><div class="shadow-sub">Observatoire expérimental · aucune autorité implicite</div></div>
     <div id="shadowWindow" class="shadow-window">Chargement…</div>
+  </div>
+  <div class="shadow-dual-panel" style="padding:11px 13px;border:1px solid #557487;border-radius:8px;margin:10px 0;">
+    <b>BOONOLAB · Observatoire causal à 7 familles et 4 régimes</b>
+    <span style="display:block;font-size:12px;opacity:.78;margin:5px 0;">Chronologie stable pendant le refresh de 30 s · consultation manuelle dans un onglet séparé · protection de position en shadow.</span>
+    <a href="/boonolab-observatoire" target="_blank" rel="noopener noreferrer" style="font-weight:700;color:#217e9e;text-decoration:underline;">Ouvrir l’observatoire BOONOLAB (lecture sans rafraîchissement)</a>
   </div>
   <div id="shadowV494Dual" class="shadow-dual-panel"><div class="shadow-empty">Shadow Entrée / Sortie V4.9.4 · lecture du résumé…</div></div>
   <div id="shadowV494Elastic" class="shadow-dual-panel"><div class="shadow-empty">Elastic V4.9.4 · lecture des qualités et transferts…</div></div>

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261107-001",
+  "title": "Observer seven causal event families position counterattack and market regimes without modifying PAPER",
+  "createdAtUtc": "2026-11-07T11:51:57+00:00",
+  "authorization": "Autorisation utilisateur expresse des trois chantiers en observation / shadow et lecture chronologique stable, sans changement PAPER",
+  "reference": "Discussion BOONOLAB 7 novembre 2026, analyse #182 et proposition de trois chantiers",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b1888d94ec8f0a17d7b96c36befa8608ebd661ce8f00a44d19bba6113d291c88",
+      "bytes": 604
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b75324fd8c7f7d43b9abd5e14bfb8029ff1ba5ddfde041939e62cc003ad563a2",
+      "bytes": 2151
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c4b7431ee631007ec5bf333440fcc615d3264002d553749ca0e15fcc7b62f429",
+      "bytes": 2253
+    }
+  }
+}
