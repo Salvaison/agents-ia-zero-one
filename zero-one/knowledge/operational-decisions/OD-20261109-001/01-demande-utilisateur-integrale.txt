@@ -1,0 +1,9 @@
+Salut, tu as ajouté une commande pour la fraicheur de la capture de mcb3 pour OVH mais avant la tf3  revenait que quand chrome se rechargeait aprés redémarage. Ainsi je pouvais oscultés les différentes tf, maintenant toutes les minutes TW reviens sur le 3min
+
+Mon onglet de TA est enregistrer pour aprés redémarrage revenir sur le 15min, en même temps le code demande au symbol choisis dêtre sur le 3min
+
+enlève cette contrainte tout en conservant le positionement de la capture toutes les 60s
+
+---
+
+Je précise, c'est bien que au redémarrage le TF3 revienne mais que aprés je puisses changer librement

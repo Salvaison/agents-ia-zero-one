@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-09T14:43:58+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Amsterdam: premier chargement d un nouvel onglet TA qljTf3vu force 3m une fois; captures suivantes passives sur TF choisi; sauvegarde, patch et marqueur session hors Git",
+  "evidence": "Script boono-tv/desk/desk-capture-daemon.js SHA fb06be70cf3b64e12b8661413231a4a52a0be46a52b3dd6698c3b05b30be51fd ; backup OD-20261109-001 ; patch knowledge/patches/OD-20261109-001-ta-3m-once-then-passive.patch",
+  "previousEventSha256": "ee78b97f1ee447f0a7db4e6679785a928128694328ca124f3d9c4e6cbde4763a"
+}

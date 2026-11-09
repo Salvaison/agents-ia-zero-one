@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-09T14:43:58+00:00",
+  "status": "TESTE",
+  "description": "Simulation CDP: TF15 conserve, nouveau tab force 3m une seule fois, TF1h suivant conserve ; 3 captures/1 setResolution, aucun changement symbole ; node --check et cadence 60 s live",
+  "evidence": "node tests/boono-tv-ta-capture-tf-freedom-2026-11-09.js -> PASS; captures live 14:40:32 puis 14:41:32 UTC ; pas de validation manuelle du changement TF",
+  "previousEventSha256": "6958df4f2c9ca69c8182a756a6952b850fa1f36fd90118a7e93d126a55982160"
+}

@@ -1,0 +1,147 @@
+--- a/desk-capture-daemon.js
++++ b/desk-capture-daemon.js
+@@ -11,6 +11,9 @@
+ const REQUIRED_TF='3',REQUIRED_SYMBOL='OKX:BTCUSDT.P';
+ const OUT=path.resolve(__dirname,'..','assets','desk-live');
+ const TRIGGER='/run/boono-tv-desk-rollover.json';
++// One bootstrap per real TradingView TA tab, not per capture or PM2 restart.
++// /run survives a PM2 restart but is reset on host reboot.
++const TA_BOOT_MARKER='/run/boono-tv-ta-tab-initialized.json';
+ const NORMAL_MS=60000;
+ const ROLLOVER_MS=60000;
+ // Dynamic clip anchored to the actual MarketCipher_B study pane.
+@@ -32,6 +35,19 @@
+   fs.writeFileSync(tmp,data);
+   fs.renameSync(tmp,file);
+ }
++function lastInitializedTabId(){
++  try{
++    const data=JSON.parse(fs.readFileSync(TA_BOOT_MARKER,'utf8'));
++    return typeof data.targetId==='string'?data.targetId:null;
++  }catch(_){return null}
++}
++function markTabInitialized(target,actual){
++  // Mark ONLY after the new tab has been verified in 3m on OKX.
++  atomicWrite(TA_BOOT_MARKER,JSON.stringify({
++    targetId:target.id,initializedAt:new Date().toISOString(),
++    startupTf:actual.resolution,startupSymbol:actual.symbol
++  })+'\n');
++}
+ function readRollover(){
+   try{
+     const j=JSON.parse(fs.readFileSync(TRIGGER,'utf8'));
+@@ -61,16 +77,17 @@
+       try{
+         await cmd('Page.enable');
+         await cmd('Runtime.enable');
+-        // BOONO-TV owns this TA-only capture view and needs real 3m OKX.
+-        // Never change collector layout 2AqpEMfD. On the next 60s capture,
+-        // any manual TF change to the TA view is requalified to 3m.
++        // Isolated TA layout qljTf3vu. BOONOTRADE collectors 2AqpEMfD
++        // are NEVER accessed. Initialize 3m/OKX ONCE for each new TA tab;
++        // subsequent 60s captures follow the user's freely selected TF.
+         const readMeta=async()=>{
+           const m=await cmd('Runtime.evaluate',{
+             expression:"(function(){try{const w=window.TradingViewApi._activeChartWidgetWV.value();return {resolution:String(w.resolution()),symbol:String(w.symbol())}}catch(e){return {error:String(e)}}})()",
+             returnByValue:true
+           });
+           const v=m&&m.result&&m.result.value||{};
+-          if(v.error)throw new Error('TA_CHART_META: '+v.error);
++          if(v.error||!v.resolution||!v.symbol)
++            throw new Error('TA_CHART_META: '+(v.error||JSON.stringify(v)));
+           return v;
+         };
+         const edit=async expression=>{
+@@ -78,21 +95,29 @@
+           const v=r&&r.result&&r.result.value||{};
+           if(r.exceptionDetails||v.error)throw new Error('TA_CHART_EDIT: '+(v.error||r.exceptionDetails.text));
+         };
++        if(!target.id)throw new Error('TA_CHART_TARGET_ID_MISSING');
++        const firstCaptureOfTab=lastInitializedTabId()!==target.id;
+         let actual=await readMeta(),corrected=false;
+-        if(actual.symbol!==REQUIRED_SYMBOL){
+-          await edit("(function(){try{const w=window.TradingViewApi._activeChartWidgetWV.value();w.setSymbol('OKX:BTCUSDT.P');return {ok:true}}catch(e){return {error:String(e)}}})()");
+-          corrected=true;
+-          await sleep(2300);
+-          actual=await readMeta();
+-        }
+-        if(actual.resolution!==REQUIRED_TF||corrected){
+-          await edit("(function(){try{const w=window.TradingViewApi._activeChartWidgetWV.value();w.setResolution('3');return {ok:true}}catch(e){return {error:String(e)}}})()");
+-          corrected=true;
+-          await sleep(2600);
+-          actual=await readMeta();
++        if(firstCaptureOfTab){
++          // Chrome may restore the saved 15m layout. Set 3m only on this
++          // first observation, never when the user changes TF thereafter.
++          if(actual.symbol!==REQUIRED_SYMBOL){
++            await edit("(function(){try{const w=window.TradingViewApi._activeChartWidgetWV.value();w.setSymbol('OKX:BTCUSDT.P');return {ok:true}}catch(e){return {error:String(e)}}})()");
++            corrected=true;
++            await sleep(2300);
++            actual=await readMeta();
++          }
++          if(actual.resolution!==REQUIRED_TF||corrected){
++            await edit("(function(){try{const w=window.TradingViewApi._activeChartWidgetWV.value();w.setResolution('3');return {ok:true}}catch(e){return {error:String(e)}}})()");
++            corrected=true;
++            await sleep(2600);
++            actual=await readMeta();
++          }
++          if(actual.resolution!==REQUIRED_TF||actual.symbol!==REQUIRED_SYMBOL)
++            throw new Error('TA_BOOT_NOT_3M_OKX: '+JSON.stringify(actual));
++          markTabInitialized(target,actual);
+         }
+-        if(actual.resolution!==REQUIRED_TF||actual.symbol!==REQUIRED_SYMBOL)
+-          throw new Error('TA_CAPTURE_NOT_3M_OKX: '+JSON.stringify(actual));
++        // After bootstrap do not write resolution or symbol, ever.
+         // The native MarketCipher B lives in the SECOND TradingView canvas.
+         // Anchor the clip to that pane so reflows cannot cut positive lobes.
+         const found=await cmd('Runtime.evaluate',{
+@@ -136,6 +161,7 @@
+         }
+         finish(null,{jpg,
+           actualTf:actual.resolution,actualSymbol:actual.symbol,corrected,
++          initializedNewTab:firstCaptureOfTab,
+           clip:paneMeta.clip,pane:paneMeta.pane,viewport:paneMeta.viewport,
+           initialJpegBytes:initialBytes,activatedForRecovery});
+       }catch(e){finish(e)}
+@@ -146,11 +172,8 @@
+ function stateWrite(obj){
+   atomicWrite(path.join(OUT,'state.json'),JSON.stringify(obj,null,2)+'\n');
+ }
+-let rolloverIndex=0;
+ async function tick(){
+   const ro=readRollover();
+-  // A requested/default TF is NOT the actual TradingView chart resolution.
+-  const requestedTf=ro.active?Number(ro.sequence[rolloverIndex++%ro.sequence.length]||3):3;
+   const started=Date.now();
+   try{
+     const target=await findTarget();
+@@ -163,21 +186,23 @@
+     if(actualTf)atomicWrite(path.join(OUT,'marketcipher-'+actualTf+'.jpg'),jpg);
+     atomicWrite(path.join(OUT,'marketcipher-live.jpg'),jpg);
+     stateWrite({
+-      ok:true,capturedAt:new Date().toISOString(),tf:capture.actualTf||null,requestedTf,rollover:ro.active,
++      ok:true,capturedAt:new Date().toISOString(),tf:capture.actualTf||null,
++      requestedTf:capture.initializedNewTab?Number(REQUIRED_TF):null,rollover:ro.active,
+       nextMs:ro.active?ROLLOVER_MS:NORMAL_MS,
+       title:target.title,url:target.url,clip:capture.clip,pane:capture.pane,
+       viewport:capture.viewport,clipMode:'MARKETCIPHER_B_PANE_DOM_ANCHORED',bytes:jpg.length,
+-      expectedTf:'3',expectedSymbol:'OKX:BTCUSDT.P',
+-      sourceMatchesDefault:String(capture.actualTf)==='3'&&capture.actualSymbol==='OKX:BTCUSDT.P',
+-      sourceLayout:CAPTURE_CHART_ID,captureIsolation:'TA_ONLY_3M_ENFORCED',
++      startupDefaultTf:REQUIRED_TF,expectedSymbol:REQUIRED_SYMBOL,
++      sourceMatchesDefault:String(capture.actualTf)===REQUIRED_TF&&capture.actualSymbol===REQUIRED_SYMBOL,
++      sourceLayout:CAPTURE_CHART_ID,captureIsolation:'TA_ONLY_FREE_TF_AFTER_BOOT',
++      initializedNewTab:!!capture.initializedNewTab,
+       correctedTo3m:!!capture.corrected,
+       autoActivatedTABecauseBlank:!!capture.activatedForRecovery,
+       firstCaptureBytes:capture.initialJpegBytes,
+       actualTf:capture.actualTf,actualSymbol:capture.actualSymbol,
+-      provenance:'TA_CHART_CAPTURE_3M_ENFORCED'
++      provenance:'TA_PANE_PASSIVE_AFTER_ONE_TIME_3M_BOOT'
+     });
+   }catch(e){
+-    stateWrite({ok:false,capturedAt:new Date().toISOString(),tf:null,requestedTf,rollover:ro.active,error:e.message,nextMs:ro.active?ROLLOVER_MS:NORMAL_MS});
++    stateWrite({ok:false,capturedAt:new Date().toISOString(),tf:null,requestedTf:null,rollover:ro.active,error:e.message,nextMs:ro.active?ROLLOVER_MS:NORMAL_MS});
+   }
+   const wait=(ro.active?ROLLOVER_MS:NORMAL_MS)-Math.max(0,Date.now()-started);
+   await sleep(Math.max(250,wait));

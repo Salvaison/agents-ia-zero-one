@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-09T14:43:59+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "PM2 boono-desk-capture redemarre seul, PID 3943085, service online ; source jpeg reelle sur Amsterdam et OVH toutes les 60s, capture 610x152; trading et collecteurs inchanges",
+  "evidence": "Snapshots Amsterdam 14:40:32, 14:41:32 et OVH 14:42:32; OVH HTTP 200 JPEG 21025 octets, state captureIsolation TA_ONLY_FREE_TF_AFTER_BOOT; validation utilisateur encore ouverte",
+  "previousEventSha256": "882b1d02d828948528559ce1e936f5111474bf5a7aa281fe57b8f40b6a4d1497"
+}

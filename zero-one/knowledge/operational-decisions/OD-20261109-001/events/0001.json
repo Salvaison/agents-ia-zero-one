@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-09T14:36:59+00:00",
+  "status": "AUTORISE",
+  "description": "TF3 une fois au demarrage Chrome; choix manuel TF libre pendant session; capture MarketCipher toutes les 60 secondes",
+  "evidence": "Fichiers 01 et 02, capture ecran TA dans conversation, examen du script et rapport OD-20261105-004",
+  "previousEventSha256": null
+}

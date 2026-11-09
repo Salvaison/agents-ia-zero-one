@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261109-001",
+  "title": "Capture TA MarketCipher : 3 minutes une fois au demarrage, TF libres ensuite",
+  "createdAtUtc": "2026-11-09T14:36:59+00:00",
+  "authorization": "Demande explicite du 9 novembre 2026 et precision sur le comportement souhaité",
+  "reference": "Conversation BOONO Systems maintenance du 9 novembre 2026, image TradingView fournie dans le chat",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "5b03b2981aefd30413965c12bb7464fa299599769ec96755dd17279624780ae1",
+      "bytes": 614
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "47936d100a19c2bc2211d24588e93ade2fdd7d6aeb6eb770f76e56ef4dc68274",
+      "bytes": 2060
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0296dc0ac46c14c0af7171d4194000db539667347b6388596cfd7f3c4930cd58",
+      "bytes": 2321
+    }
+  }
+}
