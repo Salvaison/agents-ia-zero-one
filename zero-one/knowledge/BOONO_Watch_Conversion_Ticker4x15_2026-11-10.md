@@ -97,3 +97,14 @@ Le volume BTC/min placé après ce pourcentage reste exactement la mesure OKX vo
 
 **Service :** `config-server` redémarré seul ; HTTP local 302 attendu vers le login, route Shadow protégée. `boono-v494-paper`, `boono-v543-paper`, et `boono-v494-elastic-shadow` online, **non redémarrés**. Rendu visuel mobile à confirmer par l'utilisateur. Code et décision publiés GitHub.
 
+
+## Ajustement demandé et déployé — 10 novembre 2026 · traits horaires discrets (Conversion)
+
+**Demande explicite du propriétaire :** « Ok, c'est presque parfait! vu la densité d'information les lignes verticale qui marque les heures dans le graphe sont devenue trop visible. Reviens au paramétres antérieur pour ces lignes ».
+
+**Modification isolée :** dans `modules/elastic-mini-conversion-v542.js`, les lignes verticales horaires du SVG sont revenues **exactement aux paramètres d'avant l'intensification visuelle** : `stroke="#edf1f3"` et `stroke-width=".55"` (sans `stroke-opacity=".85"`). L'ancien paramétrage renforcé était `#90a5b4`, largeur `1.15`, opacité `.85`. Il s'agit d'un changement d'une seule ligne de code, sans modification du rythme des repères horaires.
+
+**Vérifications :** syntaxe Node OK ; test de génération du SVG sur bougies 3m synthétiques confirmant la présence des lignes à `#edf1f3/.55`, la disparition du trait plus foncé, et la conservation des bougies, de l'axe de conversion bleu, des montants BTC et des graduations transparentes. `git diff --check` OK.
+
+**En service :** redémarrage ciblé de `config-server` sur Amsterdam, HTTP 302 de redirection authentification normal ; `config-server`, `boono-v494-paper`, `boono-v543-paper` et `boono-v494-elastic-shadow` en ligne. **Aucun moteur PAPER modifié ni redémarré** ; le module LIEU, le ticker 4×15, la conversion et BOONO-TV OVH sont inchangés. Contrôle visuel dans le navigateur propriétaire encore ouvert.
+

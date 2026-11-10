@@ -133,7 +133,7 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   const x=tx(t);
   if(x>=plot.l&&x<=w-plot.r)
    svgParts.push('<line x1="'+x.toFixed(1)+'" y1="'+plot.t+'" x2="'+x.toFixed(1)+
-    '" y2="'+(h-plot.b)+'" stroke="#90a5b4" stroke-width="1.15" stroke-opacity=".85"/>');
+    '" y2="'+(h-plot.b)+'" stroke="#edf1f3" stroke-width=".55"/>');
  }
  svgParts.push('<g clip-path="url(#'+clip+')">');
  const bw=clamp(pw/Math.max(12,bars.length)*.65,1.1,4.8);
