@@ -32,3 +32,14 @@ Le PDF d'origine comporte une invalidation de la lecture contextuelle (73637,7 $
 - Redémarrage ciblé `pm2 restart config-server --update-env` : `config-server` online, route HTTP 302 vers authentification attendu. `boono-v494-paper`, `boono-v543-paper`, `boono-v494-elastic-shadow` restent **online et non redémarrés**. Les stratégies, protections PAPER et la scène TV sur OVH sont inchangées.
 - **Validation visuelle ouverte :** contrôler le rendu final sur le téléphone/desktop, l'ordre réel de lecture et les retours à la ligne de longs identifiants.
 
+
+## Retouche visuelle du module 5 — cinq surfaces gris clair plus marquées
+
+**Demande du propriétaire :** « La rubrique PHASE STRUCTURELLE, CHAINE CAUSALE, RISQUE et MATURITE OFFENSIVE en bold et leurs fond en gris clair. Ces 5 surfaces gris clair 10% plus foncé. »
+
+**Changement autorisé :** uniquement la présentation BOONO Watch du module combiné #5, sans aucune modification de contenu, calcul, seuil, événement ou moteur PAPER. Les cinq surfaces gris clair retenues sont **CHAÎNE CAUSALE**, **PHASE STRUCTURELLE**, **PRONOSTIC**, **MATURITÉ OFFENSIVE** et **RISQUE**, correspondant à cinq rubriques de lecture ; la ligne **POSITION** demeure blanche et distincte pour préserver sa visibilité.
+
+**Implémentation :** CSS commun `background:#e1e4e7` (gris clair assombri d'environ 10 % par rapport aux fonds quasi blancs précédents), coins 3px, marges internes 6×5px, libellés `font-weight:900` et couleur `#233746`. La maturité offensive reçoit sa classe graphique propre `v52-joined-offensive`. Les accents LONG/SHORT et la décision réelle conservent leur typographie et leur sémantique. Aucun autre module impacté.
+
+**Vérifications :** `node --check` serveur et script client généré, `git diff --check`, rendu VM d'une analyse V5 réelle : **exactement cinq surfaces**, chacune dans une classe identifiée, ligne POSITION non colorée, autres contenus conservés. Redémarrage ciblé `config-server` et HTTP 302 vers authentification attendu. Les services `boono-v494-paper`, `boono-v543-paper` et `boono-v494-elastic-shadow` sont restés online sans redémarrage. Validation visuelle dans le navigateur de l'utilisateur encore ouverte.
+

@@ -3283,12 +3283,19 @@ app.get('/', requireAuth, (req, res) => {
       .v52-joined-line:last-of-type{border-bottom:0;}
       .v52-joined-line b{font-weight:850;color:#304351;}
       .v52-joined-line .v52-green{color:#14854e;}.v52-joined-line .v52-red{color:#b52b39;}
+      /* Five light-grey evidence surfaces: ~10% darker than previous
+         near-white backgrounds. The POSITION row stays visually distinct. */
+      .v52-joined-causal,.v52-joined-phase,.v52-joined-pronostic,
+      .v52-joined-offensive,.v52-joined-risk{
+        background:#e1e4e7;border-radius:3px;padding:6px 5px;
+      }
+      .v52-joined-causal b,.v52-joined-phase b,.v52-joined-pronostic b,
+      .v52-joined-offensive b,.v52-joined-risk b{
+        font-weight:900;color:#233746;
+      }
       .v52-joined-pronostic{font-size:10.3px;color:#273b49;}
       .v52-joined-position{font-size:10px;color:#263c48;}
-      .v52-joined-causal{background:#f6f8fb;border-radius:3px;padding:6px 4px;}
-      .v52-joined-phase{background:#f8f9fb;padding:5px 4px;}
       .v52-joined-action{font-size:9px;font-weight:850;color:#3e5a70;}
-      .v52-joined-risk{background:#f8f9fa;padding:5px 4px;}
       .v52-joined-info{font:550 8px/1.5 'SF Mono',Menlo,monospace;color:#7a8995;}
       .v52-joined-extra{margin-top:4px;border-top:1px solid #dce5eb;padding-top:5px;}
       .v52-joined-extra summary{cursor:pointer;color:#627788;font-weight:800;font-size:9px;}
@@ -7932,7 +7939,7 @@ function renderV52Living(data){
      '<div class="v52-joined-line"><b>POSITION</b> FLAT · '+
        f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
     (r.offensiveMaturity?
-     '<div class="v52-joined-line"><b>MATURITÉ OFFENSIVE</b> '+
+     '<div class="v52-joined-line v52-joined-offensive"><b>MATURITÉ OFFENSIVE</b> '+
       f(r.offensiveMaturity.classification||'—')+
       ' · début prix 4h '+
       v5Time(r.offensiveMaturity.context?.priceOrigin?.origin4h?.availableAt)+
