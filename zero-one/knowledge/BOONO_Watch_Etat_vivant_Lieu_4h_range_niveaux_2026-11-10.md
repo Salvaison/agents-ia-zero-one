@@ -38,3 +38,16 @@ L'utilisateur conteste la provenance des affichages « FIB ENREGISTRÉ groupe 6 
 
 **Frontière de référence :** `modules/config-server.js` (UI + télémétrie uniquement) et `modules/v5/v53-causal-chain-view.js` (chronologie MCB en lecture seule, ajustée lors de l'étape précédente du 10/11).
 
+
+## Ajustement du 10/11 — 15h35 CET, demandé et mis en service
+
+**Demande utilisateur :** supprimer le texte « 4h · précédent / confirmé · contexte » et présenter sous « 3 . Lieu » une ligne compacte « 4h BW4 [précédent]/[confirmé] · LBW4 [précédent]/[confirmé] ». L'utilisateur demande également de vérifier la formule de progression en pourcentage du grand range et indique en avoir enregistré un.
+
+**Implémentation UI (sans politique PAPER) :** titre « 3 · Lieu », ligne « 4h BW4 ... · LBW4 ... » ; suppression de la redondance textuelle « précédent gris / dernier confirmé couleur », couleurs et horodatages des bougies conservés.
+
+**Formule vérifiée dans \`livingPlaceLandscape\`** : \`(prix - VAL) / (VAH - VAL) × 100\`. Le **POC** est absent du calcul du pourcentage ; sa distance signée s'affiche séparément \`prix - POC\`. Les seuls inputs sont le **prix** de l'analyse V5, les trois niveaux \`VAL / POC / VAH\` enregistrés par l'utilisateur, groupés par identifiant et scope. Cette formule est géométrique, elle ne reconstruit pas le profil de volume. Hors VAH/VAL, le rendu indique « prix sous VAL » ou « prix au-dessus de VAH » plutôt qu'un pourcentage.
+
+**Point ouvert / anomalie de persistance potentielle :** à 15h35 CET, \`data/levels.json\` avait été modifié à 15h22 CET mais contenait **uniquement** le triplet \`daily\` groupe 4 (VAL 81 289 / POC 83 861 / VAH 84 861). Aucun triplet \`big\` (issu de \`big-range\`) n'était enregistré sur Amsterdam malgré l'indication de l'utilisateur. Aucun niveau n'a été modifié ou créé pour « compléter » l'information. L'enquête sur l'éditeur/sauvegarde des ranges reste ouverte.
+
+**Tests :** syntaxe serveur OK ; extraction et \`node --check\` du JS client servi par \`/app.js\` OK ; rendu client isolé vérifiant l'en-tête et les quatre valeurs BW4/LBW4 -42.4/-45.1, -42.8/-49.7 OK ; redémarrage ciblé de \`config-server\` et HTTP 302 vers authentification OK ; \`boono-v494-paper\` et \`boono-v543-paper\` online et non redémarrés. Validation visuelle navigateur utilisateur encore ouverte.
+

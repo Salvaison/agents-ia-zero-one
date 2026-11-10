@@ -7543,10 +7543,9 @@ function renderV52Living(data){
      v5Time(event.sourceAt)+' · connu '+v5Time(event.availableAt)+
      ' · LBW4 '+n(event.lbw)+'</span></div>':
    '<div class="v53-observer-note">E4 confirmé : aucun événement dans la fenêtre archivée</div>';
-  return '<div class="v53-observer-line">BW4 '+h4pair(h4.bw)+
+  return '<div class="v53-observer-line"><b>4h</b>　BW4 '+h4pair(h4.bw)+
    '　 LBW4 '+h4pair(h4.lbw)+'</div>'+
-   '<div class="v53-observer-note">précédent gris / dernier confirmé couleur · '+
-   'source '+v5Time(h4.confirmedSourceAt)+' · connu '+v5Time(h4.confirmedAt)+
+   '<div class="v53-observer-note">source '+v5Time(h4.confirmedSourceAt)+' · connu '+v5Time(h4.confirmedAt)+
    (h4.status==='STALE'?' · DONNÉES 4H ANCIENNES':'')+'</div>'+signal;
  };
  const rangeRow=(g,kind)=>{
@@ -7618,8 +7617,8 @@ function renderV52Living(data){
        v5Time(s54.nativeE3?.confirmed?.availableAt)+'</div>'+
     '<div class="v53-observer-note">Déplacement depuis cross3 '+n(c.sinceCross)+
        ' $ BTC · âge '+n(mat.cross3AgeMin)+' min · sans veto</div>')+
-   cell('place','3 · LIEU',
-    '4h · précédent / confirmé · contexte',
+   cell('place','3 · Lieu',
+    '',
     h4row()+
     '<div class="v53-observer-subhead">GRAND RANGE · distance parcourue et POC</div>'+
     rangeRow(site.bigRange,'BIG-RANGE')+
