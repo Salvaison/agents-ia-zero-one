@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-001",
+  "title": "BOONO Watch Conversion 4x15 et volumes dans le graphe",
+  "createdAtUtc": "2026-11-10T16:22:01.721101+00:00",
+  "authorization": "Deux demandes explicites du propriétaire dans la conversation du 10 novembre 2026",
+  "reference": "Croquis manuscrit joint dans la conversation; modules Watch Amsterdam",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c1c4b11322489e9d8f37d90d3de22abc5b27668317bf34181edd8d7c4f0007fb",
+      "bytes": 1491
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "88e9f69d3d2b17c5eb7041687ac4c271d6a14292cecd44c75f89f3ae716ef66d",
+      "bytes": 522
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "a736e589bf3a4d8c175f3ee7881dbdf62513066b3e4c674c2700bb8aa4a36f51",
+      "bytes": 1524
+    }
+  }
+}

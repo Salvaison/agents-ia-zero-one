@@ -3217,6 +3217,30 @@ app.get('/', requireAuth, (req, res) => {
       .v52-cell.mcb{border-left-color:#6075b9;}.v52-cell.geom{border-left-color:#5f80ac;}
        .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;background:#f3f5f7;}
       .v52-mini-conversion{flex:1;min-width:0;margin-top:0;border:0;border-radius:0;padding:0;background:transparent;}
+
+      /* BOONO Conversion 4x15: graph and ticker side-by-side, read-only. */
+      .v52-main .v52-mini-conversion-layout{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(0,1fr);gap:6px;align-items:stretch;}
+      .v52-main .v52-mini-left{min-width:0;display:flex;flex-direction:column;gap:1px;}
+      .v52-main .v52-mini-ticker-side{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:5px;min-width:0;align-self:stretch;}
+      .v52-main .v52-ticker-card{min-width:0;border:1px solid #cdd8df;border-radius:5px;background:#fff;padding:5px 5px 4px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;overflow-wrap:anywhere;font:650 8.2px/1.4 'SF Mono',Menlo,monospace;}
+      .v52-main .v52-ticker-date{font-weight:800;color:#4b606e;font-size:8px;}
+      .v52-main .v52-ticker-top{font-size:9px;font-weight:850;color:#253846;}
+      .v52-main .v52-ticker-direction{font-size:8.2px;color:#435868;}
+      .v52-main .v52-ticker-market{font-size:8px;color:#526473;}
+      .v52-main .v52-ticker-state{font-size:7.6px;color:#748493;}
+      .v52-main .v52-mini-price-row,.v52-main .v52-mini-delta{background:#fff;border:1px solid #d7e0e7;border-radius:3px;}
+      .v52-main .v52-mini-price-row{padding:4px 3px;min-height:28px;}
+      .v52-main .v52-mini-ma3{font:750 9px/1.35 'SF Mono',Menlo,monospace;color:#637a89;}
+      .v52-main .v52-mini-delta{padding:5px 2px;}
+      .v52-main .v52-mini-chart{min-height:0;height:auto;aspect-ratio:1.17/1;}
+      .v52-main .v52-mini-chart svg{display:block;width:100%;height:100%;min-height:0;}
+      .v52-main .v52-mini-mf{margin-top:4px;}
+      @media(max-width:390px){
+        .v52-main .v52-mini-conversion-layout{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:4px;}
+        .v52-main .v52-ticker-card{padding:4px 3px;font-size:7.5px;gap:3px;}
+        .v52-main .v52-ticker-top{font-size:8px;}
+        .v52-main .v52-ticker-direction,.v52-main .v52-ticker-market{font-size:7.5px;}
+      }
       .v52-cell.conv>.title{font:850 8.7px/1.4 'SF Mono',Menlo,monospace;letter-spacing:0;color:#5a6e7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #cbd5dd;padding-bottom:5px;margin-bottom:5px;}
       .v52-mini-price-row{text-align:center;padding:2px 0 3px;margin-bottom:1px;}
       .v52-mini-btc-price{font:850 14px/1.15 'SF Mono',Menlo,monospace;letter-spacing:-.04em;color:#304e60;font-variant-numeric:tabular-nums;}
@@ -7429,6 +7453,83 @@ async function loadV5PaperPanel(){
 // Structural V5 is the *current* analysis; separate 30s low-bandwidth poll.
 // This never calls /api/trades and continues even when V4 state is stale.
 // V5.2 independently refreshed, very small payload. V4.9.3 runs behind it.
+// Autonomous V494 Elastic ticker remains strictly SHADOW, never a PAPER vote.
+// Reuse the authenticated, compact endpoint already used by SHADOWS. Only poll
+// while the main living panel is visible; rebuild from cache after UI refresh.
+let miniTicker4x15Cache=null,miniTicker4x15Pending=false,miniTicker4x15RequestedAt=0;
+function renderMiniTicker4x15(packet){
+ const root=document.getElementById('v52-mini-ticker');if(!root)return;
+ const safe=x=>escTrade(String(x===undefined||x===null?'—':x));
+ const pct=x=>x===undefined||x===null||!Number.isFinite(Number(x))?'—':
+   Math.round(100*Number(x))+' %';
+ const share=(map,key)=>map&&Object.keys(map).length?
+   (Object.hasOwn(map,key)?pct(map[key]):'0 %'):'—';
+ const top=(fractions,count=2)=>Object.entries(fractions||{})
+   .filter(([k,v])=>Number.isFinite(Number(v))&&Number(v)>0&&Number(v)<=1)
+   .sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,count)
+   .map(([key,v])=>safe(key)+' '+pct(v)).join(' · ')||'Aucune mesure';
+ const time=ms=>ms&&Number.isFinite(Number(ms))?
+   new Date(Number(ms)).toLocaleString('fr-FR',{timeZone:'Europe/Stockholm',
+     day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+ const trusted=packet&&packet.mode==='SHADOW_ONLY'&&
+   packet.decisionImpact===false&&packet.brokerOrdersEnabled===false;
+ const fresh=trusted&&packet.status==='DATA_RECENT'&&
+   Number.isFinite(Number(packet.asOf))&&Date.now()-Number(packet.asOf)<=90000;
+ const windows=trusted&&Array.isArray(packet.quality4x15)?
+   packet.quality4x15.slice(-4).sort((a,b)=>Number(b.startAt)-Number(a.startAt)):[];
+ const cards=[];
+ for(let i=0;i<4;i++){
+  const b=windows[i];
+  if(!b){
+   cards.push('<div class="v52-ticker-card"><div class="v52-ticker-date">15 MIN · —</div>'+
+    '<div class="v52-ticker-state">Fenêtre non observée</div></div>');
+   continue;
+  }
+  const samples=Number(b.samples||0);
+  const summary=samples>0?top(b.qualityFractions,2):'Aucune qualité observée';
+  const directions=samples>0?
+   'LONG '+share(b.directionFractions,'long')+
+   ' · SHORT '+share(b.directionFractions,'short')+
+   ' · CONTESTED '+share(b.directionFractions,'contested'):'Direction —';
+  const regimes=samples>0?top(b.marketFractions,2):'Régime —';
+  const status=b.partial===true?'EN FORMATION':'15 MIN CLOSES';
+  const sourceWarning=!fresh?' · SOURCE ANCIENNE':'';
+  cards.push('<div class="v52-ticker-card" data-window="'+Number(b.startAt||0)+'">'+
+   '<div class="v52-ticker-date">'+safe(time(b.startAt))+' · 15 MIN</div>'+
+   '<div class="v52-ticker-top">'+summary+'</div>'+
+   '<div class="v52-ticker-direction">'+directions+'</div>'+
+   '<div class="v52-ticker-market">Régime marché : '+regimes+'</div>'+
+   '<div class="v52-ticker-state">'+status+' · '+samples+
+      ' relevés'+sourceWarning+'</div></div>');
+ }
+ root.innerHTML=cards.join('');
+ root.title=trusted?'TICKER ELASTIC V494 · SHADOW UNIQUEMENT · source '+
+   time(packet.asOf)+' · lecture sans autorité de trading':
+   'Ticker 4 × 15 minutes indisponible ou non vérifié';
+}
+async function loadMiniTicker4x15(){
+ const root=document.getElementById('v52-mini-ticker');
+ const tab=document.getElementById('tab2-statev2');
+ if(!root||!tab?.classList.contains('active')||document.hidden||
+    miniTicker4x15Pending||Date.now()-miniTicker4x15RequestedAt<35000)return;
+ miniTicker4x15Pending=true;miniTicker4x15RequestedAt=Date.now();
+ try{
+  const response=await fetch('/api/shadows/v494-elastic',{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const packet=await response.json();
+  if(packet.mode!=='SHADOW_ONLY'||packet.decisionImpact!==false||
+     packet.brokerOrdersEnabled!==false)
+    throw Error('ELASTIC_READ_ONLY_CONTRACT_MISMATCH');
+  miniTicker4x15Cache=packet;
+  renderMiniTicker4x15(packet);
+ }catch(err){
+  // Preserve the last known window for comparison, explicitly marked stale.
+  if(miniTicker4x15Cache){
+   renderMiniTicker4x15({...miniTicker4x15Cache,status:'SOURCE_STALE'});
+  }else renderMiniTicker4x15(null);
+ }finally{miniTicker4x15Pending=false;}
+}
+
 let v52Pending=false,v493Pending=false;
 function renderV52Living(data){
  const el=document.getElementById('v52-live');if(!el)return;
@@ -7696,14 +7797,12 @@ function renderV52Living(data){
     '',
     '<div id="v52-mini-conversion" class="v52-mini-conversion" role="group"'+
       ' aria-label="Prix BTC en bougies 3m, duel des acheteurs et vendeurs, conversion live">'+
+     '<div class="v52-mini-conversion-layout"><div class="v52-mini-left">'+
      '<div class="v52-mini-price-row"><strong class="v52-mini-btc-price"'+
-       ' id="v52-mini-btc-price">BTC —</strong></div>'+
+       ' id="v52-mini-btc-price">BTC —</strong>'+
+       '<div class="v52-mini-ma3" id="v52-mini-ma3">MA3 · distance —</div></div>'+
      '<div id="v52-mini-conversion-svg" class="v52-mini-chart"></div>'+
-     '<div class="v52-mini-volume" aria-label="Volumes initiateurs BTC sur trois minutes">'+
-      '<span class="buy" title="Volume acheteur initiateur sur trois minutes">'+
-       '<b id="v52-mini-buy">—</b></span>'+
-      '<span class="sell" title="Volume vendeur initiateur sur trois minutes">'+
-       '<b id="v52-mini-sell">—</b></span></div>'+
+
      '<div class="v52-mini-delta" id="v52-mini-delta">Δ BTC 3m —</div>'+
      '<div class="v52-mini-price-deport" id="v52-mini-price-deport"'+
       ' title="Déplacement net BTC sur 3m divisé par amplitude haut-bas BTC sur 3m. Mesure normalisée du déport entre axe bleu et contact des cubes, distincte des volumes et de eff3.">Déport prix —</div>'+
@@ -7722,7 +7821,10 @@ function renderV52Living(data){
      '<div class="v52-mini-foot v52-mini-speed v52-conv-speed">Vitesse 3m '+
       sn(mat.recent3mRateUsdPerMin)+' $/min</div>'+
      '<div class="v52-mini-foot" id="v52-mini-quality">Qualité — · direction —</div>'+
-    '</div>')+
+     '</div><aside id="v52-mini-ticker" class="v52-mini-ticker-side"'+
+       ' aria-label="Ticker mémoire Elastic V494, quatre fenêtres de 15 minutes">'+
+       '<div class="v52-ticker-card">TICKER 4×15 · lecture des fenêtres…</div>'+
+     '</aside></div></div>')+
    cell('prognosis','5 · PRONOSTIC',f(a.candidate||'NEUTRE').toUpperCase(),
     f(a.prognosis||'—')+
     (s54.available?'<div class="v52-muted">PHASE STRUCTURELLE '+
@@ -7798,6 +7900,16 @@ function renderV52Living(data){
     ' · MCB '+f(data.floorAuthority.last.mcbStructureAction||'—'):
     'aucune')+'</div>':'');
  el.innerHTML=card;
+ // MA3 price/distance from V543 market analysis; never extrapolate a stale MA.
+ const ma3Label=el.querySelector('#v52-mini-ma3');
+ if(ma3Label){
+  const maPrice=ma3?.ma,dist=ma3?.distanceUsd;
+  const valid=!stale&&maPrice!=null&&dist!=null&&
+   Number.isFinite(Number(maPrice))&&Number.isFinite(Number(dist));
+  ma3Label.textContent=valid?'MA3 '+n(maPrice)+' $ · dist '+sn(dist)+' $':
+   'MA3 · dist — (source indisponible)';
+ }
+ renderMiniTicker4x15(miniTicker4x15Cache);
  // BOONO Watch rebuilds this cell on refresh; restore the cached mini chart
  // immediately rather than waiting for another OKX trade or chart request.
  if(typeof window!=='undefined'&&window.BoonoMiniConversion)
@@ -7817,6 +7929,7 @@ async function loadV52PaperPanel(){
   if(window.elasticConversionV541)
     window.elasticConversionV541.setAnalysis(data.analysis);
   renderV52Living(data);
+  loadMiniTicker4x15();
  }catch(e){if(el)el.textContent='V5.4.3 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }

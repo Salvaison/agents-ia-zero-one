@@ -1,0 +1,2 @@
+Aucun prompt opérationnel distinct n'a été transmis à un autre agent. Les modifications ont été exécutées directement sur Amsterdam dans cette discussion, à partir des demandes intégrales copiées dans 01-demande-utilisateur-integrale.txt. Le périmètre effectif est le seul rendu BOONO Watch : composants clients et SVG, sans changement des moteurs. Les commandes précises sont matérialisées dans le commit Git de cette opération et dans le rapport KB; ne pas inventer de verbatim opérationnel séparé.
+

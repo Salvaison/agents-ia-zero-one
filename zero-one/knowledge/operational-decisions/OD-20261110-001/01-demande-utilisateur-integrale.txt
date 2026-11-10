@@ -1,0 +1,24 @@
+Ce croquis est pour représenter les améliorations du graphe conversion avec l'ajout du ticker 4X15min à positionner à droite du graphe comme 4 pasties superposées avec le texte:
+
+"10/11 16:00 · 15 MIN **CONTESTED 27 % · INEFFICIENT 26 %**
+LONG 29 % · SHORT 44 % · CONTESTED 27 %
+Régime marché: **MIXED 77 % · LOW_EDGE_SHADOW"**
+
+Pour le graphe tu remarquera la dispositions générale avec le carré du graphe légérement plus large que haut, au faite plus large avec la largeur des pastilles volumes ~10-12px, les 2 bandeaux blanc au dessus et au dessous du carré du graghe et à à gauche avec des pastilles volume de 10px de largeur, rectangle au bord arrondi, bordure noir et pastille active devienne gris claire bordure noir. Note aussi que les data d'achat et vente sont à l'intérieur du graphe de part et d'autre de la ligne bleu du milieu
+
+Les lignes verticales qui marque les heures sur le graphe peuvent être dessinée plus franchement
+
+ajout de data MA3 . dist dans le bandeau supérieur du graphe
+
+Voilà, le nouveau conversion
+
+---
+
+bien sur conservé le data en dessous du graphe:
+"MF3 Δ3m -2.4 · MF15 Δ10m — · cohérence ADVERSE · MF15 — · 21.6s après Bâton
+**Bâton +2.8 $ · depuis +8.0 $**
+**PM3 -40,0 · PM5 -32,9 · Live +10,8**
+eff3 — · yield/P75 — · effort/P75 —
+Vitesse 3m — $/min
+Qualité UNCLASSIFIED · direction SHORT" Cela donnera aussi plus de hauteur à la partie droite du module conversion avec les 4 pastilles 4X15min
+

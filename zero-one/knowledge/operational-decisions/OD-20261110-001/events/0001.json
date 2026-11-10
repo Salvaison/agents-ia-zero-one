@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-10T16:22:01.721101+00:00",
+  "status": "AUTORISE",
+  "description": "Deux messages utilisateur définissent le nouveau Conversion, le ticker 4x15 à droite et le maintien intégral des métriques sous le graphe",
+  "evidence": "Demande exacte dans 01 + croquis de conversation",
+  "previousEventSha256": null
+}

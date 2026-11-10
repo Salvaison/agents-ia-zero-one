@@ -16,10 +16,9 @@ function relativePriceDeport(e){
  const net=num(e.priceNetUsd),range=num(e.priceRangeUsd);
  return net!==null&&range!==null&&range>0?clamp(net/range,-1,1):null;
 }
-// The ten small WHITE/BLACK rounded pastilles show the aggregate EXECUTED
-// aggressor volume (buy + sell BTC) over the same 3-minute OKX trade window.
-// Fixed logarithmic thresholds allow comparison across sessions; do NOT
-// mistake this for resting order-book liquidity, and do not display a scale.
+// Ten black-outlined rounded volume bars, 10.5 px wide, with light-grey
+// fill for active levels. Uses executed buy+sell OKX volume on the SAME 3m
+// window, not passive book liquidity. Fixed thresholds remain unchanged.
 const TOTAL_VOLUME_THRESHOLDS_BTC=[1,2,5,10,20,50,100,200,500,1000];
 function totalVolumeReading(e){
  const buy=num(e?.buyBtc),sell=num(e?.sellBtc);
@@ -30,8 +29,8 @@ function totalVolumeReading(e){
 }
 function volumePastilles(e,status,h){
  const {btc:total,level}=totalVolumeReading(e);
- const square=7.2,step=10.4,x=1.2;
- const y0=Math.max(3,(h-(9*step+square))/2);
+ const barW=10.5,barH=10.5,step=13.1,x=2;
+ const y0=Math.max(3,(h-(9*step+barH))/2);
  const title=total===null?'Volume OKX exécuté 3m indisponible':
    'Volume TOTAL exécuté OKX sur 3m : '+btc(total)+
    ' BTC (achat + vente), intensité '+level+'/10 selon seuils logarithmiques fixes'+
@@ -45,15 +44,10 @@ function volumePastilles(e,status,h){
  for(let i=0;i<10;i++){
   const y=y0+i*step,active=level!==null&&9-i<level;
   items.push('<rect class="v52-mini-volume-pastille" x="'+x+'"'+
-   ' y="'+y.toFixed(1)+'" width="'+square+'" height="'+square+
-   '" rx="2" fill="#fff" stroke="#283039" stroke-width=".85"'+
+   ' y="'+y.toFixed(1)+'" width="'+barW+'" height="'+barH+
+   '" rx="2.5" fill="'+(active?'#cbd3d8':'#fff')+
+   '" stroke="#202a30" stroke-width="1.15"'+
    ' data-active="'+(active?'true':'false')+'"/>');
-  // Active levels gain an inner dark mark; the squares remain WHITE with
-  // their black rounded outlines as requested.
-  if(active)items.push('<rect class="v52-mini-volume-active"'+
-   ' x="'+(x+2).toFixed(1)+'" y="'+(y+2).toFixed(1)+'"'+
-   ' width="'+(square-4).toFixed(1)+'" height="'+(square-4).toFixed(1)+
-   '" rx=".65" fill="#283039"/>');
  }
  return items.join('')+'</g>';
 }
@@ -129,7 +123,7 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   const x=tx(t);
   if(x>=plot.l&&x<=w-plot.r)
    svgParts.push('<line x1="'+x.toFixed(1)+'" y1="'+plot.t+'" x2="'+x.toFixed(1)+
-    '" y2="'+(h-plot.b)+'" stroke="#edf1f3" stroke-width=".55"/>');
+    '" y2="'+(h-plot.b)+'" stroke="#90a5b4" stroke-width="1.15" stroke-opacity=".85"/>');
  }
  svgParts.push('<g clip-path="url(#'+clip+')">');
  const bw=clamp(pw/Math.max(12,bars.length)*.65,1.1,4.8);
@@ -222,6 +216,19 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   '" stroke="#4a9eff" stroke-width="1.6" stroke-opacity=".96">'+
   '<title>Référence fixe Δ prix BTC sur 3m = 0. Distance au contact = Δ prix 3m / amplitude du prix 3m, projeté sur le déplacement horizontal autorisé.</title>'+
   '</line>');
+ // Live buyer/seller amounts are INSIDE the plot, on opposite sides
+ // of the fixed BLUE line; no redundant volume row below the graphic.
+ const labelY=h-9,labelSize=clamp((pw/2)/12,6.8,8.7);
+ svgParts.push('<g class="v52-mini-volume-internal" aria-label="Volumes achat et vente OKX, 3 minutes">'+
+  '<text x="'+(cx-5).toFixed(1)+'" y="'+labelY+'" text-anchor="end"'+
+   ' font-family="SF Mono,Menlo,monospace" font-size="'+labelSize.toFixed(1)+'"'+
+   ' font-weight="800" fill="#117a4b" stroke="#fff" stroke-width="2"'+
+   ' paint-order="stroke">ACHAT '+(available?btc(buy)+' BTC':'—')+'</text>'+
+  '<text x="'+(cx+5).toFixed(1)+'" y="'+labelY+'" text-anchor="start"'+
+   ' font-family="SF Mono,Menlo,monospace" font-size="'+labelSize.toFixed(1)+'"'+
+   ' font-weight="800" fill="#b93946" stroke="#fff" stroke-width="2"'+
+   ' paint-order="stroke">VENTE '+(available?btc(sell)+' BTC':'—')+'</text>'+
+  '</g>');
  // Live BTC quote, 3m signed price move, and start/end time are rendered in
  // independent, bigger rows OUTSIDE this SVG. No text masks the candles.
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
@@ -250,10 +257,11 @@ function refresh(snapshot){
  if(!host||!slot)return false;
  const current=snapshot||window.elasticConversionV541?.snapshot?.()||lastSnapshot;
  if(current)lastSnapshot=current;
- const dim=host.getBoundingClientRect?.()||{};
- const w=num(dim.width)||num(host.clientWidth)||0;
- if(w<100)return false;
- const h=192;
+ const dim=slot.getBoundingClientRect?.()||{};
+ const w=num(dim.width)||num(slot.clientWidth)||0;
+ if(w<150)return false;
+ const h=Math.round(clamp(w*.84,176,268));
+ slot.style.height=h+'px';
  slot.innerHTML=miniSvg({data:candles,periodData:period,
    snapshot:current,width:w,height:h,now:Date.now()});
  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};

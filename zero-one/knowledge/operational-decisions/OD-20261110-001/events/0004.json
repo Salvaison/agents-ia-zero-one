@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T16:22:01.721101+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server redémarré et online, HTTP 302 attendu vers login, runners V494 et V543 online, TV inchangée, validation visuelle ouverte",
+  "evidence": "PM2 + curl localhost:80, documentation KB",
+  "previousEventSha256": "751160b07d7fb668e956c27f758eb0ee29b01420b5f413fc438478f87b6f02d2"
+}

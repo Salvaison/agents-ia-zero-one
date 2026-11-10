@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T16:22:01.721101+00:00",
+  "status": "TESTE",
+  "description": "Syntaxe serveur et client OK, 4 cartes ticker / partial / stale OK, 10 pastilles SVG / volumes internes / heures OK, métriques MF Bâton PM conservées",
+  "evidence": "Tests Node/vm sur données shadow réelles, fixtures SVG; diff --check",
+  "previousEventSha256": "dac2bf4204303f07c42e24ae98ea62a999f67c780be0790d477b6199614b5072"
+}
