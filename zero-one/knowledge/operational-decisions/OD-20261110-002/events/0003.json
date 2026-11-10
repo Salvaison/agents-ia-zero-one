@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T16:40:53.877881+00:00",
+  "status": "TESTE",
+  "description": "Tests de syntaxe JS, ticker réel et états partiels, SVG sur trois amplitudes, bougies 3m enregistrées, sans changement des relevés sous le graphique",
+  "evidence": "Tests Node vm, node --check, git diff --check",
+  "previousEventSha256": "7334eefdb95907c9d11242646db5d0f3fe188d836612c852f654db4d62f65cf8"
+}

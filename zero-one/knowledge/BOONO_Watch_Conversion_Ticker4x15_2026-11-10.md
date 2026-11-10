@@ -33,3 +33,26 @@
 - BOONO-TV sur OVH et sa calibration des écrans sont **inchangés** ; la présente livraison est pour la carte Conversion de BOONO Watch sur Amsterdam.
 - Le test ne remplace pas une inspection visuelle dans le navigateur authentifié : confirmer la largeur/hauteur réelle, la lisibilité des quatre cartes sur téléphone et sur ordinateur, les mises à jour dans le temps, et l'absence de chevauchement avec les relevés sous le graphe.
 
+
+## Ajustement 10/11 — compactage ticker et auto-échelle du prix
+
+**Demande :** retirer la ligne « 15 MIN CLOSES · 30 relevés », adapter verticalement les bougies à l'amplitude du cours, donner le tracé entier aux bougies derrière l'ancienne bande des prix maintenant transparente, enlever les mots visibles « ACHAT » / « VENTE » pour agrandir les nombres BTC.
+
+**Réalisé (BOONO Watch / Amsterdam uniquement) :**
+- Dans les cartes 4×15, suppression de la dernière ligne de statut « 15 MIN CLOSES · 30 relevés ». L'heure contient `EN FORMATION` seulement pour la fenêtre partielle et `SOURCE ANCIENNE` si nécessaire. Les compteurs de relevés et la couverture restent accessibles via `title`, non comme ligne visible.
+- Dans `elastic-mini-conversion-v542.js`, le calcul de l'échelle du prix utilise maintenant l'excursion effective sur les 150 dernières minutes de bougies 3m, y compris les mèches, et la cotation fraîche si connue : `min(low)` / `max(high)`, avec marge de `max(1 $, 5,5 % de l'excursion)` de chaque côté et minimum purement numérique de 6 $ si le prix est plat. **Ancien floor 500 $ et cap 1 600 $ supprimés** : plus d'aplatissement dans un marché calme ni de prix coupés en forte amplitude. Cette nouvelle échelle est un réglage visuel, sans lien avec un seuil de trading.
+- Graduations horizontales à pas adaptatif (« nice steps » en fonction de l'amplitude et de la hauteur du SVG) ; prix inscrits sur un calque SVG **transparent placé au-dessus des bougies**. Le graphe commence à `x=15` plutôt que `39/43`, en laissant la colonne des dix pastilles de volume de 10,5 px sur le bord extérieur. La série de bougies passe désormais sous les graduations.
+- Montants d'acheteurs et vendeurs dans le SVG : suppression des mots visibles ACHAT/VENTE en pied de graphe ; seuls restent les montants `nnn.nnn BTC` en vert/rouge avec taille de police automatique jusqu'à 12,8 px. Labels sémantiques/infobulles conservés pour leur signification.
+- Hauteur SVG mobile : `0,84 × largeur` bornée à 145–268 px au lieu du plancher 176 px ; le graphique reste légèrement plus large que haut sur les petits écrans.
+- **Inchangés :** le bleu de l'axe, les dix pastilles à bord noir et remplissage gris actif, les bougies et MA200, l'horodatage, les quatre classifications des fenêtres, le bandeau BTC+MA3 et Δ BTC 3m, et toutes les données MF/Bâton/PM/effort/qualité sous le graphe.
+
+**Tests techniques :**
+- `node --check` du serveur et du SVG renderer, extraction du `/app.js` généré puis `node --check`, `git diff --check` OK.
+- Ticker alimenté par le résumé `v494-elastic-ui-summary` réel : quatre cartes, aucune ligne « 15 MIN CLOSES », signalisation EN FORMATION et SOURCE ANCIENNE, compteurs toujours en attribut `title`.
+- SVG vérifié par VM Node sur trois régimes synthétiques : mouvement calme ≈20,3 $ → span ≈22,5 $ ; habituel ≈263 $ → span ≈291,9 $ ; volatil ≈2 716 $ → span ≈3 015 $ (donc non plafonné). Dans tous : 10 pastilles, axe bleu, volumes BTC sans mots, calque des prix transparent au-dessus des bougies.
+- Vérification sur bougies 3m réellement archivées à Amsterdam : excursion de prix ≈2 014,4 $ → span auto ≈2 236 $ ; marques horaires, chandeliers et conversion conservés.
+- `pm2 restart config-server --update-env` ciblé, réponse HTTP locale 302 attendue vers l'authentification ; `config-server`, `boono-v494-elastic-shadow`, et runners PAPER `boono-v494-paper` / `boono-v543-paper` online. Aucun redémarrage des deux moteurs de simulation.
+- **Rendu authentifié sur le téléphone et sur desktop à apprécier par l'utilisateur** ; ces tests ne démontrent pas à eux seuls la qualité des dimensions réelles en navigateur.
+
+**Traçabilité :** OD-20261110-002, demande intégrale et étapes de réalisation. Ne pas assimiler une restitution graphique d'Elastic à une autorité PAPER. Studio BOONO-TV sur OVH non modifié.
+

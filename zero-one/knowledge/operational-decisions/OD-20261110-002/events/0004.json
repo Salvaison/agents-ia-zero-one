@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T16:40:53.877881+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server ciblé relancé online sur Amsterdam, HTTP 302 attendu ; V494, V543 et Elastic shadow online sans redémarrage ; qualité visuelle téléphone à confirmer",
+  "evidence": "PM2 + curl 127.0.0.1:80 ; contrôle du statut PAPER",
+  "previousEventSha256": "7b0e47a0cb72d95aa6cce2ff250fc6ee57c7741114f12cb326d03a3807b1b2da"
+}

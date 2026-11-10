@@ -74,7 +74,9 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   width=290,height=200,now=Date.now(),quoteValue=quotePrice(now)}={}){
  const w=clamp(Math.round(width),155,720),h=clamp(Math.round(height),145,320);
  // Top/bottom captions are now separate DOM rows; fill the SVG with PRICE.
- const plot={l:w<240?39:43,r:7,t:3,b:3},pw=w-plot.l-plot.r,ph=h-plot.t-plot.b;
+ // Let candles extend BEHIND transparent price graduations. The 10.5px
+ // volume indicators remain on the extreme left, outside the actual plot.
+ const plot={l:15,r:5,t:4,b:5},pw=w-plot.l-plot.r,ph=h-plot.t-plot.b;
  const svgParts=[];
  // Keep the price CANDLE window pure white; only its OUTER frame is grey.
  svgParts.push('<rect width="'+w+'" height="'+h+'" fill="#fff"/>');
@@ -87,36 +89,44 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
  const end=visibleEnd(latestTs,periodData,now);
  const start=end-VISIBLE_MINUTES*60000;
  const bars=valid.filter(x=>Number(x.ts)>=start-180000&&Number(x.ts)<=end);
- // Use the observed BTC candle excursion, not distant MA levels, to avoid
- // empty price bands. 1600 USD remains the MAX view window. Distant MA values
- // may be clipped; they must not invent excess vertical whitespace.
+ // TRUE auto scale: occupy ~90% of the available chart height with the
+ // observed price excursion (wicks + fresh quote). No legacy 500$/1600$
+ // floor or ceiling that could flatten candles or clip larger movements.
+ // A small nonzero minimum only prevents division by zero on flat prices.
  const values=[];
  for(const c of bars)values.push(Number(c.high),Number(c.low));
  const actualQuote=num(quoteValue);
  if(actualQuote!==null&&actualQuote>0)values.push(actualQuote);
  const first=Math.min(...values),last=Math.max(...values);
- const movement=Math.max(0,last-first),padding=Math.max(18,movement*.035);
- const span=clamp(movement+padding*2,500,1600);
- const recentClose=num(bars.at(-1)?.close);
- const mid=movement+2*padding>1600?
-   (actualQuote!==null&&actualQuote>0?actualQuote:recentClose??(first+last)/2):
-   (first+last)/2;
+ const movement=Math.max(0,last-first);
+ const padding=Math.max(1,movement*.055);
+ const span=Math.max(6,movement+2*padding);
+ const mid=(first+last)/2;
  const lo=mid-span/2,hi=mid+span/2;
  const tx=ts=>plot.l+(Number(ts)-start)/Math.max(1,end-start)*pw;
  const ty=val=>plot.t+(hi-Number(val))/(hi-lo)*ph;
  const clip='v52-mini-plot-clip';
  svgParts.push('<defs><clipPath id="'+clip+'"><rect x="'+plot.l+'" y="'+plot.t+
   '" width="'+pw+'" height="'+ph+'"/></clipPath></defs>');
- for(let p=Math.ceil(lo/500)*500;p<=hi;p+=500){
+ // Human-friendly tick spacing follows the actual price span and physical
+ // chart height. Place the numerals OVER candles in a transparent overlay;
+ // price values no longer reserve a solid 40px vertical strip.
+ const targetStep=span/Math.max(3,Math.min(7,Math.floor(ph/42)));
+ const base=Math.pow(10,Math.floor(Math.log10(targetStep)));
+ const tickStep=([1,2,2.5,5,10].find(v=>v*base>=targetStep)||10)*base;
+ const priceLabels=[];
+ for(let p=Math.ceil(lo/tickStep)*tickStep;p<=hi+tickStep*.0001;p+=tickStep){
   const y=ty(p).toFixed(1);
   svgParts.push('<line x1="'+plot.l+'" x2="'+(w-plot.r)+'" y1="'+y+'" y2="'+y+
    '" stroke="#dee5e9" stroke-width=".65"/>');
-  svgParts.push('<text x="'+(plot.l-3)+'" y="'+(Number(y)+2.4)+'" text-anchor="end"'+
-   ' font-family="SF Mono,Menlo,monospace" font-size="7.8" fill="#657789">'+
+  priceLabels.push('<text x="'+(plot.l+31)+'" y="'+(Number(y)+2.4)+
+   '" text-anchor="end" font-family="SF Mono,Menlo,monospace"'+
+   ' font-size="7.9" font-weight="700" fill="#586e7f"'+
+   ' stroke="#fff" stroke-width="1.7" paint-order="stroke">'+
    Math.round(p).toLocaleString('fr-FR')+'</text>');
  }
- // Ten unlabelled total-volume pastilles live in the narrow left margin,
- // just BEFORE the BTC price tick labels; no extra axis/legend is added.
+ // Ten unlabelled total-volume pastilles live in the narrow left margin
+ // outside the candle clip; their 10.5px width remains unchanged.
  svgParts.push(volumePastilles(snapshot?.effort,snapshot?.status,h));
  // Hourly lines remain in the chart; captions have their own row below it.
  for(let t=Math.ceil(start/3600000)*3600000;t<=end;t+=3600000){
@@ -156,6 +166,9 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
    ' stroke-dasharray="3 3" opacity=".9"/>');
  }
  svgParts.push('</g>');
+ svgParts.push('<g class="v52-mini-price-axis-overlay"'+
+  ' aria-label="Prix BTC, graduations sur fond transparent">'+
+  priceLabels.join('')+'</g>');
  const e=snapshot?.effort||{},available=e.available===true;
  const buy=available?Math.max(0,num(e.buyBtc)||0):0;
  const sell=available?Math.max(0,num(e.sellBtc)||0):0;
@@ -218,23 +231,23 @@ function miniSvg({data=candles,periodData=period,snapshot=lastSnapshot,
   '</line>');
  // Live buyer/seller amounts are INSIDE the plot, on opposite sides
  // of the fixed BLUE line; no redundant volume row below the graphic.
- const labelY=h-9,labelSize=clamp((pw/2)/12,6.8,8.7);
+ const labelY=h-12,labelSize=clamp(pw/13,9.5,12.8);
  svgParts.push('<g class="v52-mini-volume-internal" aria-label="Volumes achat et vente OKX, 3 minutes">'+
   '<text x="'+(cx-5).toFixed(1)+'" y="'+labelY+'" text-anchor="end"'+
    ' font-family="SF Mono,Menlo,monospace" font-size="'+labelSize.toFixed(1)+'"'+
-   ' font-weight="800" fill="#117a4b" stroke="#fff" stroke-width="2"'+
-   ' paint-order="stroke">ACHAT '+(available?btc(buy)+' BTC':'—')+'</text>'+
+   ' font-weight="850" fill="#117a4b" stroke="#fff" stroke-width="2"'+
+   ' paint-order="stroke">'+(available?btc(buy)+' BTC':'—')+'</text>'+
   '<text x="'+(cx+5).toFixed(1)+'" y="'+labelY+'" text-anchor="start"'+
    ' font-family="SF Mono,Menlo,monospace" font-size="'+labelSize.toFixed(1)+'"'+
-   ' font-weight="800" fill="#b93946" stroke="#fff" stroke-width="2"'+
-   ' paint-order="stroke">VENTE '+(available?btc(sell)+' BTC':'—')+'</text>'+
+   ' font-weight="850" fill="#b93946" stroke="#fff" stroke-width="2"'+
+   ' paint-order="stroke">'+(available?btc(sell)+' BTC':'—')+'</text>'+
   '</g>');
  // Live BTC quote, 3m signed price move, and start/end time are rendered in
  // independent, bigger rows OUTSIDE this SVG. No text masks the candles.
  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"'+
   ' data-window-minutes="'+VISIBLE_MINUTES+'"'+
-  ' data-price-span-usd="'+span.toFixed(1)+'" data-price-span-max-usd="1600"'+
-  ' role="img" aria-label="Prix BTC 3m, graduations 500 dollars, ligne bleue ciel de référence Δ prix zéro, écart du contact des cubes proportionnel au déport prix 3m normalisé, duel en volumes BTC">'+
+  ' data-price-span-usd="'+span.toFixed(1)+'" data-price-scale="AUTO_OBSERVED"'+
+  ' role="img" aria-label="Prix BTC 3m à échelle verticale automatique, graduations transparentes, axe bleu de référence Δ prix zéro, duel de volumes BTC">'+
   svgParts.join('')+'</svg>';
 }
 function setQuote(price,ts,status){
@@ -260,7 +273,7 @@ function refresh(snapshot){
  const dim=slot.getBoundingClientRect?.()||{};
  const w=num(dim.width)||num(slot.clientWidth)||0;
  if(w<150)return false;
- const h=Math.round(clamp(w*.84,176,268));
+ const h=Math.round(clamp(w*.84,145,268));
  slot.style.height=h+'px';
  slot.innerHTML=miniSvg({data:candles,periodData:period,
    snapshot:current,width:w,height:h,now:Date.now()});

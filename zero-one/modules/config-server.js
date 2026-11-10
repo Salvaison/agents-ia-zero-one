@@ -7492,15 +7492,20 @@ function renderMiniTicker4x15(packet){
    ' · SHORT '+share(b.directionFractions,'short')+
    ' · CONTESTED '+share(b.directionFractions,'contested'):'Direction —';
   const regimes=samples>0?top(b.marketFractions,2):'Régime —';
-  const status=b.partial===true?'EN FORMATION':'15 MIN CLOSES';
+  // The final status row is redundant on mobile. A live/incomplete window
+  // remains explicitly labelled beside its date; sample count stays in title.
+  const progress=b.partial===true?' · EN FORMATION':'';
   const sourceWarning=!fresh?' · SOURCE ANCIENNE':'';
-  cards.push('<div class="v52-ticker-card" data-window="'+Number(b.startAt||0)+'">'+
-   '<div class="v52-ticker-date">'+safe(time(b.startAt))+' · 15 MIN</div>'+
+  const coverage=b.coverageFraction==null?'—':pct(b.coverageFraction);
+  cards.push('<div class="v52-ticker-card" data-window="'+Number(b.startAt||0)+'"'+
+   ' title="'+samples+' relevés · couverture '+safe(coverage)+
+   (b.partial===true?' · fenêtre en formation':' · fenêtre clôturée')+
+   (fresh?'':' · source ancienne')+'">'+
+   '<div class="v52-ticker-date">'+safe(time(b.startAt))+' · 15 MIN'+
+     progress+sourceWarning+'</div>'+
    '<div class="v52-ticker-top">'+summary+'</div>'+
    '<div class="v52-ticker-direction">'+directions+'</div>'+
-   '<div class="v52-ticker-market">Régime marché : '+regimes+'</div>'+
-   '<div class="v52-ticker-state">'+status+' · '+samples+
-      ' relevés'+sourceWarning+'</div></div>');
+   '<div class="v52-ticker-market">Régime marché : '+regimes+'</div></div>');
  }
  root.innerHTML=cards.join('');
  root.title=trusted?'TICKER ELASTIC V494 · SHADOW UNIQUEMENT · source '+

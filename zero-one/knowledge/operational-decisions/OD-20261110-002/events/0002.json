@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T16:40:53.877881+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Modification de deux modules UI du Watch uniquement, ticker date simplifié, échelle auto du prix, overlay transparent et volume interne sans mots",
+  "evidence": "modules/config-server.js; modules/elastic-mini-conversion-v542.js",
+  "previousEventSha256": "da1900fdddad133e1e42160647cbfd84044c4b49fd011eef1b27b986d7448e5e"
+}

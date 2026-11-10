@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-10T16:40:53.877881+00:00",
+  "status": "AUTORISE",
+  "description": "Demande explicite du compactage ticker 4x15, auto-échelle prix, bande transparente et montants BTC plus grands",
+  "evidence": "Copie intégrale du message utilisateur dans 01 ; antécédent OD-20261110-001",
+  "previousEventSha256": null
+}

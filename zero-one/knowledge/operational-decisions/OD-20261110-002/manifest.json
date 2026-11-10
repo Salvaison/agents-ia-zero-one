@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-002",
+  "title": "BOONO Watch ticker compact et prix Conversion auto-scale",
+  "createdAtUtc": "2026-11-10T16:40:53.877881+00:00",
+  "authorization": "Demande explicite du propriétaire du 10 novembre 2026",
+  "reference": "OD-20261110-001, état vivant Conversion sur Amsterdam",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "144209523a125c63d3685ae8a93b4ddd1cee067b793294ab21d0008c99c1b87e",
+      "bytes": 485
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "c0032eaa64f69e19b7f0e9dd8914eab543b9ab2b28ecaa949840da2316c71290",
+      "bytes": 900
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "f3ce6af41509dbb80dd29169670893274d36f17aa65ceaa960ac54f4e0f252cb",
+      "bytes": 1428
+    }
+  }
+}
