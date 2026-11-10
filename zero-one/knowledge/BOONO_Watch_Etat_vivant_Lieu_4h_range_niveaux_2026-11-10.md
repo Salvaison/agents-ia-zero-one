@@ -51,3 +51,22 @@ L'utilisateur conteste la provenance des affichages « FIB ENREGISTRÉ groupe 6 
 
 **Tests :** syntaxe serveur OK ; extraction et \`node --check\` du JS client servi par \`/app.js\` OK ; rendu client isolé vérifiant l'en-tête et les quatre valeurs BW4/LBW4 -42.4/-45.1, -42.8/-49.7 OK ; redémarrage ciblé de \`config-server\` et HTTP 302 vers authentification OK ; \`boono-v494-paper\` et \`boono-v543-paper\` online et non redémarrés. Validation visuelle navigateur utilisateur encore ouverte.
 
+
+## Ajustement du 10/11 — après 15h45 CET : extension hors Value Area et référence Fair Value
+
+**Demande utilisateur :** « Maintenant celà devrai etre affiché! » puis « Oui c'est embetant donc nous devons considerer audessus/au dessous de la Fair Value qui indique des positions de prix étendue ». Suite à la réserve sur l'affichage sans pourcentage sous VAL ou au-dessus de VAH, l'interface doit conserver des distances et un degré d'extension lisibles.
+
+**Constat vérifié :** \`data/levels.json\` contient désormais le groupe 8, \`VAH big = 78 125\`, \`POC big = 63 998\`, \`VAL big = 61 259\`, enregistré le 10/11. Le point ouvert antérieur « pas de big-range enregistré » est résolu à la date de ce contrôle. Le groupe 4 \`daily\` demeure distinct et inchangé. La valeur du prix varie au fil du temps.
+
+**Deux échelles descriptives indépendantes (sans seuil d'entrée ni sortie) :**
+1. **VAL → VAH**, \`100 × (prix − VAL)/(VAH − VAL)\`. Échelle **non plafonnée** : VAL=0 %, VAH=100 %, en dessous de VAL négatif, au-dessus de VAH supérieur à +100 %. L'écart BTC au VAL est conservé.
+2. **POC comme référence de Fair Value**, \`100 × (prix − POC)/(VAH − POC)\` lorsque prix ≥ POC, ou \`100 × (prix − POC)/(POC − VAL)\` lorsque prix < POC. POC=0 %, VAH=+100 %, VAL=−100 %. L'échelle est **asymétrique** si POC n'est pas à mi-chemin, et reste non plafonnée. POC est ici un *repère tiré des niveaux manuellement inscrits*, pas une estimation indépendante de juste valeur fondamentale.
+3. Si prix au-delà de la Value Area, affichage complémentaire **EXTENSION HAUTE** ou **EXTENSION BASSE**, montant BTC au-delà de la frontière et pourcentage de la *largeur totale VAH−VAL*. Si POC n'est pas strictement entre VAL et VAH, sa mesure normalisée reste indisponible, au lieu d'un calcul fictif.
+4. \`prix − POC\` en dollars BTC est toujours affiché en complément.
+
+**Test sur les niveaux effectivement enregistrés** au prix de mesure de 74 240 $ : position VAL→VAH **77,0 %**, position relative POC **+72,5 %** (segment POC→VAH), distance au POC **+10 242 $**. Exemples synthétiques : prix 80 125 $ → 111,86 % du range et +114,16 % relatif au POC, extension supérieure de +2 000 $ ; prix 59 259 $ → −11,86 % du range et −173,02 % relatif au POC, extension inférieure de −2 000 $. Les extrêmes synthétiques ne sont pas des prix enregistrés du marché.
+
+**Contrôle technique :** calcul isolé sur le registre live + tests aux bornes VAL, POC, VAH et au-delà ; parsing du JS client ; test du rendu HTML État vivant contenant les pourcentages non limités et les étiquettes d'extension : **OK**. \`config-server\` relancé, HTTP 302 authentification attendu, runners PAPER V494/V543 online sans redémarrage. **Rendu dans le navigateur de l'utilisateur encore à apprécier.**
+
+**Gouvernance :** seul \`modules/config-server.js\` est modifié pour cette étape (lecture et présentation). Aucune écriture dans \`data/levels.json\`, aucune modification des stratégies, de l'autorité, des verrous ou des positions. Les résultats sont des repères de localisation, **pas des probabilités de retournement, des qualifications de surachat/survente ou des motifs de trade**.
+

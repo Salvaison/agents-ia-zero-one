@@ -613,9 +613,23 @@ function livingPlaceLandscape({price,levels=[],now=Date.now()}={}){
  }).sort((a,b)=>a.order-b.order);
  const summary=(g)=>{
   const e=g.entries,span=e.VAH-e.VAL;
+  // Signed range position: do not clip values outside [0, 100].
+  const positionPct=100*(px-e.VAL)/span;
+  const pocInside=e.POC>e.VAL&&e.POC<e.VAH;
+  // POC = 0%, VAL = -100%, VAH = +100%; asymmetric on purpose:
+  // each segment is normalized by its OWN length, not by the whole range.
+  const pocDenominator=px>=e.POC?e.VAH-e.POC:e.POC-e.VAL;
+  const fairValuePct=pocInside?100*(px-e.POC)/pocDenominator:null;
+  const outside=px>e.VAH?'ABOVE_VAH':px<e.VAL?'BELOW_VAL':'INSIDE';
+  const excessUsd=outside==='ABOVE_VAH'?px-e.VAH:
+    outside==='BELOW_VAL'?e.VAL-px:0;
   return {scope:g.scope,val:e.VAL,poc:e.POC,vah:e.VAH,spanUsd:span,
    progressFromValUsd:px-e.VAL,progressFraction:(px-e.VAL)/span,
-   priceMinusPocUsd:px-e.POC};
+   positionPct,fairValuePct,pocInsideValueArea:pocInside,
+   priceMinusPocUsd:px-e.POC,sideOfPoc:px>e.POC?'ABOVE_POC':
+     px<e.POC?'BELOW_POC':'AT_POC',
+   outsideValueArea:outside,extensionFromBoundaryUsd:excessUsd,
+   extensionPctOfFullRange:100*excessUsd/span};
  };
  const big=ranged.find(g=>g.scope==='big');
  results.bigRange=big?summary(big):null;
@@ -7550,14 +7564,28 @@ function renderV52Living(data){
  };
  const rangeRow=(g,kind)=>{
   if(!g)return '<div class="v53-observer-note">'+kind+' : aucun triplet VAL / POC / VAH enregistré</div>';
-  const pct=Number(g.progressFraction)*100;
-  const inside=pct>=0&&pct<=100;
+  // Both scales are unbounded: show extended prices instead of a clipped label.
+  const fullPct=g.positionPct==null?Number(g.progressFraction)*100:Number(g.positionPct);
+  const fairPct=g.fairValuePct;
+  const side=g.sideOfPoc==='ABOVE_POC'?'AU-DESSUS DU POC':
+    g.sideOfPoc==='BELOW_POC'?'SOUS LE POC':'AU POC';
+  const reference=g.sideOfPoc==='BELOW_POC'?'POC → VAL':'POC → VAH';
+  const fairText=fairPct===null||fairPct===undefined?
+    'POC hors zone VAL–VAH · pourcentage non calculable':
+    'Fair Value (POC) · '+f(side)+' · '+(fairPct>=0?'+':'')+
+      Number(fairPct).toFixed(1)+' % ('+reference+')';
+  const extension=g.outsideValueArea==='ABOVE_VAH'?
+    ' · EXTENSION HAUTE +'+n(g.extensionFromBoundaryUsd)+
+    ' $ au-dessus VAH (+'+Number(g.extensionPctOfFullRange).toFixed(1)+' % du range)':
+    g.outsideValueArea==='BELOW_VAL'?
+    ' · EXTENSION BASSE −'+n(g.extensionFromBoundaryUsd)+
+    ' $ sous VAL (−'+Number(g.extensionPctOfFullRange).toFixed(1)+' % du range)':'';
   return '<div class="v53-observer-line"><b>'+f(kind)+'</b> · VAL '+n(g.val)+
    ' $ · POC '+n(g.poc)+' $ · VAH '+n(g.vah)+' $</div>'+
-   '<div class="v53-observer-line">Depuis VAL '+sn(g.progressFromValUsd)+
-   ' $ · '+(inside?'parcours '+pct.toFixed(1)+' % du range':
-   (pct<0?'prix sous VAL':'prix au-dessus de VAH'))+
-   ' · distance prix − POC '+sn(g.priceMinusPocUsd)+' $</div>';
+   '<div class="v53-observer-line">Position VAL → VAH '+fullPct.toFixed(1)+
+   ' % · depuis VAL '+sn(g.progressFromValUsd)+' $'+extension+'</div>'+
+   '<div class="v53-observer-line">'+fairText+
+   ' · écart prix − POC '+sn(g.priceMinusPocUsd)+' $</div>';
  };
  const levelRow=(loc,word)=>{
   if(!loc)return '<div class="v53-observer-line">'+word+' : aucun niveau ponctuel enregistré</div>';
