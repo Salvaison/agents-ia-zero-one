@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-006",
+  "title": "BOONO Watch retrait anciens modules Conversion Elastic et etats Vagues",
+  "createdAtUtc": "2026-11-10T22:03:36.775481+00:00",
+  "authorization": "Deux demandes utilisateur dans la conversation du 10 novembre 2026",
+  "reference": "ELASTIC v0.5.8 archive V4.10.10, anciens panneaux Waves et courant V5.4.3",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6c94c7402f4b538a5a2da48ea530081a630845260bbd0994aa2f92246517c71e",
+      "bytes": 2216
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "6e600b1145853438c7fa9c66b29be10ecbfd32eb6f82f4f142ae0d3fe746cb5e",
+      "bytes": 1191
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "787156824f8bf9905391a7ad706d7817077954d4e507665de443c3f4f36ba2aa",
+      "bytes": 1427
+    }
+  }
+}

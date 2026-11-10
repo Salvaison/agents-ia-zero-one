@@ -862,19 +862,19 @@ function waveUiComparePaperTrades(startTs,endTs) {
  return out.filter(x=>x.trade>0&&Number.isFinite(x.entryPrice)&&
   ['long','short'].includes(x.direction)).sort((a,b)=>a.entryTs-b.entryTs).slice(-180);
 }
-// Elastic renders Waves 3m OHLC behind a centered buy/sell duel; no PM3 line.
-// Read-only endpoint; no reuse of trading state or admission authority.
+// Retained read-only OHLC source of the CURRENT Watch mini Conversion.
+// Old full-size Elastic duel retired; no trading-state or admission authority.
 app.get('/api/elastic-chart-3m',requireAuth,(req,res)=>{
   try{
-    // One shared HTTP response with 150m of true 3m candles for BOTH
-    // the compact and the full-size Conversion charts; no additional fetch.
+    // Bounded 150m source of true 3m candles for the new mini Conversion.
+    // Polled by its own display-only loader; no old full-size chart.
     const now=Date.now(),minutes=150,t0=now-minutes*60000;
     const candles=waveUiPriceSeries('3m',t0-180000,now).slice(-53);
     res.set('Cache-Control','no-store');
     res.json({version:'elastic-wave-3m-overlay-v0.2',source:'Waves/mcb_3m.csv + mcb_3m_live.csv',
       timeframe:'3m',period:{from:t0,to:now},candles,
       priceAxis:'BTC_USD',
-      note:'Same Waves 3m OHLC source and same 150m viewport for mini and full Conversion charts. Buy/sell duel remains on its independent rolling 3m trades window, without trade authority.'});
+      note:'Same Waves 3m OHLC source and 150m viewport for the current mini Conversion. Legacy full-size graph retired; buy/sell duel uses separate live 3m OKX trades, with no trade authority.'});
   }catch(err){res.status(500).json({error:'Elastic 3m price chart unavailable',detail:err.message});}
 });
 app.get('/api/elastic-history',requireAuth,(req,res)=>{
@@ -3673,7 +3673,6 @@ app.get('/', requireAuth, (req, res) => {
 </div>
 <div class="tab-panel active" id="tab2-statev2">
 <div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER — connexion au moteur décisionnel…</div>
-<div class="placeholder-note">État V4 — chargement.</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
 <div id="paperHistoryPanel">Chargement de l’historique PAPER…</div>
@@ -3881,8 +3880,6 @@ app.get('/', requireAuth, (req, res) => {
     <div class="wave-title-row"><div class="wave-replay-title">BOONO — Vagues 15m / 3m</div><div class="wave-head-actions"><button id="waveModeLive" class="wave-mode-btn live" type="button"><span class="wave-live-dot"></span>LIVE</button></div></div>
     <div id="waveReplayPeriod" class="wave-replay-note">Chargement du LIVE…</div>
   </div>
-  <div id="waveV5StructureStory" class="wave-structural-story">V5.4.3 · Lecture structurelle…</div>
-  <div id="waveReplayState" class="wave-state-grid" style="display:none"></div>
   <div class="wave-band">
     <div class="wave-band-head">
       <div class="wave-price-head-main">
@@ -3952,7 +3949,7 @@ app.get('/', requireAuth, (req, res) => {
 <script src="/boono-charts.js"></script>
 <script src="/elastic-live-conversion-v541.js"></script>
 <script src="/elastic-mini-conversion-v542.js"></script>
-<script src="/elastic-observer-ui.js"></script>
+<!-- Retired full-size Elastic V4.10.10 archive + duel: no longer loaded by Watch. -->
 <script src="/app.js"></script>
     </body>
     </html>
@@ -4023,10 +4020,12 @@ function updateV3LivePriceDom(){
    metaEl.textContent=(good?v3UiPrice.status:'Prix Live indisponible')+
      (age!==null?' · '+age.toFixed(age<10?1:0)+'s':'');
  }
- if(window.updateElasticCurrentPrice)
-   window.updateElasticCurrentPrice(good?v3UiPrice.price:null,
-     good?v3UiPrice.ts:null,
-     good?(v3UiPrice.source==='OKX_WS'?'OKX live':'V5.4 live serveur'):'STALE');
+ // The NEW mini Conversion owns the BTC quote now. Do not depend on the
+ // retired full-size Elastic observer just to forward this OKX/V5 source.
+ if(window.BoonoMiniConversion)window.BoonoMiniConversion.setQuote(
+   good?v3UiPrice.price:null,
+   good?v3UiPrice.ts:null,
+   good?(v3UiPrice.source==='OKX_WS'?'OKX live':'V5.4 live serveur'):'STALE');
 }
 async function v3UiPollServerPrice(){
  if(v3UiFallbackBusy||Date.now()<v3UiFallbackAt||document.hidden)return;
@@ -4701,8 +4700,6 @@ function waveSchedulePriceRedraw(){
  wavePriceRedrawTimer=setTimeout(function(){
    wavePriceRedrawTimer=null;
    if(waveReplayMode!=='live'||document.hidden||!waveReplayData?.frames?.length)return;
-   const quote=waveCurrentMarketQuote(),el=document.getElementById('waveReplayPriceLiveValue');
-   if(el)el.textContent=quote?'BTC '+waveNum(quote.price,1):'BTC —';
    drawWavePrice(document.getElementById('wavePriceCanvas'),waveReplayIndex);
  },350); // redraw price layer only, not both oscillator canvases
 }
@@ -5021,66 +5018,10 @@ function drawWaveBand(canvas, key, idx) {
 function renderWaveReplay() {
   if (!waveReplayData || !waveReplayData.frames.length) return;
   waveReplayIndex = Math.max(0, Math.min(waveReplayData.frames.length-1, waveReplayIndex));
-  const f = waveReplayData.frames[waveReplayIndex], s=(waveReplayMode==='live'&&waveReplayData.liveState)?waveReplayData.liveState:(f.state||{}), p=s.position||null;
-  const st = s.thesis||{}, m15=s.mcb15||{}, m3=s.mcb3||{}, pm=s.pm||{}, tk=s.ticker||{}, ac=s.action||{};
-  const bg=s.background||{}, setup=s.setup||{}, sr=s.structuralRoom||{}, mq=s.marketQuality||{}, epm=s.entryPm||{}, etk=s.entryTicker||{}, ns=s.nativeSignal||{}, mft=s.mfTemporal||{};
-  const w15=f.wave15||{}, conf=w15.confirmed||{}, w3=f.wave3||{}, au=f.audit||{};
-  const flow = au.volumeFenetreBtc!==null&&au.winSec ? Number(au.volumeFenetreBtc)/Number(au.winSec) : null;
-  const posMain=p ? String(p.direction).toUpperCase() + ' @ ' + waveNum(p.entryPrice,1) : 'FLAT';
-  const posSub=p&&p.metrics ? 'MFE ' + waveNum(p.metrics.mfeUsd,1) + ' · MAE ' + waveNum(p.metrics.maeUsd,1) + (p.metrics.currentPnlUsd!==null&&p.metrics.currentPnlUsd!==undefined?' · PNL '+(Number(p.metrics.currentPnlUsd)>=0?'+':'')+waveNum(p.metrics.currentPnlUsd,2)+' $':'') : '';
-  const engineShort=s.version ? String(s.version).split('-')[0].toUpperCase() : 'V4.5';
-
-  let liveLeft='',liveRight='';
-  const quote=waveReplayMode==='live'?waveCurrentMarketQuote():null;
-  const displayTs=waveReplayMode==='live'?(quote?.ts??s.ts??f.ts):f.ts;
-  const displayPrice=waveReplayMode==='live'?(quote?.price??null):f.price;
-  liveLeft+=waveRow('HEURE',waveParis(displayTs),(waveReplayMode==='live'?'LIVE':'REPLAY')+' · frame '+(waveReplayIndex+1)+' / '+waveReplayData.frames.length);
-  liveLeft+=waveRow('POSITION',posMain,posSub);
-  liveLeft+=waveRow('SETUP',setup.status||'—',setup.direction||setup.candidateDirection||'');
-  liveRight+=waveRow('PRIX','<span id="waveReplayPriceLiveValue">BTC '+
-    (displayPrice===null?'—':waveNum(displayPrice,1))+'</span>',
-    waveReplayMode==='live'?(quote?quote.source:'Flux Live indisponible'):
-      'BTC-USDT-SWAP · REPLAY');
-  liveRight+=waveRow('ACTION',ac.type||'—',ac.stage||'');
-  liveRight+=waveRow('ENGINE',engineShort,'paper / simulation');
-  const live='<div class="wave-live-grid"><div class="wave-live-col">'+liveLeft+'</div><div class="wave-live-col">'+liveRight+'</div></div>';
-
-  let mcb='';
-  mcb+=waveRow('THÈSE',(st.state||'—')+(st.direction?' · '+String(st.direction).toUpperCase():(st.candidateDirection?' · cand. '+String(st.candidateDirection).toUpperCase():'')),
-    (st.mode?'mode '+st.mode:'')+(st.originMode?' · issue de '+st.originMode:''));
-  mcb+=waveRow('SIGNAL',ns.reinforcedUp&&ns.reinforcedUp.active?'UP_REINFORCED':(ns.latest&&ns.latest.type||'—'),
-    ns.reinforcedUp&&ns.reinforcedUp.active&&ns.reinforcedUp.event?'LBW '+waveNum(ns.reinforcedUp.event.value,1)+' · bypass 1H LONG actif':(ns.latest?'val '+waveNum(ns.latest.value,1)+' · age '+waveNum(ns.latest.ageMinutes,0)+'m':''));
-  mcb+=waveRow('15m LIVE / CONF','LBW '+waveNum(w15.lbw,1)+' / '+waveNum(conf.lbw,1),'BW '+waveNum(w15.bw,1)+' / '+waveNum(conf.bw,1)+' · MF '+waveNum(w15.mf,1)+' / '+waveNum(conf.mf,1));
-  mcb+=waveRow('15m ÉTAT',(m15.maturity||'—')+' · rec '+(m15.recoveryFraction!==null&&m15.recoveryFraction!==undefined?waveNum(100*m15.recoveryFraction,1)+'%':'—'),(m15.e15Class||'—')+' · extrême '+waveNum(m15.extremeLbw,1));
-  mcb+=waveRow('MF MÉMOIRE',mft.state||'—',
-    (mft.memoryDirection?'fond '+String(mft.memoryDirection).toUpperCase()+' '+String(mft.memoryHorizon||''):'fond —')+
-    (mft.tacticalDirection?' · 30m '+String(mft.tacticalDirection).toUpperCase():'')+
-    (mft.candidateContext&&mft.candidateContext.state?' · '+mft.candidateContext.state:''));
-  mcb+=waveRow('3m','LBW '+waveNum(w3.lbw,1)+' · pente '+waveNum(m3.slopeLbw,1),'turn '+(m3.turningDirection||'—')+' · MF '+waveNum(w3.mf,1));
-
-  let context='';
-  context+=waveRow('BACKGROUND',bg.primaryRelation||'—',bg.oneHour?'1H '+(bg.oneHour.direction||'—')+' · '+(bg.oneHour.phase||'—')+' · macro '+(bg.macroShadow||'—'):'');
-  context+=waveRow('STRUCTURE',sr.state||'—',sr.roomToBoundaryUsd!==null&&sr.roomToBoundaryUsd!==undefined?'room '+waveNum(sr.roomToBoundaryUsd,1)+' $':'');
-  context+=waveRow('MARKET',(mq.state||'—')+(mq.lowEdge?' · LOW_EDGE':''),mq.window60&&mq.window60.efficiency!==undefined?'eff60 '+waveNum(100*mq.window60.efficiency,0)+'% · flips/h '+waveNum(mq.window60.flipsPerHour,0):'');
-
-  let execution='';
-  execution+=waveRow('SETUP',(setup.status||'—')+(setup.direction||setup.candidateDirection?' · '+String(setup.direction||setup.candidateDirection).toUpperCase():''),setup.reason?escTrade(setup.reason):'');
-  execution+=waveRow('PM / CONVERSION',(pm.status||'—')+' · net3m '+waveNum(pm.net3m,1),'gross3m '+waveNum(pm.gross3m,1)+' · eff3m '+(pm.eff3m!==null&&pm.eff3m!==undefined?waveNum(100*pm.eff3m,0)+'%':'—'));
-  execution+=waveRow('TICKER',(tk.status||'—')+(tk.direction?' · '+String(tk.direction).toUpperCase():''),'yield/P75 '+waveNum(tk.yieldVsP75,2)+' · effort/P75 '+waveNum(tk.effortVsP75,2));
-  execution+=waveRow('PREUVE',(epm.status||'—')+' · ticker '+(etk.status||'—'),epm.netSince!==null&&epm.netSince!==undefined?'net '+waveNum(epm.netSince,1)+' · gross '+waveNum(epm.grossSince,1)+' · eff '+waveNum(100*epm.effSince,0)+'%'+(epm.materiality?' · matérialité '+(epm.materiality.passed?'OK':'NON'):''):'preuve repart à zéro au setup');
-  execution+=waveRow('ACTION',ac.type||'—',ac.reason?escTrade(ac.reason):'');
-  execution+=waveRow('FLOW / AUDIT','PM '+waveNum(au.priceMove,1)+' · cadence '+waveNum(au.cadence,1),'flow '+waveNum(flow,2)+' BTC/s · MF15 pente '+waveNum(au.mf15Pente,2)+' · MF15 Live '+waveNum(w15.mf,2));
-
-  document.getElementById('waveReplayState').innerHTML=
-    waveGroup('LIVE',live,'live')+
-    waveGroup('MCB / THÈSE',mcb,'')+
-    waveGroup('CONTEXTE',context,'')+
-    waveGroup('EXÉCUTION / PREUVE',execution,'');
-
-  const timeEl=document.getElementById('waveReplayTime'); if(timeEl)timeEl.textContent=waveParis(f.ts);
-  const ev=nearestWaveEvents(f.ts),eventEl=document.getElementById('waveReplayEvent');
-  if(eventEl)eventEl.textContent=ev.length ? ev.map(function(e){return e.label+' · '+String(e.direction||'').toUpperCase()+' @ '+waveNum(e.price,1);}).join(' | ') : '';
-  const slider=document.getElementById('waveSlider'); if(slider)slider.value=String(waveReplayIndex);
+  const f=waveReplayData.frames[waveReplayIndex];
+  const w15=f.wave15||{},au=f.audit||{};
+  const flow=au.volumeFenetreBtc!==null&&au.winSec?
+    Number(au.volumeFenetreBtc)/Number(au.winSec):null;
   drawWavePrice(document.getElementById('wavePriceCanvas'),waveReplayIndex);
   drawWaveBand(document.getElementById('wave15Canvas'),'wave15',waveReplayIndex);
   drawWaveBand(document.getElementById('wave3Canvas'),'wave3',waveReplayIndex);
@@ -5284,7 +5225,6 @@ function waveApplyData(data, mode, targetTs) {
   } else waveReplayIndex=Math.max(0,Math.min(data.frames.length-1,waveReplayIndex));
   if(slider)slider.value=String(waveReplayIndex);
   waveSetModeButtons(); waveDescribePeriod(); waveSetTrackScale(); renderWaveReplay();
-  if(mode==='live')loadWaveV5StructureStory();
   requestAnimationFrame(function(){
     waveBindScrollSync();
     if(mode==='live'&&waveLiveFollow)waveScrollToTimestamp(data.frames[data.frames.length-1].ts);
@@ -5314,50 +5254,9 @@ async function loadWaveReplay() {
     if(firstLoss)target=firstLoss.ts;
     waveApplyData(waveReplayCache,'replay',target);
   }catch(e){
-    document.getElementById('waveReplayState').innerHTML='<div class="placeholder-note">Replay indisponible : '+e.message+'</div>';
+    const status=document.getElementById('waveReplayPeriod');
+    if(status)status.textContent='Replay indisponible : '+e.message;
   }
-}
-let waveV5StoryLoading=false;
-async function loadWaveV5StructureStory(){
-  const el=document.getElementById('waveV5StructureStory');
-  if(!el||waveV5StoryLoading||document.hidden)return;
-  waveV5StoryLoading=true;
-  try{
-    const r=await fetch('/api/v5-structure',{cache:'no-store',
-      signal:AbortSignal.timeout(12000)});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const a=await r.json(),s=a.structure||{},j=a.enjeu||{},m=a.horizon||{};
-    const z=a.integrity||{},t=(a.attempts||{}),p=(a.scenarios||[]);
-    const signed=n=>n===null||n===undefined?'—':
-      (Number(n)>0?'+':'')+Number(n).toFixed(1);
-    const dir=x=>x?String(x).toUpperCase():'—';
-    const safe=x=>escTrade(String(x===undefined||x===null?'—':x));
-    const stale=z.dataIntegrity!=='ASOF_OK';
-    const elasticStale=!['EVENT_STREAM_OBSERVED','SAME_ACTIVE_ENGINE'].includes(z.elasticEventStatus);
-    const blocks=[
-      '<div class="heading"><span>V5.4.3 · STRUCTURE DIRECTRICE</span>'+
-        '<span>V5.4.1 PAPER · ACTIF</span></div>',
-      stale?'<div class="line alert">MCB confirmé périmé ou absent : lecture historique uniquement.</div>':'',
-      elasticStale?'<div class="line alert">Chronologie Elastic non fraîche : anciennes attaques, aucune confirmation récente déduite.</div>':'',
-      '<div class="line"><b>Trajet E15→E15 '+safe(dir(s.direction))+'</b>'+
-        ' · contexte 1h '+safe(dir(s.context1h))+' / 4h '+safe(dir(s.context4h))+
-        ' · E3 '+safe(dir(s.childDirection))+'</div>',
-      '<div class="line"><b>POSITION</b> '+safe(j.valueArea)+
-        ' · frontière '+safe(j.profileFrontier&&j.profileFrontier.key||j.nearest&&j.nearest.key)+
-        ' '+safe(j.profileFrontier&&j.profileFrontier.price||j.nearest&&j.nearest.price)+'$</div>',
-      '<div class="line"><b>PHÉNOMÈNE</b> '+safe(a.phase)+
-        ' · E15 UP '+Number(t.e15Up3h||0)+'/3h · E3 UP '+Number(t.e3Up90m||0)+'/90m</div>',
-      '<div class="line"><b>EFFETS</b> Prix 1h '+signed(m.priceNet1h)+'$ · MF15 Δ1h '+
-        signed(m.mf15Delta1h)+' · conversion '+safe(a.conversion&&a.conversion.quality)+
-        ' (descriptive)</div>',
-      '<div class="line"><b>HYPOTHÈSES</b> '+p.slice(0,2).map(x=>safe(x.kind)).join(' / ')+'</div>',
-      '<div class="note">Observé '+waveParis(a.ts)+
-        ' · horodatages réels, aucune exécution financée</div>'
-    ];
-    el.innerHTML=blocks.join('');
-  }catch(err){
-    el.textContent='V5.4.1 STRUCTURE · Observation indisponible : '+err.message;
-  }finally{waveV5StoryLoading=false;}
 }
 function waveMergePriceSeries(a,b){
   const m=new Map();
@@ -5499,7 +5398,8 @@ async function loadWaveLive(force) {
       setTimeout(function(){loadWaveSnapshot();},0);
     }
   }catch(e){
-    document.getElementById('waveReplayState').innerHTML='<div class="placeholder-note">Live indisponible : '+e.message+'</div>';
+    const status=document.getElementById('waveReplayPeriod');
+    if(status)status.textContent='Live indisponible : '+e.message;
   }
 }
 function waveStep(delta){if(!waveReplayData)return;waveReplayIndex=Math.max(0,Math.min(waveReplayData.frames.length-1,waveReplayIndex+delta));renderWaveReplay();if(waveReplayData.frames[waveReplayIndex])waveScrollToTimestamp(waveReplayData.frames[waveReplayIndex].ts);}
@@ -8024,6 +7924,33 @@ function renderV52Living(data){
  if(typeof window!=='undefined'&&window.BoonoMiniConversion)
   window.BoonoMiniConversion.refresh();
 }
+// The retired Elastic chart used to be the sole loader for mini 3m candles.
+// Keep the existing authenticated OHLC endpoint but fetch ONLY for the new
+// Watch Conversion (no old duel canvas, no duplicate fetch or V4 state).
+let miniConversionCandlesBusy=false,miniConversionCandlesRequestedAt=0;
+async function loadMiniConversionCandles(){
+ const tab=document.getElementById('tab2-statev2');
+ const host=document.getElementById('v52-mini-conversion');
+ if(!tab?.classList.contains('active')||!host||document.hidden||
+    !window.BoonoMiniConversion||miniConversionCandlesBusy||
+    Date.now()-miniConversionCandlesRequestedAt<45000)return;
+ miniConversionCandlesBusy=true;miniConversionCandlesRequestedAt=Date.now();
+ try{
+  const res=await fetch('/api/elastic-chart-3m',{cache:'no-store',
+    signal:AbortSignal.timeout(7000)});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const data=await res.json();
+  const ok=window.BoonoMiniConversion.setCandles(data);
+  if(!ok)throw Error('BOUGIES_3M_INSUFFISANTES');
+  host.removeAttribute('data-candle-source-error');
+  host.removeAttribute('title');
+ }catch(e){
+  // Never invent missing candles or reset a valid recent history.
+  host.setAttribute('data-candle-source-error','true');
+  host.title='Bougies 3m : actualisation momentanément indisponible ('+
+    String(e.message||'—').slice(0,65)+')';
+ }finally{miniConversionCandlesBusy=false;}
+}
 async function loadV52PaperPanel(){
  const el=document.getElementById('v52-live');
  const tab=document.getElementById('tab2-statev2');
@@ -8038,6 +7965,7 @@ async function loadV52PaperPanel(){
   if(window.elasticConversionV541)
     window.elasticConversionV541.setAnalysis(data.analysis);
   renderV52Living(data);
+  loadMiniConversionCandles();
   loadMiniTicker4x15();
  }catch(e){if(el)el.textContent='V5.4.3 PAPER · indisponible : '+e.message;}
  finally{v52Pending=false;}
@@ -8313,7 +8241,6 @@ async function loadTrades() {
     else living += '<div><b>V4</b> état courant indisponible.</div>';
     if (ld) living += '<div style="margin-top:7px;opacity:.7;"><b>Dernière décision journalisée</b> ' + escTrade(ld.action) + ' — ' + escTrade(ld.reason) + ' · ' + tradeTime(ld.ts) + '</div>';
     living += '</div></div>';
-    const openElastic=Array.from(stateEl.querySelectorAll('details[data-elastic-chain][open]')).map(function(n){return n.dataset.elasticChain;});
     const archiveWasOpen=!!stateEl.querySelector('#v5-paper-archive[open]');
     const baselineWasOpen=!!stateEl.querySelector('#v493-details[open]');
     const labWasOpen=!stateEl.querySelector('#execution-lab-details')||
@@ -8322,7 +8249,6 @@ async function loadTrades() {
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
     stateEl.innerHTML =
       '<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER · lecture de la décision en cours…</div>'+
-      (window.renderElasticObserverV05?window.renderElasticObserverV05(current):renderElasticDualV04(current))+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
         '<div id="execution-lab-live">Données du carnet en attente…</div></details>'+
@@ -8343,9 +8269,6 @@ async function loadTrades() {
     loadV493Panel();
     loadV5StructureLive();
     if(archiveWasOpen)loadV5PaperPanel();
-    if(window.loadElasticObserverHistory)window.loadElasticObserverHistory();
-    if(window.loadElasticChart3m)window.loadElasticChart3m(current);
-    stateEl.querySelectorAll('details[data-elastic-chain]').forEach(function(n){n.open=openElastic.includes(n.dataset.elasticChain);});
     updateV3LivePriceDom();
 
     const executed = (data.executed || []).map(function(t,i){ return Object.assign({}, t, {__tradeNo:i+1}); }).reverse();

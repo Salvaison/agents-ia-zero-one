@@ -94,11 +94,14 @@ function refreshUi(force=false){
  const now=Date.now();
  if(!force&&now-lastUiRefresh<5000)return false;
  if(document.hidden)return false;
- const node=document.getElementById('elastic-live-duel');
- if(!node||typeof window.paintElasticLiveConversion!=='function')return false;
+ // The full-size legacy Conversion has been removed. Keep the SAME OKX
+ // trade stream and 5-second chart refresh, now directed to the current
+ // Watch mini Conversion only; no second WS and no independent PM source.
+ if(!document.getElementById('tab2-statev2')?.classList.contains('active')||
+    !document.getElementById('v52-mini-conversion')||
+    !window.BoonoMiniConversion?.refresh)return false;
  lastUiRefresh=now;
- window.paintElasticLiveConversion(snapshot(now));
- return true;
+ return window.BoonoMiniConversion.refresh(snapshot(now));
 }
 window.elasticConversionV541={
  ingestTrade,setAnalysis,snapshot,refreshUi,

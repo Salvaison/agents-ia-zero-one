@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T22:03:36.775481+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server relancé sur Amsterdam, HTTP 302 auth attendu, V494/V543 et shadow Elastic online, aucune décision de trading modifiée",
+  "evidence": "PM2 targeted restart et curl local; contrôle visuel navigateur à effectuer",
+  "previousEventSha256": "515c1a905fb147b4da436f8125a2c06b57dcceb1dbf147a2141ddb728c2ec18e"
+}

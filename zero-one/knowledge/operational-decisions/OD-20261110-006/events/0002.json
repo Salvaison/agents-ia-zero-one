@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T22:03:36.775481+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Ancien renderer non chargé, ancien rendu retiré, Vagues débarrassé de la structure directrice et du state masqué; mini Conversion branché directement sur prix, chandeliers et flux OKX",
+  "evidence": "modules/config-server.js et modules/elastic-live-conversion-v541.js",
+  "previousEventSha256": "0266c589f1a7cdd677327df52ee4d1b59a3581acf1792f715c5263e409712f14"
+}

@@ -1,0 +1,46 @@
+tu peux enlevé l'ancien module conversion et l'ancien elastic 4.10.10:
+
+**PRIX BTC · BOUGIES 3m + CONVERSION · OKX LIVE · 3m complets**
+PM3 **-9.5** $ · PM5 **+23.9** $ · PM Live **-9.1** $
+eff3 — · yield/P75 — · effort/P75 —
+Qualité **CONTESTED** · direction **—**
+**ACHAT 16.142 BTCVENTE 27.528 BTC**
+Graphique prix BTC 3m, comme dans VaguesDuel de conversion semi-transparent : deux carrés accolés se déplaçant selon le BTC autour de l’axe central fixe
+**Δ PRIX BTC +1.9 $ · 3m**
+PRIX BTC · axe gaucheSurfaces · volume acheteurs / vendeursTemps · bas
+**CHRONOLOGIE · mémoire persistante&#x20;**(cliquer pour ouvrir / refermer)
+Fenêtre 6 h24 h48 hFamille ToutesMCB15MCB3FLOWMACONVERSIONBOUNDARYCONTEXT
+Ouvre la chronologie pour charger les événements.
+**ELASTIC v0.5.8 · ARCHIVE V4.10.10**ARCHIVE FIGÉE · aucune autorité de trading
+MCB propose **SHORT** · trajectoire 15m **SHORT** · prix **LONG**
+**CHAÎNE DE THÈSE SHORT**
+**PM Live -25.9** → **PM3 -12.6**
+**MCB 15&#x20;**confirmé gris → Live
+BW +23.7 / **+28.7**　 LBW +28.2 / **+38.7**　 **Δ/bougie** **+10.56**
+BW/LBW **-10.33** · dernier cross 8.0m · Δ/min **+1.10**
+Pente E→E prix **+7.59** $/min　 **durée** 120.0m
+Signal confirmé **E15 UP** · barre 21.2m · Live —
+**MCB 3&#x20;**confirmé gris → Live
+BW +4.1 / **+30.7**　 LBW +22.2 / **+36.7**　 **Δ/bougie** **+14.47**
+BW/LBW **-11.91** · dernier cross 11.5m · Δ/min **+1.11**
+Pente E→E prix **—** $/min　 **durée** —
+Signal confirmé **E3 UP** · barre 12.2m · Live —
+**FLOW**
+MF15 -6.8 / **-3.7** · MF3 -2.5 / **-2.2**
+Mémoire **long** · horizon h4
+**MA · épisodes confirmés**
+MA3 **+226.8** $ · LOST · 48 retests · 0 bougies contact
+MA15 **-16.8** $ · RETEST · 7 retests · 1 bougies contact
+**CONVERSION**
+Qualité **CONTESTED** · sens **—**
+**BOUNDARY**
+OPEN_PATH · aucune limite en avant · distance —
+Range BELOW_RANGE_BREAK · terrain —
+Niveaux VAL daily +786.6 $ · WR +2473.6 $ · Fib fib0 -22869.4 $ · fib0 +45808.6 $
+**CONTEXT**
+Régime CHOP_SHADOW · données OK
+1h long · 4h long · Daily long · Weekly short
+
+---
+
+et aussi sur la page des vagues, enléve l'état vivant qui traine là

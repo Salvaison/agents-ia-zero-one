@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T22:03:36.775481+00:00",
+  "status": "TESTE",
+  "description": "Tests VM client : quatre tests de retrait DOM/script, trois graphes Waves et FLOW, OHLC mini 45s, même flux OKX, prix et volumes initiateurs ; syntaxes et diff vérifiés",
+  "evidence": "tests/ui/watch-old-panels-retired.test.js ; node --check ; git diff --check",
+  "previousEventSha256": "45a973efffa1ff55884738f0874376b7d3361232a344ce23703035bb7e1478f8"
+}

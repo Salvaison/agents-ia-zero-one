@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-10T22:03:36.775481+00:00",
+  "status": "AUTORISE",
+  "description": "Supprimer visuellement ancien graphe Conversion et Elastic v0.5.8 V4.10.10 et Etat vivant redondant sous Vagues",
+  "evidence": "Requêtes intégrales du propriétaire et liste des anciens labels",
+  "previousEventSha256": null
+}
