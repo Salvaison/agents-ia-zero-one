@@ -69,3 +69,50 @@ test('failed exchange read does not fabricate volume or throw to the trade UI',a
  assert.equal(r.windows[0].meanBtcPerMinute,null);
 });
 
+
+test('graph pastille thresholds are shared in meaning: 62 BTC/min sustained corresponds to 70%',()=>{
+ const {readFileSync}=require('node:fs');
+ const source=readFileSync(require('node:path').resolve(__dirname,
+  '../../modules/elastic-mini-conversion-v542.js'),'utf8');
+ const token=source.match(/const TOTAL_VOLUME_THRESHOLDS_BTC=(\[[^\]]+\]);/);
+ assert.ok(token,'graph volume threshold literal must remain discoverable');
+ const thresholds=JSON.parse(token[1]);
+ assert.deepEqual([...volume.VOLUME_3M_THRESHOLDS_BTC],thresholds);
+ assert.equal(volume.graphIntensityPct(0),0);
+ assert.equal(volume.graphIntensityPct(0.5),0);
+ assert.equal(volume.graphIntensityPct(1),10);
+ assert.equal(volume.graphIntensityPct(186),70);
+ assert.equal(volume.graphIntensityPct(1000),100);
+ assert.equal(volume.graphIntensityPct(-1),null);
+});
+test('15min smoothed intensity uses 15 minute-aligned 3m pastille levels, not a 24h reference',()=>{
+ const samples=Array.from({length:17},(_,i)=>({
+  at:base+(i-2)*MIN,btc:62.1
+ }));
+ const b=volume.reconcile([{startAt:base}],samples,base+15*MIN)[0];
+ assert.equal(b.meanGraphVolumePct,70);
+ assert.equal(b.meanBtcPerMinute,62.1);
+ assert.equal(b.intensityObservedMinutes,15);
+ assert.equal(b.intensityCoverageFraction,1);
+ assert.match(b.intensityBasis,/GRAPH_3M_PASTILLE/);
+});
+test('3m pastille smoothing requires two historical minutes before the 15m window',()=>{
+ const samples=Array.from({length:15},(_,i)=>({
+  at:base+i*MIN,btc:62.1
+ }));
+ const b=volume.reconcile([{startAt:base}],samples,base+15*MIN)[0];
+ assert.equal(b.meanBtcPerMinute,62.1);
+ assert.equal(b.intensityObservedMinutes,13);
+ assert.equal(b.meanGraphVolumePct,null);
+});
+test('partial quarter smooths only completed minutes and never peeks into the current minute',()=>{
+ const samples=Array.from({length:17},(_,i)=>({
+  at:base+(i-2)*MIN,btc:i>6?900:62.1
+ }));
+ const b=volume.reconcile([{startAt:base}],samples,base+4.5*MIN)[0];
+ assert.equal(b.expectedMinutes,4);
+ assert.equal(b.intensityObservedMinutes,4);
+ assert.equal(b.meanGraphVolumePct,70);
+ assert.equal(b.completed15Minutes,false);
+});
+

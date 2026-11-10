@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-004",
+  "title": "BOONO Watch Vol moy 15m normalise pastilles 3m",
+  "createdAtUtc": "2026-11-10T17:28:36.288176+00:00",
+  "authorization": "Correction explicite de l utilisateur, meme % que celui du graphe, lisse 15 min",
+  "reference": "OD-20261110-003 plus les seuils fixes de l intensite du graphe 3m",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "d3f48bdf4761ccc87bfa2c9f2367929742e556cf811509adbb06fbe578b5aeb8",
+      "bytes": 405
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "32cd6fdd98ac7c3fce935557629e453c05e6fa18418362a34dc7aa9b4a85e472",
+      "bytes": 1012
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "586586ac03c12936646dd04608bec57a3c2f9fa028c5c3417a0591e4de2f7867",
+      "bytes": 2010
+    }
+  }
+}

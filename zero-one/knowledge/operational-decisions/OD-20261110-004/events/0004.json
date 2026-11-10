@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T17:28:36.288176+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Config-server redemarre, route Watch protegee HTTP302 ; moteurs V494/V543 et Elastic shadow restent online ; validation mobile utilisateur ouverte",
+  "evidence": "PM2 et curl sur Amsterdam",
+  "previousEventSha256": "cabcbf2d3890e8fcb244627a400ce0e497a57d2706e7a676804f39186bfbc624"
+}

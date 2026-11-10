@@ -82,3 +82,18 @@
 
 **Documentation d'origine :** registre OD-20261110-003, prompt utilisateur intégral, étapes d'implantation/test/activation et référence au commit associé.
 
+
+## Ajustement 10/11 — OD-20261110-004 : pourcentage des dix pastilles du graphe, lissé 15m
+
+**Correction expresse du propriétaire :** écarter la proposition de comparaison avec le volume moyen des 24h. L'indicateur est **le même pourcentage d'intensité que le graphe Conversion 3m**, calculé avec les dix pastilles de volume exécuté, mais moyenné sur le quart d'heure. Forme souhaitée sur une unique ligne : `Vol moy: 70% · 62,1BTC/min` (exemple, pas valeur imposée).
+
+**Calcul retenu :** les seuils fixes du graphe, en volume total exécuté BTC sur 3 minutes, sont `1,2,5,10,20,50,100,200,500,1000 BTC`. Chaque minute close du 15m produit une somme de ses propres trois dernières bougies OKX 1m closes, évaluée selon les mêmes seuils. L'intensité 0–100 % de chaque minute est le nombre de seuils atteints multiplié par dix. La valeur `Vol moy` est la moyenne des intensités minute par minute sur les 15 minutes (ou la fraction close d'un créneau en formation), **pas une comparaison sur 24h**, et pas un rendement économique. Une mesure absente parmi les 3x1m nécessaires rend le pourcentage indisponible : aucune extrapolation.
+
+Le volume BTC/min placé après ce pourcentage reste exactement la mesure OKX volumique indépendante installée à l'OD-003. L'échelle du graphe fondée sur les transactions continues peut donner un niveau instantané légèrement différent du lissage historique fondé sur des minutes closes. Les catégories qualité `SILENT / INEFFICIENT / ...` et leurs parts historiques restent strictement inchangées.
+
+**Code :** `modules/attention/v494-elastic-volume-1m.js` : `VOLUME_3M_THRESHOLDS_BTC`, `graphIntensityPct`, `meanGraphVolumePct`, nombre de minutes observées et statut de couverture. `modules/config-server.js` : ligne `Vol moy: XX% · YY,YBTC/min` sur une seule rangée ; style compact sur mobile ; infobulle de provenance et couverture. Aucune modification du ticker décisionnel ni du renderer graphique.
+
+**Tests :** 19 tests Node (ticker historique + module de volume) **réussis** ; test de concordance stricte avec les seuils du graphe ; échantillon continu 62,1 BTC/min générant 70 % ; maintien des minutes antérieures nécessaires ; refus des valeurs tronquées ; état EN FORMATION borné à l'horodatage du shadow. Contrôle réel sur Amsterdam : tranche 17h30–17h45 CET du 10/11 mesurée à 293,4 BTC/min et 89 % en moyenne d'intensité. Rendu HTML client : quatre cartes, informations de marché et qualités conservées, bon repli si la source manque.
+
+**Service :** `config-server` redémarré seul ; HTTP local 302 attendu vers le login, route Shadow protégée. `boono-v494-paper`, `boono-v543-paper`, et `boono-v494-elastic-shadow` online, **non redémarrés**. Rendu visuel mobile à confirmer par l'utilisateur. Code et décision publiés GitHub.
+

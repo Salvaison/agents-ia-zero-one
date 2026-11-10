@@ -3237,7 +3237,7 @@ app.get('/', requireAuth, (req, res) => {
       .v52-main .v52-ticker-card{min-width:0;border:1px solid #cdd8df;border-radius:5px;background:#fff;padding:5px 5px 4px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;overflow-wrap:anywhere;font:650 8.2px/1.4 'SF Mono',Menlo,monospace;}
       .v52-main .v52-ticker-date{font-weight:800;color:#4b606e;font-size:8px;}
       .v52-main .v52-ticker-top{font-size:9px;font-weight:850;color:#253846;}
-      .v52-main .v52-ticker-volume{font-size:9px;font-weight:850;color:#304b5b;}
+      .v52-main .v52-ticker-volume{font-size:9px;font-weight:850;color:#304b5b;white-space:nowrap;letter-spacing:-.015em;}
       .v52-main .v52-ticker-volume.unknown{color:#82909a;font-weight:650;}
       .v52-main .v52-ticker-conversion-label{font-size:7.8px;color:#687a86;font-weight:700;}
       .v52-main .v52-ticker-direction{font-size:8.2px;color:#435868;}
@@ -3254,6 +3254,7 @@ app.get('/', requireAuth, (req, res) => {
         .v52-main .v52-mini-conversion-layout{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:4px;}
         .v52-main .v52-ticker-card{padding:4px 3px;font-size:7.5px;gap:3px;}
         .v52-main .v52-ticker-top{font-size:8px;}
+        .v52-main .v52-ticker-volume{font-size:7.5px;letter-spacing:-.045em;}
         .v52-main .v52-ticker-direction,.v52-main .v52-ticker-market{font-size:7.5px;}
       }
       .v52-cell.conv>.title{font:850 8.7px/1.4 'SF Mono',Menlo,monospace;letter-spacing:0;color:#5a6e7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #cbd5dd;padding-bottom:5px;margin-bottom:5px;}
@@ -7512,14 +7513,25 @@ function renderMiniTicker4x15(packet){
   const measurement=volumeByStart.get(Number(b.startAt))||null;
   const hasVolume=measurement?.meanBtcPerMinute!=null&&
    measurement.sourceStatus==='OK';
-  const volumeLabel=hasVolume?'VOL. MOY '+volumeText(measurement.meanBtcPerMinute)+
-   ' BTC/min':measurement?.status==='WAIT_CONFIRMED_1M'?
-    'VOL. MOY · minute en formation':
-    'VOL. MOY — · données OKX incomplètes';
+  const intensityPct=measurement?.meanGraphVolumePct;
+  const hasIntensity=hasVolume&&intensityPct!=null&&
+   Number.isFinite(Number(intensityPct))&&Number(intensityPct)>=0&&
+   Number(intensityPct)<=100;
+  // The 0..100 score matches the GRAPH's ten 3m volume pastilles,
+  // averaged at the end of each confirmed minute across this 15m slot.
+  // It is NOT a percentile against 24h volume or a win probability.
+  const percentLabel=hasIntensity?Math.round(Number(intensityPct))+'%':'—%';
+  const volumeLabel=hasVolume?'Vol moy: '+percentLabel+' · '+
+    volumeText(measurement.meanBtcPerMinute)+'BTC/min':
+    'Vol moy: —% · —BTC/min';
   const volumeInfo=measurement?
    ' · volume OKX observé '+volumeText(measurement.totalBtcObserved)+' BTC sur '+
    Number(measurement.observedMinutes||0)+'/'+Number(measurement.expectedMinutes||0)+
-   ' minutes confirmées':' · volume OKX non disponible';
+   ' minutes confirmées · pastilles 3m moyennées '+
+   Number(measurement.intensityObservedMinutes||0)+'/'+
+   Number(measurement.intensityExpectedMinutes||0)+' minutes'+
+   ' · base : mêmes seuils que le graphe, pas référence 24h':
+   ' · volume OKX non disponible';
   const summary=samples>0?top(b.qualityFractions,2):'Aucune qualité observée';
   const directions=samples>0?
    'LONG '+share(b.directionFractions,'long')+

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T17:28:36.288176+00:00",
+  "status": "TESTE",
+  "description": "19 tests automatises OK, parite des seuils du graphe, echantillon de 62.1BTC/min → 70%, HTML des quatre cartes verifie sur volumes reels",
+  "evidence": "tests/attention/v494-elastic-volume-1m.test.js; tests/attention/v494-elastic-ticker.test.js",
+  "previousEventSha256": "3c41e49f63c580ab8d3e8d9e45ccf132741996a18463763012618e4e903584e3"
+}

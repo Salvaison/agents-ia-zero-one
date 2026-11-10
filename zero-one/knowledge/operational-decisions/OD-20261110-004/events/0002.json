@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T17:28:36.288176+00:00",
+  "status": "IMPLEMENTE",
+  "description": "3m OKX total BTC recalcule depuis trois minutes closes puis moyennage des intensites sur le quart d heure; affichage sur une ligne avec BTC/min",
+  "evidence": "modules/attention/v494-elastic-volume-1m.js; modules/config-server.js",
+  "previousEventSha256": "fa600cc655db6297b599d704db7b058a2373ada8e0748e9e9acbf0704872e349"
+}

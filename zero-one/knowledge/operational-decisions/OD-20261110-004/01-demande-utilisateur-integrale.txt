@@ -1,0 +1,5 @@
+Ok trés bien . "VOL. MOY 62,1 BTC/min" écrit juste "62,1 BTC/min" ça permet de gagné une ligne dans le telephone ou plutôt je voudrais voir le pourcentage moyen de volume sur la période, ainsi: "Vol moy: 70%"
+
+pardon, écrit "Vol moy: 70% . 62.1BTC/min"
+
+"100 % comme le volume moyen par minute des 24 heures précédentes" je dirais le meme % que celui exposer dans le graphe mais lissé sur 15min
