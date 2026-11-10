@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-007",
+  "title": "BOONO Watch passation Amsterdam consolidee 2026-11-10",
+  "createdAtUtc": "2026-11-10T22:18:18.705171+00:00",
+  "authorization": "Demande explicite du propriétaire de réécrire la passation octobre 19 avec les dernières mises à jour",
+  "reference": "BOONO_interface_Amsterdam_socle_Watch_2026-10-19(2).md, code VPS HEAD 05d9e39",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "d98116ab9ed4b19c405d252141debbea67755b6a7e85f979b1ca75875abaf5e4",
+      "bytes": 165
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "4cdd71be559cbf87aa17b3ba0d83a4d48db490f710ce42f58065153f6751d481",
+      "bytes": 1188
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c57ceed48ce9bc42dd8be35a6e20593077baeb11c287db51a7fe340883d4f98e",
+      "bytes": 1375
+    }
+  }
+}

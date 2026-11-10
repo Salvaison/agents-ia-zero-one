@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T22:18:18.705171+00:00",
+  "status": "REDIGE",
+  "description": "Passation successeur 325 lignes, cinq cartes Watch, Vagues, SHADOWS, AUDIT, endpoints, cadences, sources/autorités, runbook, risques et onze commits.",
+  "evidence": "knowledge/BOONO_interface_Amsterdam_socle_Watch_2026-11-10.md",
+  "previousEventSha256": "aceefd1c578798b2dfafe8b973a7a9101b6c81627df2f193b5c5f29fca564847"
+}

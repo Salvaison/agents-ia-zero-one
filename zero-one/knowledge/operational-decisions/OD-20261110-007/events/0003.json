@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T22:18:18.705171+00:00",
+  "status": "CONTROLE",
+  "description": "Sources du VPS comparées au document, chemins KB vérifiés, audit original daté séparé, état PM2 et protection par session documentés.",
+  "evidence": "modules/config-server.js, modules/elastic-mini-conversion-v542.js, modules/attention/v494-elastic-volume-1m.js, OD-001..006",
+  "previousEventSha256": "e4e7d64bd5789cdae8ea48202547eae4f1ad407e06dfc5a9e26319c7349252ae"
+}

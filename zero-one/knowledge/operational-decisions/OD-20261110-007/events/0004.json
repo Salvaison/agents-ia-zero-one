@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T22:18:18.705171+00:00",
+  "status": "PRET_PUBLICATION",
+  "description": "Document final prêt pour un commit ciblé, original Oct19 préservé, autres changements du worktree non touchés.",
+  "evidence": "git diff --check + commit ciblé uniquement",
+  "previousEventSha256": "ce5db182ea15be1ff440769ad414582d64c760c0dab86ec24b43e54ce6a2268d"
+}
