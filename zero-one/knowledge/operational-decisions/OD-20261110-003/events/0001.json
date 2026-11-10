@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-10T17:12:33.123818+00:00",
+  "status": "AUTORISE",
+  "description": "Demande de volume global moyen par 15m puis des deux qualités Elastic dominantes en %, sans changer les pourcentages",
+  "evidence": "Reproduction intégrale de la demande ; suite des constats flux/rendement",
+  "previousEventSha256": null
+}

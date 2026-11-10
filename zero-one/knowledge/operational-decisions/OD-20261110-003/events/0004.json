@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T17:12:33.123818+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server Amsterdam relancé, HTTP 302 attendu; runners V494/V543 et shadow Elastic online non modifiés ; validation mobile ouverte",
+  "evidence": "PM2 config-server et curl localhost; aucune modification TV",
+  "previousEventSha256": "cebe8efc1855f733929fd37e0db44747be9e1c02fd30f1f95ff949655f6f368c"
+}

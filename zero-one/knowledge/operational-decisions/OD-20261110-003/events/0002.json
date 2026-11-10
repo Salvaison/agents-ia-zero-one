@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T17:12:33.123818+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Volume global BTC/min calculé depuis 1m closes OKX volCcy avec cache; card ticker : volume d abord, qualité ensuite; parts et catégories V494 inchangées",
+  "evidence": "modules/attention/v494-elastic-volume-1m.js ; modules/config-server.js",
+  "previousEventSha256": "212c11df80f1b2baedf453cb65c6b4353abc0d191aad49c01f136b8ba3bc1695"
+}

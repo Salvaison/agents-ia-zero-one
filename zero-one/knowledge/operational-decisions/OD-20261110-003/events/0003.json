@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T17:12:33.123818+00:00",
+  "status": "TESTE",
+  "description": "15 tests Node OK ; vrai OKX 1m et 4 fenêtres réconciliées, asOf et couverture vérifiés; client DOM avec volume/qualité et fallback testé",
+  "evidence": "tests/attention/v494-elastic-volume-1m.test.js ; tests/attention/v494-elastic-ticker.test.js",
+  "previousEventSha256": "7bd47056ac60ffa7a368448cfe3f85e2f4822e67de88bf090ce4590f28512c49"
+}

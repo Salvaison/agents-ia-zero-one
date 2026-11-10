@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-003",
+  "title": "BOONO Watch ticker 4x15 volume global OKX et qualités séparés",
+  "createdAtUtc": "2026-11-10T17:12:33.123818+00:00",
+  "authorization": "Demande explicite du propriétaire du 10 novembre 2026",
+  "reference": "OD-20261110-001 et 002 ; écart historique fenêtre prix / 200 transactions",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b0d895eaf92ef42b38e4e541fb0e86bc3c0da9891a9b2497525c6753224518a5",
+      "bytes": 257
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "a60b938d91f858b1a788e0acb89f42d885085f63944142758cfed60d3a3ac70d",
+      "bytes": 1113
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "5dbf1c5bba1f15bac0683f0b64353a260f92c355a343994becbf0138c4b13728",
+      "bytes": 1439
+    }
+  }
+}

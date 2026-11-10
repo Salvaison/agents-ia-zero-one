@@ -56,3 +56,29 @@
 
 **Traçabilité :** OD-20261110-002, demande intégrale et étapes de réalisation. Ne pas assimiler une restitution graphique d'Elastic à une autorité PAPER. Studio BOONO-TV sur OVH non modifié.
 
+
+## 10 novembre — OD-20261110-003 · Volume exécuté moyen 15m avant qualité de conversion
+
+**Instruction du propriétaire :**
+> Ok, nous devons corriger ça. Je dirais que la premiére valeur devrais refléter le volume globale moyen de la période et la deuxième la qualité de conversion avec ces 2 valeurs principale en pourcent durant cette période (inchangé pour ces derniers)
+
+**Constat technique préalable.** Jusqu'ici le ticker affichait uniquement les qualités \`SILENT / INEFFICIENT / ...\` agrégées sur des échantillons V494 toutes les 30 s. Ces qualités sont **relatives aux étalons V493 P75**. Leur effort est tiré notamment du débit des **200 derniers trades** (\`volumeFenetreBtc / winSec\`) tandis que le rendement \`|priceMove| / volumeFenetreBtc\` croise un mouvement entre relevés Bâton et un volume dont l'horizon réel est variable. Cela ne mesure pas correctement le **volume total réellement échangé pendant chacun des quatre quarts d'heure**. Les qualités étaient néanmoins bien des proportions de *temps observé*, non des proportions de volume.
+
+**Mesure nouvellement ajoutée et dissociée :**
+- Source primaire indépendante : \`GET https://www.okx.com/api/v5/market/candles?instId=BTC-USDT-SWAP&bar=1m&limit=100\`, source publique OHLCV de l'instrument **BTC-USDT-SWAP**, sans identifiants privés ni broker. \`data[][6]\` = \`volCcy\` (volume BTC) ; **ne pas confondre** \`data[][5]\` (\`vol\` en nombre de contrats) ni \`data[][7]\` (\`volCcyQuote\` en USDT). Les réponses ont été vérifiées depuis Amsterdam : un exemple fournit \`vol=2244.35\`, \`volCcy=22.4435\`, \`volCcyQuote=1637019.22369\`.
+- Chaque carte de 15 minutes reçoit une somme de bougies **1m confirmées et uniques**, tronquée au \`asOf\` du shadow V494 : une minute future ou non clôturée ne finance jamais rétrospectivement une mesure.
+- **VOL. MOY (BTC/min) = somme(volCcy des minutes confirmées de ce créneau) / nombre de minutes confirmées**, mais affichée seulement si toutes les minutes attendues dans la partie observée sont disponibles. Il ne s'agit ni de volume disponible dans le carnet ni de la somme des échantillons 200-ticks.
+- Source insuffisante : valeur \`—\` et mention \`données OKX incomplètes\` ; aucun zéro fictif. La couverture \`n/n\`, le total BTC réellement observé et l'état de formation restent dans l'attribut descriptif de la carte.
+- Source OKX mise en cache côté serveur pour 45 secondes ; limite 4,5 secondes d'attente réseau ; source ancienne signalée, résilience de l'endpoint ancien même si OKX est indisponible.
+- \`modules/attention/v494-elastic-volume-1m.js\` nouveau module strictement **read-only**. Le serveur privé \`config-server.js\` ajoute \`volume4x15\` au résumé existant \`/api/shadows/v494-elastic\`, sans toucher aux runners, ledgers, verdicts PAPER, ordres ou SHADOW de référence.
+- Ordre des cartes : heure 15m ; **VOL. MOY x BTC/min** en première ligne forte ; **CONVERSION · SILENT 53 % · INEFFICIENT 24 %** ou les deux qualités dominantes réellement mesurées en deuxième ; parts LONG/SHORT/CONTESTED et régime marché inchangés.
+- Les qualités (et leurs pourcentages historiques) restent calculées par l'ancien classificateur V494 ; la comparaison de fenêtres rendement/effort de ce dernier reste un **point ouvert** à étudier en shadow. **Cette intervention ne prétend pas avoir corrigé la politique statistique de classification.** Pour une mesure causale réellement homogène, il faudra calculer effort BTC et déplacement de prix sur le même horizon, évaluer des contre-exemples et conserver une comparaison historique avant toute promotion.
+
+**Validation sur données réelles 10/11 :** tranche 16:30–16:45 UTC / 17:30–17:45 CET : **volume 4 401,045 BTC**, moyenne **293,403 BTC/min**, 15/15 minutes confirmées. Le ticker historique conservait les proportions \`SILENT 52,9 %\`, \`INEFFICIENT 23,6 %\`. Ces valeurs illustrent l'intérêt de distinguer intensité absolue et qualité relative.
+
+**Tests :** 15 tests Node passés (ancien ticker et nouveau module), couvrant volumes confirmés et contrats vs BTC, bougies non confirmées exclues, as-of, fenêtres incomplètes, cache et erreur d'API, classification V494 inchangée. JS client généré validé ; quatre cartes rendues avec données réelles et rétrocompatibilité si volume indisponible ; \`node --check\` serveur/module ; \`git diff --check\` OK.
+
+**Mise en service :** seul \`config-server\` a été redémarré via PM2. HTTP 302 sur Watch et route Elastic sans authentification est la redirection attendue. \`boono-v494-paper\`, \`boono-v543-paper\`, \`boono-v494-elastic-shadow\` restent online et n'ont pas été redémarrés. Validation visuelle finale dans le navigateur du propriétaire encore ouverte. La scène BOONO-TV OVH reste inchangée.
+
+**Documentation d'origine :** registre OD-20261110-003, prompt utilisateur intégral, étapes d'implantation/test/activation et référence au commit associé.
+

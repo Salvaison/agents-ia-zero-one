@@ -1,0 +1,1 @@
+Ok, nous devons corriger ça. Je dirais que la premiére valeur devrais refléter le volume globale moyen de la période et la deuxième la qualité de conversion avec ces 2 valeurs principale en pourcent durant cette période (inchangé pour ces derniers)

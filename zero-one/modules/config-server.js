@@ -44,6 +44,8 @@ const {readRecentNdjson,readNdjsonSince}=require('./v3lab/storage/rotating-ndjso
 const v53CausalChainUi=require('./v5/v53-causal-chain-view');
 const v494DualUiSummary=require('./attention/v494-dual-ui-summary');
 const v494ElasticUiSummary=require('./attention/v494-elastic-ui-summary');
+const v494ElasticVolume1m=require('./attention/v494-elastic-volume-1m');
+const elasticVolume1m=v494ElasticVolume1m.createProvider();
 const v494StateLayer=require('./attention/v494-elastic-state-layer');
 const v494StateHistory=require('./attention/v494-elastic-state-history');
 const boonoMarketHistory=require('./attention/boonolab-market-history');
@@ -1521,18 +1523,28 @@ app.get('/api/shadows', requireAuth, (req, res) => {
 
 // Independent Elastic v494 follow-up lab: read only the compact summary,
 // never the event journal, baseline V494 paper state or full Audit in the UI.
-app.get('/api/shadows/v494-elastic',requireAuth,(req,res)=>{
+app.get('/api/shadows/v494-elastic',requireAuth,async(req,res)=>{
+ let payload;
  try{
   const file=path.join(__dirname,'../data/v494-elastic-shadow-summary.json');
   if(fs.statSync(file).size>256*1024)throw Error('ELASTIC_SUMMARY_TOO_LARGE');
   const raw=JSON.parse(fs.readFileSync(file,'utf8'));
-  const payload=v494ElasticUiSummary.build(raw,Date.now());
-  res.set('Cache-Control','private,no-store');
-  sendUiJson(req,res,payload);
+  payload=v494ElasticUiSummary.build(raw,Date.now());
  }catch(_){
   res.status(503).json({error:'Elastic V494 indisponible',
    detail:'ELASTIC_SUMMARY_UNAVAILABLE_OR_INCOMPATIBLE'});
+  return;
  }
+ // An independently cached, public OKX 1m volume observation. Never touch
+ // the V494/V543 PAPER inputs, histories, or historical quality fractions.
+ try{
+  payload.volume4x15=await elasticVolume1m.get(payload.quality4x15,payload.asOf);
+ }catch(_){
+  payload.volume4x15={status:'UNAVAILABLE',source:v494ElasticVolume1m.SOURCE,
+   decisionImpact:false,brokerOrdersEnabled:false,windows:[]};
+ }
+ res.set('Cache-Control','private,no-store');
+ sendUiJson(req,res,payload);
 });
 
 // V494 timestamped state layer: authenticated compact status and on-demand
@@ -3225,6 +3237,9 @@ app.get('/', requireAuth, (req, res) => {
       .v52-main .v52-ticker-card{min-width:0;border:1px solid #cdd8df;border-radius:5px;background:#fff;padding:5px 5px 4px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;overflow-wrap:anywhere;font:650 8.2px/1.4 'SF Mono',Menlo,monospace;}
       .v52-main .v52-ticker-date{font-weight:800;color:#4b606e;font-size:8px;}
       .v52-main .v52-ticker-top{font-size:9px;font-weight:850;color:#253846;}
+      .v52-main .v52-ticker-volume{font-size:9px;font-weight:850;color:#304b5b;}
+      .v52-main .v52-ticker-volume.unknown{color:#82909a;font-weight:650;}
+      .v52-main .v52-ticker-conversion-label{font-size:7.8px;color:#687a86;font-weight:700;}
       .v52-main .v52-ticker-direction{font-size:8.2px;color:#435868;}
       .v52-main .v52-ticker-market{font-size:8px;color:#526473;}
       .v52-main .v52-ticker-state{font-size:7.6px;color:#748493;}
@@ -7477,6 +7492,14 @@ function renderMiniTicker4x15(packet){
    Number.isFinite(Number(packet.asOf))&&Date.now()-Number(packet.asOf)<=90000;
  const windows=trusted&&Array.isArray(packet.quality4x15)?
    packet.quality4x15.slice(-4).sort((a,b)=>Number(b.startAt)-Number(a.startAt)):[];
+ const sourceVolume=packet?.volume4x15;
+ const volumeTrusted=trusted&&sourceVolume?.decisionImpact===false&&
+   sourceVolume?.brokerOrdersEnabled===false&&
+   sourceVolume?.source==='OKX_BTC_USDT_SWAP_CLOSED_1M_VOLCCY';
+ const volumeByStart=new Map(volumeTrusted&&Array.isArray(sourceVolume.windows)?
+   sourceVolume.windows.map(v=>[Number(v.startAt),v]):[]);
+ const volumeText=v=>v==null||!Number.isFinite(Number(v))?'—':
+   Number(v).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
  const cards=[];
  for(let i=0;i<4;i++){
   const b=windows[i];
@@ -7486,6 +7509,17 @@ function renderMiniTicker4x15(packet){
    continue;
   }
   const samples=Number(b.samples||0);
+  const measurement=volumeByStart.get(Number(b.startAt))||null;
+  const hasVolume=measurement?.meanBtcPerMinute!=null&&
+   measurement.sourceStatus==='OK';
+  const volumeLabel=hasVolume?'VOL. MOY '+volumeText(measurement.meanBtcPerMinute)+
+   ' BTC/min':measurement?.status==='WAIT_CONFIRMED_1M'?
+    'VOL. MOY · minute en formation':
+    'VOL. MOY — · données OKX incomplètes';
+  const volumeInfo=measurement?
+   ' · volume OKX observé '+volumeText(measurement.totalBtcObserved)+' BTC sur '+
+   Number(measurement.observedMinutes||0)+'/'+Number(measurement.expectedMinutes||0)+
+   ' minutes confirmées':' · volume OKX non disponible';
   const summary=samples>0?top(b.qualityFractions,2):'Aucune qualité observée';
   const directions=samples>0?
    'LONG '+share(b.directionFractions,'long')+
@@ -7498,12 +7532,15 @@ function renderMiniTicker4x15(packet){
   const sourceWarning=!fresh?' · SOURCE ANCIENNE':'';
   const coverage=b.coverageFraction==null?'—':pct(b.coverageFraction);
   cards.push('<div class="v52-ticker-card" data-window="'+Number(b.startAt||0)+'"'+
-   ' title="'+samples+' relevés · couverture '+safe(coverage)+
+   ' title="'+samples+' relevés · couverture '+safe(coverage)+volumeInfo+
    (b.partial===true?' · fenêtre en formation':' · fenêtre clôturée')+
    (fresh?'':' · source ancienne')+'">'+
    '<div class="v52-ticker-date">'+safe(time(b.startAt))+' · 15 MIN'+
      progress+sourceWarning+'</div>'+
-   '<div class="v52-ticker-top">'+summary+'</div>'+
+   '<div class="v52-ticker-volume'+(hasVolume?'':' unknown')+'">'+
+     safe(volumeLabel)+'</div>'+
+   '<div class="v52-ticker-top"><span class="v52-ticker-conversion-label">CONVERSION </span>'+
+     summary+'</div>'+
    '<div class="v52-ticker-direction">'+directions+'</div>'+
    '<div class="v52-ticker-market">Régime marché : '+regimes+'</div></div>');
  }
