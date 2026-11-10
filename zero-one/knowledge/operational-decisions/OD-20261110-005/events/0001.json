@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-10T21:31:02.175127+00:00",
+  "status": "AUTORISE",
+  "description": "Remplacer cartes 5/6 et bandes contextuelles par une carte ordonnee selon texte+PDF, en conservant preuves techniques repliables",
+  "evidence": "Message utilisateur et 5pronostic-decision.pdf",
+  "previousEventSha256": null
+}

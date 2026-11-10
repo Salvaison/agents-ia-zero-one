@@ -1,0 +1,21 @@
+Ok Trés bien et le dernier module pronostic/decision
+
+Ci-bas nouvelle version:
+
+5 · PRONOSTIC· DÉCISION + INVALIDATION
+
+**CHAÎNE CAUSALE · observation** PM Live +3.9 $ · Cross3 22:01:21 → E3 Live 22:01:21 → E3 confirmé 22:00:51 → Cross15 21:06:21 → E15 Live 21:05:51 → E15 confirmé 18:30:51
+
+PHASE STRUCTURELLE STRUCTURAL_CONTINUATION · campagne long|E15:1794320100000 · maturité rang2h 1.1 · MF15 sur 2h +2.2 · maturité extension mesurée
+
+PRONOSTIC **LONG .** MCB15 LONG depuis CREUX · STRUCTURAL_CONTINUATION
+
+**POSITION LONG** · entrée 73768.2 $ · 21:47:39 · P&L net potentiel +1.6 $
+
+MFE 161.7 $ BTC · MAE 50.7 $ · floor indicatif non-exécutoire 90.0 $ BTC · invalidation 73537.7 $
+
+**MATURITÉ OFFENSIVE** EDGE_BUT_CONVERSION_NOT_PROVEN_EXHAUSTED · début prix 4h 18:42:00 · progression 1167.7 $ BTC · bord 2h ouiLBW15/prix pas de preuve opposée · PM marginal non invalidé
+
+**RISQUE** hard-cap −500$ BTC · nouvelles entrées : gain-floors 120/90, 220/180 = ALERTES sous MCB/structureFrais A/R estimés — $ · mobilité observée — $ BTC · niveau proche non-veto
+
+Pièce jointe : 5pronostic-decision.pdf (2 pages ; état avant et mise en page demandée).

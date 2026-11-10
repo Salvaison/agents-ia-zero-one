@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-10T21:31:02.175127+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server redemarre sur Amsterdam, HTTP302 attendu ; deux runners PAPER et shadow Elastic online sans modification",
+  "evidence": "PM2 config-server et curl localhost",
+  "previousEventSha256": "3a3d671aab572d07c7a23db68eb3927079dd0173a6f2cb908ebc6e0f09f387fe"
+}

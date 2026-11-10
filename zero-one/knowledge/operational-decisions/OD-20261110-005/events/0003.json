@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-10T21:31:02.175127+00:00",
+  "status": "TESTE",
+  "description": "Node syntax + client genere, rendu sur etat V5/position et FLAT, invalidation memorisee distincte de contextuelle, repli conserve",
+  "evidence": "Tests VM JS, git diff --check",
+  "previousEventSha256": "3eb02c6b1d995cb803d5f62276b452e815efc372d9a8c492fa64a40a398f32ff"
+}

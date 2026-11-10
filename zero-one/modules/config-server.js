@@ -3275,6 +3275,25 @@ app.get('/', requireAuth, (req, res) => {
       .v52-mini-speed{font-size:9px;color:#647887;}
       @media(max-width:480px){.v52-mini-chart,.v52-mini-chart svg{min-height:192px;height:192px;}}
       .v52-cell.prognosis{border-left-color:#737aa3;}.v52-cell.decision{border-left-color:#40545f;}
+      /* BOONO Watch #5: one ordered, readable decision story on desktop & mobile. */
+      .v52-cell.prognosis-decision{border-left-color:#596f91;}
+      .v52-cell.prognosis-decision>.value{display:none;}
+      .v52-joined-line{font:650 9.3px/1.5 'SF Mono',Menlo,monospace;
+        color:#445566;padding:4px 0;border-bottom:1px solid #e7edf1;overflow-wrap:anywhere;}
+      .v52-joined-line:last-of-type{border-bottom:0;}
+      .v52-joined-line b{font-weight:850;color:#304351;}
+      .v52-joined-line .v52-green{color:#14854e;}.v52-joined-line .v52-red{color:#b52b39;}
+      .v52-joined-pronostic{font-size:10.3px;color:#273b49;}
+      .v52-joined-position{font-size:10px;color:#263c48;}
+      .v52-joined-causal{background:#f6f8fb;border-radius:3px;padding:6px 4px;}
+      .v52-joined-phase{background:#f8f9fb;padding:5px 4px;}
+      .v52-joined-action{font-size:9px;font-weight:850;color:#3e5a70;}
+      .v52-joined-risk{background:#f8f9fa;padding:5px 4px;}
+      .v52-joined-info{font:550 8px/1.5 'SF Mono',Menlo,monospace;color:#7a8995;}
+      .v52-joined-extra{margin-top:4px;border-top:1px solid #dce5eb;padding-top:5px;}
+      .v52-joined-extra summary{cursor:pointer;color:#627788;font-weight:800;font-size:9px;}
+      .v52-joined-extra .v52-muted{margin:5px 0;line-height:1.5;overflow-wrap:anywhere;}
+
       .v52-cell .title{font-size:9px;color:#687684;letter-spacing:.04em;font-weight:850;margin-bottom:3px;}
       .v52-cell .value{font-size:11px;font-weight:800;margin-bottom:2px;}
       .v52-cell.conv > .value{display:none;}
@@ -7750,6 +7769,7 @@ function renderV52Living(data){
  const fibGroup=(fctx.mapped?.groups||[]).slice().sort((a,b)=>Number(b.groupId)-Number(a.groupId))[0]||null;
  const fib382=fibGroup?.levels?.find(x=>Math.abs(Number(x.ratio)-.382)<.00001);
  const originalPlaceOpen=!!el.querySelector('#v53-place-details[open]');
+ const decisionTechOpen=!!el.querySelector('#v52-decision-tech-details[open]');
  const alignment=observed.alignment==='ALIGNED'?'3m et 15m alignés':
    observed.alignment==='TACTICAL_OPPOSES_15M'?'3m opposé au 15m':'Alignement indéterminé';
  const state15=ch15.interrupted?' · Live interrompu':'';
@@ -7879,80 +7899,108 @@ function renderV52Living(data){
        ' aria-label="Ticker mémoire Elastic V494, quatre fenêtres de 15 minutes">'+
        '<div class="v52-ticker-card">TICKER 4×15 · lecture des fenêtres…</div>'+
      '</aside></div></div>')+
-   cell('prognosis','5 · PRONOSTIC',f(a.candidate||'NEUTRE').toUpperCase(),
-    f(a.prognosis||'—')+
-    (s54.available?'<div class="v52-muted">PHASE STRUCTURELLE '+
+   cell('prognosis-decision','5 · PRONOSTIC · DÉCISION + INVALIDATION','',
+    '<div class="v52-joined-line v52-joined-causal"><b>CHAÎNE CAUSALE · observation</b> PM Live '+
+     sn(c.pmCombined)+' $ · Cross3 '+v5Time(ch3.cross?.observedAt)+
+     ' → E3 Live '+v5Time(ch3.live?.observedAt)+
+     ' → E3 confirmé '+v5Time(ch3.confirmed?.observedAt)+
+     ' → Cross15 '+v5Time(ch15.cross?.observedAt)+
+     ' → E15 Live '+v5Time(ch15.live?.observedAt)+
+     ' → E15 confirmé '+v5Time(ch15.confirmed?.observedAt)+'</div>'+
+    (s54.available?
+     '<div class="v52-joined-line v52-joined-phase"><b>PHASE STRUCTURELLE</b> '+
       f(s54.phase)+' · campagne '+f(s54.campaignId)+
       ' · maturité rang2h '+n(s54.priceRangeRank)+
       ' · MF15 sur 2h '+sn(s54.mf15History2h)+
       ' · maturité extension '+(s54.matureAfterExtension?'AVANCÉE':'mesurée')+'</div>':
-    '<div class="v52-muted">Nouvelle preuve E15 '+v5Time(requal.proofAt)+
-    ' · fenêtre '+f(requal.window||'—')+
-    ' · conversion '+f(requal.conversion?.quality||'—')+
-    ' · MF '+f(requal.mfQuality||'—')+
-    ' · progression depuis E15 '+n(requal.priceTravelIn15Ranges)+'×15m</div>'+
-    (campaign.engaged?'<div class="v52-muted">MCB15 engagé · pic mémorisé '+
-      f(campaign.peakQuality)+' '+v5Time(campaign.lastPowerfulAt||campaign.lastProductiveAt)+
-      ' · conversion actuelle '+f(campaign.currentQuality)+
-      ' · '+f(campaign.moment)+' · timing '+f(campaign.timing)+'</div>':
-      '<div class="v52-muted">Mémoire de conversion : '+f(campaign.thesis||'—')+'</div>')))+
-   cell('decision','6 · DÉCISION + INVALIDATION',f(act),
-    f(a.reason||'—')+'<div class="v52-muted">Invalidation '+n(inv.price)+
-    ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+
-    ' $ · ancre connue '+v5Time(inv.confirmedAvailableAt)+
-    ' · MA partage maturité/risque : '+f(ma.riskCandidate?.reference||'non activée')+
-    ' · rejet MA réellement prouvé '+(maProof.blocked?'OUI':'non')+'</div>')+
-  '</div>'+
-  '<div class="v52-strip"><span><b>CHAÎNE CAUSALE · observation</b> PM Live '+
-    sn(c.pmCombined)+' $ · Cross3 '+v5Time(ch3.cross?.observedAt)+
-    ' → E3 Live '+v5Time(ch3.live?.observedAt)+
-    ' → E3 confirmé '+v5Time(ch3.confirmed?.observedAt)+
-    ' → Cross15 '+v5Time(ch15.cross?.observedAt)+
-    ' → E15 Live '+v5Time(ch15.live?.observedAt)+
-    ' → E15 confirmé '+v5Time(ch15.confirmed?.observedAt)+
-    '<span class="v52-muted"> · jalons observés, ordre réel non imposé ; chaque PM est daté dans sa colonne</span>'+
-    '</span></div>'+
-  '<div class="v52-strip"><span><b>ATTENTION V5.4.3</b> '+
-   f(r.attention?.stage||'—')+' · preuves '+Number(r.attention?.events?.length||0)+
-   '</span><span>V4.9.3 SHADOW '+f(r.admissionV493Shadow?.action||'EN ATTENTE')+
-   ' · âge '+(r.admissionV493Shadow?n(r.admissionV493Shadow.ageMs/1000):'—')+
-   ' s · aucune autorité de trade</span></div>'+
-  (r.offensiveMaturity?'<div class="v52-strip"><span><b>MATURITÉ OFFENSIVE</b> '+
-   f(r.offensiveMaturity.classification||'—')+
-   ' · début prix 4h '+v5Time(r.offensiveMaturity.context?.priceOrigin?.origin4h?.availableAt)+
-   ' · progression '+n(r.offensiveMaturity.context?.priceOrigin?.origin4h?.progressUsd)+' $ BTC'+
-   ' · bord 2h '+f(r.offensiveMaturity.context?.priceGeometry?.priceAt2hExtreme?'oui':'non')+
-   '</span><span>LBW15/prix '+f(r.offensiveMaturity.context?.oscillator?.oppositeDivergenceForming?'divergence en formation':'pas de preuve opposée')+
-   ' · PM marginal '+f(r.offensiveMaturity.context?.conversion?.conversionFatigue?'s’essouffle':'non invalidé')+
-   (a.checks?.offensiveMaturityBlocksNewAdmission?
-    ' · entrée DIFFÉRÉE · requalification possible':'')+
-   '</span></div>':'')+
-  '<div class="v52-strip"><span><b>RISQUE</b> hard-cap −500$ BTC · nouvelles entrées : gain-floors 120/90, 220/180 = ALERTES sous MCB/structure'+
-   (data.floorAuthority?.currentPositionLegacy?
-    ' · POSITION HÉRITÉE : floor autonome préservé jusqu’à clôture':'')+
-   '</span>'+
-   '<span>Frais A/R estimés '+n(eco.expectedFeesUsd)+' $ · mobilité observée '+
-     n(eco.empiricalMobilityUsd)+' $ BTC · niveau proche non-veto</span></div>'+
-  (p?'<div class="v52-ledger"><b class="'+(p.direction==='long'?'v52-green':'v52-red')+'">POSITION '+f(p.direction).toUpperCase()+'</b>'+
-   ' · entrée '+n(p.entryPrice)+' $ · '+v5Time(p.entryAt)+
-   ' · P&L net potentiel '+sn(p.lastNetPnlUsd)+' $'+
-   '<div>MFE '+n(p.mfePriceUsd)+' $ BTC · MAE '+n(p.maePriceUsd)+
-   ' $ · '+(data.floorAuthority?.currentPositionLegacy?
-      'floor ancien exécutoire ':'floor indicatif non-exécutoire ')+
-      n(p.gainFloorUsd)+' $ BTC · invalidation '+n(p.invalidationPrice)+' $</div></div>':
-   '<div class="v52-ledger">FLAT · '+f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
-  '<div class="v52-muted">PAPER V5.4.3 · '+Number(data.completed||0)+' clôtures · '+Number(data.wins||0)+
-   ' gagnantes · net '+sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
-   ' $ · dernière action '+event+' · pas d’ordre broker financé</div>'+
-  (data.floorAuthority?'<div class="v52-muted">Autorité sorties '+f(data.floorAuthority.version)+
-   ' · activée '+v5Time(data.floorAuthority.activatedAt)+
-   ' · position '+(data.floorAuthority.currentPositionLegacy?
-    'LEGACY / protection ancienne':'NOUVELLE AUTORITÉ MCB')+
-   ' · alertes floor distinctes '+Number(data.floorAuthority.attentionEpisodes||0)+
-   ' · dernière : '+(data.floorAuthority.last?f(data.floorAuthority.last.status)+
-    ' · '+v5Time(data.floorAuthority.last.at)+
-    ' · MCB '+f(data.floorAuthority.last.mcbStructureAction||'—'):
-    'aucune')+'</div>':'');
+     '<div class="v52-joined-line v52-joined-phase"><b>PHASE STRUCTURELLE</b> · en attente de données confirmées</div>')+
+    '<div class="v52-joined-line v52-joined-pronostic"><b>PRONOSTIC</b> '+
+     '<strong class="'+(a.candidate==='long'?'v52-green':a.candidate==='short'?'v52-red':'')+'">'+
+       f(a.candidate||'NEUTRE').toUpperCase()+'</strong> · '+
+     f(a.prognosis||'—')+
+     ' · <span class="v52-joined-action">DÉCISION '+f(act)+'</span></div>'+
+    (p?
+     '<div class="v52-joined-line v52-joined-position"><b class="'+
+      (p.direction==='long'?'v52-green':'v52-red')+'">POSITION '+
+      f(p.direction).toUpperCase()+'</b> · entrée '+n(p.entryPrice)+
+      ' $ · '+v5Time(p.entryAt)+' · P&L net potentiel '+sn(p.lastNetPnlUsd)+' $</div>'+
+     '<div class="v52-joined-line">MFE '+n(p.mfePriceUsd)+
+      ' $ BTC · MAE '+n(p.maePriceUsd)+' $ · '+
+      (data.floorAuthority?.currentPositionLegacy?
+       'floor ancien exécutoire ':'floor indicatif non-exécutoire ')+
+      n(p.gainFloorUsd)+' $ BTC · invalidation '+n(p.invalidationPrice)+' $</div>':
+     '<div class="v52-joined-line"><b>POSITION</b> FLAT · '+
+       f(data.lastReason||a.reason||'étude de la prochaine ouverture')+'</div>')+
+    (r.offensiveMaturity?
+     '<div class="v52-joined-line"><b>MATURITÉ OFFENSIVE</b> '+
+      f(r.offensiveMaturity.classification||'—')+
+      ' · début prix 4h '+
+      v5Time(r.offensiveMaturity.context?.priceOrigin?.origin4h?.availableAt)+
+      ' · progression '+
+      n(r.offensiveMaturity.context?.priceOrigin?.origin4h?.progressUsd)+' $ BTC'+
+      ' · bord 2h '+
+      (r.offensiveMaturity.context?.priceGeometry?.priceAt2hExtreme?'oui':'non')+
+      ' · LBW15/prix '+
+      (r.offensiveMaturity.context?.oscillator?.oppositeDivergenceForming?
+       'divergence opposée en formation':'pas de preuve opposée')+
+      ' · PM marginal '+
+      (r.offensiveMaturity.context?.conversion?.conversionFatigue?
+       's’essouffle':'non invalidé')+
+      (a.checks?.offensiveMaturityBlocksNewAdmission?
+       ' · entrée DIFFÉRÉE · requalification possible':'')+'</div>':'')+
+    '<div class="v52-joined-line v52-joined-risk"><b>RISQUE</b> hard-cap −500$ BTC'+
+      ' · nouvelles entrées : gain-floors 120/90, 220/180 = ALERTES sous MCB/structure'+
+      (data.floorAuthority?.currentPositionLegacy?
+       ' · POSITION HÉRITÉE : floor autonome préservé jusqu’à clôture':'')+
+      ' · Frais A/R estimés '+n(eco.expectedFeesUsd)+
+      ' $ · mobilité observée '+n(eco.empiricalMobilityUsd)+
+      ' $ BTC · niveau proche non-veto</div>'+
+    '<details class="v52-joined-extra" id="v52-decision-tech-details"'+
+     (decisionTechOpen?' open':'')+'>'+
+     '<summary>Détails techniques · décision / invalidation / PAPER</summary>'+
+     '<div class="v52-muted">Action '+f(act)+' · motif '+f(a.reason||'—')+
+      ' · jalons causaux observés, ordre chronologique réel non imposé ; PM horodatés par source</div>'+
+     '<div class="v52-muted">Invalidation contextuelle actuelle '+n(inv.price)+
+      ' $ · '+f(inv.reference)+' · distance '+n(inv.distanceUsd)+
+      ' $ · ancre connue '+v5Time(inv.confirmedAvailableAt)+
+      ' · MA partage maturité/risque : '+f(ma.riskCandidate?.reference||'non activée')+
+      ' · rejet MA prouvé '+(maProof.blocked?'OUI':'non')+'</div>'+
+     (p?'<div class="v52-muted">Invalidation mémorisée à l’entrée '+n(p.invalidationPrice)+
+       ' $ · '+f(p.invalidationReference||'—')+
+       ' (distincte de la référence contextuelle évolutive)</div>':'')+
+     '<div class="v52-muted">ATTENTION V5.4.3 '+f(r.attention?.stage||'—')+
+      ' · preuves '+Number(r.attention?.events?.length||0)+
+      ' · V4.9.3 SHADOW '+f(r.admissionV493Shadow?.action||'EN ATTENTE')+
+      ' · âge '+(r.admissionV493Shadow?n(r.admissionV493Shadow.ageMs/1000):'—')+
+      ' s · aucune autorité de trade</div>'+
+     (!s54.available?
+      '<div class="v52-muted">Nouvelle preuve E15 '+v5Time(requal.proofAt)+
+       ' · fenêtre '+f(requal.window||'—')+
+       ' · conversion '+f(requal.conversion?.quality||'—')+
+       ' · MF '+f(requal.mfQuality||'—')+
+       ' · progression depuis E15 '+n(requal.priceTravelIn15Ranges)+'×15m</div>':'')+
+     (!s54.available?
+      '<div class="v52-muted">Mémoire conversion : '+
+       (campaign.engaged?'MCB15 engagé · pic '+f(campaign.peakQuality)+' '+
+        v5Time(campaign.lastPowerfulAt||campaign.lastProductiveAt)+
+        ' · qualité '+f(campaign.currentQuality)+' · '+f(campaign.moment)+
+        ' · timing '+f(campaign.timing):f(campaign.thesis||'—'))+'</div>':'')+
+     '<div class="v52-muted">PAPER V5.4.3 · '+Number(data.completed||0)+
+      ' clôtures · '+Number(data.wins||0)+' gagnantes · net '+
+      sn(data.realizedUsd)+' $ · equity '+n(data.equityUsd)+
+      ' $ · dernière action '+event+' · aucun ordre broker financé</div>'+
+     (data.floorAuthority?
+      '<div class="v52-muted">Autorité sorties '+f(data.floorAuthority.version)+
+       ' · activée '+v5Time(data.floorAuthority.activatedAt)+
+       ' · position '+(data.floorAuthority.currentPositionLegacy?
+        'LEGACY / protection ancienne':'NOUVELLE AUTORITÉ MCB')+
+       ' · alertes floor distinctes '+Number(data.floorAuthority.attentionEpisodes||0)+
+       ' · dernière : '+(data.floorAuthority.last?
+        f(data.floorAuthority.last.status)+' · '+
+        v5Time(data.floorAuthority.last.at)+' · MCB '+
+        f(data.floorAuthority.last.mcbStructureAction||'—'):'aucune')+'</div>':'')+
+    '</details>')+
+  '</div>';
  el.innerHTML=card;
  // MA3 price/distance from V543 market analysis; never extrapolate a stale MA.
  const ma3Label=el.querySelector('#v52-mini-ma3');

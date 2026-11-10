@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261110-005",
+  "title": "BOONO Watch fusion Pronostic Decision Invalidation",
+  "createdAtUtc": "2026-11-10T21:31:02.175127+00:00",
+  "authorization": "Demande du propriétaire et PDF a deux pages du 10 novembre 2026",
+  "reference": "5pronostic-decision.pdf dans conversation, BOONO Watch Etat vivant V5.4.3",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "17b2674011b509bb5e4d10733e5db30ccb2919b83cd9a795e9f0b5a495313beb",
+      "bytes": 1208
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "0acaf53491452312fdf3e261e44e054a0c4da224ac5d672956bb2b30f75b61b3",
+      "bytes": 991
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0bbffdbd5b41e95c63c3f5c1dfde30619681d394052b79cd7d9671c2835bc4e4",
+      "bytes": 1359
+    }
+  }
+}

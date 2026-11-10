@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-10T21:31:02.175127+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Une seule carte Pronostic+Decision+Invalidation sur Watch, position entree et risque contextualises, ancien volet technique preserve",
+  "evidence": "modules/config-server.js renderV52Living",
+  "previousEventSha256": "a16867c6bbfc1900cf8f8ca718638afa25b9ce06e8bce04eaa3235ae20132186"
+}
