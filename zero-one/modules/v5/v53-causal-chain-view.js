@@ -43,6 +43,10 @@ function build({events=[],audit=[],now,price,mcb15=null,mcb3=null}){
    pmLive:pmAtEvent,
    pmBaton:round(recorded),pmSinceBaton:sinceBaton,
    pmObservedAt:auditRow?.ts||null,
+   oscillatorAtEvent:auditRow?{
+    bw:round(n(e.family==='MCB15'?auditRow.live15BwRaw:auditRow.liveBw)),
+    lbw:round(n(e.family==='MCB15'?auditRow.live15LbwRaw:auditRow.liveLbw)),
+    sampledAt:n(auditRow.ts)}:null,
    pmQuality:pmAtEvent!==null?'BATON_PLUS_EVENT_PRICE':'PM_AT_EVENT_UNKNOWN',
    deltaSinceEvent:actualPrice!==null&&value!==null?
      round(value-actualPrice):null

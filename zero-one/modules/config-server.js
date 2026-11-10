@@ -518,6 +518,111 @@ function v53UiReadEvents(){
  }
  return v53UiSources;
 }
+// Read-only living MCB measurements, strictly separate from PAPER decisions.
+function livingMcbMeasurements(rows,now){
+ const finite=x=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):null;
+ const last=rows.filter(x=>finite(x.ts)!==null&&x.ts<=now).at(-1);
+ if(!last)return {status:'UNAVAILABLE'};
+ const age=now-Number(last.ts),fresh=age>=-3000&&age<=95000;
+ const csv=tf=>{
+  const lines=waveUiReadTailText(path.join(WAVE_MCB_DIR,'mcb_'+tf+'.csv'),16000).trim().split(/\r?\n/);
+  for(let i=lines.length-1;i>=0;i--){
+   const x=lines[i].split(','),ts=Date.parse(x[0]);
+   if(Number.isFinite(ts)&&ts<=now&&now-ts<=(tf==='3m'?12:40)*60000&&
+      [x[5],x[6],x[7]].every(v=>finite(v)!==null))
+     return {ts,lbw:Number(x[5]),bw:Number(x[6]),mf:Number(x[7])};
+  }return null;
+ };
+ const recent=(which,lookback)=>[...rows].reverse().find(x=>x.ts<=last.ts-lookback&&
+   last.ts-lookback-x.ts<65000&&finite(x[which])!==null);
+ const one=(tf)=>{
+  const is15=tf==='15m',k=is15?{bw:'live15BwRaw',lbw:'live15LbwRaw',mf:'live15MfRaw'}:
+    {bw:'liveBw',lbw:'liveLbw',mf:'liveMoneyFlow'};
+  const confirm=csv(tf);
+  const v=(key)=>({confirmed:confirm?confirm[key]:null,live:fresh?finite(last[k[key]]):null});
+  const past=recent(k.bw,is15?90000:60000),pastL=recent(k.lbw,is15?90000:60000);
+  const spread=finite(last[k.bw])!==null&&finite(last[k.lbw])!==null?
+    Number(last[k.bw])-Number(last[k.lbw]):null;
+  const oldSpread=past&&pastL?Number(past[k.bw])-Number(pastL[k.lbw]):null;
+  return {bw:v('bw'),lbw:v('lbw'),mf:v('mf'),confirmedAt:confirm?.ts||null,
+   spread,spreadRatePerMinute:spread!==null&&oldSpread!==null?
+    (spread-oldSpread)/((last.ts-past.ts)/60000):null};
+ };
+ const volume=finite(last.volumeFenetreBtc),win=finite(last.winSec);
+ return {status:fresh?'LIVE':'STALE',asOf:last.ts,ageMs:age,
+  MCB15:one('15m'),MCB3:one('3m'),
+  flowBtcPerSec:fresh&&volume!==null&&win>0?volume/win:null,
+  mf15Slope:fresh?finite(last.mf15Pente):null,
+  mf15Live:fresh?finite(last.live15MfRaw):null};
+}
+// BOONO Watch / LIEU: derived display only; recorded map is never modified.
+function livingPlaceLandscape({price,levels=[],now=Date.now()}={}){
+ const finite=x=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x))?Number(x):null;
+ const px=finite(price);
+ const results={status:'OBSERVATION_ONLY',price:px,asOf:now,
+  h4:{status:'UNAVAILABLE'},bigRange:null,otherRange:null,nearestAbove:null,nearestBelow:null};
+ if(px===null||px<=0)return results;
+ // 4h confirmed CSV rows carry candle start; only closed candles are eligible.
+ try{
+  const filename=path.join(WAVE_MCB_DIR,'mcb_4h.csv');
+  const stat=fs.statSync(filename);
+  const lines=waveUiReadTailText(filename,48000).split(/\r?\n/);
+  const rows=lines.map(line=>{
+    const v=line.split(','),t=Date.parse(v[0]);
+    if(!Number.isFinite(t)||t+4*3600000>now||
+      ![v[5],v[6]].every(x=>finite(x)!==null))return null;
+    return {at:t,availableAt:t+4*3600000,
+      lbw:Number(v[5]),bw:Number(v[6]),
+      up:finite(v[13]),dn:finite(v[14])};
+  }).filter(Boolean).sort((a,b)=>a.at-b.at);
+  const latest=rows.at(-1),previous=rows.at(-2);
+  const event=[...rows].reverse().find(r=>(r.up!==null)!==(r.dn!==null));
+  results.h4=latest&&previous?{
+    status:now-stat.mtimeMs>8*3600000?'STALE':'CONFIRMED',
+    prevAt:previous.at,confirmedSourceAt:latest.at,confirmedAt:latest.availableAt,
+    bw:{previous:previous.bw,confirmed:latest.bw},
+    lbw:{previous:previous.lbw,confirmed:latest.lbw},
+    event:event?{direction:event.up!==null?'UP':'DN',
+      sourceAt:event.at,availableAt:event.availableAt,
+      lbw:event.lbw,signalValue:event.up??event.dn}:null
+  }:{status:'MISSING_CONFIRMED_BARS'};
+ }catch(_){results.h4={status:'UNAVAILABLE'};}
+ const rows=(Array.isArray(levels)?levels:[])
+  .map((v,i)=>({...v,index:i,price:finite(v?.price)}))
+  .filter(v=>v.price!==null&&v.price>0);
+ // "Above" and "below" compare to *price*, not whether a token says support.
+ const points=rows.filter(v=>['DS','DR','WS','WR','MS','MR'].includes(v.token));
+ const closest=(xs)=>xs.sort((a,b)=>Math.abs(a.price-px)-Math.abs(b.price-px)||
+     (Number(a.uiOrder??999)-Number(b.uiOrder??999)))[0]||null;
+ const emit=(v)=>v?{token:String(v.token),price:v.price,
+    signedDistanceUsd:px-v.price,label:v.label||v.token}:null;
+ results.nearestAbove=emit(closest(points.filter(v=>v.price>=px)));
+ results.nearestBelow=emit(closest(points.filter(v=>v.price<px)));
+ // Scope was retained in labels ("VAH daily" / "VAH range" / "VAH big").
+ const rangeGroups=new Map();
+ for(const v of rows){
+  if(!['VAL','POC','VAH'].includes(v.token)||v.groupId==null)continue;
+  const scope=String(v.label||'').split(/\s+/).slice(1)[0]||'unspecified';
+  const key=String(v.groupId)+'|'+scope;
+  if(!rangeGroups.has(key))rangeGroups.set(key,{scope,groupId:v.groupId,entries:{},
+    order:Number.isFinite(Number(v.uiOrder))?Number(v.uiOrder):999});
+  rangeGroups.get(key).entries[v.token]=v.price;
+ }
+ const ranged=[...rangeGroups.values()].filter(g=>{
+  const v=g.entries;return v.VAL!=null&&v.POC!=null&&v.VAH!=null&&v.VAH>v.VAL;
+ }).sort((a,b)=>a.order-b.order);
+ const summary=(g)=>{
+  const e=g.entries,span=e.VAH-e.VAL;
+  return {scope:g.scope,val:e.VAL,poc:e.POC,vah:e.VAH,spanUsd:span,
+   progressFromValUsd:px-e.VAL,progressFraction:(px-e.VAL)/span,
+   priceMinusPocUsd:px-e.POC};
+ };
+ const big=ranged.find(g=>g.scope==='big');
+ results.bigRange=big?summary(big):null;
+ const other=ranged.find(g=>g.scope!=='big');
+ results.otherRange=other?summary(other):null;
+ return results;
+}
 app.get('/api/v52',requireAuth,(req,res)=>{
  try{
   res.set('Cache-Control','no-store');
@@ -533,12 +638,20 @@ app.get('/api/v52',requireAuth,(req,res)=>{
     brokerOrdersEnabled:false,decisionImpact:false};}
   try{
    const a=summary.analysis,src=v53UiReadEvents();
+   summary.livingMcb=livingMcbMeasurements(src.audit,Date.now());
    summary.causalEvents=a?v53CausalChainUi.build({events:src.events,
     audit:src.audit,now:a.asOf,price:a.price,
     mcb15:a.readings?.mcb15,mcb3:a.readings?.mcb3}):null;
   }catch(err){
    summary.causalEvents={unavailable:true,message:'Provenance Elastic/Audit momentanément indisponible',
     decisionImpact:false};
+  }
+  try{
+   summary.placeLandscape=livingPlaceLandscape({
+     price:summary.analysis?.price,
+     levels:JSON.parse(fs.readFileSync(LEVELS_PATH,'utf8')),now:Date.now()});
+  }catch(_){
+   summary.placeLandscape={status:'UNAVAILABLE',h4:{status:'UNAVAILABLE'}};
   }
   sendUiJson(req,res,summary);
  }catch(e){res.status(503).json({error:'V5.4.3 PAPER indisponible',detail:e.message});}
@@ -3075,12 +3188,17 @@ app.get('/', requireAuth, (req, res) => {
       .v53-up{color:#16804b;font-weight:850;}.v53-down{color:#bb3e42;font-weight:850;}
       .v53-neutral{color:#657482;font-weight:750;}
       .v53-phase-caption{margin:3px 0 4px;color:#536777;font-size:9px;}
+      .v53-observer-line{font-size:9px;margin:3px 0;line-height:1.5;}
+      .v53-observer-line .el-old,.v53-confirmed{color:#9aa3ae;font-weight:500;}
+      .v53-observer-subhead{font-size:9px;font-weight:850;margin-top:8px;padding-top:5px;border-top:1px solid #dfe6eb;color:#536777;}
+      .v53-observer-note{font-size:8px;color:#7c8892;}
       .v53-cross-note{padding-top:4px;font-size:9px;color:#7c5c36;}
       .v52-pill{font-weight:850;font-size:10px;border-radius:15px;padding:4px 8px;border:1px solid #c7d1de;background:#e8eef3;color:#46545f;}
       .v52-pill.long{background:#d7f0e1;color:#107c44;border-color:#85c9a2;}
       .v52-pill.short{background:#fbe4e5;color:#a32834;border-color:#e7a2a7;}
       .v52-pill.warn{background:#fff0d9;color:#9c6312;border-color:#edd0a1;}
       .v52-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;}
+      .v52-main .v52-grid{grid-template-columns:minmax(0,1fr);}
       .v52-cell{min-width:0;border:1px solid #d9e1e8;border-left:3px solid #89a0b3;background:#fff;padding:6px;border-radius:6px;}
       .v52-cell.mcb{border-left-color:#6075b9;}.v52-cell.geom{border-left-color:#5f80ac;}
        .v52-cell.place{border-left-color:#b38339;}.v52-cell.conv{border-left-color:#a15391;display:flex;flex-direction:column;background:#f3f5f7;}
@@ -7354,6 +7472,102 @@ function renderV52Living(data){
     '<span class="v53-proof-hour">'+(usable?v5Time(e.observedAt)+historic:'—')+'</span>'+
     '<span class="v53-proof-pm">'+pm+'</span></div>';
  };
+ const eo=data.livingMcb?.status==='LIVE'?data.livingMcb:null;
+ const elasticTf=(tf)=>eo?.[tf]||null;
+ const elasticFmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?'—':
+  (Number(x)>0?'+':'')+Number(x).toFixed(1);
+ const oldLive=p=>{
+  const o=p?.confirmed,l=p?.live,has=o!==null&&o!==undefined&&Number.isFinite(Number(o));
+  const tone=l===null||l===undefined?'v53-neutral':
+   Number(l)>Number(o)?'v53-up':Number(l)<Number(o)?'v53-down':'v53-neutral';
+  return '<span class="v53-confirmed">'+(has?elasticFmt(o):'—')+'</span> / '+
+    '<b class="'+tone+'">'+elasticFmt(l)+'</b>';
+ };
+ const flowPair=(p)=>oldLive(p);
+ const displayElastic=(tf)=>{
+  const w=elasticTf(tf);
+  if(!w)return '<div class="v53-observer-note">MCB Live indisponible ou périmé</div>';
+  const name=tf==='MCB15'?'15':'3',c=w;
+  const confirmedSpread=w.bw.confirmed!=null&&w.lbw.confirmed!=null?
+     w.bw.confirmed-w.lbw.confirmed:null;
+  return '<div class="v53-observer-line">BW '+oldLive(w.bw)+
+    '　 LBW '+oldLive(w.lbw)+'</div>'+
+    '<div class="v53-observer-line">BW/LBW spread'+name+' '+
+    oldLive({confirmed:confirmedSpread,live:w.spread})+
+    ' · Δ/min '+elasticFmt(w.spreadRatePerMinute)+'</div>'+
+    '<div class="v53-observer-note">Confirmé '+v5Time(w.confirmedAt)+
+    ' · Live '+v5Time(eo.asOf)+'</div>';
+ };
+ const eventRow=(label,e)=>{
+  const t=e?.observedAt;
+  const usable=t!=null&&Number.isFinite(Number(t));
+  const age=usable?Math.max(0,(Number(data.updatedAt||Date.now())-Number(t))/60000):null;
+  const since=usable&&e.deltaSinceEvent!=null?sn(e.deltaSinceEvent)+' $':'—';
+  const x=e?.oscillatorAtEvent||{};
+  const level=x.bw==null||x.lbw==null?'BW/LBW —':
+    'BW/LBW '+sn(x.bw)+' / '+sn(x.lbw);
+  return '<div class="v53-proof-row"><span class="v53-proof-key">'+label+
+   '</span><b class="'+eventTone(e?.direction)+'">'+sideName(e?.direction)+'</b>'+
+   '<span class="v53-proof-hour">'+(usable?v5Time(t):'—')+
+   ' · '+(age===null?'—':age.toFixed(0)+'min')+
+   ' · '+level+(label.startsWith('Cross')?' · Since '+since:'')+'</span></div>';
+ };
+ const flowBlock=(tf)=>{
+  const is15=tf==='mf15',fl=eo?.[is15?'MCB15':'MCB3']?.mf;
+  const text=fl?flowPair(fl):'<span class="v53-confirmed">—</span> / —';
+  return '<div class="v53-observer-line">MF'+(is15?'15':'3')+' '+text+
+   (is15?' · flow '+(eo?.flowBtcPerSec==null?'—':n(eo.flowBtcPerSec))+
+   ' BTC/s · MF15 pente '+(eo?.mf15Slope==null?'—':Number(eo.mf15Slope).toFixed(2))+
+   ' · MF15 Live '+(eo?.mf15Live==null?'—':Number(eo.mf15Live).toFixed(2)):'')+'</div>';
+ };
+ const maBlock=(tf)=>{
+  const mm=eo?.ma?.[tf]||{};
+  const item=tf==='15m'?ma15:ma3;
+  const z=Object.keys(mm).length?mm:item;
+  return '<div class="v53-observer-subhead">MA'+(tf==='15m'?'15':'3')+' · épisodes confirmés</div>'+
+   '<div class="v53-observer-line">distance '+sn(z.distanceUsd)+' $ · '+
+    f(z.state||'—')+' · '+(z.retestCount===undefined?'—':Number(z.retestCount))+
+    ' retests · '+(z.confirmedContactBars===undefined?'—':Number(z.confirmedContactBars))+
+    ' bougies contact</div>';
+ };
+ const site=data.placeLandscape||{},h4=site.h4||{};
+ const h4pair=x=>oldLive({confirmed:x?.previous,live:x?.confirmed});
+ const h4row=()=>{
+  if(!['CONFIRMED','STALE'].includes(h4.status))
+   return '<div class="v53-observer-line">4h confirmé indisponible</div>';
+  const event=h4.event;
+  const signal=event?
+   '<div class="v53-proof-row"><span class="v53-proof-key">E4 confirmé</span>'+
+   '<b class="'+eventTone(event.direction==='UP'?'long':'short')+'">'+
+    f(event.direction)+'</b><span class="v53-proof-hour">source '+
+     v5Time(event.sourceAt)+' · connu '+v5Time(event.availableAt)+
+     ' · LBW4 '+n(event.lbw)+'</span></div>':
+   '<div class="v53-observer-note">E4 confirmé : aucun événement dans la fenêtre archivée</div>';
+  return '<div class="v53-observer-line">BW4 '+h4pair(h4.bw)+
+   '　 LBW4 '+h4pair(h4.lbw)+'</div>'+
+   '<div class="v53-observer-note">précédent gris / dernier confirmé couleur · '+
+   'source '+v5Time(h4.confirmedSourceAt)+' · connu '+v5Time(h4.confirmedAt)+
+   (h4.status==='STALE'?' · DONNÉES 4H ANCIENNES':'')+'</div>'+signal;
+ };
+ const rangeRow=(g,kind)=>{
+  if(!g)return '<div class="v53-observer-note">'+kind+' : aucun triplet VAL / POC / VAH enregistré</div>';
+  const pct=Number(g.progressFraction)*100;
+  const inside=pct>=0&&pct<=100;
+  return '<div class="v53-observer-line"><b>'+f(kind)+'</b> · VAL '+n(g.val)+
+   ' $ · POC '+n(g.poc)+' $ · VAH '+n(g.vah)+' $</div>'+
+   '<div class="v53-observer-line">Depuis VAL '+sn(g.progressFromValUsd)+
+   ' $ · '+(inside?'parcours '+pct.toFixed(1)+' % du range':
+   (pct<0?'prix sous VAL':'prix au-dessus de VAH'))+
+   ' · distance prix − POC '+sn(g.priceMinusPocUsd)+' $</div>';
+ };
+ const levelRow=(loc,word)=>{
+  if(!loc)return '<div class="v53-observer-line">'+word+' : aucun niveau ponctuel enregistré</div>';
+  return '<div class="v53-observer-line">'+word+' : <b>'+f(loc.token)+' '+
+   n(loc.price)+' $</b> · distance prix − niveau '+sn(loc.signedDistanceUsd)+' $</div>';
+ };
+ const fibGroup=(fctx.mapped?.groups||[]).slice().sort((a,b)=>Number(b.groupId)-Number(a.groupId))[0]||null;
+ const fib382=fibGroup?.levels?.find(x=>Math.abs(Number(x.ratio)-.382)<.00001);
+ const originalPlaceOpen=!!el.querySelector('#v53-place-details[open]');
  const alignment=observed.alignment==='ALIGNED'?'3m et 15m alignés':
    observed.alignment==='TACTICAL_OPPOSES_15M'?'3m opposé au 15m':'Alignement indéterminé';
  const state15=ch15.interrupted?' · Live interrompu':'';
@@ -7373,87 +7587,57 @@ function renderV52Living(data){
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
   (stale?'<div class="v52-warn">Vérifier la fraîcheur des sources ; aucune entrée nouvelle autorisée.</div>':'')+
   '<div class="v52-grid">'+
-   cell('mcb','1 · MCB15 · DIRECTEUR','LBW15 '+n(m.lbw)+' / BW15 '+n(m.bw),
-    '<div class="v53-phase-caption">Offensive <b class="'+eventTone(m.currentOffensive)+'">'+
-    sideName(m.currentOffensive)+'</b> · trajectoire mémorisée '+f(m.trajectory)+
-    ' · MF15 '+sn(m.mf15??m.mf)+' / Δ10m '+sn(m.mf15Delta10m)+'</div>'+
-    '<div class="v53-phase-caption">Bande haute : LBW15 ≥ +60 '+
-     (band.highLBW60?'<b class="v53-up">ATTEINTE</b>':'non')+
-     ' · bande basse : BW15 ≤ −60 '+(band.lowBWMinus60?'<b class="v53-down">ATTEINTE</b>':'non')+
-     ' · simple repère, pas un veto</div>'+
-    proofRow('Cross15',ch15.cross)+
-    proofRow('E15 Live',ch15.live)+
-    proofRow('E15 confirmé',ch15.confirmed)+
+   cell('mcb','1 · MCB15 · DIRECTEUR',
+    'Trajectoire '+f(s54.strategicState||m.trajectory||'—')+
+    ' · offensive <b class="'+eventTone(m.currentOffensive)+'">'+sideName(m.currentOffensive)+'</b>',
+    displayElastic('MCB15')+
+    eventRow('Cross15',ch15.cross)+eventRow('E15 Live',ch15.live)+
+    eventRow('E15 confirmé',ch15.confirmed)+
     ((state15||discrepancy15)?'<div class="v53-cross-note">'+
-      (discrepancy15?'Croisement et dernier E15 Live de sens différent. ':'')+
-      state15+'</div>':'')+
-    '<div class="v52-muted">LBW/BW spread15 '+n(m.bwLbwSpread)+
-     ' · pivot confirmé '+v5Time(m.structuralPivotAt)+
-     ' · 1h '+f(s54.context1h||m.context1h)+' / 4h '+f(s54.context4h||m.context4h)+'</div>'+
-    (s54.available?'<div class="v52-muted"><b>CAMPAGNE V5.4.3</b> '+f(s54.director)+
-      ' · origine '+v5Time(s54.structuralOrigin?.sourceTs)+
-      ' · disponible '+v5Time(s54.structuralOrigin?.availableAt)+
-      ' · '+f(s54.strategicState)+'</div>'+
-      '<div class="v52-muted">LBW15 géométrique ≠ E15 natif · '+
-       f(s54.nativeE15?.confirmed?.direction||'—')+' source '+
-       v5Time(s54.nativeE15?.confirmed?.sourceTs)+
-       ' · connu '+v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>':'')+
-    (divRegime15?'<div class="v52-muted"><b>RÉGIME DE FRAÎCHEUR 15m</b> · MA15 '+
-      f(divRegime15.side||'INCONNU')+' · confirmé '+
-      v5Time(divRegime15.confirmedAt)+
-      (divRegime15.status==='CONFIRMED_REGIME'?
-       ' · ancres limitées à ce régime MA15':
-       ' · continuité MA15 non démontrée')+
-      ' · sans autorité de trade</div>':'')+
-    (div15?'<div class="v52-muted"><b>DIV15 LBW / PRIX · '+
-     (div15.direction==='long'?'UP':'DN')+'</b> · prix '+
-      n(div15.anchors?.priceFirst)+' → '+n(div15.anchors?.priceSecond)+
-     ' $ · LBW15 '+sn(div15.anchors?.lbwFirst)+' → '+
-     sn(div15.anchors?.lbwSecond)+' · connue '+v5Time(div15.availableAt)+
-     ' · '+f(div15.quality||'OBSERVATION')+
-     ' · points '+Number(div15.points?.length||0)+
-     ' · sans autorité de trade</div>':'') )+
-   cell('geom','2 · MCB3 · TACTIQUE','LBW3 '+n(three.lbw)+' / BW3 '+n(three.bw),
-    '<div class="v53-phase-caption">Tactique '+f(mat.maturity)+
-      ' · MF3 '+sn(three.mf)+' / Δ3m '+sn(c.mf3Delta3m)+'</div>'+
-    proofRow('Cross3',ch3.cross)+
-    proofRow('E3 Live',ch3.live)+
-    proofRow('E3 confirmé',ch3.confirmed)+
+      (discrepancy15?'Cross et E15 Live de sens différents. ':'')+state15+'</div>':'')+
+    flowBlock('mf15')+
+    maBlock('15m')+
+    '<div class="v53-observer-note">E15 natif · source '+
+       v5Time(s54.nativeE15?.confirmed?.sourceTs)+' · connu '+
+       v5Time(s54.nativeE15?.confirmed?.availableAt)+'</div>'+
+    '<div class="v53-observer-note">Pivot géométrique '+v5Time(m.structuralPivotAt)+
+       ' · mémoire, pas un signal natif · 1h '+f(s54.context1h||m.context1h)+
+       ' / 4h '+f(s54.context4h||m.context4h)+'</div>')+
+   cell('geom','2 · MCB3 · TACTIQUE',
+    'Tactique '+f(mat.maturity||s54.phase||'—')+
+    ' · '+f(alignment),
+    displayElastic('MCB3')+
+    eventRow('Cross3',ch3.cross)+eventRow('E3 Live',ch3.live)+
+    eventRow('E3 confirmé',ch3.confirmed)+
     ((state3||discrepancy3)?'<div class="v53-cross-note">'+
-      (discrepancy3?'Croisement et dernier E3 Live de sens différent. ':'')+
-      state3+'</div>':'')+
-    '<div class="v52-muted">V5.4.3 : '+f(s54.phase||'tactique héritée')+
-     ' · pivot LBW3 (mémoire, sans veto) '+f(s54.mcb3?.direction||'—')+
-     (s54.sourceFreshness?.firstNewBarSnapshotPending?
-       ' · nouvelle bougie : premier relevé en attente (données précédentes fraîches)':'')+
-     '</div>'+
-    (s54.nativeE3?'<div class="v52-muted">E3 natif '+
-      f(s54.nativeE3.confirmed?.direction||'—')+
-      ' · source '+v5Time(s54.nativeE3.confirmed?.sourceTs)+
-      ' · disponible '+v5Time(s54.nativeE3.confirmed?.availableAt)+
-      ' · cross '+v5Time(s54.mcb3?.cross?.ts)+
-      ' · preuve '+f(s54.tacticalAdmission?.reason||'—')+'</div>':'')+
-    '<div class="v52-muted">'+f(alignment)+
-     ' · déplacement depuis cross3 '+n(c.sinceCross)+' $ BTC'+
-     ' · âge '+n(mat.cross3AgeMin)+' min (informatif)</div>'+
-    '<div class="v52-muted">PM Live à chaque événement = Bâton + prix observé ensuite ;'+
-     ' E3 et Cross3 appartiennent à une seule famille, sans ordre de validation imposé.</div>')+
-   cell('place','3 · LIEU',''+f(pl.nearest?.key||'frontière inconnue')+
-    ' '+n(pl.nearest?.price)+' $',
-    'Frontière de contexte dans le sens candidat (pas forcément la plus proche)'+
-    (fibNearest?'<div class="v52-muted">FIB ENREGISTRÉ · groupe '+f(fibNearest.groupId)+
-     ' · ratio '+n(fibNearest.ratio)+' · '+n(fibNearest.price)+' $'+
-     ' · distance signée '+sn(fibNearest.distanceUsd)+
-     ' $ (niveau − prix) · ancienneté de l’ancre non datée · CONTEXTE seulement</div>':
-     '<div class="v52-muted">FIB enregistré · aucun groupe complet</div>')+
-    (fibCampaign?'<div class="v52-muted">FIB CAMPAGNE illustratif · 0,382 depuis origine '+
-     n(fibCampaign.progressFromOrigin382.price)+' $ (distance '+
-     sn(fibCampaign.progressFromOrigin382.distanceUsd)+' $)'+
-     ' · retracement 38,2% depuis extrême '+
-     n(fibCampaign.retracementFromExtreme382.price)+' $ (distance '+
-     sn(fibCampaign.retracementFromExtreme382.distanceUsd)+' $)'+
-     ' · extrême connu '+v5Time(fibCampaign.extremeConfirmedAt)+
-     ' · aucun stop automatique</div>':'')+
+      (discrepancy3?'Cross et E3 Live de sens différents. ':'')+state3+'</div>':'')+
+    flowBlock('mf3')+
+    maBlock('3m')+
+    '<div class="v53-observer-note">E3 natif · source '+
+       v5Time(s54.nativeE3?.confirmed?.sourceTs)+' · connu '+
+       v5Time(s54.nativeE3?.confirmed?.availableAt)+'</div>'+
+    '<div class="v53-observer-note">Déplacement depuis cross3 '+n(c.sinceCross)+
+       ' $ BTC · âge '+n(mat.cross3AgeMin)+' min · sans veto</div>')+
+   cell('place','3 · LIEU',
+    '4h · précédent / confirmé · contexte',
+    h4row()+
+    '<div class="v53-observer-subhead">GRAND RANGE · distance parcourue et POC</div>'+
+    rangeRow(site.bigRange,'BIG-RANGE')+
+    (site.bigRange?'':(site.otherRange?
+     '<div class="v53-observer-note">Seul le range '+f(site.otherRange.scope)+
+     ' est actuellement enregistré ; ne pas le confondre avec le grand range.</div>'+
+      rangeRow(site.otherRange,'RANGE '+String(site.otherRange.scope).toUpperCase()):''))+
+    '<div class="v53-observer-subhead">NIVEAUX ENREGISTRÉS · autour du prix</div>'+
+    levelRow(site.nearestAbove,'Au-dessus')+
+    levelRow(site.nearestBelow,'En dessous')+
+    '<div class="v53-observer-note">Distances signées : prix − niveau (BTC $)</div>'+
+    '<details id="v53-place-details"'+(originalPlaceOpen?' open':'')+'>'+
+    '<summary class="v53-observer-subhead">Autres repères · Fibonacci / MA / territoire / risque</summary>'+
+    (fib382?'<div class="v52-muted">FIB SAISI · 0,382 = '+n(fib382.price)+
+     ' $ · ancres fib0 '+n(fibGroup.fib0)+' $ → fib1 '+n(fibGroup.fib1)+
+     ' $ · distance prix − niveau '+sn(-fib382.distanceUsd)+
+     ' $ · aucune autorité autonome</div>':
+     '<div class="v52-muted">Aucun Fibonacci complet enregistré</div>')+
     '<div class="v52-muted">MA3 '+f(ma3.state||'—')+
      ' · distance '+sn(ma3.distanceUsd)+' $ · approche '+n(ma3.approachUsd)+
      ' $ · preuve '+f(maProof.status||'—')+'</div>'+
@@ -7466,18 +7650,21 @@ function renderV52Living(data){
       v5Time(ma3.polarityMemory.lastFailedReclaim.at):'—')+'</div>'+
     '<div class="v52-muted">MA15 '+f(ma15.state||'—')+
      ' · distance '+sn(ma15.distanceUsd)+' $ · approche '+n(ma15.approachUsd)+' $</div>'+
-    '<div class="v52-muted">'+f(maCycle(ma15))+' (compteur informatif)</div>'+
+    '<div class="v52-muted">'+f(maCycle(ma15))+' (informatif)</div>'+
     (s54.available?'<div class="v52-muted">ORIGINE 2h '+
       n(origin2h.low)+' – '+n(origin2h.high)+' $ · place '+
       n(origin2h.positionInPriceRange)+' · 30m Δ '+
       sn(origin30.directionalPriceChange)+' $</div>':'')+
     '<div class="v52-muted">Zone active '+f(zone.name||'AUCUNE')+
      (zone.name?' ['+n(zone.lower)+' / '+n(zone.upper)+']':'')+
-     ' · une seule confrontation · '+f(ma.entryGate?.reason||'MA contexte')+'</div>'+
-    (s54.testedTerritory?'<div class="v52-muted">Territoire '+f(s54.testedTerritory.status)+
-      ' · preuve '+v5Time(s54.testedTerritory.availableAt)+'</div>':'')+
-    '<div class="v52-muted">Ancre de risque '+f(pl.anchor?.key||'NON DÉMONTRÉE')+
-     ' '+n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+'</div>')+
+     ' · '+f(ma.entryGate?.reason||'MA contexte')+'</div>'+
+    (s54.testedTerritory?'<div class="v52-muted">Territoire '+
+      f(s54.testedTerritory.status)+' · preuve '+
+      v5Time(s54.testedTerritory.availableAt)+'</div>':'')+
+    '<div class="v52-muted">Ancre de risque '+
+      f(pl.anchor?.key||'NON DÉMONTRÉE')+' '+
+      n(pl.anchor?.price)+' $ · disponible '+v5Time(pl.anchor?.availableAt)+'</div>'+
+    '</details>')+
    cell('conv','4. CONVERSION. PM <span id="v52-mini-conversion-status">OKX · attente</span>',
     '',
     '<div id="v52-mini-conversion" class="v52-mini-conversion" role="group"'+
