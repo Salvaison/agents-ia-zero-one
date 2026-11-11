@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-11T07:49:43.837377+00:00",
+  "status": "TESTE",
+  "description": "9 tests Node, données réellement relayées Amsterdam-OVH, source stale/FLAT, MCB4h confirmé; visuel de contrôle Chrome headless 1920x1080, aucun débordement du panneau 720x1080",
+  "evidence": "tests/boono-tv-four-block-{state,front}-20261111.test.js; capture locale de validation non publiée",
+  "previousEventSha256": "c21cc622c92ef3effcbe2b6986677744ccd3451082f262fc4f42d7aeac838202"
+}

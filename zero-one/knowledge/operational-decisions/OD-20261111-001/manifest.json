@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261111-001",
+  "title": "BOONO-TV Etat vivant V5.4.3 en quatre parties, sources Amsterdam et rendu OVH",
+  "createdAtUtc": "2026-11-11T07:49:43.837377+00:00",
+  "authorization": "Message utilisateur du 11 novembre 2026 demandant de réaliser la maquette EV-boonoTv.pdf",
+  "reference": "EV-boonoTv.pdf, une page jointe dans la conversation (non copiée sur GitHub)",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c99e4452ff9b103dc98e9e39f15b8d0ae79ae064a6a79e1b774e1fae5dbcf896",
+      "bytes": 380
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "1ecfdb112d018315dc623b2007674466f98cb6dfdfbe70e4e2ee3ec030b34efd",
+      "bytes": 1486
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e15c84a460be131e1e352c4def0e3655f3a79ff19aeb07c0ca1d289e58ef5b15",
+      "bytes": 2221
+    }
+  }
+}

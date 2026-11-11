@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-11T07:49:43.837377+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Adapter de données TV en lecture seule sur Amsterdam, 4 sections CSS/JS sur le panneau OVH et patch runtime strictement localisé; aucun décor/ordre modifié",
+  "evidence": "boono-tv/tv-living-state.js; boono-tv/scene/tv-living-state.js/.css; patch OVH",
+  "previousEventSha256": "6cd054bb43b81ff412404d16f9c4ddfb09e60fc87b27a8cd4c106c6f5f47886b"
+}

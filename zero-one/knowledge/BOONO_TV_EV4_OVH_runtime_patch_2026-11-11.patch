@@ -1,0 +1,33 @@
+--- a/scene/app.js
++++ b/scene/app.js
+@@ -638,7 +638,11 @@
+   }
+   return;
+  }
+- renderState(s);renderAudit(s.audit);renderBoono(s.boono);renderDeskProjection(s);
++ // Four-part V5 paper observation on the LEFT panel only; legacy renderer
++ // stays available as a fallback for an explicitly incomplete studio deployment.
++ if(window.BoonoTVLivingState?.render)window.BoonoTVLivingState.render(s);
++ else renderState(s);
++ renderAudit(s.audit);renderBoono(s.boono);renderDeskProjection(s);
+  window.BoonoTVChronologyLatest=s.chronology?.latest||null;
+  dispatchEvent(new Event('boono-chronology-update'));
+  const a=s.series?.mcb3||[],b=s.series?.mcb15||[];
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,6 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261111-001">
+ </head>
+ <body>
+ <main id="scene">
+@@ -112,6 +113,7 @@
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+ <script src="/chart-views.js"></script>
++<script src="/tv-living-state.js?v=OD20261111-001"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+ <script src="/radio-preview.js"></script>

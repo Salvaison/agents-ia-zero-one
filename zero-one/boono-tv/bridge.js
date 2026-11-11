@@ -9,6 +9,8 @@ const ROOT = path.resolve(__dirname, '..');
 const DATA = path.join(ROOT, 'data');
 const MCB = '/root/agents-ia-zero-one/data/mcb-live';
 const SHARED_CHARTS = path.join(ROOT, 'shared', 'boono-chart-renderer.js');
+// BOONO-TV four-section State Vivant; read-only V5.4.3 + Audit/MCB evidence.
+const livingTVReader=require('./tv-living-state').createReader({dataDir:DATA,mcDir:MCB});
 
 const PATHS = {
   state: path.join(DATA, 'trade-sim-v4-state.json'), // historical V4, NOT LIVE; no longer used by buildPayload
@@ -511,6 +513,7 @@ function normalizeV543Live() {
     market:{...tick,position},
     analysis:{source:'V543_PAPER',asOf:Number.isFinite(ts)?ts:null,
       ageMs:Number.isFinite(age)?age:null,fresh:analysisFresh,available:fresh},
+    tvLiving:livingTVReader(paper),
     conversion:miniConversion(c),
     trades:currentPaperTrades(paper),
     chronology:{latest:lastChronologyObservation(),mcb3BwLbwCross:lastObservedMcb3Cross()},

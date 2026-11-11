@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-11T07:49:43.837377+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "PM2 boono-tv Amsterdam redémarré seul; OVH studio 3091 et lecteur privé 3092 fournissent les nouveaux JS/CSS HTTP 200; tunnel 3309 opérationnel et V5 PAPER inchangé",
+  "evidence": "HTTP /api/snapshot contrôlé côté Amsterdam et OVH, PM2 observé; validation utilisateur encore ouverte",
+  "previousEventSha256": "60d08278b097963d3f56401d702bdb5aa56f255c59993ab4c48f25bde16c8bc7"
+}
