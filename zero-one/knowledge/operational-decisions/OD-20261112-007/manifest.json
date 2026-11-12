@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-007",
+  "title": "BOONO-TV LIEU MCB1h source confirmée distincte du MCB4h",
+  "createdAtUtc": "2026-11-12T13:29:52.481289+00:00",
+  "authorization": "Demande explicite utilisateur de ligne 1h sous 4h",
+  "reference": "BOONO_TV_Etat_Vivant_TV02_5_rubriques_2026-11-12.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "457ca7817b4fdecfb77ff47d6f4c11531cf137a2788c72a25da4bf3b5ccf8cae",
+      "bytes": 147
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5360f27950f73222c7010bd90ed45c252c266c5c8a063fc69fb95822744b9e56",
+      "bytes": 924
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "1f5eacdd6b2b07dadb0a1c9f0bed4fc611a0c8c0bb7e239eb2f62cbb0bef6e67",
+      "bytes": 1008
+    }
+  }
+}

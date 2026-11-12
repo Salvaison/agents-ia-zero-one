@@ -97,3 +97,17 @@ La surface de 900px consacrée aux cinq rubriques TV02 est désormais divisée e
 **Code concerné :** boono-tv/scene/tv-living-state.js, fonction lineNames, et boono-tv/scene/tv-living-state.css. Les règles CSS de polarité sont plus spécifiques que la règle préexistante de noms blancs. Le runtime OVH charge les scripts et CSS avec le suffixe OD20261112-006 ; patch de liens d'origine enregistré dans knowledge/BOONO_TV_chaine_causale_polarites_OVH_2026-11-12.patch.
 
 **Vérifications :** source native réelle relayée via OVH et test de six directions alternées ; données manquantes restant neutres ; source V5 stale protégée. Chrome headless avec feuille CSS OVH réelle : rouge rendu rgb(255,97,120), vert rendu rgb(57,243,164). 25 tests Node cumulés passés. Aucun moteur PAPER ou pont de données Amsterdam redémarré, aucune modification de trading. Validation dans la scène complète par le propriétaire encore ouverte.
+
+## Ajout du 12 novembre — MCB1h confirmé dans LIEU STRUCTUREL
+
+**Demande :** insérer immédiatement sous la ligne 4h une ligne analogue « 1h BW1 précédent / dernier confirmé · LBW1 précédent / dernier confirmé · E1 Live — ».
+
+**Source réelle :** le lecteur read-only Amsterdam boono-tv/tv-living-state.js lit maintenant la queue du CSV /root/agents-ia-zero-one/data/mcb-live/mcb_1h.csv. Il sélectionne uniquement les deux dernières bougies 1h dont la clôture est disponible à latestAnalysis.asOf (sourceAt + 3 600 000 ms <= asOf). Il publie dans tvLiving.place.h1 le BW et le LBW précédents et confirmés, avec sourceAt et availableAt. Aucun chiffre de l'exemple 4h n'est copié vers le 1h.
+
+**Affichage OVH :** la ligne 1h est placée entre 4h et E4 confirmé, devant les deux ranges enregistrés. Même convention : précédente valeur grise, dernière valeur confirmée rouge ou verte selon l'évolution. L'horloge source/disponibilité est conservée en attribut d'information. E1 Live reste à « — » : il n'existe pas de preuve intrabar native validée pour alimenter cette valeur ; une bougie 1h confirmée ne suffit pas à produire un événement E1 Live. Si la source 1h manque, les deux valeurs restent indisponibles, sans duplication du 4h.
+
+**Contrôle réel au premier relevé :** BW1 −50,4 / −56,9 et LBW1 −58,2 / −65,8, à distinguer de BW4 −32,8 / −41,2 et LBW4 −39,2 / −53,2. Les nombres restent dynamiques et datés.
+
+**Tests :** 29 tests Node cumulés réussis ; bougie ouverte 1h exclue, deux clôtures distinctes, absence de signal E1 Live inventé et ordre 4h / 1h / E4 / DailyRange / BigRange confirmé. En Chromium 1920×1080 sur CSS OVH réelle et snapshot V5 réel, cinq portions de 180 px sans débordement ni troncature après la nouvelle ligne.
+
+**Déploiement :** seul le pont PM2 boono-tv Amsterdam a été redémarré. Les moteurs PAPER 494 et 543, le config-server et le studio OVH restent inchangés. Sur OVH, seul scene/tv-living-state.js a été adapté, avec son cache-bust dans scene/index.html à OD20261112-007. Le patch runtime exact est archivé dans knowledge/BOONO_TV_MCB1h_Lieu_OVH_2026-11-12.patch. Aucun impact sur la rotation 25/15/5 ou la géométrie TV02.

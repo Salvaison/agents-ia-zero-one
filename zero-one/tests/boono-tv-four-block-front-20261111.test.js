@@ -173,3 +173,33 @@ test('TV02: cinq bandeaux de titres gris-bleuté et dénominations blanches sans
  assert.match(html,/class="tv-current tv-down"/);
  assert.match(html,/class="tv-current tv-up"/);
 });
+
+test('TV place prints real 1h BW1/LBW1 directly under 4h and leaves E1 Live unproved',()=>{
+ const a=stub();
+ a.place.h1={
+  status:'CONFIRMED',
+  bw:{previous:-50.4,confirmed:-56.9},
+  lbw:{previous:-58.2,confirmed:-65.8},
+  sourceAt:1794484800000,availableAt:1794488400000,e1Live:null
+ };
+ const {front}=browser(),html=front.renderHtml(a);
+ const place=html.match(/<section class="tv-state-block tv-place">([\s\S]*?)<\/section>/)?.[1];
+ assert.ok(place,'place rendered');
+ const pos4=place.indexOf('<b>4h</b>'),pos1=place.indexOf('<b>1h</b>'),
+       posE4=place.indexOf('E4 confirmé'),posDaily=place.indexOf('DailyRange');
+ assert.ok(pos4>=0&&pos1>pos4&&posE4>pos1&&posDaily>posE4,
+  '1h must be immediately after 4h, before E4 confirmed and two ranges');
+ assert.match(place,/<span class="tv-indicator">BW1<\/span>\s*<span class="tv-prior">-50,4<\/span>[\s\S]*?<b class="tv-current tv-down">-56,9<\/b>/);
+ assert.match(place,/<span class="tv-indicator">LBW1<\/span>\s*<span class="tv-prior">-58,2<\/span>[\s\S]*?<b class="tv-current tv-down">-65,8<\/b>/);
+ assert.match(place,/<span class="tv-indicator">E1 Live<\/span> —/);
+ assert.match(place,/title="MCB1h : précédente et dernière bougies clôturées · source /);
+});
+test('Missing 1h source must not reprint 4h measurements or invent E1 Live',()=>{
+ const a=stub();
+ a.place.h1={status:'UNAVAILABLE',bw:{previous:null,confirmed:null},
+  lbw:{previous:null,confirmed:null},e1Live:null};
+ const h=browser().front.renderHtml(a);
+ assert.match(h,/<b>1h<\/b>\s*<span class="tv-indicator">BW1<\/span> — \/ —/);
+ assert.match(h,/<span class="tv-indicator">LBW1<\/span> — \/ —/);
+ assert.match(h,/<span class="tv-indicator">E1 Live<\/span> —/);
+});

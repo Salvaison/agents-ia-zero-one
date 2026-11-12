@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T13:29:52.481289+00:00",
+  "status": "TESTE",
+  "description": "29 tests Node, source 1h fermée/ouverte/absente, données 4h distinctes ; Chrome 1920x1080 cinq zones de 180px sans overflow",
+  "evidence": "tests/boono-tv-four-block-state-20261111.test.js et tests front, capture locale",
+  "previousEventSha256": "3b9ffeebff4f5d4d875184b931303f89279bb32b1dd7b8f696ae0586ac2e905b"
+}

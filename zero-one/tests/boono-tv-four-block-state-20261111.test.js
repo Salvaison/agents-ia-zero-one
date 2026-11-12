@@ -126,3 +126,32 @@ test('MA15 context is taken from V5 MA contract, not invented from MA3',()=>{
  assert.equal(r.trajectory.ma15.retests,2);
  assert.equal(r.trajectory.ma15.confirmedContactBars,null);
 });
+
+test('1h confirmed MCB uses two distinct CLOSED candles; never borrows 4h values or invents E1 Live',()=>{
+ const data=csv(60*MS,[[-40.1,-41.2,0],[-50.4,-58.2,0],[-56.9,-65.8,0]]);
+ const result=state.confirmed1h(data,T);
+ assert.equal(result.status,'CONFIRMED');
+ assert.equal(result.bw.previous,-50.4);
+ assert.equal(result.bw.confirmed,-56.9);
+ assert.equal(result.lbw.previous,-58.2);
+ assert.equal(result.lbw.confirmed,-65.8);
+ assert.equal(result.sourceAt,T-60*MS);
+ assert.equal(result.availableAt,T);
+ assert.equal(result.e1Live,null);
+ const beforeLastClose=state.confirmed1h(data,T-1);
+ assert.equal(beforeLastClose.bw.confirmed,-50.4);
+ assert.equal(beforeLastClose.lbw.confirmed,-58.2);
+ assert.equal(beforeLastClose.availableAt,T-60*MS);
+ assert.equal(state.confirmed1h('',T).status,'UNAVAILABLE');
+});
+test('Read-only 1h source is exposed below 4h in the V5 TV place payload',()=>{
+ const p=paper(),a=state.build({paper:p,now:T,
+  csv4:csv(TF4,[[-55,-70,0],[-43,-66,0]]),
+  csv1:csv(60*MS,[[-40,-42,0],[-50.4,-58.2,0],[-56.9,-65.8,0]])});
+ assert.equal(a.place.h1.status,'CONFIRMED');
+ assert.equal(a.place.h1.bw.confirmed,-56.9);
+ assert.equal(a.place.h1.lbw.confirmed,-65.8);
+ assert.equal(a.place.h1.e1Live,null);
+ assert.equal(a.place.h4.bw.confirmed,-43);
+ assert.notEqual(a.place.h1.bw.confirmed,a.place.h4.bw.confirmed);
+});

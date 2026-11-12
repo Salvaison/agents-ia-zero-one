@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T13:29:52.481289+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Seul PM2 boono-tv Amsterdam redémarré, réponse V5 h1 transmise OVH et version du script OVH 007, moteurs PAPER non redémarrés",
+  "evidence": "Bridge local et route studio 3091/3092 ; relecture utilisateur ouverte",
+  "previousEventSha256": "22654d3c1f05126a2c09cc7f21d6fde858596e57426272791c11dc27fb201e08"
+}

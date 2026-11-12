@@ -149,17 +149,27 @@
        '<b class="tv-direction tv-'+tone+'">'+clean(status)+'</b> '+
        signed(pct,1)+' % · depuis '+clean(ref)+' '+signed(dist)+' $</div>';
    };
-   const h4=p.h4||{};
+   const h4=p.h4||{},h1=p.h1||{};
    const h4Row=h4.status==='CONFIRMED'?
      '<div class="tv-reading"><b>4h</b> '+indicator('BW4')+' '+
        pair(h4.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW4')+
        ' '+pair(h4.lbw,{past:'previous',next:'confirmed'})+
-       ' · '+indicator('E4 Live')+' —</div>'+
+       ' · '+indicator('E4 Live')+' —</div>':
+     '<div class="tv-reading"><b>4h</b> — · données confirmées indisponibles</div>';
+   const h1Row=h1.status==='CONFIRMED'?
+     '<div class="tv-reading" title="MCB1h : précédente et dernière bougies clôturées · source '+
+       clean(time(h1.sourceAt))+' · disponible '+clean(time(h1.availableAt))+'">'+
+       '<b>1h</b> '+indicator('BW1')+' '+
+       pair(h1.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW1')+
+       ' '+pair(h1.lbw,{past:'previous',next:'confirmed'})+
+       ' · '+indicator('E1 Live')+' —</div>':
+     '<div class="tv-reading"><b>1h</b> '+indicator('BW1')+' — / —　'+
+       indicator('LBW1')+' — / — · '+indicator('E1 Live')+' —</div>';
+   const e4ConfirmedRow=h4.status==='CONFIRMED'?
      '<div class="tv-reading">'+indicator('E4 confirmé')+' '+
        (h4.event?signal(h4.event.direction)+' · '+clean(time(h4.event.availableAt))+
         ' · '+indicator('LBW4')+' '+signed(h4.event.lbw):
-        '— · aucun signal confirmé documenté')+'</div>':
-     '<div class="tv-reading"><b>4h</b> — · données confirmées indisponibles</div>';
+        '— · aucun signal confirmé documenté')+'</div>':'';
    const locationHead=(pos?.direction?
        '<b class="tv-direction tv-'+polarity(pos.direction)+'">'+
          clean(String(pos.direction).toUpperCase())+'</b>':p.candidate?
@@ -204,6 +214,8 @@
      '<section class="tv-state-block tv-place">'+
        tag('3','LIEU STRUCTUREL',locationHead)+
        h4Row+
+       h1Row+
+       e4ConfirmedRow+
        rangeRow(p.recordedRanges?.daily,'DailyRange')+
        rangeRow(p.recordedRanges?.big,'BigRange')+
        '</section>',

@@ -11,7 +11,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const causalView=require('../modules/v5/v53-causal-chain-view');
 
-const TF_MS={3:180000,15:900000,240:14400000};
+const TF_MS={3:180000,15:900000,60:3600000,240:14400000};
 const NULL_IF_MISSING=x=>x===null||x===undefined||x===''||
   !Number.isFinite(Number(x))?null:Number(x);
 const round=(v,d=1)=>NULL_IF_MISSING(v)===null?null:
@@ -32,6 +32,19 @@ function parseMcbConfirmed(csv,tfMinutes,asOf){
    eventUp:NULL_IF_MISSING(f[13]),eventDown:NULL_IF_MISSING(f[14])
   }];
  }).sort((a,b)=>a.sourceAt-b.sourceAt);
+}
+// The 1h line reports two genuine CLOSED MCB candles, not a fabricated
+// live value or a replay of the 4h numbers. E1 Live is unavailable until
+// a separately timestamped native 1h intrabar event source is verified.
+function confirmed1h(csv,asOf){
+ const bars=parseMcbConfirmed(csv,60,asOf);
+ const latest=bars.at(-1),previous=bars.at(-2);
+ return {status:latest&&previous?'CONFIRMED':'UNAVAILABLE',
+  bw:{previous:previous?.bw??null,confirmed:latest?.bw??null},
+  lbw:{previous:previous?.lbw??null,confirmed:latest?.lbw??null},
+  sourceAt:latest?.sourceAt??null,
+  availableAt:latest?.availableAt??null,
+  e1Live:null};
 }
 function confirmed4h(csv,asOf){
  const bars=parseMcbConfirmed(csv,240,asOf),latest=bars.at(-1),previous=bars.at(-2);
@@ -91,7 +104,7 @@ function recordedRanges(levels,price){
  }
  return out;
 }
-function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',levels=[],now=Date.now()}={}){
+function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',levels=[],now=Date.now()}={}){
  const a=paper?.latestAnalysis||{},r=a.readings||{},s54=r.structural54||{};
  const asOf=NULL_IF_MISSING(a.asOf),age=asOf===null?Infinity:now-asOf;
  const valid=paper?.brokerOrdersEnabled===false&&
@@ -164,7 +177,8 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',levels=[],now
   priceRangeRank:round(rank,2),rangeZone:rangeZone(rank),
   recordedRanges:recordedRanges(levels,a.price),
   priceAsOf:asOf,
-  h4:confirmed4h(csv4,asOf)
+  h4:confirmed4h(csv4,asOf),
+  h1:confirmed1h(csv1,asOf)
  };
  output.causal={
   pmLiveUsd:round(c.pmCombined),
@@ -251,6 +265,7 @@ function createReader({dataDir,mcDir}={}){
    },[]),
    csv3:tail(fsCsv('3m'),30000),
    csv15:tail(fsCsv('15m'),30000),
+   csv1:tail(fsCsv('1h'),30000),
    csv4:tail(fsCsv('4h'),100000)});
 }
-module.exports={build,parseMcbConfirmed,confirmed4h,rangeZone,recordedRanges,createReader};
+module.exports={build,parseMcbConfirmed,confirmed1h,confirmed4h,rangeZone,recordedRanges,createReader};

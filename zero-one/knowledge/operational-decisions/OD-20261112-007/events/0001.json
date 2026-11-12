@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T13:29:52.481289+00:00",
+  "status": "AUTORISE",
+  "description": "Ajouter 1h sous 4h, avec BW1/LBW1 et absence éventuelle de E1 Live",
+  "evidence": "01-demande-utilisateur-integrale.txt",
+  "previousEventSha256": null
+}

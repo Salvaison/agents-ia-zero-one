@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T13:29:52.481289+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Pont CSV1h asOf et nouveau champ tvLiving.place.h1 ; affichage OVH entre 4h et E4 confirmé",
+  "evidence": "boono-tv/tv-living-state.js et boono-tv/scene/tv-living-state.js",
+  "previousEventSha256": "f44de54c936e1b91ab19ed0bc81118d12a24526ce3d3a193f172f697b1345f44"
+}
