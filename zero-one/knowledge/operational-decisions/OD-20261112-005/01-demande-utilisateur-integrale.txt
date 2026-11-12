@@ -1,0 +1,1 @@
+Bien, divise la surface en 5 portion de 20% chacune, de hauteur fix et change l'interval des 3 panneaux de l'état vivant à 25s, 15s 5s

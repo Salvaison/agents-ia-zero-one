@@ -83,3 +83,7 @@ L'incident sur le prix global descendant et le pivot MCB15 `ASCENT_ACTIVE` ne do
 **Fichiers modifiés :** uniquement scene/tv-living-state.css sur OVH, et l'URL de cette feuille dans l'index OVH (v=OD20261112-004). Aucun JavaScript, source Amsterdam, niveau de prix, décor, moteur, éditeur ou service n'a été modifié/redémarré. Le patch de cache-bust OVH est archivé dans knowledge/BOONO_TV_bandeaux_clairs_typographie_OVH_2026-11-12.patch.
 
 **Vérification :** aperçu du panneau construit avec le CSS réellement servi sur OVH et un snapshot V5 récent, capturé dans Chrome headless 1920×1080 ; cinq en-têtes visibles et blancs, bandeaux distincts, valeurs gris/vert/rouge conservées, aucune troncature. La suite automatisée de 16 tests s'est terminée sans échec. Contrôle final de la scène complète par le propriétaire encore ouvert.
+
+## Ajustement du 12 novembre — zones fixes et cycle 25 / 15 / 5
+
+La surface de 900px consacrée aux cinq rubriques TV02 est désormais divisée en cinq emplacements **exactement égaux de 180px (20%)**, quelle que soit la densité des informations. Le texte exceptionnellement long ne modifie plus la hauteur des autres rubriques et reste scrollable dans son emplacement. Le cycle du panneau gauche comporte **25s État vivant → 15s Graphiques Prix/MCB → 5s Trades accomplis → retour État vivant**, soit 45s au total. Ce cycle visuel ne modifie ni les données Live ni les projections sur le loft. Détails de code, tests et passation dans knowledge/BOONO_TV_5x20_rotation_25_15_5_2026-11-12.md et registre OD-20261112-005.

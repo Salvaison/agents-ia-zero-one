@@ -138,18 +138,22 @@
 /* OD-20261112-003 — User PDF "etat_vivant_typoTV02": FIVE rubrics, flat
    editorial typography on a single dark ground. Only the left panel. */
 #statePanel .state-rows.tv-five{
- display:flex;flex-direction:column;justify-content:flex-start;
- gap:6px;box-sizing:border-box;height:900px;overflow:hidden;
- padding:7px 10px 9px;
+ display:grid;grid-template-columns:minmax(0,1fr);
+ /* 900px fixed stage, five exact 20% (180px) horizontal tracks. */
+ grid-template-rows:repeat(5,20%);gap:0;
+ box-sizing:border-box;height:900px;overflow:hidden;
+ padding:0 10px;
  background:linear-gradient(180deg,#070b0e,#060c10);
  color:#edf4f7;font:680 15.2px/1.28 ui-monospace,Menlo,Consolas,monospace;
 }
 #statePanel .tv-five .tv-state-block{
- flex:0 0 auto;min-height:0;display:block;overflow:visible;
- margin:0;padding:4px 1px 6px;
+ box-sizing:border-box;min-height:0;height:100%;display:block;
+ overflow-x:hidden;overflow-y:auto;scrollbar-width:none;
+ margin:0;padding:7px 1px 6px;
  border:0;border-bottom:1px solid rgba(112,178,188,.26);
  border-radius:0;background:transparent;box-shadow:none;
 }
+#statePanel .tv-five .tv-state-block::-webkit-scrollbar{display:none}
 #statePanel .tv-five .tv-state-block:last-child{border-bottom:0}
 #statePanel .tv-five .tv-block-title{
  display:flex;align-items:baseline;flex-wrap:wrap;

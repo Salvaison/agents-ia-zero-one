@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T12:58:31.578494+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "OVH studio et lecteur mobile servent les nouveaux assets, aucune relance des moteurs ni du studio, contrôle utilisateur encore ouvert",
+  "evidence": "Routes 3091/3092 HTTP200, PM2 inchangé",
+  "previousEventSha256": "32ac7abf42c16f3a7fb48fbfaa93cd9e0519c3c1c303de0ec6008f9755ab30d1"
+}

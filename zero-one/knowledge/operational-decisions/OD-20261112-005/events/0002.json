@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T12:58:31.578494+00:00",
+  "status": "IMPLEMENTE",
+  "description": "CSS grid cinq fois 180px, rotation par minuterie unique 25/15/5, cache-bust des deux assets sur OVH",
+  "evidence": "scene/tv-living-state.css, scene/chart-views.js, patch runtime index",
+  "previousEventSha256": "eb3e3beb6458c9d4fb6cb6eb2d5ba90f470040b4cecbeeffc4f11deaa45f8d30"
+}

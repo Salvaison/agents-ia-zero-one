@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T12:58:31.578494+00:00",
+  "status": "TESTE",
+  "description": "21 tests Node réussis, cinq zones de 180px mesurées réellement en Chromium sans chevauchement et sans overflow, fixture position PAPER ouverte vérifiée",
+  "evidence": "tests/boono-tv-panel-cycle-20261112.test.js + autres tests BOONO-TV, mesures Chrome",
+  "previousEventSha256": "9e96cc8b827001a30fe2e470c4d660702c0befea03f73e830a3eb58737a228a2"
+}

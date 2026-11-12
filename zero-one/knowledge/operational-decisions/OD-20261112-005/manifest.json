@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-005",
+  "title": "BOONO-TV cinq rubriques fixes 20 pourcent et rotation 25s 15s 5s",
+  "createdAtUtc": "2026-11-12T12:58:31.578494+00:00",
+  "authorization": "Instruction explicite utilisateur du 12 novembre 2026",
+  "reference": "BOONO_TV_5x20_rotation_25_15_5_2026-11-12.md, scène TV02 OVH",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f3d54c4b73b0b9980d53fa5e7daed2a97b14bd17e4b6757a3c20d0bab9a97885",
+      "bytes": 137
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "7e705c9326e848a7fd6df2cd675982d63f4cf148dfe4b43b414c194fee7629fb",
+      "bytes": 1325
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "5d06ec2186cee2bf052d6773df52a0b84551da25752d949ab72a5eb835ae1326",
+      "bytes": 1622
+    }
+  }
+}

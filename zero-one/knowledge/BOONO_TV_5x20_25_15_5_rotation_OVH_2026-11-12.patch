@@ -1,0 +1,104 @@
+--- a/scene/chart-views.js
++++ b/scene/chart-views.js
+@@ -7,7 +7,21 @@
+ const params=new URLSearchParams(location.search);
+ const forced=params.get('panel'); // optional fixed preview: state / charts / trades
+ const dialogueEditing=params.get('dialogueEdit')==='1'||params.get('storyboardEdit')==='1';
+-const panels=['state','charts','trades'],ROTATION_MS=12000;
++const panels=['state','charts','trades'];
++// Display dwell times, not market-data refresh periods.
++// Cycle: 25s State -> 15s charts -> 5s PAPER trades -> State (45s total).
++const PANEL_DURATIONS_MS=Object.freeze({state:25000,charts:15000,trades:5000});
++let rotationTimer=null;
++const rotationDisabled=dialogueEditing||panels.includes(forced);
++function scheduleNextPanel(){
++ if(rotationDisabled)return;
++ if(rotationTimer!==null)clearTimeout(rotationTimer);
++ rotationTimer=setTimeout(()=>{
++  rotationTimer=null;
++  const next=panels[(panels.indexOf(active)+1)%panels.length];
++  setView(next);
++ },PANEL_DURATIONS_MS[active]);
++}
+ let active='state',lastSnapshot=null,events=[],lastMarkerVersion='';
+ const nf=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
+   Number(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+@@ -25,6 +39,7 @@
+  if(trades)trades.setAttribute('aria-hidden',view==='trades'?'false':'true');
+  if(view==='charts'&&lastSnapshot)drawTrio(lastSnapshot);
+  if(view==='trades'&&lastSnapshot)drawCompletedTrades(lastSnapshot);
++ scheduleNextPanel();
+ }
+ function tradeMarkers(){
+  const res=[];
+@@ -222,13 +237,15 @@
+   }
+  }catch(_){/* feed interruption must never affect trading or scene rendering */}
+ }
++// setView schedules a one-shot timer based on the active panel duration.
++ // ?panel=... and dialogue editing intentionally disable automatic rotation.
+ setView(dialogueEditing?'state':(panels.includes(forced)?forced:'state'));
+-if(!dialogueEditing&&!panels.includes(forced))
+- setInterval(()=>setView(panels[(panels.indexOf(active)+1)%panels.length]),ROTATION_MS);
+ refreshMarkers();
+ setInterval(refreshMarkers,60000);
+ window.BoonoTVCharts={onSnapshot,tradeMarkers,tradeSpans,
+  paintTradeBrackets,paintEEvents,get view(){return active},
+- setView,drawTrio,drawCompletedTrades,cycleMs:ROTATION_MS,
++ setView,drawTrio,drawCompletedTrades,
++ cycleMs:PANEL_DURATIONS_MS.state,
++ cycleDurationsMs:PANEL_DURATIONS_MS,
+  get markerCount(){return events.length}};
+ })();
+
+--- a/scene/tv-living-state.css
++++ b/scene/tv-living-state.css
+@@ -138,18 +138,22 @@
+ /* OD-20261112-003 — User PDF "etat_vivant_typoTV02": FIVE rubrics, flat
+    editorial typography on a single dark ground. Only the left panel. */
+ #statePanel .state-rows.tv-five{
+- display:flex;flex-direction:column;justify-content:flex-start;
+- gap:6px;box-sizing:border-box;height:900px;overflow:hidden;
+- padding:7px 10px 9px;
++ display:grid;grid-template-columns:minmax(0,1fr);
++ /* 900px fixed stage, five exact 20% (180px) horizontal tracks. */
++ grid-template-rows:repeat(5,20%);gap:0;
++ box-sizing:border-box;height:900px;overflow:hidden;
++ padding:0 10px;
+  background:linear-gradient(180deg,#070b0e,#060c10);
+  color:#edf4f7;font:680 15.2px/1.28 ui-monospace,Menlo,Consolas,monospace;
+ }
+ #statePanel .tv-five .tv-state-block{
+- flex:0 0 auto;min-height:0;display:block;overflow:visible;
+- margin:0;padding:4px 1px 6px;
++ box-sizing:border-box;min-height:0;height:100%;display:block;
++ overflow-x:hidden;overflow-y:auto;scrollbar-width:none;
++ margin:0;padding:7px 1px 6px;
+  border:0;border-bottom:1px solid rgba(112,178,188,.26);
+  border-radius:0;background:transparent;box-shadow:none;
+ }
++#statePanel .tv-five .tv-state-block::-webkit-scrollbar{display:none}
+ #statePanel .tv-five .tv-state-block:last-child{border-bottom:0}
+ #statePanel .tv-five .tv-block-title{
+  display:flex;align-items:baseline;flex-wrap:wrap;
+
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-004">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-005">
+ </head>
+ <body>
+ <main id="scene">
+@@ -112,7 +112,7 @@
+ </main>
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+-<script src="/chart-views.js"></script>
++<script src="/chart-views.js?v=OD20261112-005"></script>
+ <script src="/tv-living-state.js?v=OD20261112-003"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
