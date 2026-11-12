@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T13:15:18.156680+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Six labels à couleur native rouge/vert/neutre, CSS prioritaire et liens OVH cache-bust version 006",
+  "evidence": "tv-living-state.js/.css et patch runtime OVH",
+  "previousEventSha256": "835a449b8107dcb632a47c551eba1c7686014dfb943ca4a0e5199751a81c88b0"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T13:15:18.156680+00:00",
+  "status": "TESTE",
+  "description": "Tests des six événements individuels, alternance UP/DN, état sans preuve ou source stale, couleurs CSS réelles calculées dans Chromium et 25 tests cumulés",
+  "evidence": "tests/boono-tv-causal-event-colors-20261112.test.js",
+  "previousEventSha256": "debbd86a908ed4631c3e7b7c4a3ab8f5807c1bf7139fdf39950048c2205ca0d2"
+}

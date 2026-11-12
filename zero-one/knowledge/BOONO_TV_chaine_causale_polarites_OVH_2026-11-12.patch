@@ -1,0 +1,59 @@
+--- a/scene/tv-living-state.js
++++ b/scene/tv-living-state.js
+@@ -89,8 +89,14 @@
+  }
+  function tag(n,title,detail){return '<div class="tv-block-title"><b class="tv-block-index">'+n+'</b>'+
+    '<strong>'+clean(title)+'</strong>'+(detail?'<span>'+detail+'</span>':'')+'</div>';}
+- function lineNames(items){return items.map(([label,e])=>
+-    '<span class="tv-event"><b>'+clean(label)+'</b> '+clean(time(e?.observedAt))+'</span>').join(' <span class="tv-arrow">→</span> ');}
++ // Individual events may have OPPOSITE polarities; color each name from
++ // that event's own native direction, never from the current MCB thesis.
++ // Missing/unknown evidence remains neutral, not an invented UP/DN.
++ function lineNames(items){return items.map(([label,e])=>{
++   const side=e?.observedAt?polarity(e.direction):'neutral';
++   return '<span class="tv-event"><b class="tv-event-label tv-'+side+'">'+
++     clean(label)+'</b> '+clean(time(e?.observedAt))+'</span>';
++  }).join(' <span class="tv-arrow">→</span> ');}
+  function renderHtml(v){
+    if(v?.status!=='DATA_RECENT'){
+      return '<section class="tv-state-block tv-state-unavailable-block">'+
+
+--- a/scene/tv-living-state.css
++++ b/scene/tv-living-state.css
+@@ -227,3 +227,15 @@
+ #statePanel .tv-five .tv-reading > b.tv-current.tv-down{color:#ff6178}
+ #statePanel .tv-five .tv-reading > b.tv-current.tv-neutral{color:#f3faff}
+ #statePanel .tv-five .tv-reading > b.tv-current.tv-muted{color:#93a5b3}
++
++/* OD-20261112-006 — Each causal event name is colored by that event's
++   OWN native direction. Prior V5 facts can disagree with the live thesis. */
++#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-up{
++ color:#39f3a4;font-weight:950
++}
++#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-down{
++ color:#ff6178;font-weight:950
++}
++#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-neutral{
++ color:#e4eff2;font-weight:850
++}
+
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-005">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-006">
+ </head>
+ <body>
+ <main id="scene">
+@@ -113,7 +113,7 @@
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+ <script src="/chart-views.js?v=OD20261112-005"></script>
+-<script src="/tv-living-state.js?v=OD20261112-003"></script>
++<script src="/tv-living-state.js?v=OD20261112-006"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+ <script src="/radio-preview.js"></script>

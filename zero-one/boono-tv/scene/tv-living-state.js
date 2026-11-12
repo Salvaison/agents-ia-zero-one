@@ -89,8 +89,14 @@
  }
  function tag(n,title,detail){return '<div class="tv-block-title"><b class="tv-block-index">'+n+'</b>'+
    '<strong>'+clean(title)+'</strong>'+(detail?'<span>'+detail+'</span>':'')+'</div>';}
- function lineNames(items){return items.map(([label,e])=>
-    '<span class="tv-event"><b>'+clean(label)+'</b> '+clean(time(e?.observedAt))+'</span>').join(' <span class="tv-arrow">→</span> ');}
+ // Individual events may have OPPOSITE polarities; color each name from
+ // that event's own native direction, never from the current MCB thesis.
+ // Missing/unknown evidence remains neutral, not an invented UP/DN.
+ function lineNames(items){return items.map(([label,e])=>{
+   const side=e?.observedAt?polarity(e.direction):'neutral';
+   return '<span class="tv-event"><b class="tv-event-label tv-'+side+'">'+
+     clean(label)+'</b> '+clean(time(e?.observedAt))+'</span>';
+  }).join(' <span class="tv-arrow">→</span> ');}
  function renderHtml(v){
    if(v?.status!=='DATA_RECENT'){
      return '<section class="tv-state-block tv-state-unavailable-block">'+

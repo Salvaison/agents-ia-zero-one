@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T13:15:18.156680+00:00",
+  "status": "AUTORISE",
+  "description": "Colorer chaque dénomination de la chaîne causale selon sa polarité propre",
+  "evidence": "01-demande-utilisateur-integrale.txt",
+  "previousEventSha256": null
+}

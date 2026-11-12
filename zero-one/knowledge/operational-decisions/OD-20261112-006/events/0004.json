@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T13:15:18.156680+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Assets statiques accessibles OVH et lecteur mobile ; aucune relance de moteur ou de studio ; validation utilisateur ouverte",
+  "evidence": "HTTP 3091/3092 et SHA256 OVH/Amsterdam",
+  "previousEventSha256": "b50903400b7bceb9b43c6a20bc8bb37030e5633d3b5d4a009981e501014addde"
+}

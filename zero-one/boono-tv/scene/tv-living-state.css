@@ -227,3 +227,15 @@
 #statePanel .tv-five .tv-reading > b.tv-current.tv-down{color:#ff6178}
 #statePanel .tv-five .tv-reading > b.tv-current.tv-neutral{color:#f3faff}
 #statePanel .tv-five .tv-reading > b.tv-current.tv-muted{color:#93a5b3}
+
+/* OD-20261112-006 — Each causal event name is colored by that event's
+   OWN native direction. Prior V5 facts can disagree with the live thesis. */
+#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-up{
+ color:#39f3a4;font-weight:950
+}
+#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-down{
+ color:#ff6178;font-weight:950
+}
+#statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-neutral{
+ color:#e4eff2;font-weight:850
+}

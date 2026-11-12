@@ -87,3 +87,13 @@ L'incident sur le prix global descendant et le pivot MCB15 `ASCENT_ACTIVE` ne do
 ## Ajustement du 12 novembre — zones fixes et cycle 25 / 15 / 5
 
 La surface de 900px consacrée aux cinq rubriques TV02 est désormais divisée en cinq emplacements **exactement égaux de 180px (20%)**, quelle que soit la densité des informations. Le texte exceptionnellement long ne modifie plus la hauteur des autres rubriques et reste scrollable dans son emplacement. Le cycle du panneau gauche comporte **25s État vivant → 15s Graphiques Prix/MCB → 5s Trades accomplis → retour État vivant**, soit 45s au total. Ce cycle visuel ne modifie ni les données Live ni les projections sur le loft. Détails de code, tests et passation dans knowledge/BOONO_TV_5x20_rotation_25_15_5_2026-11-12.md et registre OD-20261112-005.
+
+## Mise à jour du 12 novembre — Polarité des noms de la chaîne causale
+
+**Demande :** « Dans la chaine causale, code en couleur rouge/vert les dénominateurs celon de leur polarités ».
+
+**Implémentation OVH :** les six noms Cross3, E3 Live, E3 confirmé, Cross15, E15 Live et E15 confirmé prennent individuellement la couleur de leur événement natif dans tvLiving.causal : UP/long = vert #39f3a4, DN/short = rouge #ff6178. Si la direction ou la preuve temporelle est absente, le nom reste neutre #e4eff2. Il ne prend jamais la couleur de la thèse globale ou de son voisin. Les heures, flèches, PM Live, hauteur des cinq zones et rotation 25/15/5 restent inchangés.
+
+**Code concerné :** boono-tv/scene/tv-living-state.js, fonction lineNames, et boono-tv/scene/tv-living-state.css. Les règles CSS de polarité sont plus spécifiques que la règle préexistante de noms blancs. Le runtime OVH charge les scripts et CSS avec le suffixe OD20261112-006 ; patch de liens d'origine enregistré dans knowledge/BOONO_TV_chaine_causale_polarites_OVH_2026-11-12.patch.
+
+**Vérifications :** source native réelle relayée via OVH et test de six directions alternées ; données manquantes restant neutres ; source V5 stale protégée. Chrome headless avec feuille CSS OVH réelle : rouge rendu rgb(255,97,120), vert rendu rgb(57,243,164). 25 tests Node cumulés passés. Aucun moteur PAPER ou pont de données Amsterdam redémarré, aucune modification de trading. Validation dans la scène complète par le propriétaire encore ouverte.

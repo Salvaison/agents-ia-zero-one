@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-006",
+  "title": "BOONO TV chaîne causale polarité de chaque événement",
+  "createdAtUtc": "2026-11-12T13:15:18.156680+00:00",
+  "authorization": "Demande explicite du propriétaire le 12 novembre 2026",
+  "reference": "BOONO_TV_Etat_Vivant_TV02_5_rubriques_2026-11-12.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "a2713d08e778c16eb31c53c97b696d05ed20b5c5e80270cd4d4d8917bf61506d",
+      "bytes": 95
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5d91e61876d3db218e4a1ee3d2649a9757d532c6bc49e77467834d0d43c86af8",
+      "bytes": 1039
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0f019f508f48217957a2c09865eef0e1d60f54dc32c7a284115d1b8a5296063b",
+      "bytes": 1072
+    }
+  }
+}
