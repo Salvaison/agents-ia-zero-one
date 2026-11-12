@@ -1,0 +1,3 @@
+Il y a du travail sur la typographie. Je veux plus de contraste et de couleur dans la typo. Plus grande rubrique, met en bleu les dénominateur BW, LBW, MF, PM et UP DN en rouge et vert  ainsi que les résultats avec la 1er donnée en gris / et la suivante en rouge/vert celon sa direction
+
+Captures jointes : Screenshot 2026-11-11 18.30.15.png et Screenshot 2026-11-11 17.55.26.png (images de référence dans la conversation, non copiées dans Git).

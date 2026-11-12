@@ -86,3 +86,31 @@ test('Current CSS is scoped to the left state stage and hides other stage varian
  assert.match(patch,/window\.BoonoTVLivingState\?\.render/);
  assert.match(patch,/tv-living-state\.js\?v=OD20261111-001/);
 });
+
+test('Typographie BOONO-TV : sigles bleus, précédent gris, actuelle rouge/verte selon variation, direction UP/DN',()=>{
+ const {front}=browser(),html=front.renderHtml(stub());
+ const cases=[
+  ['BW15 en recul', /<span class="tv-indicator">BW<\/span>\s*<span class="tv-prior">\+54,7<\/span>[\s\S]*?<b class="tv-current tv-down">\+46,2<\/b>/],
+  ['LBW15 en recul', /<span class="tv-indicator">LBW<\/span>\s*<span class="tv-prior">\+47,5<\/span>[\s\S]*?<b class="tv-current tv-down">\+33,2<\/b>/],
+  ['LBW3 se redresse', /<span class="tv-indicator">LBW<\/span>\s*<span class="tv-prior">-57,7<\/span>[\s\S]*?<b class="tv-current tv-up">-55,8<\/b>/],
+  ['MF3 en hausse', /<span class="tv-indicator">MF3<\/span>\s*<span class="tv-prior">\+6,6<\/span>[\s\S]*?<b class="tv-current tv-up">\+9,0<\/b>/],
+  ['Cross15 DN en rouge', /<span class="tv-indicator">Cross15<\/span>\s*<b class="tv-direction tv-down">DN<\/b>/],
+  ['Cross3 UP en vert', /<span class="tv-indicator">Cross3<\/span>\s*<b class="tv-direction tv-up">UP<\/b>/],
+  ['E4 confirmé coloration', /<span class="tv-indicator">E4 confirmé<\/span>\s*<b class="tv-direction tv-down">DN<\/b>/],
+  ['PM Live positif en vert', /<span class="tv-indicator">PM Live<\/span>\s*<b class="tv-result tv-up">\+19,2<\/b>/],
+  ['P&L net négatif en rouge', /P&L net potentiel\s*<b class="tv-result tv-down">-2,5<\/b>/],
+ ];
+ for(const [label,expr] of cases)assert.match(html,expr,label);
+ assert.ok((html.match(/class="tv-indicator"/g)||[]).length>=15);
+ assert.ok((html.match(/class="tv-prior"/g)||[]).length>=7);
+ assert.ok((html.match(/class="tv-current tv-(?:up|down|neutral|muted)"/g)||[]).length>=7);
+});
+test('Contraste, titres agrandis et géométrie complète : seules les quatre rubriques État vivant sont touchées',()=>{
+ const css=fs.readFileSync(CSS,'utf8');
+ assert.match(css,/font-weight:900;font-size:23px/);
+ assert.match(css,/#statePanel \.tv-indicator\{\s*color:#4ed8ff/);
+ assert.match(css,/\.tv-current\.tv-up[\s\S]*?color:#39f3a4/);
+ assert.match(css,/\.tv-current\.tv-down[\s\S]*?color:#ff6276/);
+ assert.match(css,/grid-template-rows:\.85fr \.91fr \.65fr 2\.15fr/);
+ assert.doesNotMatch(css,/#boonoV2Cat|#deskScreenLeft|#pricePanelCanvas|#room\.boono-v2/);
+});

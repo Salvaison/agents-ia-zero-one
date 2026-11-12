@@ -85,3 +85,21 @@ L'intégration dans le runtime OVH existant est limitée à :
 ---
 
 *Cette passation décrit uniquement les changements effectivement réalisés et testés sur Amsterdam et OVH le 11/11/2026. Les valeurs chiffrées du PDF fourni servent d'exemple de mise en page ; le système en service affiche le marché et les positions PAPER réels de ses sources vivantes.*
+
+## Retouche du 12 novembre 2026 — typographie contrastée, données gris/vert/rouge
+
+**Demande explicite :** après deux captures du panneau TV (11/11 à 17:55:26 et 18:30:15), l'utilisateur réclame des titres de rubrique plus grands, davantage de contraste et de couleur, indicateurs **BW/LBW/MF/PM** en bleu, UP vert / DN rouge, premières valeurs en gris et secondes en vert/rouge selon l'évolution. **Le panneau TV reste en quatre sections** ; aucune donnée de stratégie ni de trading n'est modifiée.
+
+**Mise en place sur OVH :**
+- `scene/tv-living-state.js` : ajout d'un marqueur sémantique bleu `tv-indicator` aux étiquettes BW, LBW, MF15/3, pente, MF Live, PM Live, MA3, BW4/LBW4 et E4 confirmé ; aucune manipulation de la valeur numérique.
+- Paires de valeurs : `tv-prior` gris, slash neutre, `tv-current tv-up/tv-down` dynamique. Vert si **deuxième valeur supérieure** à la première, rouge si inférieure ; cette évolution arithmétique doit rester distincte de la direction LONG/SHORT stratégique.
+- `Cross3/15`, `E4 confirmé`, `offensive`, `POSITION` : normalisation des libellés **UP/DN** depuis les sources `long/short` ou `UP/DN` et affichage vert/rouge. Les chiffres signés (pente MF, PM Live, Since, P&L net) portent leur signe en couleur ; les indicateurs sans direction restent neutres.
+- `scene/tv-living-state.css` : rubriques 23 px, valeurs jusqu'à 17 px, texte plus blanc, libellés indicateurs cyan `#4ed8ff`, valeur précédente gris `#a7b6c1`, valeur montante vert `#39f3a4`, descendante rouge `#ff6276`. Le contraste de la carte demeure sombre et cohérent avec l'identité BOONO-TV.
+- **Équilibrage vertical** `grid-template-rows:.85fr .91fr .65fr 2.15fr` : la place inutilisée des trois premiers panneaux est réservée à la Chaîne causale. Le contrôle headless en 1920×1080 a révélé une coupure de la Maturité offensive avec la première proposition typographique ; cette coupure a été **corrigée** et le panneau entier a été inspecté à nouveau.
+- `scene/index.html` sur OVH : seule la version des ressources JS et CSS du nouvel État vivant passe à `OD20261112-001` pour forcer le rafraîchissement navigateur ; patch isolé dans `knowledge/BOONO_TV_typographie_runtime_patch_2026-11-12.patch`. Tous les décors, masques, scripts de projection, éditeurs, vidéos et sprites restent inchangés.
+
+**Contrôles :** 11 tests Node, dont validation explicite du code couleur BW/LBW/MF, Cross UP/DN, E4 et P&L, source périmée/FLAT, CSS limité au panneau gauche. Montage d'un aperçu dans Chrome headless à 1920×1080 avec la CSS OVH et un snapshot V5 reçu via le proxy OVH : 4 rubriques, pas de troncature après rééquilibrage. SHA256 des nouveaux JS/CSS identiques sur OVH et dans Git. Routes `3091` et `3092` rendent les assets HTTP 200.
+
+**La première capture (18:30:15) montre un message `V5.4.3 périmée`.** Un contrôle en direct du 12/11 sur `/api/snapshot` a ensuite montré `tvLiving.status=DATA_RECENT` et un âge de l'ordre de quelques secondes. Cette vérification **ne démontre pas la cause de l'indisponibilité transitoire du 11/11** et ne doit pas être déclarée réparation du collecteur. Le garde-fou `SOURCE_STALE` est conservé.
+
+**Portée opérationnelle :** pas de redémarrage du bridge Amsterdam, des runners PAPER ni du studio OVH : scripts statiques servis en direct. Ne pas attribuer à cette correction une nouvelle qualification économique ou un impact décisionnel. **Validation esthétique finale par l'utilisateur en scène composite complète toujours ouverte.**

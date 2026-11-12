@@ -20,17 +20,25 @@
    return new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Stockholm',
      hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(n));
  };
- const polarity=d=>String(d||'').toLowerCase()==='long'?'up':
-   String(d||'').toLowerCase()==='short'?'down':'neutral';
- const direction=d=>d==='long'?'UP':d==='short'?'DN':'—';
+ const polarity=d=>['long','up'].includes(String(d||'').toLowerCase())?'up':
+   ['short','dn','down'].includes(String(d||'').toLowerCase())?'down':'neutral';
+ const direction=d=>polarity(d)==='up'?'UP':polarity(d)==='down'?'DN':'—';
+ // Typography only: values never acquire a different interpretation.
+ const indicator=word=>'<span class="tv-indicator">'+clean(word)+'</span>';
+ const signed=(value,decimals=1)=>'<b class="tv-result tv-'+
+   (num(value)===null?'muted':Number(value)>0?'up':Number(value)<0?'down':'neutral')+
+   '">'+clean(fmt(value,decimals,true))+'</b>';
+ const signal=(value)=>'<b class="tv-direction tv-'+polarity(value)+'">'+
+   clean(direction(value))+'</b>';
  function slopeStyle(a,b){
    if(num(a)===null||num(b)===null)return 'muted';
    return Number(b)>Number(a)?'up':Number(b)<Number(a)?'down':'neutral';
  }
  function pair(v,{past='confirmed',next='live'}={}){
    const one=v?.[past],two=v?.[next];
-   return '<span class="tv-prior">'+clean(fmt(one,1,true))+'</span> / '+
-    '<b class="tv-'+slopeStyle(one,two)+'">'+clean(fmt(two,1,true))+'</b>';
+   return '<span class="tv-prior">'+clean(fmt(one,1,true))+'</span>'+
+    '<span class="tv-separator"> / </span>'+
+    '<b class="tv-current tv-'+slopeStyle(one,two)+'">'+clean(fmt(two,1,true))+'</b>';
  }
  function evidence(label,html,kind=''){
    return '<div class="tv-evidence '+kind+'"><strong>'+clean(label)+'</strong> '+html+'</div>';
@@ -41,16 +49,15 @@
  }
  function eventLine(tf,cross){
    const word='Cross'+tf;
-   if(!cross||!cross.observedAt)return '<div class="tv-reading"><b>'+word+'</b> — · aucun événement récent documenté</div>';
-   const dir=direction(cross.direction),tone=polarity(cross.direction);
+   if(!cross||!cross.observedAt)return '<div class="tv-reading">'+
+     indicator(word)+' — · aucun événement récent documenté</div>';
    const bw=cross.oscillatorAtEvent?.bw,lbw=cross.oscillatorAtEvent?.lbw;
    const age=num(cross.ageMinutes),since=num(cross.deltaSinceEvent);
-   return '<div class="tv-reading"><b>'+word+'<span class="tv-'+tone+'">'+dir+
-     '</span></b> '+clean(time(cross.observedAt))+' · '+
+   return '<div class="tv-reading">'+indicator(word)+' '+signal(cross.direction)+
+     ' '+clean(time(cross.observedAt))+' · '+
      (age===null?'—':Math.floor(Math.max(0,age))+'min')+
-     ' · BW/LBW '+clean(fmt(bw,1,true))+' / '+clean(fmt(lbw,1,true))+
-     ' · Since <b class="tv-'+(since===null?'muted':since>0?'up':since<0?'down':'neutral')+'">'+
-     clean(fmt(since,1,true))+' $</b></div>';
+     ' · '+indicator('BW/LBW')+' '+clean(fmt(bw,1,true))+' / '+clean(fmt(lbw,1,true))+
+     ' · Since '+signed(since)+' $</div>';
  }
  function tag(n,title,detail){return '<div class="tv-block-title"><b class="tv-block-index">'+n+'</b>'+
    '<strong>'+clean(title)+'</strong>'+(detail?'<span>'+detail+'</span>':'')+'</div>';}
@@ -67,25 +74,27 @@
    const alignment=b.alignment==='ALIGNED'?'Alignement confirmé':
      b.alignment==='TACTICAL_OPPOSES_15M'?'Tactique opposée au directeur':'Alignement indéterminé';
    const rank=num(s.priceRangeRank);
-   const placeLabel=[p.candidate?String(p.candidate).toUpperCase():null,
-     p.extended?'ÉTENDU':null,p.rangeZone||null].filter(Boolean).map(clean).join(' · ');
+   const placeLabel=[p.candidate?
+      '<b class="tv-direction tv-'+polarity(p.candidate)+'">'+
+        clean(String(p.candidate).toUpperCase())+'</b>':null,
+     p.extended?'ÉTENDU':null,p.rangeZone?clean(p.rangeZone):null].filter(Boolean).join(' · ');
    const hh=p.h4||{};
    const h4=hh.status==='CONFIRMED'?
-      '<div class="tv-reading"><b>4h</b> BW4 '+pair(hh.bw,{past:'previous',next:'confirmed'})+
-      '　 LBW4 '+pair(hh.lbw,{past:'previous',next:'confirmed'})+
+      '<div class="tv-reading"><b>4h</b> '+indicator('BW4')+' '+pair(hh.bw,{past:'previous',next:'confirmed'})+
+      '　 '+indicator('LBW4')+' '+pair(hh.lbw,{past:'previous',next:'confirmed'})+
       '<span class="tv-time"> source '+clean(time(hh.sourceAt))+' · connu '+clean(time(hh.availableAt))+'</span></div>'+
-      '<div class="tv-reading"><b>E4 confirmé</b> '+
+      '<div class="tv-reading">'+indicator('E4 confirmé')+' '+
       (hh.event?
-       '<span class="tv-'+(hh.event.direction==='UP'?'up':'down')+'">'+clean(hh.event.direction)+'</span>'+
+       signal(hh.event.direction)+
        ' · source '+clean(time(hh.event.sourceAt))+' · connu '+clean(time(hh.event.availableAt))+
-       ' · LBW4 '+clean(fmt(hh.event.lbw,1,true)):'— · aucun événement dans la fenêtre')+
+       ' · '+indicator('LBW4')+' '+clean(fmt(hh.event.lbw,1,true)):'— · aucun événement dans la fenêtre')+
        '</div>':
       '<div class="tv-reading"><b>4h</b> — · bougies confirmées indisponibles</div>';
    const positionHtml=pos?
-     '<div class="tv-position"><b>POSITION <span class="tv-'+polarity(pos.direction)+'">'+
+     '<div class="tv-position"><b>POSITION <span class="tv-direction tv-'+polarity(pos.direction)+'">'+
       clean(String(pos.direction).toUpperCase())+'</span></b> · entrée '+
       clean(fmt(pos.entryPrice))+' $ · '+clean(time(pos.entryAt))+
-      ' · P&L net potentiel <b>'+clean(fmt(pos.potentialNetPnlUsd,1,true))+' $</b></div>'+
+      ' · P&L net potentiel '+signed(pos.potentialNetPnlUsd)+' $</div>'+
      '<div class="tv-reading tv-position-metrics">MFE '+clean(fmt(pos.mfePriceUsd))+
       ' $ BTC · MAE '+clean(fmt(pos.maePriceUsd))+' $ · floor '+
       (pos.floorAdvisory?'indicatif non-exécutoire':'ancien exécutoire')+' '+
@@ -93,22 +102,24 @@
      '<div class="tv-position"><b>POSITION</b> FLAT · aucune position PAPER ouverte</div>';
    return [
      '<section class="tv-state-block tv-trajectory">'+
-       tag('1','Trajectoire','<b>'+clean(a.strategicState||'—')+'</b> · offensive <span class="tv-'+polarity(a.offensive)+'">'+clean(direction(a.offensive))+'</span>')+
-       '<div class="tv-reading"><b>MCB15 · DIRECTEUR</b> BW '+pair(a.bw)+
-         '　LBW '+pair(a.lbw)+'</div>'+
+       tag('1','Trajectoire','<b class="tv-direction tv-'+polarity(a.director)+'">'+
+         clean(a.strategicState||'—')+'</b> · offensive '+signal(a.offensive))+
+       '<div class="tv-reading"><b>MCB15 · DIRECTEUR</b> '+indicator('BW')+' '+pair(a.bw)+
+         '　'+indicator('LBW')+' '+pair(a.lbw)+'</div>'+
        eventLine('15',a.cross)+
-       '<div class="tv-reading">MF15 '+pair(a.mf)+
+       '<div class="tv-reading">'+indicator('MF15')+' '+pair(a.mf)+
         ' · flow '+clean(fmt(a.flowBtcPerSec,2))+' BTC/s'+
-        ' · MF15 pente '+clean(fmt(a.mf15Slope,2,true))+
-        ' · MF15 Live '+clean(fmt(a.mf15Live,2,true))+'</div>'+
+        ' · '+indicator('MF15 pente')+' '+signed(a.mf15Slope,2)+
+        ' · '+indicator('MF15 Live')+' <b class="tv-current tv-'+
+          slopeStyle(a.mf?.confirmed,a.mf15Live)+'">'+clean(fmt(a.mf15Live,2,true))+'</b></div>'+
        '</section>',
      '<section class="tv-state-block tv-tactical">'+
        tag('2','Tactique','<b>'+clean(b.phase||'—')+'</b> · '+clean(alignment))+
-       '<div class="tv-reading"><b>MCB3 · TACTIQUE</b> BW '+pair(b.bw)+
-        '　LBW '+pair(b.lbw)+'</div>'+
+       '<div class="tv-reading"><b>MCB3 · TACTIQUE</b> '+indicator('BW')+' '+pair(b.bw)+
+        '　'+indicator('LBW')+' '+pair(b.lbw)+'</div>'+
        eventLine('3',b.cross)+
-       '<div class="tv-reading">MF3 '+pair(b.mf)+' · <b>MA3</b> distance '+
-        clean(fmt(b.ma3?.distanceUsd,1,true))+' $ · '+
+       '<div class="tv-reading">'+indicator('MF3')+' '+pair(b.mf)+
+        ' · '+indicator('MA3')+' distance '+signed(b.ma3?.distanceUsd)+' $ · '+
         clean(b.ma3?.state||'—')+' · '+
         (num(b.ma3?.retests)===null?'—':clean(String(b.ma3.retests)))+
         ' retests · '+(num(b.ma3?.confirmedContactBars)===null?'—':clean(String(b.ma3.confirmedContactBars)))+
@@ -119,12 +130,13 @@
        '</section>',
      '<section class="tv-state-block tv-causal">'+
        tag('4','CHAÎNE CAUSALE · observation','')+
-       '<div class="tv-causal-chain tv-evidence"><b>PM Live '+clean(fmt(c.pmLiveUsd,1,true))+' $</b> · '+
+       '<div class="tv-causal-chain tv-evidence"><b>'+indicator('PM Live')+
+        ' '+signed(c.pmLiveUsd)+' $</b> · '+
         lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],['E3 confirmé',c.e3Confirmed],
          ['Cross15',c.cross15],['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
        evidence('PHASE STRUCTURELLE',clean(phase)+' · campagne '+clean(s.campaignId||'—')+
         ' · maturité rang2h '+clean(fmt(rank,1))+
-        ' · MF15 sur 2h '+clean(fmt(s.mf15History2h,1,true))+
+        ' · '+indicator('MF15 sur 2h')+' '+signed(s.mf15History2h)+
         ' · maturité extension '+(s.matureAfterExtension?'AVANCÉE':'mesurée'),'tv-phase')+
        positionHtml+
        evidence('MATURITÉ OFFENSIVE',clean(o.classification||'—')+
@@ -132,7 +144,7 @@
          ' · progression '+clean(fmt(o.progress4hUsd,1))+
          ' $ BTC · bord 2h '+(o.atPrice2hEdge?'oui':'non')+
          ' · LBW15/prix '+(o.oppositeDivergenceForming?'divergence opposée en formation':'pas de preuve opposée')+
-         ' · PM marginal '+(o.conversionFatigue?'s’essouffle':'non invalidé'),'tv-offensive')+
+         ' · '+indicator('PM marginal')+' '+(o.conversionFatigue?'s’essouffle':'non invalidé'),'tv-offensive')+
        '</section>'
    ].join('');
  }

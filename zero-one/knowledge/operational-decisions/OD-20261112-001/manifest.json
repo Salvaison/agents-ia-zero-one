@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-001",
+  "title": "BOONO-TV typographie quatre chapitres renforcée et couleurs des indicateurs",
+  "createdAtUtc": "2026-11-12T07:17:45.953223+00:00",
+  "authorization": "Retouche demandée par le propriétaire sur deux captures État vivant du 11/11",
+  "reference": "OD-20261111-001 + Screenshot 2026-11-11 18.30.15.png et 17.55.26.png, conversation",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "8accced65575902f92e203d8d89db05f7e2f41b1426af315685bfc72a509824e",
+      "bytes": 452
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "9dce30b032c054aa4247488e7fcb83c29812824ce67d8381fcfbad755efc9e48",
+      "bytes": 1167
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "ed5d0dbf65e7abf074acd66c1c82934a8f8dc3d969e5b06d5d70b0b90e2f2f19",
+      "bytes": 1747
+    }
+  }
+}

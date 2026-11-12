@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T07:17:45.953223+00:00",
+  "status": "TESTE",
+  "description": "11 tests Node ; snapshot OVH récent, colorimétrie et source stale/FLAT ; Chrome headless 1920x1080, quatre chapitres sans troncature ; sha256 OVH/Git identiques",
+  "evidence": "tests/boono-tv-four-block-front-20261111.test.js et -state, captures locales de contrôle",
+  "previousEventSha256": "ff0220b4b0515a88cdc4e62e6f33ef22cc790dbc148cb3da29785dd49540227f"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T07:17:45.953223+00:00",
+  "status": "AUTORISE",
+  "description": "Hiérarchie des titres et codes couleurs explicitement demandés sur captures BOONO-TV",
+  "evidence": "01-demande-utilisateur-integrale.txt",
+  "previousEventSha256": null
+}

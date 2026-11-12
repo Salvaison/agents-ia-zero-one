@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T07:17:45.953223+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Ressources statiques OVH 3091/3092 HTTP 200 et nouveau cache-bust ; moteurs et studio non redémarrés ; validation visuelle propriétaire ouverte",
+  "evidence": "HTTP OVH et contrôle source tvLiving DATA_RECENT",
+  "previousEventSha256": "71be5d2228b4cbfbc980002064e7e73c2abcb7211da2ad50cd7ee342af7d9b5d"
+}

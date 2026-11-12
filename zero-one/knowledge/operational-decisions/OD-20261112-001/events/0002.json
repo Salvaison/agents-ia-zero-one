@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T07:17:45.953223+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Typo renforcée sur OVH, libellés bleus, gris précédent/vert-rouge valeur en évolution, UP/DN normalisés, grille redimensionnée et cache-bust",
+  "evidence": "boono-tv/scene/tv-living-state.js, .css, knowledge/BOONO_TV_typographie_runtime_patch_2026-11-12.patch",
+  "previousEventSha256": "984596aeedacfa20e9c7c719d46188d53580480edf2bb714f135fe756e9b063d"
+}
