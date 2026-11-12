@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T11:51:09.929885+00:00",
+  "status": "TESTE",
+  "description": "Tests des ranges et du MA15 et tests du DOM des cinq rubriques, screenshot Chrome headless 1920x1080",
+  "evidence": "tests/boono-tv-four-block-state et -front, contrôle API OVH",
+  "previousEventSha256": "1b8307491635e2701d0969c1a3733fecbafd66bc98bf10be58d2a418545178ce"
+}

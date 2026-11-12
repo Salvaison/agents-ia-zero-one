@@ -45,19 +45,28 @@ function stub(){
     oppositeDivergenceForming:false,conversionFatigue:false}};
  return z;
 }
-test('TV follows user PDF: exact four ordered sections, all evidence and PAPER risk',()=>{
- const {front}=browser(),text=front.renderHtml(stub());
- assert.equal((text.match(/class="tv-state-block/g)||[]).length,4);
- for(const x of ['Trajectoire','Tactique','Lieu','CHAÎNE CAUSALE','MCB15','Cross15',
-   'MF15','MCB3','Cross3','MA3','BW4','E4 confirmé','PHASE STRUCTURELLE',
-   'POSITION','MFE','MAE','invalidation','MATURITÉ OFFENSIVE']){
-  assert.ok(text.includes(x),x);
+test('Revised TV02 PDF: five ordered flat rubrics with recorded Daily/Big ranges and MA15',()=>{
+ const a=stub();
+ a.trajectory.ma15={distanceUsd:-457.7,state:'ACCEPTED',retests:2,confirmedContactBars:null};
+ a.place.recordedRanges={
+  daily:{zone:'BELOW_VAL',positionPct:-218.4,fairValuePct:-403.3,
+   distanceFromValUsd:-7801.2,distanceFromVahUsd:-11373.2},
+  big:{zone:'ABOVE_POC',positionPct:72.5,fairValuePct:67.2,
+   distanceFromValUsd:12228.8,distanceFromVahUsd:-4637.2}
+ };
+ const {front}=browser(),html=front.renderHtml(a);
+ assert.equal((html.match(/class="tv-state-block/g)||[]).length,5);
+ const titles=['MCB15 · DIRECTEUR','MCB3 · TACTIQUE','LIEU STRUCTUREL','CHAÎNE CAUSALE','POSITION'];
+ const order=titles.map(x=>html.indexOf(x));
+ assert.ok(order.every((x,i)=>x>=0&&(i===0||x>order[i-1])));
+ for(const name of ['Cross15','MF15','MA15','Cross3','MA3','BW4','E4 confirmé','DailyRange',
+   'BigRange','SOUS VAL','ABOVE POC','PHASE STRUCTURELLE','MFE','MAE','invalidation','MATURITÉ OFFENSIVE']){
+  assert.ok(html.includes(name),name);
  }
- const offsets=['Trajectoire','Tactique','Lieu','CHAÎNE CAUSALE'].map(x=>text.indexOf(x));
- assert.ok(offsets.every((x,i)=>x>=0&&(i===0||x>offsets[i-1])));
- assert.match(text,/73.?701,3/);
- assert.match(text,/floor indicatif non-exécutoire/);
- assert.doesNotMatch(text,/THÈSE \/ MCB|STRUCTURE \/ POSITION|CONVERSION \/ COMBAT/);
+ assert.match(html,/67,2/);
+ assert.match(html,/-4.?637,2/);
+ assert.match(html,/floor indicatif non-exécutoire/);
+ assert.doesNotMatch(html,/THÈSE \/ MCB|CONVERSION \/ COMBAT|tv-joined-/);
 });
 test('Stale source is not displayed as a live trajectory or position',()=>{
  const {front}=browser();
@@ -72,7 +81,7 @@ test('HTML data is escaped; flat state does not invent position MFE',()=>{
  const html=front.renderHtml(bad);
  assert.doesNotMatch(html,/<img/);
  assert.match(html,/&lt;img/);
- assert.match(html,/POSITION<\/b> FLAT/);
+ assert.match(html,/Aucune position PAPER ouverte/);
  assert.doesNotMatch(html,/MFE 25/);
 });
 test('Current CSS is scoped to the left state stage and hides other stage variants',()=>{
@@ -82,6 +91,7 @@ test('Current CSS is scoped to the left state stage and hides other stage varian
  assert.match(css,/#statePanel\.trades-active \.state-rows\.tv-four/);
  assert.match(css,/#statePanel\.dialogue-editing \.state-rows\.tv-four/);
  assert.doesNotMatch(css,/#boonoV2Cat|#deskScreenLeft|#pricePanelCanvas/);
+ assert.match(css,/#statePanel \.state-rows\.tv-five/);
  const patch=fs.readFileSync(path.resolve(__dirname,'../knowledge/BOONO_TV_EV4_OVH_runtime_patch_2026-11-11.patch'),'utf8');
  assert.match(patch,/window\.BoonoTVLivingState\?\.render/);
  assert.match(patch,/tv-living-state\.js\?v=OD20261111-001/);
@@ -98,7 +108,7 @@ test('Typographie BOONO-TV : sigles bleus, précédent gris, actuelle rouge/vert
   ['Cross3 UP en vert', /<span class="tv-indicator">Cross3<\/span>\s*<b class="tv-direction tv-up">UP<\/b>/],
   ['E4 confirmé coloration', /<span class="tv-indicator">E4 confirmé<\/span>\s*<b class="tv-direction tv-down">DN<\/b>/],
   ['PM Live positif en vert', /<span class="tv-indicator">PM Live<\/span>\s*<b class="tv-result tv-up">\+19,2<\/b>/],
-  ['P&L net négatif en rouge', /P&L net potentiel\s*<b class="tv-result tv-down">-2,5<\/b>/],
+  ['P&L net négatif en rouge', /P&L net potentiel<\/b>\s*<b class="tv-result tv-down">-2,5<\/b>/],
  ];
  for(const [label,expr] of cases)assert.match(html,expr,label);
  assert.ok((html.match(/class="tv-indicator"/g)||[]).length>=15);
@@ -122,7 +132,7 @@ test('Nomenclature TV: CRÊTE/CREUX depuis le pivot MCB, et pas des tendances pr
  a.trajectory.offensive='short';
  let html=front.renderHtml(a);
  assert.match(html,/CREUX LBW15 CONFIRMÉ/);
- assert.match(html,/biais MCB <b class="tv-direction tv-up">UP<\/b> · offensive <b class="tv-direction tv-down">DN<\/b>/);
+ assert.match(html,/CREUX LBW15 CONFIRMÉ[\s\S]*?offensive <b class="tv-direction tv-down">DN<\/b>/);
  assert.doesNotMatch(html,/>ASCENT_ACTIVE<\/b>/);
  a.trajectory.strategicState='DESCENT_ACTIVE';
  a.trajectory.director='short';

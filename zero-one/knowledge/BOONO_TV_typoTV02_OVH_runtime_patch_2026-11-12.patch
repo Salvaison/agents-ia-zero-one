@@ -1,0 +1,20 @@
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-002">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-003">
+ </head>
+ <body>
+ <main id="scene">
+@@ -113,7 +113,7 @@
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+ <script src="/chart-views.js"></script>
+-<script src="/tv-living-state.js?v=OD20261112-002"></script>
++<script src="/tv-living-state.js?v=OD20261112-003"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+ <script src="/radio-preview.js"></script>

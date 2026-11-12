@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T11:51:09.929885+00:00",
+  "status": "AUTORISE",
+  "description": "Correction explicite de portée, livrer la mise en page PDF à cinq rubriques",
+  "evidence": "PDF de deux pages et demande intégrale",
+  "previousEventSha256": null
+}

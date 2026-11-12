@@ -122,3 +122,7 @@ L'intégration dans le runtime OVH existant est limitée à :
 **Validation :** l'API OVH retournait une lecture récente et les titres affichés « CREUX LBW15 CONFIRMÉ · biais MCB UP · offensive DN », « ATTENTE ALIGNEMENT 3m/15m ». Test de tous les cas dynamiques (CONTINUATION, RETOURNEMENT en formation, RESPIRATION, ATTENTE, CRÊTE/CREUX) et de la protection `SOURCE_STALE` ; **13 tests Node réussis**. Le bureau, les visuels et l'interface Amsterdam ne sont pas modifiés. Validation visuelle finale du propriétaire encore ouverte.
 
 **Chantier distinct :** l'état global du prix sur plusieurs jours **reste baissier** en dépit de certains pivots LBW haussiers. Se référer au rapport `knowledge/BOONOLAB_incident_ASCENT_ACTIVE_4h_contexte_prix_2026-11-12.md` ; il n'y a **pas encore de révision du régime prix/territoire ni d'autorité d'entrée**.
+
+## Successeur du 12 novembre — TYPO TV02
+
+La disposition initiale à quatre chapitres est historique. La nouvelle maquette etat_vivant_typoTV02(1).pdf du propriétaire contient cinq rubriques typographiques numérotées sur fond noir : MCB15 Directeur, MCB3 Tactique, LIEU STRUCTUREL (DailyRange/BigRange), CHAÎNE CAUSALE, POSITION distincte avec Maturité offensive. Le contrat MA15/ranges et la réalisation OVH/Amsterdam sont documentés dans knowledge/BOONO_TV_Etat_Vivant_TV02_5_rubriques_2026-11-12.md et OD-20261112-003. Ne pas rétablir l'ancienne disposition à quatre cartes.

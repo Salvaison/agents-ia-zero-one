@@ -52,7 +52,46 @@ function rangeZone(rank){
 function pair(confirmed,live){
  return {confirmed:round(confirmed),live:round(live)};
 }
-function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',now=Date.now()}={}){
+// User-recorded VAH/POC/VAL ranges. Geometric classification ONLY: an
+// observed price below VAL is not, by itself, proof of defended territory loss.
+function recordedRanges(levels,price){
+ const px=NULL_IF_MISSING(price),out={daily:null,big:null};
+ if(px===null||!Array.isArray(levels))return out;
+ const groups=new Map();
+ for(const entry of levels){
+  if(!entry||!['VAH','POC','VAL'].includes(entry.token))continue;
+  const value=NULL_IF_MISSING(entry.price);
+  if(value===null||value<=0||entry.groupId==null)continue;
+  const scope=String(entry.label||'').trim().split(/\s+/)[1]?.toLowerCase();
+  if(!['daily','big'].includes(scope))continue;
+  const key=String(entry.groupId)+'|'+scope;
+  if(!groups.has(key))groups.set(key,{scope,groupId:entry.groupId,values:{}});
+  groups.get(key).values[entry.token]=value;
+ }
+ for(const g of groups.values()){
+  const e=g.values;
+  if(![e.VAL,e.POC,e.VAH].every(Number.isFinite)||!(e.VAL<e.POC&&e.POC<e.VAH))continue;
+  const width=e.VAH-e.VAL;
+  const zone=px<e.VAL?'BELOW_VAL':px>e.VAH?'ABOVE_VAH':
+   px>e.POC?'ABOVE_POC':px<e.POC?'BELOW_POC':'AT_POC';
+  const ref=px>=e.POC?e.VAH-e.POC:e.POC-e.VAL;
+  const data={
+   label:g.scope==='daily'?'DailyRange':'BigRange',groupId:g.groupId,
+   val:e.VAL,poc:e.POC,vah:e.VAH,
+   zone,positionPct:round(100*(px-e.VAL)/width,1),
+   fairValuePct:round(100*(px-e.POC)/ref,1),
+   distanceFromValUsd:round(px-e.VAL),
+   distanceFromVahUsd:round(px-e.VAH),
+   distanceFromPocUsd:round(px-e.POC),
+   priceAsOf:'V543_ANALYSIS_PRICE',
+   classificationProof:'GEOMETRY_ONLY_NO_TERRITORY_DEFENCE'
+  };
+  // Duplicate scopes must not be merged; use the newest UI group ID.
+  if(!out[g.scope]||Number(g.groupId)>Number(out[g.scope].groupId))out[g.scope]=data;
+ }
+ return out;
+}
+function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',levels=[],now=Date.now()}={}){
  const a=paper?.latestAnalysis||{},r=a.readings||{},s54=r.structural54||{};
  const asOf=NULL_IF_MISSING(a.asOf),age=asOf===null?Infinity:now-asOf;
  const valid=paper?.brokerOrdersEnabled===false&&
@@ -79,6 +118,7 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',now=Date.now(
  const chain=causalView.build({events,audit:pastRows,now:asOf,price:a.price,
    mcb15:r.mcb15,mcb3:r.mcb3})||{};
  const c=r.conversion||{},m=r.maContract?.ma3||{},
+   m15=r.maContract?.ma15||{},
    mat=r.offensiveMaturity||{},con=mat.context||{},
    inv=a.invalidation||{},pos=paper.position||null;
  const source15=recent15?bar15:null,source3=recent3?bar3:null;
@@ -92,7 +132,14 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',now=Date.now(
   mf:pair(source15?.mf,obs?.live15MfRaw),
   cross:chain.tf15?.cross||null,
   mf15Slope:round(obs?.mf15Pente,2),mf15Live:round(obs?.live15MfRaw,2),
-  flowBtcPerSec:flow,confirmedAt:source15?.availableAt??null,
+  flowBtcPerSec:flow,
+  ma15:{distanceUsd:round(m15.distanceUsd),
+    state:m15.state||null,
+    retests:Number.isInteger(m15.polarityMemory?.retestsSinceChange)?
+     m15.polarityMemory.retestsSinceChange:null,
+    confirmedContactBars:Number.isInteger(m15.confirmedContactBars)?
+     m15.confirmedContactBars:null},
+  confirmedAt:source15?.availableAt??null,
   liveSampledAt:obs?.ts??null
  };
  output.tactical={
@@ -115,6 +162,8 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv4='',now=Date.now(
   candidate:a.candidate||null,
   extended:s54.extendedTacticalWave===true,
   priceRangeRank:round(rank,2),rangeZone:rangeZone(rank),
+  recordedRanges:recordedRanges(levels,a.price),
+  priceAsOf:asOf,
   h4:confirmed4h(csv4,asOf)
  };
  output.causal={
@@ -196,8 +245,12 @@ function createReader({dataDir,mcDir}={}){
  return paper=>build({paper,now:Date.now(),
    audit:jsonTail(path.join(data,'audit-history.json')),
    events:eventsTail(path.join(data,'elastic-observer-events.ndjson')),
+   levels:read(path.join(data,'levels.json'),name=>{
+    const parsed=JSON.parse(fs.readFileSync(name,'utf8'));
+    return Array.isArray(parsed)?parsed:[];
+   },[]),
    csv3:tail(fsCsv('3m'),30000),
    csv15:tail(fsCsv('15m'),30000),
    csv4:tail(fsCsv('4h'),100000)});
 }
-module.exports={build,parseMcbConfirmed,confirmed4h,rangeZone,createReader};
+module.exports={build,parseMcbConfirmed,confirmed4h,rangeZone,recordedRanges,createReader};

@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T11:51:09.929885+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Pont boono-tv redémarré seul, assets OVH/lecteur mobile HTTP 200 version 003, moteurs PAPER inchangés",
+  "evidence": "PM2 Amsterdam, HTTP 3091/3092, validation utilisateur ouverte",
+  "previousEventSha256": "b6432b43c2be2401b2e7777ca3fb1994d206416c561cb598de3f09f87f754355"
+}

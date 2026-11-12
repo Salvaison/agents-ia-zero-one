@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-003",
+  "title": "BOONO-TV cinq rubriques typographie utilisateur TV02 et ranges",
+  "createdAtUtc": "2026-11-12T11:51:09.929885+00:00",
+  "authorization": "Propriétaire : aucune mise à jour typographique visible malgré PDF",
+  "reference": "etat_vivant_typoTV02(1).pdf deux pages jointes au chat",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "d2ad21df35271cc541594e6772c784b41aec560cdcb93f243b11f7d4041127f0",
+      "bytes": 558
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8a0a0fcab256d6136c53dbcd15be436ae4293a973d00ed2c0c600566e1f1d955",
+      "bytes": 1276
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0b544c7dcc2925bbc2ee17090f39339ec63e4ec1f24a0950c96fbeb5e5befa0f",
+      "bytes": 1244
+    }
+  }
+}

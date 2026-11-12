@@ -93,100 +93,150 @@
     '<span class="tv-event"><b>'+clean(label)+'</b> '+clean(time(e?.observedAt))+'</span>').join(' <span class="tv-arrow">→</span> ');}
  function renderHtml(v){
    if(v?.status!=='DATA_RECENT'){
-     return '<section class="tv-state-block"><div class="tv-block-title"><strong>ÉTAT VIVANT · OBSERVATION</strong></div>'+
-      '<p class="tv-state-unavailable">Source V5.4.3 périmée ou non reçue. Aucune ancienne trajectoire, position ou preuve ne sera présentée comme actuelle.</p></section>';
+     return '<section class="tv-state-block tv-state-unavailable-block">'+
+      tag('!','ÉTAT VIVANT · OBSERVATION','')+
+      '<div class="tv-state-unavailable">Source V5.4.3 périmée ou non reçue. '+
+      'Aucune ancienne trajectoire, position ou preuve ne sera présentée comme actuelle.</div>'+
+      '</section>';
    }
    const a=v.trajectory||{},b=v.tactical||{},p=v.place||{},
-         c=v.causal||{},s=v.structure||{},o=v.offensive||{},pos=v.position||null;
-   const phase=s.phase||'—';
-   const alignment=b.alignment==='ALIGNED'?'Alignement confirmé':
-     b.alignment==='TACTICAL_OPPOSES_15M'?'Tactique opposée au directeur':'Alignement indéterminé';
-   const rank=num(s.priceRangeRank);
-   const placeLabel=[p.candidate?
-      '<b class="tv-direction tv-'+polarity(p.candidate)+'">'+
-        clean(String(p.candidate).toUpperCase())+'</b>':null,
-     p.extended?'ÉTENDU':null,p.rangeZone?clean(p.rangeZone):null].filter(Boolean).join(' · ');
-   const hh=p.h4||{};
-   const h4=hh.status==='CONFIRMED'?
-      '<div class="tv-reading"><b>4h</b> '+indicator('BW4')+' '+pair(hh.bw,{past:'previous',next:'confirmed'})+
-      '　 '+indicator('LBW4')+' '+pair(hh.lbw,{past:'previous',next:'confirmed'})+
-      '<span class="tv-time"> source '+clean(time(hh.sourceAt))+' · connu '+clean(time(hh.availableAt))+'</span></div>'+
-      '<div class="tv-reading">'+indicator('E4 confirmé')+' '+
-      (hh.event?
-       signal(hh.event.direction)+
-       ' · source '+clean(time(hh.event.sourceAt))+' · connu '+clean(time(hh.event.availableAt))+
-       ' · '+indicator('LBW4')+' '+clean(fmt(hh.event.lbw,1,true)):'— · aucun événement dans la fenêtre')+
-       '</div>':
-      '<div class="tv-reading"><b>4h</b> — · bougies confirmées indisponibles</div>';
-   const positionHtml=pos?
-     '<div class="tv-position"><b>POSITION <span class="tv-direction tv-'+polarity(pos.direction)+'">'+
-      clean(String(pos.direction).toUpperCase())+'</span></b> · entrée '+
-      clean(fmt(pos.entryPrice))+' $ · '+clean(time(pos.entryAt))+
-      ' · P&L net potentiel '+signed(pos.potentialNetPnlUsd)+' $</div>'+
-     '<div class="tv-reading tv-position-metrics">MFE '+clean(fmt(pos.mfePriceUsd))+
-      ' $ BTC · MAE '+clean(fmt(pos.maePriceUsd))+' $ · floor '+
-      (pos.floorAdvisory?'indicatif non-exécutoire':'ancien exécutoire')+' '+
-      clean(fmt(pos.gainFloorUsd))+' $ BTC · invalidation '+clean(fmt(pos.invalidationPrice))+' $</div>':
-     '<div class="tv-position"><b>POSITION</b> FLAT · aucune position PAPER ouverte</div>';
+     c=v.causal||{},s=v.structure||{},o=v.offensive||{},pos=v.position||null;
+   const phase=s.phase||b.phase||'—',m15=a.ma15||{},m3=b.ma3||{},
+     rank=num(s.priceRangeRank);
+   const count=x=>num(x)===null?'—':clean(String(x));
+   // Direction color describes candidate direction; a CREUX LBW is not a
+   // confirmed reversal of the multi-day BTC price trend.
+   const dirPiv='<b class="tv-pivot" title="État natif MCB15 : '+
+     clean(a.strategicState||'—')+'">'+clean(pivotName(a.strategicState))+'</b>';
+   const phaseText=phaseBadge(b.phase,
+     ['STRUCTURAL_REVERSAL_FORMING','TACTICAL_RESPIRATION'].includes(b.phase)?
+      p.candidate:a.director);
+   const maRow=(tf,ma)=>indicator('MA'+tf)+' distance '+signed(ma?.distanceUsd)+
+     ' $ · '+clean(ma?.state||'—')+' · '+count(ma?.retests)+' retests · '+
+     count(ma?.confirmedContactBars)+' bougies contact';
+   const crossShort=(tf,item)=>{
+     if(!item?.observedAt)return '<div class="tv-reading">'+indicator('Cross'+tf)+
+       ' — · événement indisponible</div>';
+     const age=num(item.ageMinutes),since=num(item.deltaSinceEvent);
+     return '<div class="tv-reading"><b>'+indicator('Cross'+tf)+' '+
+       signal(item.direction)+'</b> · '+indicator('LBW')+' '+
+       clean(fmt(item.oscillatorAtEvent?.lbw))+' · '+clean(time(item.observedAt))+
+       ' · Since '+(age===null?'—':Math.floor(Math.max(0,age))+'min')+
+       ' '+signed(since)+' $</div>';
+   };
+   const rangeRow=(r,name)=>{
+     if(!r)return '<div class="tv-reading tv-range">'+indicator(name)+
+       ' · triplet VAL/POC/VAH non enregistré</div>';
+     const zone=String(r.zone||'—');
+     // BELOW_VAL is a geometric fact, not defended territorial LOSS.
+     const status=zone==='BELOW_VAL'?'SOUS VAL':
+       zone==='ABOVE_VAH'?'AU-DESSUS VAH':zone==='ABOVE_POC'?'ABOVE POC':
+       zone==='BELOW_POC'?'BELOW POC':'AU POC';
+     const pct=zone==='ABOVE_POC'||zone==='BELOW_POC'||zone==='AT_POC'?
+       r.fairValuePct:r.positionPct;
+     const ref=name==='DailyRange'?'VAL':'VAH';
+     const dist=name==='DailyRange'?r.distanceFromValUsd:r.distanceFromVahUsd;
+     const tone=zone==='BELOW_VAL'?'down':zone==='ABOVE_VAH'?'up':
+       zone==='ABOVE_POC'?'up':zone==='BELOW_POC'?'down':'neutral';
+     return '<div class="tv-reading tv-range">'+indicator(name)+
+       ' <span class="tv-range-bounds">VAH → VAL</span> · '+
+       '<b class="tv-direction tv-'+tone+'">'+clean(status)+'</b> '+
+       signed(pct,1)+' % · depuis '+clean(ref)+' '+signed(dist)+' $</div>';
+   };
+   const h4=p.h4||{};
+   const h4Row=h4.status==='CONFIRMED'?
+     '<div class="tv-reading"><b>4h</b> '+indicator('BW4')+' '+
+       pair(h4.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW4')+
+       ' '+pair(h4.lbw,{past:'previous',next:'confirmed'})+
+       ' · '+indicator('E4 Live')+' —</div>'+
+     '<div class="tv-reading">'+indicator('E4 confirmé')+' '+
+       (h4.event?signal(h4.event.direction)+' · '+clean(time(h4.event.availableAt))+
+        ' · '+indicator('LBW4')+' '+signed(h4.event.lbw):
+        '— · aucun signal confirmé documenté')+'</div>':
+     '<div class="tv-reading"><b>4h</b> — · données confirmées indisponibles</div>';
+   const locationHead=(pos?.direction?
+       '<b class="tv-direction tv-'+polarity(pos.direction)+'">'+
+         clean(String(pos.direction).toUpperCase())+'</b>':p.candidate?
+       '<b class="tv-direction tv-'+polarity(p.candidate)+'">'+
+         clean(String(p.candidate).toUpperCase())+'</b>':'—')+
+     (b.phase==='AWAIT_TACTICAL_ALIGNMENT'&&p.candidate?
+       ' · ATTENTE '+signal(p.candidate):'')+
+     (p.recordedRanges?.daily?.zone==='BELOW_VAL'?' · SOUS VAL DAILY':'');
+   const posHeadline=pos?
+      'POSITION '+signal(pos.direction):'POSITION · FLAT';
+   const positionRows=pos?
+     '<div class="tv-reading"><b>entrée</b> '+clean(fmt(pos.entryPrice))+' $ · '+
+       clean(time(pos.entryAt))+' · <b>P&L net potentiel</b> '+
+       signed(pos.potentialNetPnlUsd)+' $</div>'+
+     '<div class="tv-reading tv-position-metrics">'+
+       indicator('MFE')+' '+clean(fmt(pos.mfePriceUsd))+' $ BTC · '+
+       indicator('MAE')+' '+clean(fmt(pos.maePriceUsd))+' $ · floor '+
+       (pos.floorAdvisory?'indicatif non-exécutoire':'ancienne protection')+' '+
+       clean(fmt(pos.gainFloorUsd))+' $ · invalidation '+
+       clean(fmt(pos.invalidationPrice))+' $</div>':
+     '<div class="tv-reading">Aucune position PAPER ouverte</div>';
    return [
-     '<section class="tv-state-block tv-trajectory">'+
-       tag('1','Trajectoire','<b class="tv-pivot" title="État natif MCB15 : '+
-         clean(a.strategicState||'—')+'">'+clean(pivotName(a.strategicState))+
-         '</b> · biais MCB '+signal(a.director)+' · offensive '+signal(a.offensive))+
-       '<div class="tv-reading"><b>MCB15 · DIRECTEUR</b> '+indicator('BW')+' '+pair(a.bw)+
-         '　'+indicator('LBW')+' '+pair(a.lbw)+'</div>'+
-       eventLine('15',a.cross)+
+     '<section class="tv-state-block tv-mcb15">'+
+       tag('1','MCB15 · DIRECTEUR',dirPiv+' · offensive '+signal(a.offensive))+
+       '<div class="tv-reading">'+indicator('BW')+' '+pair(a.bw)+
+          '　'+indicator('LBW')+' '+pair(a.lbw)+'</div>'+
+       crossShort('15',a.cross)+
        '<div class="tv-reading">'+indicator('MF15')+' '+pair(a.mf)+
-        ' · flow '+clean(fmt(a.flowBtcPerSec,2))+' BTC/s'+
-        ' · '+indicator('MF15 pente')+' '+signed(a.mf15Slope,2)+
-        ' · '+indicator('MF15 Live')+' <b class="tv-current tv-'+
-          slopeStyle(a.mf?.confirmed,a.mf15Live)+'">'+clean(fmt(a.mf15Live,2,true))+'</b></div>'+
+         ' · flow '+clean(fmt(a.flowBtcPerSec,2))+' BTC/s · '+
+         indicator('MF15 pente')+' '+signed(a.mf15Slope,2)+
+         ' · '+indicator('MF15 Live')+' '+signed(a.mf15Live,2)+
+         ' · '+maRow('15',m15)+'</div>'+
        '</section>',
-     '<section class="tv-state-block tv-tactical">'+
-       tag('2','Tactique',phaseBadge(b.phase,
-         ['STRUCTURAL_REVERSAL_FORMING','TACTICAL_RESPIRATION'].includes(b.phase)?p.candidate:a.director)+
-         ' · '+clean(alignment))+
-       '<div class="tv-reading"><b>MCB3 · TACTIQUE</b> '+indicator('BW')+' '+pair(b.bw)+
-        '　'+indicator('LBW')+' '+pair(b.lbw)+'</div>'+
-       eventLine('3',b.cross)+
+     '<section class="tv-state-block tv-mcb3">'+
+       tag('2','MCB3 · TACTIQUE',phaseText)+
+       '<div class="tv-reading">'+indicator('BW')+' '+pair(b.bw)+
+         '　'+indicator('LBW')+' '+pair(b.lbw)+'</div>'+
+       crossShort('3',b.cross)+
        '<div class="tv-reading">'+indicator('MF3')+' '+pair(b.mf)+
-        ' · '+indicator('MA3')+' distance '+signed(b.ma3?.distanceUsd)+' $ · '+
-        clean(b.ma3?.state||'—')+' · '+
-        (num(b.ma3?.retests)===null?'—':clean(String(b.ma3.retests)))+
-        ' retests · '+(num(b.ma3?.confirmedContactBars)===null?'—':clean(String(b.ma3.confirmedContactBars)))+
-        ' bougies contact</div>'+
+        ' · '+maRow('3',m3)+'</div>'+
        '</section>',
      '<section class="tv-state-block tv-place">'+
-       tag('3','Lieu','<b>'+placeLabel+'</b>')+h4+
+       tag('3','LIEU STRUCTUREL',locationHead)+
+       h4Row+
+       rangeRow(p.recordedRanges?.daily,'DailyRange')+
+       rangeRow(p.recordedRanges?.big,'BigRange')+
        '</section>',
      '<section class="tv-state-block tv-causal">'+
-       tag('4','CHAÎNE CAUSALE · observation','')+
-       '<div class="tv-causal-chain tv-evidence"><b>'+indicator('PM Live')+
-        ' '+signed(c.pmLiveUsd)+' $</b> · '+
-        lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],['E3 confirmé',c.e3Confirmed],
-         ['Cross15',c.cross15],['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
-       evidence('PHASE STRUCTURELLE',phaseBadge(phase,
-          ['STRUCTURAL_REVERSAL_FORMING','TACTICAL_RESPIRATION'].includes(phase)?p.candidate:a.director)+
+       tag('4','CHAÎNE CAUSALE','OBSERVATION')+
+       '<div class="tv-reading">'+indicator('PM Live')+' '+
+         signed(c.pmLiveUsd)+' $ · '+
+         lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],
+          ['E3 confirmé',c.e3Confirmed],['Cross15',c.cross15],
+          ['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
+       '<div class="tv-reading tv-structural-phase"><b>PHASE STRUCTURELLE</b> '+
+         phaseBadge(phase,['STRUCTURAL_REVERSAL_FORMING',
+          'TACTICAL_RESPIRATION'].includes(phase)?p.candidate:a.director)+
          ' · campagne '+clean(s.campaignId||'—')+
-        ' · maturité rang2h '+clean(fmt(rank,1))+
-        ' · '+indicator('MF15 sur 2h')+' '+signed(s.mf15History2h)+
-        ' · maturité extension '+(s.matureAfterExtension?'AVANCÉE':'mesurée'),'tv-phase')+
-       positionHtml+
-       evidence('MATURITÉ OFFENSIVE',clean(o.classification||'—')+
+         ' · maturité rang2h '+clean(fmt(rank,1))+
+         ' · '+indicator('MF15 sur 2h')+' '+signed(s.mf15History2h)+
+         ' · maturité extension '+(s.matureAfterExtension?'AVANCÉE':'mesurée')+
+         '</div></section>',
+     '<section class="tv-state-block tv-position-block">'+
+       tag('5','POSITION',pos?signal(pos.direction):'FLAT')+
+       positionRows+
+       '<div class="tv-reading tv-offensive"><b>MATURITÉ OFFENSIVE</b> '+
+         clean(o.classification||'—')+
          ' · début prix 4h '+clean(time(o.priceOrigin4hAt))+
-         ' · progression '+clean(fmt(o.progress4hUsd,1))+
+         ' · progression '+clean(fmt(o.progress4hUsd))+
          ' $ BTC · bord 2h '+(o.atPrice2hEdge?'oui':'non')+
-         ' · LBW15/prix '+(o.oppositeDivergenceForming?'divergence opposée en formation':'pas de preuve opposée')+
-         ' · '+indicator('PM marginal')+' '+(o.conversionFatigue?'s’essouffle':'non invalidé'),'tv-offensive')+
-       '</section>'
+         ' · '+indicator('LBW15/prix')+' '+
+         (o.oppositeDivergenceForming?'divergence opposée en formation':'pas de preuve opposée')+
+         ' · '+indicator('PM marginal')+' '+
+         (o.conversionFatigue?'s’essouffle':'non invalidé')+
+       '</div></section>'
    ].join('');
  }
  function render(snapshot){
    const root=Q('#stateRows');if(!root)return;
-   root.classList.add('tv-four');
+   root.classList.remove('tv-four');root.classList.add('tv-five');
    root.innerHTML=renderHtml(snapshot?.tvLiving);
    root.dataset.tvSource=String(snapshot?.tvLiving?.status||'NO_SOURCE');
-   root.setAttribute('aria-label','État vivant : Trajectoire, Tactique, Lieu, Chaîne causale');
+   root.setAttribute('aria-label','État vivant : MCB15, MCB3, Lieu structurel, Chaîne causale et Position');
  }
  window.BoonoTVLivingState={render,renderHtml};
 })();

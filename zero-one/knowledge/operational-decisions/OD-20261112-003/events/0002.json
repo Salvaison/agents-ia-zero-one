@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T11:51:09.929885+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Pont TV MA15 et ranges en lecture seule, cinq rubriques sur fond noir sans anciennes cartes, nouvelle version assets OVH",
+  "evidence": "boono-tv/tv-living-state.js et boono-tv/scene/tv-living-state.js/css",
+  "previousEventSha256": "f1017313dab6e23419c2c0630640df950b2203e1b61b0ebdd4e4895a78b587f9"
+}

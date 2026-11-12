@@ -1,0 +1,4 @@
+Utilisateur : « Voila, j'ai refait la typo, réordonné, rajouté qqe data... »
+Fichier de référence : etat_vivant_typoTV02(1).pdf, 2 pages, joint à la conversation du 12 novembre 2026.
+Utilisateur : « Mais je ne vois aucune mises à jour de la typo? »
+Le PDF contient les cinq rubriques MCB15 DIRECTEUR, MCB3 TACTIQUE, LIEU STRUCTUREL, CHAÎNE CAUSALE, POSITION et la suite MATURITÉ OFFENSIVE en page 2, une typographie cyan/blanc/rouge/vert sur fond noir, ainsi que MA15, DailyRange et BigRange. Le PDF reste joint au chat, non republié dans Git.

@@ -94,3 +94,35 @@ test('read cached real datasets without requiring 3MB Audit parsing per 5sec',()
   assert.equal(x.place.h4.status,'CONFIRMED');
  }
 });
+
+test('Two user-registered ranges stay independent and calculate from the same V5 price',()=>{
+ const m=state;
+ const levels=[
+  {groupId:4,token:'VAL',label:'VAL daily',price:81289},
+  {groupId:4,token:'POC',label:'POC daily',price:83861},
+  {groupId:4,token:'VAH',label:'VAH daily',price:84861},
+  {groupId:8,token:'VAL',label:'VAL big',price:61259},
+  {groupId:8,token:'POC',label:'POC big',price:63998},
+  {groupId:8,token:'VAH',label:'VAH big',price:78125}
+ ];
+ const px=73487.8,r=m.recordedRanges(levels,px);
+ assert.equal(r.daily.zone,'BELOW_VAL');
+ assert.equal(r.big.zone,'ABOVE_POC');
+ assert.equal(r.daily.distanceFromValUsd,-7801.2);
+ assert.equal(r.big.distanceFromVahUsd,-4637.2);
+ assert.equal(r.big.fairValuePct,67.2);
+ assert.equal(r.big.positionPct,72.5);
+ assert.equal(r.daily.classificationProof,'GEOMETRY_ONLY_NO_TERRITORY_DEFENCE');
+ assert.equal(r.daily.positionPct,-218.4);
+ assert.equal(m.recordedRanges(levels.filter(x=>x.groupId!==8),px).big,null);
+});
+test('MA15 context is taken from V5 MA contract, not invented from MA3',()=>{
+ const p=paper();
+ p.latestAnalysis.readings.maContract.ma15={
+  state:'OPPOSITE_SIDE',distanceUsd:-457.7,confirmedContactBars:null,
+  polarityMemory:{retestsSinceChange:2}};
+ const r=state.build({paper:p,now:T});
+ assert.equal(r.trajectory.ma15.distanceUsd,-457.7);
+ assert.equal(r.trajectory.ma15.retests,2);
+ assert.equal(r.trajectory.ma15.confirmedContactBars,null);
+});
