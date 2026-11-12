@@ -1,0 +1,9 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-11-12T14:55:52.002976+00:00",
+  "status": "VALIDE_PAR_UTILISATEUR",
+  "description": "Le propriétaire confirme « Trés bien Validé » la ligne CONVERSION (PM3/PM5/PMLive), la qualification de marché à six catégories en SHADOW et sa disposition dans l État vivant BOONO-TV.",
+  "evidence": "Message utilisateur dans cette conversation, après la livraison 3bdf5ad du 12 novembre 2026.",
+  "scope": "Validation de la présentation et de sa mise en service privée ; ne valide pas statistiquement les six catégories ni ne leur attribue une autorité de trading.",
+  "previousEventSha256": "c9fcbbc6d5c848eae1230fa36a88af7eba180146e5de4692515d3a890d7af677"
+}

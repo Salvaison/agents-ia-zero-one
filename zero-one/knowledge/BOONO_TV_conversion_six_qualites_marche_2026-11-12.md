@@ -39,3 +39,9 @@ Le nouveau `boono-tv/market-quality-six.js` exploite la **dernière heure glissa
 - La scène OVH en service utilise le cache-bust `OD20261112-008` dans `scene/index.html` pour JS/CSS. Patch exact du runtime OVH préservé dans `knowledge/BOONO_TV_conversion_six_qualites_marche_OVH_2026-11-12.patch`. Aucune retouche du loft, des personnages, éditeurs, perspectives, autres projections, moteurs PAPER, ni de la rotation 25/15/5.
 - **Tests** : 40 tests Node passés, dont les six combinaisons, limites de seuil, ignorance des sources futures, interruptions de mesure, qualité absente, contradiction PM3/PM5 et accès strictement SHADOW. Le relais OVH a été vérifié sur les valeurs V5 réelles. L'aperçu de contrôle Chrome headless 1920×1080 a d'abord révélé un débordement de 10 puis 5 px de la rubrique 4 ; un compactage limité à cette zone a permis de mesurer **cinq portions de 180 px, sans aucun débordement**.
 - Les assets statiques OVH sont disponibles sur le serveur studio 3091 et le lecteur mobile 3092. La validation visuelle finale dans la scène complète appartient toujours au propriétaire.
+
+## 6. Validation du propriétaire
+
+**VALIDÉ PAR LE PROPRIÉTAIRE** — réponse explicite « Trés bien Validé » après livraison de la rubrique CONVERSION et des six catégories de marché sur BOONO-TV. Confirmation ajoutée dans le registre append-only `knowledge/operational-decisions/OD-20261112-008/events/0005.json`, sans modifier les preuves antérieures.
+
+La validation concerne la **présentation, les informations affichées et leur mise en service privée**, et non une validation hors échantillon du classificateur expérimental SHADOW. La séparation avec les moteurs PAPER reste inchangée.
