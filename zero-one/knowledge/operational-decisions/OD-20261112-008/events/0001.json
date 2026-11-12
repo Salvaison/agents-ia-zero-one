@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T14:44:20.046486+00:00",
+  "status": "AUTORISE",
+  "description": "Insérer ligne trois PM après chaîne causale et six qualités de marché après CONTESTED",
+  "evidence": "Deux requêtes intégrales du propriétaire",
+  "previousEventSha256": null
+}

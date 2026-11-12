@@ -1,0 +1,115 @@
+--- a/scene/tv-living-state.js
++++ b/scene/tv-living-state.js
+@@ -109,6 +109,32 @@
+      c=v.causal||{},s=v.structure||{},o=v.offensive||{},pos=v.position||null;
+    const phase=s.phase||b.phase||'—',m15=a.ma15||{},m3=b.ma3||{},
+      rank=num(s.priceRangeRank);
++   const conversion=c.conversion||{},marketGrade=conversion.marketQualitySix||{};
++   // Six research regimes: LOW/MEDIUM/HIGH flow × PRODUCTIF/IMPRODUCTIF.
++   // This is separate from PM3/PM5 directional CONTESTED and always SHADOW.
++   const marketValid=marketGrade.status==='EXPLORATORY'&&
++     marketGrade.mode==='SHADOW_ONLY'&&
++     marketGrade.decisionImpact===false&&
++     marketGrade.brokerOrdersEnabled===false;
++   const marketTone=marketValid?
++     (marketGrade.productivity==='PRODUCTIF'?'up':'down'):'neutral';
++   const marketText=marketValid?marketGrade.label:'—';
++   const marketTip=marketValid?'BOONOLAB SHADOW · 1h glissante · débit médian '+
++     fmt(marketGrade.medianFlowBtcPerSecond,4)+' BTC/s · efficacité '+
++     fmt(num(marketGrade.efficiency)===null?null:100*marketGrade.efficiency,1)+
++     '% · rétention '+fmt(num(marketGrade.retention)===null?null:100*marketGrade.retention,1)+
++     '% · seuils expérimentaux, aucune autorité de trading':
++     'Qualité marché six classes indisponible : couverture Audit ou calibration absente';
++   const conversionLine='<div class="tv-reading tv-conversion-line" title="'+clean(marketTip)+'">'+
++     '<span class="tv-conversion-metrics"><b>CONVERSION :</b> '+
++     indicator('PM3')+' '+signed(conversion.pm3)+
++     ' · '+indicator('PM5')+' '+signed(conversion.pm5)+
++     ' · '+indicator('PMLive')+' '+signed(conversion.pmLive)+' :</span>'+
++     '<span class="tv-conversion-qualities"><b class="tv-quality-flag">'+
++     clean(conversion.quality||'—')+'</b>'+
++     ' · <span class="tv-market-caption">marché</span> '+
++     '<b class="tv-market-grade tv-'+marketTone+'">'+clean(marketText)+'</b>'+
++     ' <span class="tv-research-source">SHADOW</span></span></div>';
+    const count=x=>num(x)===null?'—':clean(String(x));
+    // Direction color describes candidate direction; a CREUX LBW is not a
+    // confirmed reversal of the multi-day BTC price trend.
+@@ -226,6 +252,7 @@
+          lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],
+           ['E3 confirmé',c.e3Confirmed],['Cross15',c.cross15],
+           ['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
++       conversionLine+
+        '<div class="tv-reading tv-structural-phase"><b>PHASE STRUCTURELLE</b> '+
+          phaseBadge(phase,['STRUCTURAL_REVERSAL_FORMING',
+           'TACTICAL_RESPIRATION'].includes(phase)?p.candidate:a.director)+
+
+--- a/scene/tv-living-state.css
++++ b/scene/tv-living-state.css
+@@ -239,3 +239,47 @@
+ #statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-neutral{
+  color:#e4eff2;font-weight:850
+ }
++
++
++/* OD-20261112-008: compact conversion line between causal events and phase.
++   Market six-grade = 3x flow intensity x productiveness SHADOW, not PM clash. */
++#statePanel .tv-five .tv-causal .tv-conversion-line{
++ margin:2px 0 2px;padding:2px 0;border-top:1px solid rgba(117,175,186,.25);
++ font-size:13px;line-height:1.23
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-metrics,
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-qualities{
++ display:block
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-metrics>b:first-child{
++ color:#f8fcff;font-weight:950
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-quality-flag{
++ color:#f1c981;font-weight:925
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-market-caption{
++ color:#e1edf2;font-weight:800
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-up{
++ color:#39f3a4;font-weight:950
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-down{
++ color:#ff6178;font-weight:950
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-neutral{
++ color:#bdcbd3;font-weight:850
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line .tv-research-source{
++ color:#9cb5bf;font-size:11px;font-weight:780
++}
++
++/* Fit the full observation + conversion + phase within the fixed 180px slot. */
++#statePanel .tv-five .tv-causal .tv-reading{
++ line-height:1.27
++}
++#statePanel .tv-five .tv-causal .tv-conversion-line{
++ margin:1px 0;padding:1px 0;line-height:1.22
++}
++#statePanel .tv-five .tv-causal .tv-structural-phase{
++ margin-top:2px;padding-top:2px
++}
+
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-006">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-008">
+ </head>
+ <body>
+ <main id="scene">
+@@ -113,7 +113,7 @@
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+ <script src="/chart-views.js?v=OD20261112-005"></script>
+-<script src="/tv-living-state.js?v=OD20261112-007"></script>
++<script src="/tv-living-state.js?v=OD20261112-008"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+ <script src="/radio-preview.js"></script>

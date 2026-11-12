@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T14:44:20.046486+00:00",
+  "status": "TESTE",
+  "description": "40 tests Node, six classes intensité×rétention, sources manquantes, PM contradictoires, protection stale, Chrome cinq zones fixes sans débordement",
+  "evidence": "tests/boono-tv-market-quality-six-20261112.test.js, tests/boono-tv-conversion-six-ui-20261112.test.js",
+  "previousEventSha256": "b52d378fdbf998d8347105b2f1ec01dae5ed19b0d2e37aa734bf246cb072e998"
+}

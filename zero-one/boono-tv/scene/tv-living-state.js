@@ -109,6 +109,32 @@
      c=v.causal||{},s=v.structure||{},o=v.offensive||{},pos=v.position||null;
    const phase=s.phase||b.phase||'—',m15=a.ma15||{},m3=b.ma3||{},
      rank=num(s.priceRangeRank);
+   const conversion=c.conversion||{},marketGrade=conversion.marketQualitySix||{};
+   // Six research regimes: LOW/MEDIUM/HIGH flow × PRODUCTIF/IMPRODUCTIF.
+   // This is separate from PM3/PM5 directional CONTESTED and always SHADOW.
+   const marketValid=marketGrade.status==='EXPLORATORY'&&
+     marketGrade.mode==='SHADOW_ONLY'&&
+     marketGrade.decisionImpact===false&&
+     marketGrade.brokerOrdersEnabled===false;
+   const marketTone=marketValid?
+     (marketGrade.productivity==='PRODUCTIF'?'up':'down'):'neutral';
+   const marketText=marketValid?marketGrade.label:'—';
+   const marketTip=marketValid?'BOONOLAB SHADOW · 1h glissante · débit médian '+
+     fmt(marketGrade.medianFlowBtcPerSecond,4)+' BTC/s · efficacité '+
+     fmt(num(marketGrade.efficiency)===null?null:100*marketGrade.efficiency,1)+
+     '% · rétention '+fmt(num(marketGrade.retention)===null?null:100*marketGrade.retention,1)+
+     '% · seuils expérimentaux, aucune autorité de trading':
+     'Qualité marché six classes indisponible : couverture Audit ou calibration absente';
+   const conversionLine='<div class="tv-reading tv-conversion-line" title="'+clean(marketTip)+'">'+
+     '<span class="tv-conversion-metrics"><b>CONVERSION :</b> '+
+     indicator('PM3')+' '+signed(conversion.pm3)+
+     ' · '+indicator('PM5')+' '+signed(conversion.pm5)+
+     ' · '+indicator('PMLive')+' '+signed(conversion.pmLive)+' :</span>'+
+     '<span class="tv-conversion-qualities"><b class="tv-quality-flag">'+
+     clean(conversion.quality||'—')+'</b>'+
+     ' · <span class="tv-market-caption">marché</span> '+
+     '<b class="tv-market-grade tv-'+marketTone+'">'+clean(marketText)+'</b>'+
+     ' <span class="tv-research-source">SHADOW</span></span></div>';
    const count=x=>num(x)===null?'—':clean(String(x));
    // Direction color describes candidate direction; a CREUX LBW is not a
    // confirmed reversal of the multi-day BTC price trend.
@@ -226,6 +252,7 @@
          lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],
           ['E3 confirmé',c.e3Confirmed],['Cross15',c.cross15],
           ['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
+       conversionLine+
        '<div class="tv-reading tv-structural-phase"><b>PHASE STRUCTURELLE</b> '+
          phaseBadge(phase,['STRUCTURAL_REVERSAL_FORMING',
           'TACTICAL_RESPIRATION'].includes(phase)?p.candidate:a.director)+

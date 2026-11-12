@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T14:44:20.046486+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Pont PM2 boono-tv Amsterdam redémarré seul, assets JS/CSS OVH et mobile HTTP 200; moteurs PAPER inchangés, contrôle visuel utilisateur ouvert",
+  "evidence": "API boono-tv 3090 / proxy OVH 3091, Chrome headless",
+  "previousEventSha256": "d132e3825bb8cadb5acedf817b40b60dbc02bb97d2042cdd7b9a67153b0a3038"
+}

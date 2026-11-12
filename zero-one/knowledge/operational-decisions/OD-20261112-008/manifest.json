@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-008",
+  "title": "BOONO-TV ligne Conversion PM3 PM5 PMLive et six qualités marché BOONOLAB",
+  "createdAtUtc": "2026-11-12T14:44:20.046486+00:00",
+  "authorization": "Deux demandes successives utilisateur le 12 novembre 2026",
+  "reference": "BOONOLAB_PM3_PM5_PMLive_dissonance_regimes_2026-11-07.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6f32fc6b62abe9fbb4655a2dc4db230431e210a4c50a0e4a10d3039bc0f1bca6",
+      "bytes": 233
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "ff58170b24a5e554f52390c0078a64582af8c8150ff2136628ccfa24ffaddf30",
+      "bytes": 1498
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "860c3e4a9bc1ffc542918a5fa5215c9622c347084a51c310a765e8234f0d2b82",
+      "bytes": 1754
+    }
+  }
+}

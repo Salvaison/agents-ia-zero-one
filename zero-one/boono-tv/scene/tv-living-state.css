@@ -239,3 +239,47 @@
 #statePanel .tv-five .tv-causal .tv-event b.tv-event-label.tv-neutral{
  color:#e4eff2;font-weight:850
 }
+
+
+/* OD-20261112-008: compact conversion line between causal events and phase.
+   Market six-grade = 3x flow intensity x productiveness SHADOW, not PM clash. */
+#statePanel .tv-five .tv-causal .tv-conversion-line{
+ margin:2px 0 2px;padding:2px 0;border-top:1px solid rgba(117,175,186,.25);
+ font-size:13px;line-height:1.23
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-metrics,
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-qualities{
+ display:block
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-conversion-metrics>b:first-child{
+ color:#f8fcff;font-weight:950
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-quality-flag{
+ color:#f1c981;font-weight:925
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-market-caption{
+ color:#e1edf2;font-weight:800
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-up{
+ color:#39f3a4;font-weight:950
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-down{
+ color:#ff6178;font-weight:950
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line b.tv-market-grade.tv-neutral{
+ color:#bdcbd3;font-weight:850
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line .tv-research-source{
+ color:#9cb5bf;font-size:11px;font-weight:780
+}
+
+/* Fit the full observation + conversion + phase within the fixed 180px slot. */
+#statePanel .tv-five .tv-causal .tv-reading{
+ line-height:1.27
+}
+#statePanel .tv-five .tv-causal .tv-conversion-line{
+ margin:1px 0;padding:1px 0;line-height:1.22
+}
+#statePanel .tv-five .tv-causal .tv-structural-phase{
+ margin-top:2px;padding-top:2px
+}

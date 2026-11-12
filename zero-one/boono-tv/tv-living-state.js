@@ -10,6 +10,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const causalView=require('../modules/v5/v53-causal-chain-view');
+const sixMarketQuality=require('./market-quality-six');
 
 const TF_MS={3:180000,15:900000,60:3600000,240:14400000};
 const NULL_IF_MISSING=x=>x===null||x===undefined||x===''||
@@ -104,7 +105,7 @@ function recordedRanges(levels,price){
  }
  return out;
 }
-function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',levels=[],now=Date.now()}={}){
+function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',levels=[],marketSixCalibration=null,now=Date.now()}={}){
  const a=paper?.latestAnalysis||{},r=a.readings||{},s54=r.structural54||{};
  const asOf=NULL_IF_MISSING(a.asOf),age=asOf===null?Infinity:now-asOf;
  const valid=paper?.brokerOrdersEnabled===false&&
@@ -180,8 +181,20 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',level
   h4:confirmed4h(csv4,asOf),
   h1:confirmed1h(csv1,asOf)
  };
+ // V543 PM3/PM5 sign disagreement is separate from six historical
+ // market quality regimes (3 intensity bands x retained/non-retained price).
+ const pm3=NULL_IF_MISSING(c.pm3),pm5=NULL_IF_MISSING(c.pm5);
+ const pmConflict=pm3!==null&&pm5!==null&&pm3*pm5<0;
  output.causal={
   pmLiveUsd:round(c.pmCombined),
+  conversion:{
+   asOf,
+   pm3:round(pm3),pm5:round(pm5),pmLive:round(c.pmCombined),
+   quality:pmConflict?'CONTESTED':'UNCLASSIFIED',
+   qualitySource:pmConflict?'V543_PM3_PM5_DIRECTION_CONFLICT':
+     'V543_PM3_PM5_NOT_OPPOSED_NO_P75_CALIBRATION',
+   marketQualitySix:sixMarketQuality.evaluate(pastRows,asOf,marketSixCalibration)
+  },
   cross3:chain.tf3?.cross||null,
   e3Live:chain.tf3?.live||null,e3Confirmed:chain.tf3?.confirmed||null,
   cross15:chain.tf15?.cross||null,
@@ -263,6 +276,9 @@ function createReader({dataDir,mcDir}={}){
     const parsed=JSON.parse(fs.readFileSync(name,'utf8'));
     return Array.isArray(parsed)?parsed:[];
    },[]),
+   marketSixCalibration:read(path.resolve(__dirname,
+     '../knowledge/BOONOLAB_PM_dissonance_study_results_2026-11-07.json'),
+     name=>JSON.parse(fs.readFileSync(name,'utf8')),null),
    csv3:tail(fsCsv('3m'),30000),
    csv15:tail(fsCsv('15m'),30000),
    csv1:tail(fsCsv('1h'),30000),

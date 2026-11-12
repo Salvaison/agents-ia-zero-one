@@ -111,3 +111,7 @@ La surface de 900px consacrée aux cinq rubriques TV02 est désormais divisée e
 **Tests :** 29 tests Node cumulés réussis ; bougie ouverte 1h exclue, deux clôtures distinctes, absence de signal E1 Live inventé et ordre 4h / 1h / E4 / DailyRange / BigRange confirmé. En Chromium 1920×1080 sur CSS OVH réelle et snapshot V5 réel, cinq portions de 180 px sans débordement ni troncature après la nouvelle ligne.
 
 **Déploiement :** seul le pont PM2 boono-tv Amsterdam a été redémarré. Les moteurs PAPER 494 et 543, le config-server et le studio OVH restent inchangés. Sur OVH, seul scene/tv-living-state.js a été adapté, avec son cache-bust dans scene/index.html à OD20261112-007. Le patch runtime exact est archivé dans knowledge/BOONO_TV_MCB1h_Lieu_OVH_2026-11-12.patch. Aucun impact sur la rotation 25/15/5 ou la géométrie TV02.
+
+## 12 novembre — Conversion PM3/PM5/PMLive et six qualités de marché
+
+Dans la quatrième rubrique, une ligne CONVERSION comporte maintenant PM3, PM5 et PMLive V5.4.3, leur opposition éventuelle CONTESTED, puis le marché classé selon les six qualités **FAIBLE/MÉDIAN/FORT × PRODUCTIF/IMPRODUCTIF** de l'étude BOONOLAB du 7 novembre. Cette qualification utilise l'AUDIT d'une heure glissante et les seuils historiques expérimentaux, **sans impact décisionnel**. Le rendu garde deux lignes compactes entre la chaîne E3/E15 et la phase structurelle pour respecter les cinq sections fixes de 180px. La passation complète est dans knowledge/BOONO_TV_conversion_six_qualites_marche_2026-11-12.md et le registre OD-20261112-008.
