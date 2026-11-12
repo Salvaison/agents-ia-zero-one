@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T12:05:14.227601+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "CSS statique OVH et lecteur mobile disponible avec cache-bust, pas de redémarrage moteur, validation utilisateur ouverte",
+  "evidence": "HTTP OVH 3091/3092, code CSS synchronisé OVH/Amsterdam",
+  "previousEventSha256": "41a90d5a1781144777c0f095c211a35ec2c17d1a32165db1c4ffec21dd570580"
+}

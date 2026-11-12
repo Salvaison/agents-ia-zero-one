@@ -1,0 +1,11 @@
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-003">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-004">
+ </head>
+ <body>
+ <main id="scene">

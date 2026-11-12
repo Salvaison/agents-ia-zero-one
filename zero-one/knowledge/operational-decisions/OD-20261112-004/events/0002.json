@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T12:05:14.227601+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Cinq bandeaux #24404b, textes titres et indicateurs blancs, valeur courante rouge/verte préservée, CSS version 004 sur OVH",
+  "evidence": "boono-tv/scene/tv-living-state.css, patch OVH index",
+  "previousEventSha256": "0d6e6b1e24b62c4dcb1c2f87be20b7d3e5da3b095464d8470d8a83448f76a5c3"
+}

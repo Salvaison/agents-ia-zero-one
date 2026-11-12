@@ -153,13 +153,16 @@
 #statePanel .tv-five .tv-state-block:last-child{border-bottom:0}
 #statePanel .tv-five .tv-block-title{
  display:flex;align-items:baseline;flex-wrap:wrap;
- gap:5px;margin:0 0 5px;padding:0;
- border:0;font:900 18.5px/1.2 ui-monospace,Menlo,Consolas,monospace;
- letter-spacing:-.2px;color:#f6fcff;
+ gap:6px;margin:0 0 6px;padding:6px 8px 5px;
+ border:1px solid rgba(137,184,197,.24);
+ border-left:3px solid #799eaa;
+ border-radius:3px;background:#24404b;
+ font:900 18.5px/1.2 ui-monospace,Menlo,Consolas,monospace;
+ letter-spacing:-.2px;color:#f8fcff;
 }
 #statePanel .tv-five .tv-block-title>strong{
  font:950 19.5px/1.2 ui-monospace,Menlo,Consolas,monospace;
- color:#4cddfa;letter-spacing:-.2px;
+ color:#f8fcff;letter-spacing:-.2px;
 }
 #statePanel .tv-five .tv-block-title>span{
  font:800 13.8px/1.32 ui-monospace,Menlo,Consolas,monospace;
@@ -177,7 +180,7 @@
  letter-spacing:-.16px;color:#e9f0f3;
 }
 #statePanel .tv-five .tv-reading>b{color:#f6fbfe;font-weight:920}
-#statePanel .tv-five .tv-indicator{color:#4bdbf6;font-weight:900}
+#statePanel .tv-five .tv-indicator{color:#f8fcff;font-weight:900;text-shadow:none}
 #statePanel .tv-five .tv-time,
 #statePanel .tv-five .tv-prior{color:#9facb5;font-weight:700}
 #statePanel .tv-five .tv-range{font-size:14.6px;line-height:1.34}
@@ -209,3 +212,14 @@
 #statePanel.trades-active .state-rows.tv-five{
  visibility:hidden;pointer-events:none;
 }
+
+
+/* TV02: all label denominators white, even within embedded proof sections. */
+#statePanel .tv-five .tv-causal .tv-evidence .tv-indicator,
+#statePanel .tv-five .tv-position .tv-indicator{color:#f8fcff;text-shadow:none}
+
+/* BW/LBW/MF current <b> values must outrank the general white text rule. */
+#statePanel .tv-five .tv-reading > b.tv-current.tv-up{color:#39f3a4}
+#statePanel .tv-five .tv-reading > b.tv-current.tv-down{color:#ff6178}
+#statePanel .tv-five .tv-reading > b.tv-current.tv-neutral{color:#f3faff}
+#statePanel .tv-five .tv-reading > b.tv-current.tv-muted{color:#93a5b3}

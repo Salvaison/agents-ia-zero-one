@@ -71,3 +71,15 @@ L'incident sur le prix global descendant et le pivot MCB15 `ASCENT_ACTIVE` ne do
 
 ---
 *Passation complémentaire à `knowledge/BOONO_TV_Etat_Vivant_4_chapitres_2026-11-11.md`. Le présent document décrit la version TV02 **à cinq rubriques** réellement mise en place le 12 novembre 2026.*
+
+## Ajustement graphique du 12 novembre — cinq bandeaux éclaircis et libellés blancs
+
+**Demande explicite :** « Mhh, place les 5 rubriques sur un bandeau plus claire et aussi je t'ai demandé de changer les dénominateur bleu ciel à blanc ».
+
+**Livraison OVH :** les cinq en-têtes de l'État vivant TV02 possèdent un fond gris bleuté plus clair (#24404b), une bordure discrète et les intitulés blancs (#f8fcff). Les étiquettes d'indicateurs (BW, LBW, MF, PM, MA, Cross, DailyRange, BigRange) passent également du cyan au blanc. Les numéros conservent leur petit fond cyan de repérage ; ils ne sont pas des dénominations de données.
+
+**Préservation de la sémantique colorée :** première valeur confirmée grise, seconde valeur en progression verte (#39f3a4) ou en recul rouge (#ff6178), UP vert et DN rouge. Une règle CSS plus spécifique a été ajoutée pour empêcher que la couleur blanche des libellés n'écrase celle des valeurs courantes BW/LBW/MF.
+
+**Fichiers modifiés :** uniquement scene/tv-living-state.css sur OVH, et l'URL de cette feuille dans l'index OVH (v=OD20261112-004). Aucun JavaScript, source Amsterdam, niveau de prix, décor, moteur, éditeur ou service n'a été modifié/redémarré. Le patch de cache-bust OVH est archivé dans knowledge/BOONO_TV_bandeaux_clairs_typographie_OVH_2026-11-12.patch.
+
+**Vérification :** aperçu du panneau construit avec le CSS réellement servi sur OVH et un snapshot V5 récent, capturé dans Chrome headless 1920×1080 ; cinq en-têtes visibles et blancs, bandeaux distincts, valeurs gris/vert/rouge conservées, aucune troncature. La suite automatisée de 16 tests s'est terminée sans échec. Contrôle final de la scène complète par le propriétaire encore ouvert.

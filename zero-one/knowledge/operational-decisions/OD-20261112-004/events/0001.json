@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T12:05:14.227601+00:00",
+  "status": "AUTORISE",
+  "description": "L utilisateur demande les cinq titres sur un bandeau plus clair et les dénominations bleu ciel en blanc",
+  "evidence": "01-demande-utilisateur-integrale.txt",
+  "previousEventSha256": null
+}

@@ -158,3 +158,18 @@ test('Nomenclature TV: phases structurelles dynamiques (continuation, retourneme
  const css=fs.readFileSync(CSS,'utf8');
  assert.match(css,/#statePanel \.tv-pivot,#statePanel \.tv-phase-label/);
 });
+
+test('TV02: cinq bandeaux de titres gris-bleuté et dénominations blanches sans masquer les valeurs UP/DN',()=>{
+ const css=fs.readFileSync(CSS,'utf8');
+ assert.match(css,/#statePanel \.tv-five \.tv-block-title\{[\s\S]*?background:#24404b/);
+ assert.match(css,/#statePanel \.tv-five \.tv-block-title>strong\{[\s\S]*?color:#f8fcff/);
+ assert.match(css,/#statePanel \.tv-five \.tv-indicator\{color:#f8fcff/);
+ assert.match(css,/#statePanel \.tv-five \.tv-reading > b\.tv-current\.tv-up\{color:#39f3a4\}/);
+ assert.match(css,/#statePanel \.tv-five \.tv-reading > b\.tv-current\.tv-down\{color:#ff6178\}/);
+ const {front}=browser(),html=front.renderHtml(stub());
+ assert.equal((html.match(/class="tv-block-title"/g)||[]).length,5);
+ assert.ok((html.match(/class="tv-indicator"/g)||[]).length>=15);
+ assert.match(html,/class="tv-prior"/);
+ assert.match(html,/class="tv-current tv-down"/);
+ assert.match(html,/class="tv-current tv-up"/);
+});

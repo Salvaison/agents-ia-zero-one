@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T12:05:14.227601+00:00",
+  "status": "TESTE",
+  "description": "16 tests JS et aperçu CSS réel dans Chrome 1920x1080, cinq rubriques visibles et couleurs distinctes",
+  "evidence": "tests/boono-tv-four-block-front-20261111.test.js, capture locale de contrôle",
+  "previousEventSha256": "d190586b1714cf839bce3817321740f61efd7d9d98d5817c7592f3a217351c20"
+}

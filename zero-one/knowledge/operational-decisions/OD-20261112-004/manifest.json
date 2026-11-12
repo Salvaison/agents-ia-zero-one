@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-004",
+  "title": "BOONO-TV TV02 cinq bandeaux clairs et indicateurs blancs",
+  "createdAtUtc": "2026-11-12T12:05:14.227601+00:00",
+  "authorization": "Demande explicite utilisateur sur le rendu TV02",
+  "reference": "OD-20261112-003, BOONO_TV_Etat_Vivant_TV02_5_rubriques_2026-11-12.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "124c633eca344721466002c5d07fd8fd797e99b7f3b8ecd2dab4ba32378d32e3",
+      "bytes": 128
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "011d895db77fe51df055e7ae857aeeef508af1eafd24062c88071f652046ed47",
+      "bytes": 886
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "a3f499314116df7596658311669ed9b2037b5ed29eb6a8f5b82a9ef20ee150ae",
+      "bytes": 1256
+    }
+  }
+}
