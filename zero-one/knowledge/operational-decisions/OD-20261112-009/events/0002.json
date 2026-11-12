@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T15:34:12.667350+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Bridge Amsterdam champ tvTicker4x15, provider 1m OKX sans second WS, DOM OVH et graphes read-only, cycle 25/15/5/15",
+  "evidence": "boono-tv/tv-conversion-ticker.js, bridge.js, scene/tv-conversion-panel.*, scene/chart-views.js, patch OVH",
+  "previousEventSha256": "93022db3c23b83a44353009169f992692a1706b2fbc08c01191b60fbba3fc3a0"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T15:34:12.667350+00:00",
+  "status": "TESTE",
+  "description": "48 tests Node TV; contrôle Chromium 1920x1080 du panneau 718×972 et deux canvas/4 cartes sans débordement; données OVH réelles et mode SOURCE ANCIENNE",
+  "evidence": "tests/boono-tv-fourth-ticker-20261112.test.js, tests/boono-tv-fourth-conversion-panel-20261112.test.js et suite TV",
+  "previousEventSha256": "138661d07698426f8dc5b60375f07f9e4d5dd01a54f6a85ec29ac12cc76a43f2"
+}

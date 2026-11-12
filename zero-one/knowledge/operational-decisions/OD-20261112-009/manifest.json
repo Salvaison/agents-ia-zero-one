@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-009",
+  "title": "BOONO-TV quatrieme vue Conversion 3m et Elastic ticker 4x15",
+  "createdAtUtc": "2026-11-12T15:34:12.667350+00:00",
+  "authorization": "Demande explicite du proprietaire du 12 novembre 2026",
+  "reference": "BOONO_TV_4eme_panneau_Conversion_Ticker4x15_2026-11-12.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "d097fddf5b4117f3b0301ec4cacbb9add09805c36c8c7ab69cac9ad5dbbc8bd3",
+      "bytes": 130
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "15d403969c9c3bec25dec39fa3abde25265dd50fe4dfe2c8b6ed0c9f1918fa0a",
+      "bytes": 2084
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "968551a95757af809f3ada0bbdec09d24349e28b702b3451838712cd5e2e9548",
+      "bytes": 2244
+    }
+  }
+}

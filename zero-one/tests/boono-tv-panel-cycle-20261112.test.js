@@ -18,7 +18,8 @@ function simulate(query=''){
  const nodes={
   '#statePanel':element(),
   '#leftChartTrio':element(),
-  '#completedTradesPanel':element()
+  '#completedTradesPanel':element(),
+  '#tvConversionPanel':element()
  };
  const context={
   window:{},document:{querySelector:selector=>nodes[selector]||null},
@@ -40,16 +41,20 @@ function simulate(query=''){
   oneTimer,advance,setView:context.window.BoonoTVCharts.setView};
 }
 
-test('Panneaux BOONO-TV 25s état / 15s graphiques / 5s trades : 45s total',()=>{
+test('Four BOONO-TV panels 25/15/5/15 seconds, exact 60s full cycle',()=>{
  const v=simulate();
- assert.deepEqual(v.duration(),{state:25000,charts:15000,trades:5000});
+ assert.deepEqual(v.duration(),{state:25000,charts:15000,trades:5000,conversion:15000});
  assert.equal(v.view(),'state');assert.equal(v.oneTimer(),25000);
  v.advance();assert.equal(v.view(),'charts');assert.equal(v.oneTimer(),15000);
  assert.equal(v.nodes['#leftChartTrio']['aria-hidden'],'false');
  v.advance();assert.equal(v.view(),'trades');assert.equal(v.oneTimer(),5000);
  assert.equal(v.nodes['#completedTradesPanel']['aria-hidden'],'false');
+ v.advance();assert.equal(v.view(),'conversion');assert.equal(v.oneTimer(),15000);
+ assert.equal(v.nodes['#tvConversionPanel']['aria-hidden'],'false');
+ assert.equal(v.nodes['#leftChartTrio']['aria-hidden'],'true');
  v.advance();assert.equal(v.view(),'state');assert.equal(v.oneTimer(),25000);
- assert.equal(v.clock.elapsed,45000);
+ assert.equal(v.clock.elapsed,60000);
+ assert.equal(v.nodes['#tvConversionPanel']['aria-hidden'],'true');
  assert.equal(v.clock.timers.size,1);
 });
 test('Une action manuelle réinitialise la durée de la vue active sans minuterie en double',()=>{
@@ -58,13 +63,17 @@ test('Une action manuelle réinitialise la durée de la vue active sans minuteri
  assert.equal(v.view(),'trades');
  assert.equal(v.oneTimer(),5000);
  assert.equal(v.clock.timers.size,1);
- v.advance();assert.equal(v.view(),'state');
- assert.equal(v.oneTimer(),25000);
+ v.advance();assert.equal(v.view(),'conversion');
+ assert.equal(v.oneTimer(),15000);
 });
 test('Le mode ?panel et le mode dialogue restent figés comme avant',()=>{
  const preview=simulate('?panel=charts');
  assert.equal(preview.view(),'charts');
  assert.equal(preview.oneTimer(),null);
+ const fourth=simulate('?panel=conversion');
+ assert.equal(fourth.view(),'conversion');
+ assert.equal(fourth.oneTimer(),null);
+ assert.equal(fourth.nodes['#tvConversionPanel']['aria-hidden'],'false');
  const editing=simulate('?dialogueEdit=1');
  assert.equal(editing.view(),'state');
  assert.equal(editing.oneTimer(),null);
@@ -81,7 +90,7 @@ test('Cinq portions rigides exactement égales : chacune 20% du stage de 900px',
  assert.match(STATE_CSS,/#statePanel \.tv-five \.tv-block-title\{/);
  assert.match(STATE_CSS,/#statePanel \.tv-five \.tv-indicator\{color:#f8fcff/);
 });
-test('Cycle indépendant des rafraîchissements du prix, des sprites et du projecteur',()=>{
+test('Four-panel cycle independent of OKX, price, sprites and projector refreshes',()=>{
  const s=ROTATION_SOURCE;
  assert.doesNotMatch(s,/ROTATION_MS=12000/);
  assert.match(s,/setTimeout\(\(\)=>\{/);

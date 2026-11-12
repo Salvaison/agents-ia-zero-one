@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T15:34:12.667350+00:00",
+  "status": "AUTORISE",
+  "description": "Demande explicite de 4e vue avec graphe Conversion et ticker 4x15 dans le style des Vagues",
+  "evidence": "01-demande-utilisateur-integrale.txt",
+  "previousEventSha256": null
+}

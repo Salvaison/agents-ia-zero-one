@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T15:34:12.667350+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Le seul bridge boono-tv Amsterdam redémarré; assets JS/CSS et rotateur servis studio OVH 3091 et lecteur mobile 3092 HTTP 200; moteurs PAPER intacts",
+  "evidence": "Contrôles PM2, curl local 3090 et proxy OVH, retour spontané source V494 DATA_OK; validation utilisateur ouverte",
+  "previousEventSha256": "c60b8ea153139e85f948ce7522e362b24ded1dda5602f3c1648d695e86ae0394"
+}

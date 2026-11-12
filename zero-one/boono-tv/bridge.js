@@ -11,6 +11,8 @@ const MCB = '/root/agents-ia-zero-one/data/mcb-live';
 const SHARED_CHARTS = path.join(ROOT, 'shared', 'boono-chart-renderer.js');
 // BOONO-TV four-section State Vivant; read-only V5.4.3 + Audit/MCB evidence.
 const livingTVReader=require('./tv-living-state').createReader({dataDir:DATA,mcDir:MCB});
+// Fourth left-stage view: compact V494 Elastic 4×15 and closed OKX 1m volume.
+const conversionTickerReader=require('./tv-conversion-ticker').createReader({dataDir:DATA});
 
 const PATHS = {
   state: path.join(DATA, 'trade-sim-v4-state.json'), // historical V4, NOT LIVE; no longer used by buildPayload
@@ -514,6 +516,7 @@ function normalizeV543Live() {
     analysis:{source:'V543_PAPER',asOf:Number.isFinite(ts)?ts:null,
       ageMs:Number.isFinite(age)?age:null,fresh:analysisFresh,available:fresh},
     tvLiving:livingTVReader(paper),
+    tvTicker4x15:conversionTickerReader.view(),
     conversion:miniConversion(c),
     trades:currentPaperTrades(paper),
     chronology:{latest:lastChronologyObservation(),mcb3BwLbwCross:lastObservedMcb3Cross()},
@@ -633,6 +636,12 @@ setInterval(()=>{
   for(const c of wss.clients)if(c.readyState===WebSocket.OPEN)c.send(payload);
 },1000);
 startPublicOkxObserver();
+// One REST read of confirmed OKX 1m candles per minute, cached independently
+// from every 5s snapshot. No extra WS and no modification to the PAPER runners.
+const refreshTickerVolume=()=>conversionTickerReader.refresh().catch(err=>
+  console.warn('[boono-tv] 4x15 volume shadow refresh:',String(err?.message||err).slice(0,100)));
+setTimeout(refreshTickerVolume,1500);
+setInterval(refreshTickerVolume,60000);
 server.listen(PORT, '127.0.0.1', () => {
   publish(true);
   console.log(`[boono-tv] read-only renderer bridge on http://127.0.0.1:${PORT}`);

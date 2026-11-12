@@ -1,0 +1,442 @@
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -16,6 +16,7 @@
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+ <link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-008">
++<link rel="stylesheet" href="/tv-conversion-panel.css?v=OD20261112-009">
+ </head>
+ <body>
+ <main id="scene">
+@@ -28,6 +29,35 @@
+   <section class="trio-card trio-card-price"><header><strong>01 · PRIX / 3m</strong><span id="trioPriceLive">—</span></header><canvas id="trioPriceCanvas"></canvas></section>
+   <section class="trio-card trio-card-15"><header><strong>02 · MARKETCIPHER 15m</strong><span id="trioMcb15Value">—</span></header><canvas id="trioMcb15Canvas"></canvas></section>
+   <section class="trio-card trio-card-3"><header><strong>03 · MARKETCIPHER 3m</strong><span id="trioMcb3Value">—</span></header><canvas id="trioMcb3Canvas"></canvas></section>
++</section>
++<section id="tvConversionPanel" class="tv-conv-panel" aria-label="Conversion graphique BTC 3m et ticker Elastic quatre périodes de quinze minutes" aria-hidden="true">
++ <header class="tv-conv-head">
++  <div><strong>CONVERSION · BTCUSDT</strong><small>BOONO WATCH · 3m · OBSERVATION READ ONLY</small></div>
++  <span class="conv-live-quote" id="tvConvQuote">BTC —</span>
++ </header>
++ <div class="tv-conv-meta"><span id="tvConvPM">PM3 — · PM5 — · PMLive —</span><span id="tvConvQuality">Qualité —</span></div>
++ <div class="tv-conv-dual">
++  <section class="tv-conv-chart-card" aria-label="Cours BTC et duel de volumes, source OKX">
++   <header><strong>01 · PRIX 3m / DUEL</strong><span id="tvConvMA">MA200 —</span></header>
++   <div class="tv-conv-chartplot">
++    <canvas id="tvConvPriceCanvas" aria-label="Prix et bougies 3 minutes"></canvas>
++    <canvas id="tvConvOverlayCanvas" aria-hidden="true"></canvas>
++    <div id="tvConvVolumeRail" aria-label="Dix seuils de volume exécuté sur trois minutes"></div>
++   </div>
++   <div class="tv-conv-effort">
++    <div id="tvConvDuelInfo" class="conv-duel-volumes">ACHAT — BTC · VENTE — BTC</div>
++    <div id="tvConvDelta">Δ BTC 3m — $</div>
++    <div id="tvConvDeport" class="conv-deport">Déport — %</div>
++    <div id="tvConvEffortNote" class="conv-effort-note">Flux OKX 3m · en attente</div>
++   </div>
++  </section>
++  <aside id="tvConvTicker" class="tv-conv-ticker" aria-label="Ticker de quatre périodes Elastic de quinze minutes"></aside>
++ </div>
++ <footer class="tv-conv-footer">
++  <span id="tvConvPeriod">Bougies 3m en attente</span>
++  <strong>TICKER 4×15 · ELASTIC V494</strong>
++  <span>Qualités historiques · SHADOW · 15 MIN</span>
++ </footer>
+ </section>
+ <section id="completedTradesPanel" class="completed-trades-panel" aria-label="Liste des trades PAPER clôturés" aria-hidden="true">
+   <header class="completed-trades-head">
+@@ -112,7 +142,8 @@
+ </main>
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+-<script src="/chart-views.js?v=OD20261112-005"></script>
++<script src="/tv-conversion-panel.js?v=OD20261112-009"></script>
++<script src="/chart-views.js?v=OD20261112-009"></script>
+ <script src="/tv-living-state.js?v=OD20261112-008"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+
+--- a/scene/chart-views.js
++++ b/scene/chart-views.js
+@@ -5,12 +5,12 @@
+  */
+ const Q=s=>document.querySelector(s);
+ const params=new URLSearchParams(location.search);
+-const forced=params.get('panel'); // optional fixed preview: state / charts / trades
++const forced=params.get('panel'); // optional fixed preview: state / charts / trades / conversion
+ const dialogueEditing=params.get('dialogueEdit')==='1'||params.get('storyboardEdit')==='1';
+-const panels=['state','charts','trades'];
+-// Display dwell times, not market-data refresh periods.
+-// Cycle: 25s State -> 15s charts -> 5s PAPER trades -> State (45s total).
+-const PANEL_DURATIONS_MS=Object.freeze({state:25000,charts:15000,trades:5000});
++const panels=['state','charts','trades','conversion'];
++// Fourth read-only stage: preserve previously validated 25s/15s/5s and
++// give Conversion the same 15s as the analytical Vagues. Total 60 seconds.
++const PANEL_DURATIONS_MS=Object.freeze({state:25000,charts:15000,trades:5000,conversion:15000});
+ let rotationTimer=null;
+ const rotationDisabled=dialogueEditing||panels.includes(forced);
+ function scheduleNextPanel(){
+@@ -29,16 +29,20 @@
+ function setView(view){
+  if(!panels.includes(view))return;
+  active=view;
+- const panel=Q('#statePanel'),trio=Q('#leftChartTrio'),trades=Q('#completedTradesPanel');
++ const panel=Q('#statePanel'),trio=Q('#leftChartTrio'),trades=Q('#completedTradesPanel'),
++   conversion=Q('#tvConversionPanel');
+  if(panel){
+   panel.classList.toggle('charts-active',view==='charts');
+   panel.classList.toggle('trades-active',view==='trades');
++  panel.classList.toggle('conversion-active',view==='conversion');
+   panel.dataset.activePanel=view;
+  }
+  if(trio)trio.setAttribute('aria-hidden',view==='charts'?'false':'true');
+  if(trades)trades.setAttribute('aria-hidden',view==='trades'?'false':'true');
++ if(conversion)conversion.setAttribute('aria-hidden',view==='conversion'?'false':'true');
+  if(view==='charts'&&lastSnapshot)drawTrio(lastSnapshot);
+  if(view==='trades'&&lastSnapshot)drawCompletedTrades(lastSnapshot);
++ if(view==='conversion'&&lastSnapshot)window.BoonoTVConversion?.render?.(lastSnapshot);
+  scheduleNextPanel();
+ }
+ function tradeMarkers(){
+@@ -216,6 +220,7 @@
+  tag('#pricePanelLive',nf(s?.market?.price,1)+' USDT');
+  drawTrio(s);
+  drawCompletedTrades(s);
++ window.BoonoTVConversion?.onSnapshot?.(s);
+ }
+ async function refreshMarkers(){
+  if(Array.isArray(lastSnapshot?.trades))return;
+
+--- a/scene/tv-conversion-panel.css
++++ b/scene/tv-conversion-panel.css
+@@ -0,0 +1,131 @@
++/* BOONO-TV fourth LEFT stage — Conversion & 4×15 ticker.
++   Same TV-neon palette and chart source as Vagues, no changes to the loft. */
++#tvConversionPanel{
++ position:absolute;inset:82px 0 26px;
++ padding:12px 12px 8px;
++ display:grid;grid-template-rows:49px 48px minmax(0,1fr) 64px;
++ gap:9px;min-height:0;overflow:hidden;
++ color:#e7f5f9;background:linear-gradient(180deg,#04141b,#061a24);
++ visibility:hidden;opacity:0;pointer-events:none;
++ transition:opacity .36s ease;
++}
++#statePanel.conversion-active .price-row,
++#statePanel.conversion-active .state-rows{visibility:hidden;pointer-events:none}
++#statePanel.conversion-active #tvConversionPanel{
++ visibility:visible;opacity:1;pointer-events:none;
++}
++#tvConversionPanel .tv-conv-head{
++ min-height:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
++ border-bottom:1px solid rgba(77,189,211,.37);padding:0 7px 9px;
++}
++#tvConversionPanel .tv-conv-head strong{
++ font:950 25px/1.1 'Arial Narrow',Arial,sans-serif;color:#edfbff;letter-spacing:.65px;
++}
++#tvConversionPanel .tv-conv-head small{display:block;color:#90b5c2;font:750 11px/1.3 ui-monospace,monospace;margin-top:3px}
++#tvConversionPanel .tv-conv-head .conv-live-quote{
++ color:#71e9aa;font:900 27px/1 ui-monospace,monospace;white-space:nowrap;
++ text-shadow:0 0 8px rgba(20,214,128,.13);
++}
++#tvConversionPanel .tv-conv-meta{
++ display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;
++ padding:4px 8px;background:#102c38;
++ border:1px solid rgba(82,184,204,.36);
++ font:780 14px/1.23 ui-monospace,Menlo,Consolas,monospace;
++}
++#tvConversionPanel .tv-conv-meta b{font-weight:900;color:#f7fcff}
++#tvConversionPanel .tv-conv-meta .conv-up{color:#43efa2}
++#tvConversionPanel .tv-conv-meta .conv-down{color:#ff7b88}
++#tvConversionPanel .tv-conv-meta .conv-na{color:#a4bcc8}
++#tvConversionPanel .tv-conv-dual{
++ display:grid;grid-template-columns:minmax(0,1.72fr) minmax(0,.98fr);
++ gap:9px;min-height:0;
++}
++#tvConversionPanel .tv-conv-chart-card{
++ display:grid;grid-template-rows:32px minmax(0,1fr) 114px;
++ min-height:0;min-width:0;
++ border:1px solid rgba(88,191,214,.39);
++ background:linear-gradient(165deg,#071e28,#04131c);
++ box-shadow:inset 0 0 26px rgba(0,0,0,.28);
++}
++#tvConversionPanel .tv-conv-chart-card>header{
++ padding:7px 10px;display:flex;justify-content:space-between;align-items:center;
++ gap:7px;border-bottom:1px solid rgba(91,184,205,.25);
++ color:#adf3ff;font:900 14px/1.18 ui-monospace,Menlo,Consolas,monospace;
++}
++#tvConversionPanel .tv-conv-chart-card>header span{
++ color:#f4fbfc;font-size:12px;white-space:nowrap;
++}
++#tvConversionPanel .tv-conv-chartplot{
++ position:relative;min-height:0;overflow:hidden;
++ background:#031923;
++}
++#tvConversionPanel .tv-conv-chartplot canvas{
++ position:absolute;inset:0;width:100%;height:100%;display:block;
++}
++#tvConvOverlayCanvas{pointer-events:none}
++#tvConvVolumeRail{
++ position:absolute;left:5px;top:13%;bottom:14%;
++ display:grid;grid-template-rows:repeat(10,minmax(0,1fr));gap:4px;
++ width:13px;pointer-events:none;
++}
++#tvConvVolumeRail span{
++ display:block;border:1.4px solid rgba(131,172,184,.87);border-radius:4px;
++ background:#07212c;box-shadow:inset 0 0 2px #000;
++}
++#tvConvVolumeRail span.on{
++ background:#bbccd2;border-color:#d4e0e3;box-shadow:0 0 4px #7dbccb40;
++}
++#tvConversionPanel .tv-conv-effort{
++ display:flex;flex-direction:column;justify-content:space-evenly;
++ gap:5px;padding:8px 11px;background:rgba(1,16,24,.93);
++ border-top:1px solid rgba(84,166,184,.34);
++ font:740 14px/1.25 ui-monospace,Consolas,monospace;
++}
++#tvConversionPanel .tv-conv-effort .conv-duel-volumes{
++ display:flex;justify-content:space-between;gap:7px;
++ font-weight:850;font-size:15px;
++}
++#tvConversionPanel .tv-conv-effort .conv-buy{color:#64e8ae}
++#tvConversionPanel .tv-conv-effort .conv-sell{color:#ff8692}
++#tvConversionPanel .tv-conv-effort .conv-deport{color:#c9e4ed}
++#tvConversionPanel .tv-conv-effort .conv-effort-note{color:#88aebd;font-size:11.1px;font-weight:680}
++#tvConversionPanel .tv-conv-ticker{
++ min-width:0;min-height:0;
++ display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:7px;
++}
++#tvConversionPanel .tv-quarter-card{
++ min-width:0;min-height:0;overflow:hidden;
++ padding:8px 8px 7px;
++ border:1px solid rgba(89,189,210,.47);
++ background:linear-gradient(175deg,#0b2530,#061922);
++ display:flex;flex-direction:column;justify-content:space-between;
++ gap:3px;font:740 11.3px/1.23 ui-monospace,Menlo,Consolas,monospace;
++}
++#tvConversionPanel .tv-quarter-card .quarter-time{
++ display:flex;justify-content:space-between;gap:4px;align-items:center;
++ color:#b8f3ff;font-weight:950;font-size:12.7px;
++ border-bottom:1px solid rgba(118,177,189,.20);padding-bottom:3px;
++}
++#tvConversionPanel .tv-quarter-card .quarter-time span{color:#8eabb8;font-size:10px;font-weight:800}
++#tvConversionPanel .tv-quarter-card .quarter-volume{font-weight:880;color:#e8faff;font-size:12.2px}
++#tvConversionPanel .tv-quarter-card .quarter-quality{color:#f7e2b1;font-weight:880;font-size:12px}
++#tvConversionPanel .tv-quarter-card .quarter-direction{color:#d2e3e9}
++#tvConversionPanel .tv-quarter-card .quarter-market{color:#a9c8d3}
++#tvConversionPanel .tv-quarter-card .up{color:#43efa2}
++#tvConversionPanel .tv-quarter-card .down{color:#ff7b88}
++#tvConversionPanel .tv-quarter-card .na{color:#8daab5}
++#tvConversionPanel .tv-quarter-card.stale{border-color:#8d7770;background:#1c2228}
++#tvConversionPanel .tv-quarter-card.stale .quarter-time{color:#e6bd9a}
++#tvConversionPanel .tv-conv-footer{
++ min-height:0;display:flex;align-items:center;flex-wrap:wrap;align-content:center;
++ gap:5px 14px;padding:8px 11px;
++ border:1px solid rgba(78,171,193,.35);background:#08212c;
++ color:#b6d9e3;font:730 12.4px/1.2 ui-monospace,Menlo,Consolas,monospace;
++}
++#tvConversionPanel .tv-conv-footer strong{color:#f3fcff;font-weight:950}
++#tvConversionPanel .tv-conv-footer .up{color:#43efa2}
++#tvConversionPanel .tv-conv-footer .down{color:#ff7b88}
++#tvConversionPanel .tv-conv-footer .na{color:#afc1c8}
++#statePanel.dialogue-editing #tvConversionPanel{
++ visibility:hidden!important;opacity:0!important;pointer-events:none!important;
++}
+
+--- a/scene/tv-conversion-panel.js
++++ b/scene/tv-conversion-panel.js
+@@ -0,0 +1,196 @@
++/* BOONO-TV FOURTH panel — Price/Conversion and Elastic 4×15.
++   Render-only. Uses V543 paper, existing 3m candle series, existing OKX
++   public trades in bridge, and V494 SHADOW quarters with closed 1m volume.
++   No orders, no new websocket, no independent trading signals. */
++(function(){
++'use strict';
++const Q=s=>document.querySelector(s);
++const n=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v))?Number(v):null;
++const safe=s=>String(s===undefined||s===null?'—':s).replace(/[&<>"']/g,
++ c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
++const fmt=(v,d=1)=>{
++ const x=n(v);return x===null?'—':x.toLocaleString('fr-FR',{
++ minimumFractionDigits:d,maximumFractionDigits:d});
++};
++const signed=(v,d=1)=>n(v)===null?'—':(Number(v)>0?'+':'')+fmt(v,d);
++const tone=v=>n(v)===null?'na':Number(v)>0?'up':Number(v)<0?'down':'na';
++const clock=ms=>n(ms)===null?'—':new Date(Number(ms)).toLocaleTimeString('fr-FR',{
++ timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit',hour12:false});
++const stamp=ms=>n(ms)===null?'—':new Date(Number(ms)).toLocaleString('fr-FR',{
++ timeZone:'Europe/Stockholm',day:'2-digit',month:'2-digit',
++ hour:'2-digit',minute:'2-digit',hour12:false});
++const escClass=s=>['up','down','na'].includes(s)?s:'na';
++const pct=v=>n(v)===null?'—':Math.round(Number(v)*100)+'%';
++const ordered=(map,count=2)=>Object.entries(map||{}).filter(([k,v])=>
++ n(v)!==null&&Number(v)>0&&Number(v)<=1).sort((a,b)=>b[1]-a[1]).slice(0,count);
++const graphVolumeLevels=[1,2,5,10,20,50,100,200,500,1000];
++let latest=null;
++function updateRail(effort){
++ const el=Q('#tvConvVolumeRail');if(!el)return;
++ const buy=n(effort?.buyBtc),sell=n(effort?.sellBtc);
++ const total=effort?.available===true&&buy!==null&&sell!==null?buy+sell:null;
++ const level=total===null?null:graphVolumeLevels.filter(t=>total>=t).length;
++ el.innerHTML=Array.from({length:10},(_,i)=>
++  '<span class="'+(level!==null&&9-i<level?'on':'')+'"></span>').join('');
++ el.title=total===null?'Volume OKX 3m indisponible':
++  'Volume agressif total exécuté sur 3m : '+fmt(total,2)+' BTC, seuils du graphe BOONO Watch (pas profondeur du carnet)';
++}
++function drawDuelOverlay(canvas,data,e,p,chart){
++ if(!canvas||!chart)return;
++ const lib=window.BoonoCharts;
++ const box=lib?.setupCanvas?.(canvas);
++ if(!box)return;
++ const {ctx,w,h}=box;
++ ctx.clearRect(0,0,w,h);
++ const buy=n(e?.buyBtc),sell=n(e?.sellBtc);
++ if(e?.available!==true||buy===null||sell===null)return;
++ const pad=chart.padding,lowY=pad.top,highY=pad.top+chart.plotHeight;
++ const plotStart=pad.left,plotW=chart.plotWidth,axis=plotStart+plotW*.50;
++ const max=Math.max(1,buy,sell);
++ const maxWidth=Math.min(125,plotW*.39);
++ const leftWidth=Math.max(10,maxWidth*buy/max),rightWidth=Math.max(10,maxWidth*sell/max);
++ const live=n(p);
++ const bounds=chart.bounds;
++ const rawY=live!==null?lib.mapPrice(live,bounds,pad.top,chart.plotHeight):lowY+chart.plotHeight*.5;
++ const y=Math.max(lowY+57,Math.min(highY-57,rawY));
++ const rectHeight=Math.min(95,chart.plotHeight*.20);
++ const sy=y-rectHeight/2;
++ ctx.save();ctx.beginPath();ctx.rect(plotStart,lowY,plotW,chart.plotHeight);ctx.clip();
++ ctx.strokeStyle='rgba(67,180,244,.6)';ctx.lineWidth=2;
++ ctx.beginPath();ctx.moveTo(axis,lowY);ctx.lineTo(axis,highY);ctx.stroke();
++ ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(103,203,242,.7)';ctx.lineWidth=.8;
++ ctx.beginPath();ctx.moveTo(plotStart,y);ctx.lineTo(plotStart+plotW,y);ctx.stroke();ctx.setLineDash([]);
++ function block(x,width,amount,color,fill){
++  ctx.fillStyle=fill;ctx.strokeStyle=color;ctx.lineWidth=1.8;
++  ctx.beginPath();ctx.roundRect(x,sy,width,rectHeight,5);ctx.fill();ctx.stroke();
++  ctx.font='900 13px ui-monospace,Menlo,Consolas,monospace';
++  ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
++  const label=fmt(amount,1);
++  if(width>47)ctx.fillText(label+' BTC',x+width/2,y,Math.max(25,width-6));
++ }
++ block(axis-leftWidth,leftWidth,buy,'#4eecad','rgba(48,199,117,.24)');
++ block(axis,rightWidth,sell,'#ff8190','rgba(237,85,112,.23)');
++ ctx.restore();
++}
++function ticker(s){
++ const root=Q('#tvConvTicker');if(!root)return;
++ const source=s?.tvTicker4x15;
++ const trusted=source?.mode==='SHADOW_ONLY'&&
++   source?.decisionImpact===false&&source?.brokerOrdersEnabled===false;
++ const fresh=trusted&&source?.status==='DATA_RECENT'&&n(source.asOf)!==null&&
++   Date.now()-Number(source.asOf)<=90000;
++ const windows=trusted&&Array.isArray(source.windows)?
++   source.windows.slice(-4).sort((a,b)=>Number(b.startAt)-Number(a.startAt)):[];
++ const v=source?.volume4x15;
++ const volumeTrusted=trusted&&v?.source==='OKX_BTC_USDT_SWAP_CLOSED_1M_VOLCCY'&&
++    v.status==='OK'&&n(v.asOf)!==null&&Number(v.asOf)<=Number(source.asOf)&&
++    Number(source.asOf)-Number(v.asOf)<=90000;
++ const byStart=new Map(volumeTrusted&&Array.isArray(v.windows)?
++   v.windows.map(x=>[Number(x.startAt),x]):[]);
++ const cards=[];
++ for(let i=0;i<4;i++){
++  const w=windows[i];
++  if(!w){
++   cards.push('<div class="tv-quarter-card stale"><div class="quarter-time">15 MIN · —</div><div class="quarter-market">Fenêtre indisponible</div></div>');
++   continue;
++  }
++  const vol=byStart.get(Number(w.startAt));
++  const hasVolume=vol?.sourceStatus==='OK'&&
++   n(vol?.meanBtcPerMinute)!==null&&n(vol.meanGraphVolumePct)!==null;
++  const volText=hasVolume?
++   'Vol moy: '+Math.round(Number(vol.meanGraphVolumePct))+'% · '+
++   fmt(vol.meanBtcPerMinute,1)+' BTC/min':
++   'Vol moy: —% · — BTC/min';
++  const qualities=ordered(w.qualityFractions).map(([k,x])=>safe(k)+' '+pct(x)).join(' · ')||'Qualité —';
++  const dirs=w.directionFractions||{};
++  const longs='LONG '+pct(dirs.long)+' · SHORT '+pct(dirs.short)+
++   ' · CONTESTED '+pct(dirs.contested);
++  const markets=ordered(w.marketFractions).map(([k,x])=>safe(k)+' '+pct(x)).join(' · ')||'MARCHÉ —';
++  const state=!fresh?'SOURCE ANCIENNE':w.partial?'EN FORMATION':'15 MIN';
++  cards.push('<div class="tv-quarter-card'+(!fresh?' stale':'')+'"'+
++   ' title="Fenêtre Elastic SHADOW, '+safe(String(w.samples??'—'))+
++   ' relevés, source '+safe(stamp(source.asOf))+
++   ', volume confirmé OKX 1m '+(hasVolume?'observé':'indisponible')+'">'+
++   '<div class="quarter-time">'+safe(stamp(w.startAt))+
++   '<span>'+safe(state)+'</span></div>'+
++   '<div class="quarter-volume">'+safe(volText)+'</div>'+
++   '<div class="quarter-quality">'+qualities+'</div>'+
++   '<div class="quarter-direction">'+
++     '<span class="up">'+safe('LONG '+pct(dirs.long))+'</span> · '+
++     '<span class="down">'+safe('SHORT '+pct(dirs.short))+'</span>'+
++     '<span class="na">'+safe(' · CONTESTED '+pct(dirs.contested))+'</span>'+
++   '</div>'+
++   '<div class="quarter-market">Régime : '+markets+'</div></div>');
++ }
++ root.innerHTML=cards.join('');
++ root.dataset.status=!trusted?'UNAVAILABLE':fresh?'DATA_RECENT':'SOURCE_STALE';
++}
++function render(s){
++ if(s)latest=s;else s=latest;
++ const host=Q('#tvConversionPanel');
++ if(!host||!s)return;
++ const lib=window.BoonoCharts;
++ const candleCanvas=Q('#tvConvPriceCanvas'),overlayCanvas=Q('#tvConvOverlayCanvas');
++ const effort=s.conversion?.effort||{},c=s.conversion?.conversion||{};
++ const quote=n(s.market?.fresh===true?s.market.price:null);
++ Q('#tvConvQuote').textContent=quote===null?'BTC —':fmt(quote,1)+' $';
++ const isLive=effort.available===true&&s.conversion?.status==='LIVE_3M';
++ Q('#tvConvPM').innerHTML=[
++  ['PM3',c.pm3],['PM5',c.pm5],['PMLive',c.pmLive]
++ ].map(([label,v])=>'<b>'+label+'</b> <span class="conv-'+escClass(tone(v))+'">'+
++   safe(signed(v,1))+' $</span>').join('　');
++ const summary=Q('#tvConvQuality');
++ summary.textContent='Qualité '+(c.quality||'—')+
++   ' · direction '+(c.direction||'—').toUpperCase();
++ const vol=Q('#tvConvDuelInfo');
++ vol.innerHTML='<span class="conv-buy">ACHAT '+safe(fmt(effort.available?effort.buyBtc:null,2))+
++  ' BTC</span><span class="conv-sell">VENTE '+safe(fmt(effort.available?effort.sellBtc:null,2))+' BTC</span>';
++ Q('#tvConvDelta').textContent='Δ BTC 3m '+signed(effort.available?effort.priceNetUsd:null,1)+' $';
++ const dep=effort.available&&n(effort.priceRangeUsd)>0?
++  100*Number(effort.priceNetUsd)/Number(effort.priceRangeUsd):null;
++ Q('#tvConvDeport').textContent='Déport '+signed(dep,1)+' % du range 3m';
++ Q('#tvConvEffortNote').textContent=
++  'Flux initiateurs OKX 3m · '+(isLive?'LIVE_3M':
++    effort.available?'FENÊTRE EN FORMATION':'SOURCE INDISPONIBLE');
++ updateRail(effort);
++ ticker(s);
++ const series=Array.isArray(s.series?.mcb3)?s.series.mcb3:[];
++ const now=Date.now(),last=Math.max(0,...series.map(r=>Number(r.ts)||0));
++ const end=Math.max(last,Math.min(now,Number(s.market?.marketTimestamp||last)));
++ const start=end-150*60000;
++ const rows=series.filter(r=>n(r.ts)!==null&&Number(r.ts)>=start-180000&&
++  Number(r.ts)<=end&&[r.high,r.low,r.close,r.open].every(v=>n(v)!==null));
++ if(!lib||rows.length<2||!candleCanvas){
++  Q('#tvConvPeriod').textContent='Bougies 3m indisponibles';
++  host.dataset.priceStatus='UNAVAILABLE';return;
++ }
++ const hi=Math.max(...rows.map(r=>Number(r.high)));
++ const lo=Math.min(...rows.map(r=>Number(r.low)));
++ const amplitude=Math.max(1,hi-lo);
++ const maLast=n(rows.at(-1)?.ma200);
++ const maVisible=maLast!==null&&maLast>=lo-.28*amplitude&&maLast<=hi+.28*amplitude;
++ const priceRows=rows.map(r=>({
++  ...r,ma200:maVisible&&n(r.ma200)!==null?Number(r.ma200):null
++ }));
++ const chart=lib.drawPrice(candleCanvas,priceRows,{
++  theme:'tv-neon',grid:true,hourGrid:false,t0:start,t1:end,
++  padding:{left:22,right:83,top:11,bottom:26},candleMs:180000,
++  timeAxis:true,maxBodyWidth:8,maWidth:1.8,maAbove:'#32d88a',
++  maBelow:'#ff6178',pricePadPct:.07,livePrice:quote,
++  livePriceLine:quote!==null,livePriceRightLabel:quote!==null,
++  candleOutlineUp:'#38e4a4',candleOutlineDown:'#ff7a8c'
++ });
++ drawDuelOverlay(overlayCanvas,priceRows,effort,quote,chart);
++ const maDist=maLast!==null&&quote!==null?quote-maLast:null;
++ Q('#tvConvPeriod').textContent='150 MIN · 3m · '+clock(start)+'–'+clock(end);
++ Q('#tvConvMA').textContent='MA200 '+(maLast===null?'—':fmt(maLast,1)+
++  ' · dist '+signed(maDist,1)+' $'+(maVisible?'':' · hors vue'));
++ host.dataset.priceStatus=quote===null?'PRICE_STALE':'PRICE_FRESH';
++}
++function onSnapshot(s){
++ latest=s;
++ if(Q('#statePanel')?.dataset.activePanel==='conversion')render(s);
++}
++window.BoonoTVConversion={render,onSnapshot,
++ volumeLevels:graphVolumeLevels.slice(),get source(){return 'TV_READ_ONLY_EXISTING_OKX_MCB3_V494_ELASTIC';}};
++})();
