@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-002",
+  "title": "BOONO-TV vocabulaire CRETE CREUX RETOURNEMENT CONTINUATION UP/DN",
+  "createdAtUtc": "2026-11-12T11:23:41.684089+00:00",
+  "authorization": "Message explicite du propriétaire après incident ASCENT_ACTIVE le 12 novembre 2026",
+  "reference": "BOONOLAB_incident_ASCENT_ACTIVE_4h_contexte_prix_2026-11-12.md; OD-20261111-001",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f1b8a6cb96c0e0f796bf6ea3f30b52a24ee4495cc18b663aee870f5b4716e8d5",
+      "bytes": 81
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "fd1a56f8706e990290f83b24e0d2f55868a905f4804499e6492d188ecd1902c4",
+      "bytes": 1066
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "01dcc0249d9ec942c6eebd2e41389a2783b3a67b72b1158b3ec14db8b12aa2fd",
+      "bytes": 1408
+    }
+  }
+}

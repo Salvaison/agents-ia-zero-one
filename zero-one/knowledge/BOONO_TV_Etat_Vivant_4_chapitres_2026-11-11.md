@@ -103,3 +103,22 @@ L'intégration dans le runtime OVH existant est limitée à :
 **La première capture (18:30:15) montre un message `V5.4.3 périmée`.** Un contrôle en direct du 12/11 sur `/api/snapshot` a ensuite montré `tvLiving.status=DATA_RECENT` et un âge de l'ordre de quelques secondes. Cette vérification **ne démontre pas la cause de l'indisponibilité transitoire du 11/11** et ne doit pas être déclarée réparation du collecteur. Le garde-fou `SOURCE_STALE` est conservé.
 
 **Portée opérationnelle :** pas de redémarrage du bridge Amsterdam, des runners PAPER ni du studio OVH : scripts statiques servis en direct. Ne pas attribuer à cette correction une nouvelle qualification économique ou un impact décisionnel. **Validation esthétique finale par l'utilisateur en scène composite complète toujours ouverte.**
+
+## Ajustement du 12 novembre — nomenclature explicite CRÊTE / CREUX / RETOURNEMENT / CONTINUATION
+
+À la suite de l'observation « nous sommes vraiment en Descent active », l'utilisateur a demandé de privilégier les dénominations **crête**, **creux**, **retournement**, **continuation UP/DN**.
+
+**Changement de présentation BOONO-TV, pas changement de moteur :**
+
+- `ASCENT_ACTIVE` est présenté comme **CREUX LBW15 CONFIRMÉ · biais MCB UP** ; `DESCENT_ACTIVE` devient **CRÊTE LBW15 CONFIRMÉE · biais MCB DN**. La direction de l'offensive Live apparaît séparément : on peut ainsi lire « CREUX confirmé · biais MCB UP · offensive DN ». **Ce n'est pas une validation de tendance du prix.**
+- `STRUCTURAL_CONTINUATION` est présenté comme **CONTINUATION MCB UP/DN** ; sa direction vient du directeur MCB15.
+- `STRUCTURAL_REVERSAL_FORMING` est présenté comme **RETOURNEMENT UP/DN · EN FORMATION**, direction provenant du candidat actif. Le mot RETOURNEMENT ne s'applique pas automatiquement à un nouveau creux LBW.
+- `TACTICAL_RESPIRATION` est présenté comme **RESPIRATION TACTIQUE UP/DN**, direction provenant du candidat tactique, et non du directeur.
+- `AWAIT_TACTICAL_ALIGNMENT` est présenté comme **ATTENTE ALIGNEMENT 3m/15m** ; ne pas transformer une attente en continuation ou retournement prouvé.
+- La nomenclature native reste dans l'infobulle `title` pour permettre la vérification technique, mais les termes ambigus ne figurent plus comme titres principaux.
+
+**Implementation :** uniquement le renderer `boono-tv/scene/tv-living-state.js` et deux classes de style (`tv-pivot`, `tv-phase-label`), les fichiers réellement servis sur OVH ; pas de modification des règles `structural-trajectory-v1`, des moteurs PAPER ou du flux Amsterdam. Version des assets OVH `OD20261112-002` ; patch d'index archivé `knowledge/BOONO_TV_nomenclature_runtime_patch_2026-11-12.patch`.
+
+**Validation :** l'API OVH retournait une lecture récente et les titres affichés « CREUX LBW15 CONFIRMÉ · biais MCB UP · offensive DN », « ATTENTE ALIGNEMENT 3m/15m ». Test de tous les cas dynamiques (CONTINUATION, RETOURNEMENT en formation, RESPIRATION, ATTENTE, CRÊTE/CREUX) et de la protection `SOURCE_STALE` ; **13 tests Node réussis**. Le bureau, les visuels et l'interface Amsterdam ne sont pas modifiés. Validation visuelle finale du propriétaire encore ouverte.
+
+**Chantier distinct :** l'état global du prix sur plusieurs jours **reste baissier** en dépit de certains pivots LBW haussiers. Se référer au rapport `knowledge/BOONOLAB_incident_ASCENT_ACTIVE_4h_contexte_prix_2026-11-12.md` ; il n'y a **pas encore de révision du régime prix/territoire ni d'autorité d'entrée**.

@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T11:23:41.684089+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Assets statiques servis OVH avec nouvelle version ; moteurs PAPER et pont Amsterdam inchangés, validation visuelle utilisateur ouverte",
+  "evidence": "HTTP OVH 3091/3092, code CSS/JS rendu sur session privée",
+  "previousEventSha256": "9b8ae22f828a84f06b79738422eaeb7ac6ff7d2ab58040c18cbf7d0b720ec389"
+}

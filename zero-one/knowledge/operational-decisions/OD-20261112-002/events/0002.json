@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T11:23:41.684089+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Libellés TV selon pivots LBW et phases dynamiques V5 ; code natif conservé en infobulle ; CSS limité au panneau gauche",
+  "evidence": "boono-tv/scene/tv-living-state.js + css, patch OVH OD20261112-002",
+  "previousEventSha256": "cc51b3d052082d4ef59fa80a4ff602935afd210a94983af96e63726cfac089c2"
+}

@@ -123,3 +123,13 @@
 #statePanel .tv-block-title>strong{
  color:#fff;font-weight:950;letter-spacing:.15px
 }
+
+
+/* Pivot and tactical phase names describe their native MCB evidence, NOT
+   a price-trend verdict. Keep UP/DN separately directional. */
+#statePanel .tv-pivot,#statePanel .tv-phase-label{
+ color:#72dcf7;font-weight:950;letter-spacing:.05px
+}
+#statePanel .tv-phase-label[title],#statePanel .tv-pivot[title]{
+ cursor:help
+}

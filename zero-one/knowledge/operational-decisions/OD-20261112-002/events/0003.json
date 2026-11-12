@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T11:23:41.684089+00:00",
+  "status": "TESTE",
+  "description": "13 tests Node OK : CREUX/CRÊTE, 4 états de phase, directions tactique/directeur distinctes, source périmée, autres panneaux inchangés",
+  "evidence": "tests/boono-tv-four-block-front-20261111.test.js",
+  "previousEventSha256": "0374501443af2c22b9f00fecd5962892a1f3a14190e909ee946c553fb5d39ea9"
+}

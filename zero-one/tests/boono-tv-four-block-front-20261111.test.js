@@ -114,3 +114,37 @@ test('Contraste, titres agrandis et géométrie complète : seules les quatre ru
  assert.match(css,/grid-template-rows:\.85fr \.91fr \.65fr 2\.15fr/);
  assert.doesNotMatch(css,/#boonoV2Cat|#deskScreenLeft|#pricePanelCanvas|#room\.boono-v2/);
 });
+
+test('Nomenclature TV: CRÊTE/CREUX depuis le pivot MCB, et pas des tendances prix fictives',()=>{
+ const {front}=browser(),a=stub();
+ a.trajectory.strategicState='ASCENT_ACTIVE';
+ a.trajectory.director='long';
+ a.trajectory.offensive='short';
+ let html=front.renderHtml(a);
+ assert.match(html,/CREUX LBW15 CONFIRMÉ/);
+ assert.match(html,/biais MCB <b class="tv-direction tv-up">UP<\/b> · offensive <b class="tv-direction tv-down">DN<\/b>/);
+ assert.doesNotMatch(html,/>ASCENT_ACTIVE<\/b>/);
+ a.trajectory.strategicState='DESCENT_ACTIVE';
+ a.trajectory.director='short';
+ html=front.renderHtml(a);
+ assert.match(html,/CRÊTE LBW15 CONFIRMÉE/);
+ assert.match(html,/title="État natif MCB15 : DESCENT_ACTIVE"/);
+});
+test('Nomenclature TV: phases structurelles dynamiques (continuation, retournement en formation, attente)',()=>{
+ const {front}=browser(),a=stub();
+ a.trajectory.director='short';
+ a.place.candidate='long';
+ for(const [phase,needle] of [
+  ['STRUCTURAL_CONTINUATION',/CONTINUATION<\/b> MCB <b class="tv-direction tv-down">DN<\/b>/],
+  ['STRUCTURAL_REVERSAL_FORMING',/RETOURNEMENT<\/b> <b class="tv-direction tv-up">UP<\/b> · EN FORMATION/],
+  ['AWAIT_TACTICAL_ALIGNMENT',/ATTENTE ALIGNEMENT 3m\/15m/],
+  ['TACTICAL_RESPIRATION',/RESPIRATION TACTIQUE<\/b> <b class="tv-direction tv-up">UP<\/b>/]
+ ]){
+  a.tactical.phase=phase;a.structure.phase=phase;
+  const html=front.renderHtml(a);
+  assert.match(html,needle,phase);
+  assert.match(html,new RegExp('Nomenclature native : '+phase));
+ }
+ const css=fs.readFileSync(CSS,'utf8');
+ assert.match(css,/#statePanel \.tv-pivot,#statePanel \.tv-phase-label/);
+});

@@ -23,6 +23,34 @@
  const polarity=d=>['long','up'].includes(String(d||'').toLowerCase())?'up':
    ['short','dn','down'].includes(String(d||'').toLowerCase())?'down':'neutral';
  const direction=d=>polarity(d)==='up'?'UP':polarity(d)==='down'?'DN':'—';
+ // Display-only classification: the structural trajectory code names the
+ // MOST RECENT confirmed LBW pivot, NOT an independently proven BTC trend.
+ // Never translate ASCENT_ACTIVE directly into RETOURNEMENT_UP.
+ const pivotName=state=>state==='ASCENT_ACTIVE'?'CREUX LBW15 CONFIRMÉ':
+   state==='DESCENT_ACTIVE'?'CRÊTE LBW15 CONFIRMÉE':'PIVOT LBW15 —';
+ const phaseName=(phase,dir)=>{
+   const name=String(phase||'');
+   if(name==='STRUCTURAL_CONTINUATION')
+     return 'CONTINUATION MCB '+direction(dir);
+   if(name==='STRUCTURAL_REVERSAL_FORMING')
+     return 'RETOURNEMENT '+direction(dir)+' · EN FORMATION';
+   if(name==='AWAIT_TACTICAL_ALIGNMENT')
+     return 'ATTENTE ALIGNEMENT 3m/15m';
+   if(name==='TACTICAL_RESPIRATION')
+     return 'RESPIRATION TACTIQUE '+direction(dir);
+   return name==='STRUCTURE_UNKNOWN'?'STRUCTURE NON QUALIFIÉE':name||'—';
+ };
+ const phaseBadge=(phase,dir)=>{
+   const name=String(phase||'');
+   const title=' title="Nomenclature native : '+clean(name||'—')+'"';
+   if(name==='STRUCTURAL_CONTINUATION')return '<b class="tv-phase-label"'+
+     title+'>CONTINUATION</b> MCB '+signal(dir);
+   if(name==='STRUCTURAL_REVERSAL_FORMING')return '<b class="tv-phase-label"'+
+     title+'>RETOURNEMENT</b> '+signal(dir)+' · EN FORMATION';
+   if(name==='TACTICAL_RESPIRATION')return '<b class="tv-phase-label"'+
+     title+'>RESPIRATION TACTIQUE</b> '+signal(dir);
+   return '<b class="tv-phase-label"'+title+'>'+clean(phaseName(phase,dir))+'</b>';
+ };
  // Typography only: values never acquire a different interpretation.
  const indicator=word=>'<span class="tv-indicator">'+clean(word)+'</span>';
  const signed=(value,decimals=1)=>'<b class="tv-result tv-'+
@@ -102,8 +130,9 @@
      '<div class="tv-position"><b>POSITION</b> FLAT · aucune position PAPER ouverte</div>';
    return [
      '<section class="tv-state-block tv-trajectory">'+
-       tag('1','Trajectoire','<b class="tv-direction tv-'+polarity(a.director)+'">'+
-         clean(a.strategicState||'—')+'</b> · offensive '+signal(a.offensive))+
+       tag('1','Trajectoire','<b class="tv-pivot" title="État natif MCB15 : '+
+         clean(a.strategicState||'—')+'">'+clean(pivotName(a.strategicState))+
+         '</b> · biais MCB '+signal(a.director)+' · offensive '+signal(a.offensive))+
        '<div class="tv-reading"><b>MCB15 · DIRECTEUR</b> '+indicator('BW')+' '+pair(a.bw)+
          '　'+indicator('LBW')+' '+pair(a.lbw)+'</div>'+
        eventLine('15',a.cross)+
@@ -114,7 +143,9 @@
           slopeStyle(a.mf?.confirmed,a.mf15Live)+'">'+clean(fmt(a.mf15Live,2,true))+'</b></div>'+
        '</section>',
      '<section class="tv-state-block tv-tactical">'+
-       tag('2','Tactique','<b>'+clean(b.phase||'—')+'</b> · '+clean(alignment))+
+       tag('2','Tactique',phaseBadge(b.phase,
+         ['STRUCTURAL_REVERSAL_FORMING','TACTICAL_RESPIRATION'].includes(b.phase)?p.candidate:a.director)+
+         ' · '+clean(alignment))+
        '<div class="tv-reading"><b>MCB3 · TACTIQUE</b> '+indicator('BW')+' '+pair(b.bw)+
         '　'+indicator('LBW')+' '+pair(b.lbw)+'</div>'+
        eventLine('3',b.cross)+
@@ -134,7 +165,9 @@
         ' '+signed(c.pmLiveUsd)+' $</b> · '+
         lineNames([['Cross3',c.cross3],['E3 Live',c.e3Live],['E3 confirmé',c.e3Confirmed],
          ['Cross15',c.cross15],['E15 Live',c.e15Live],['E15 confirmé',c.e15Confirmed]])+'</div>'+
-       evidence('PHASE STRUCTURELLE',clean(phase)+' · campagne '+clean(s.campaignId||'—')+
+       evidence('PHASE STRUCTURELLE',phaseBadge(phase,
+          ['STRUCTURAL_REVERSAL_FORMING','TACTICAL_RESPIRATION'].includes(phase)?p.candidate:a.director)+
+         ' · campagne '+clean(s.campaignId||'—')+
         ' · maturité rang2h '+clean(fmt(rank,1))+
         ' · '+indicator('MF15 sur 2h')+' '+signed(s.mf15History2h)+
         ' · maturité extension '+(s.matureAfterExtension?'AVANCÉE':'mesurée'),'tv-phase')+

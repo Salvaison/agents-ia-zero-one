@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-12T11:23:41.684089+00:00",
+  "status": "AUTORISE",
+  "description": "Le propriétaire demande les dénominations crête, creux, retournement, continuation UP/DN après le diagnostic du pivot MCB15",
+  "evidence": "Message original + analyse code structural-trajectory",
+  "previousEventSha256": null
+}
