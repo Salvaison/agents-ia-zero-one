@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261112-010",
+  "title": "Retrait du quatrieme panneau BOONO-TV Conversion 4x15",
+  "createdAtUtc": "2026-11-12T15:53:01.180769+00:00",
+  "authorization": "Rejet explicite par le propriétaire pour surcharge d information",
+  "reference": "OD-20261112-009, essai retiré",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "4dec1533d0216febaf38fbfb62b0dfec1c15d1214327705894f9ccdf9fb3685f",
+      "bytes": 72
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "34658278200e9b5d5080f0d814dac6e03addb293f8ab707d052b535534e42b8d",
+      "bytes": 1116
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0f6c8b40ab73a1cae2afbcfa785a13452e935ea144e1262ecd30f43b12cd2a94",
+      "bytes": 1206
+    }
+  }
+}

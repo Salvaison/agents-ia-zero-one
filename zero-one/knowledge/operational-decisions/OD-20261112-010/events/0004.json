@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-12T15:53:01.180769+00:00",
+  "status": "VERIFIE",
+  "description": "Trois vues 25/15/5 et cycle 45s, tests existants réussis, sources État vivant conservées",
+  "evidence": "40 tests Node, contrôle HTML OVH et proxy",
+  "previousEventSha256": "a3636f42b89059c75477d02f0334b5b4566c935a3cdc5a75f3ec1314ad920121"
+}

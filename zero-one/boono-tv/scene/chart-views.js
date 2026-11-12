@@ -5,12 +5,12 @@
  */
 const Q=s=>document.querySelector(s);
 const params=new URLSearchParams(location.search);
-const forced=params.get('panel'); // optional fixed preview: state / charts / trades / conversion
+const forced=params.get('panel'); // optional fixed preview: state / charts / trades
 const dialogueEditing=params.get('dialogueEdit')==='1'||params.get('storyboardEdit')==='1';
-const panels=['state','charts','trades','conversion'];
-// Fourth read-only stage: preserve previously validated 25s/15s/5s and
-// give Conversion the same 15s as the analytical Vagues. Total 60 seconds.
-const PANEL_DURATIONS_MS=Object.freeze({state:25000,charts:15000,trades:5000,conversion:15000});
+const panels=['state','charts','trades'];
+// Display dwell times, not market-data refresh periods.
+// Cycle: 25s State -> 15s charts -> 5s PAPER trades -> State (45s total).
+const PANEL_DURATIONS_MS=Object.freeze({state:25000,charts:15000,trades:5000});
 let rotationTimer=null;
 const rotationDisabled=dialogueEditing||panels.includes(forced);
 function scheduleNextPanel(){
@@ -29,20 +29,16 @@ const tag=(selector,value)=>{const el=Q(selector);if(el)el.textContent=value};
 function setView(view){
  if(!panels.includes(view))return;
  active=view;
- const panel=Q('#statePanel'),trio=Q('#leftChartTrio'),trades=Q('#completedTradesPanel'),
-   conversion=Q('#tvConversionPanel');
+ const panel=Q('#statePanel'),trio=Q('#leftChartTrio'),trades=Q('#completedTradesPanel');
  if(panel){
   panel.classList.toggle('charts-active',view==='charts');
   panel.classList.toggle('trades-active',view==='trades');
-  panel.classList.toggle('conversion-active',view==='conversion');
   panel.dataset.activePanel=view;
  }
  if(trio)trio.setAttribute('aria-hidden',view==='charts'?'false':'true');
  if(trades)trades.setAttribute('aria-hidden',view==='trades'?'false':'true');
- if(conversion)conversion.setAttribute('aria-hidden',view==='conversion'?'false':'true');
  if(view==='charts'&&lastSnapshot)drawTrio(lastSnapshot);
  if(view==='trades'&&lastSnapshot)drawCompletedTrades(lastSnapshot);
- if(view==='conversion'&&lastSnapshot)window.BoonoTVConversion?.render?.(lastSnapshot);
  scheduleNextPanel();
 }
 function tradeMarkers(){
@@ -220,7 +216,6 @@ function onSnapshot(s){
  tag('#pricePanelLive',nf(s?.market?.price,1)+' USDT');
  drawTrio(s);
  drawCompletedTrades(s);
- window.BoonoTVConversion?.onSnapshot?.(s);
 }
 async function refreshMarkers(){
  if(Array.isArray(lastSnapshot?.trades))return;

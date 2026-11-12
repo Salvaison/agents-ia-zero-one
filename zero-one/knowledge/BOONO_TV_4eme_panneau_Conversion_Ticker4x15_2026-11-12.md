@@ -1,5 +1,8 @@
 # BOONO-TV — Quatrième panneau Conversion + ticker Elastic 4×15
 
+**STATUT ACTUEL : RETIRÉ SUR DEMANDE DU PROPRIÉTAIRE, LE 12 NOVEMBRE 2026.** Cette passation reste une archive de l’essai rejeté. BOONO-TV a retrouvé ses trois vues et la rotation 25/15/5, cycle 45 secondes. Voir OD-20261112-010. La ligne CONVERSION de l’État vivant validée séparément n’est pas touchée.
+
+
 **Date de mise en service :** 12 novembre 2026 · **Décision :** OD-20261112-009.
 **Objet :** quatrième vue tournante du panneau gauche de BOONO-TV, graphiquement harmonisée avec « Vues analytiques / Vagues ».
 **Frontière de sécurité :** interface et relais read-only ; aucun changement de moteur, de position, de règles ni d'ordres.

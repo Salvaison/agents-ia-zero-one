@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-12T15:53:01.180769+00:00",
+  "status": "RETIRE_AMSTERDAM",
+  "description": "Rétabli pont avant 4e vue, supprimé tvTicker4x15 et provider, redémarrage ciblé boono-tv uniquement",
+  "evidence": "API 3090, PM2 ; aucune modification des runners PAPER",
+  "previousEventSha256": "01e016edebb8f6758350562d4ef847ec75eb70a6e0561b11a0a4a68c4cb62e4d"
+}

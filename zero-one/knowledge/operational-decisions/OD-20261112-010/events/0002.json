@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-12T15:53:01.180769+00:00",
+  "status": "RETIRE_OVH",
+  "description": "Restauré index.html et chart-views.js depuis les sauvegardes exactes pré-4e vue; assets JS/CSS spécialisés hors scène",
+  "evidence": "Contrôle SHA-256 et HTTP 3091",
+  "previousEventSha256": "13b2195d62e1f530cf06a061d92df478c8cb5557cc8c0bc49048d9b2880bd695"
+}

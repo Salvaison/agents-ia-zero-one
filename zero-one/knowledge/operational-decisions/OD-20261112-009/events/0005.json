@@ -1,0 +1,9 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-11-12T15:53:01.180769+00:00",
+  "status": "RETIRE_SUR_DEMANDE_UTILISATEUR",
+  "description": "Quatrième panneau Conversion + ticker 4x15 retiré car le propriétaire le juge trop chargé. Trois vues et rotation 25/15/5 restaurées ; pont de données supplémentaire retiré.",
+  "evidence": "Message utilisateur : Non, c est pas bien, celà fait trop d info, tu peux enlevé se dernier. OD-20261112-010.",
+  "scope": "Ne concerne pas la ligne Conversion et la qualité SHADOW déjà validées dans l État vivant, ni les moteurs PAPER.",
+  "previousEventSha256": "04a15bc9f592f4b66828c89f34595f6d3957e7581a3562b9c405456968551aa2"
+}
