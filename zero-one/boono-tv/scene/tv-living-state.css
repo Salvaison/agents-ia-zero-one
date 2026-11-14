@@ -283,3 +283,18 @@
 #statePanel .tv-five .tv-causal .tv-structural-phase{
  margin-top:2px;padding-top:2px
 }
+
+
+/* OD-20261114-001: confirmed native E retains its own UP/DN color; a
+   genuine fresh opposite Live shares the same palette, blank is neutral. */
+#statePanel .tv-five .tv-place .tv-native-signal.tv-up,
+#statePanel .tv-five .tv-place .tv-native-label.tv-up{
+ color:#39f3a4;font-weight:950
+}
+#statePanel .tv-five .tv-place .tv-native-signal.tv-down,
+#statePanel .tv-five .tv-place .tv-native-label.tv-down{
+ color:#ff6178;font-weight:950
+}
+#statePanel .tv-five .tv-place .tv-native-signal.tv-neutral{
+ color:#cedbe2;font-weight:780
+}

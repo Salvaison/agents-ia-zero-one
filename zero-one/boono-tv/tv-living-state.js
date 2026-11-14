@@ -34,29 +34,64 @@ function parseMcbConfirmed(csv,tfMinutes,asOf){
   }];
  }).sort((a,b)=>a.sourceAt-b.sourceAt);
 }
-// The 1h line reports two genuine CLOSED MCB candles, not a fabricated
-// live value or a replay of the 4h numbers. E1 Live is unavailable until
-// a separately timestamped native 1h intrabar event source is verified.
-function confirmed1h(csv,asOf){
- const bars=parseMcbConfirmed(csv,60,asOf);
- const latest=bars.at(-1),previous=bars.at(-2);
+// The native TradingView marker is recorded at candle close in CSV
+// columns 13/14 (UP/DN). Preserve the confirmed marker until an opposing
+// confirmed marker replaces it; do not confuse its negative BW value with DN.
+function lastNativeConfirmed(bars){
+ for(let i=bars.length-1;i>=0;i--){
+  const row=bars[i],up=row.eventUp!==null,dn=row.eventDown!==null;
+  if(up===dn)continue;
+  return {direction:up?'UP':'DN',lbw:row.lbw,
+   nativeValue:round(up?row.eventUp:row.eventDown),
+   sourceAt:row.sourceAt,availableAt:row.availableAt,
+   source:'MCB_NATIVE_CLOSED_BAR_CSV',confirmed:true};
+ }return null;
+}
+// True intrabar snapshots exist independently for 1h/4h on Amsterdam.
+// Only show a recent native event from the CURRENT still-open candle if it
+// is OPPOSITE to the last confirmed event. Same-direction Live is extinguished
+// at confirmation and never restated as a second independent proof.
+function oppositeLiveSignal(input,tfMinutes,asOf,confirmed){
+ const tf=TF_MS[tfMinutes],now=NULL_IF_MISSING(asOf),
+   observedAt=NULL_IF_MISSING(input?.observedAt);
+ if(!tf||now===null||!confirmed||observedAt===null||
+    observedAt>now+3000||now-observedAt>120000)return null;
+ const lines=String(input.csv||'').trim().split(/\r?\n/);
+ if(lines.length!==2)return null;
+ const cols=lines[1].split(',');
+ if(cols.length<15)return null;
+ const sourceAt=Date.parse(cols[0]);
+ if(!Number.isFinite(sourceAt)||sourceAt!==Math.floor(now/tf)*tf||
+    sourceAt+tf<=now)return null;
+ const up=NULL_IF_MISSING(cols[13]),dn=NULL_IF_MISSING(cols[14]),
+   lbw=NULL_IF_MISSING(cols[5]);
+ if((up===null)===(dn===null)||lbw===null)return null;
+ const direction=up!==null?'UP':'DN';
+ if(direction===confirmed.direction||observedAt<=confirmed.availableAt)return null;
+ return {direction,lbw:round(lbw),nativeValue:round(up??dn),
+  sourceAt,observedAt,provisional:true,confirmed:false,
+  source:'MCB_NATIVE_CURRENT_BAR_CSV',
+  priorConfirmedAt:confirmed.availableAt,
+  oppositeToConfirmed:true};
+}
+function confirmedTf(csv,tfMinutes,asOf,liveCsv=null){
+ const bars=parseMcbConfirmed(csv,tfMinutes,asOf),
+   latest=bars.at(-1),previous=bars.at(-2),
+   event=lastNativeConfirmed(bars),
+   live=oppositeLiveSignal(liveCsv,tfMinutes,asOf,event);
  return {status:latest&&previous?'CONFIRMED':'UNAVAILABLE',
   bw:{previous:previous?.bw??null,confirmed:latest?.bw??null},
   lbw:{previous:previous?.lbw??null,confirmed:latest?.lbw??null},
   sourceAt:latest?.sourceAt??null,
   availableAt:latest?.availableAt??null,
-  e1Live:null};
+  event,live};
 }
-function confirmed4h(csv,asOf){
- const bars=parseMcbConfirmed(csv,240,asOf),latest=bars.at(-1),previous=bars.at(-2);
- const event=[...bars].reverse().find(x=>
-  (x.eventUp!==null)!==(x.eventDown!==null));
- return {status:latest&&previous?'CONFIRMED':'UNAVAILABLE',
-   bw:{previous:previous?.bw??null,confirmed:latest?.bw??null},
-   lbw:{previous:previous?.lbw??null,confirmed:latest?.lbw??null},
-   sourceAt:latest?.sourceAt??null,availableAt:latest?.availableAt??null,
-   event:event?{direction:event.eventUp!==null?'UP':'DN',
-     lbw:event.lbw,sourceAt:event.sourceAt,availableAt:event.availableAt}:null};
+function confirmed1h(csv,asOf,liveCsv=null){
+ const state=confirmedTf(csv,60,asOf,liveCsv);
+ return {...state,e1Live:state.live};
+}
+function confirmed4h(csv,asOf,liveCsv=null){
+ return confirmedTf(csv,240,asOf,liveCsv);
 }
 function rangeZone(rank){
  const x=NULL_IF_MISSING(rank);
@@ -105,7 +140,7 @@ function recordedRanges(levels,price){
  }
  return out;
 }
-function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',levels=[],marketSixCalibration=null,now=Date.now()}={}){
+function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',liveCsv1=null,liveCsv4=null,levels=[],marketSixCalibration=null,now=Date.now()}={}){
  const a=paper?.latestAnalysis||{},r=a.readings||{},s54=r.structural54||{};
  const asOf=NULL_IF_MISSING(a.asOf),age=asOf===null?Infinity:now-asOf;
  const valid=paper?.brokerOrdersEnabled===false&&
@@ -178,8 +213,8 @@ function build({paper, audit=[],events=[],csv3='',csv15='',csv1='',csv4='',level
   priceRangeRank:round(rank,2),rangeZone:rangeZone(rank),
   recordedRanges:recordedRanges(levels,a.price),
   priceAsOf:asOf,
-  h4:confirmed4h(csv4,asOf),
-  h1:confirmed1h(csv1,asOf)
+  h4:confirmed4h(csv4,asOf,liveCsv4),
+  h1:confirmed1h(csv1,asOf,liveCsv1)
  };
  // V543 PM3/PM5 sign disagreement is separate from six historical
  // market quality regimes (3 intensity bands x retained/non-retained price).
@@ -269,6 +304,10 @@ function createReader({dataDir,mcDir}={}){
   },[]);
  }
  const fsCsv=(tf)=>path.join(mcb,'mcb_'+tf+'.csv');
+ const liveTf=tf=>read(path.join(mcb,'mcb_'+tf+'_live.csv'),
+  (filename,stat)=>stat.size>4096?null:{
+   csv:fs.readFileSync(filename,'utf8'),observedAt:stat.mtimeMs
+  },null);
  return paper=>build({paper,now:Date.now(),
    audit:jsonTail(path.join(data,'audit-history.json')),
    events:eventsTail(path.join(data,'elastic-observer-events.ndjson')),
@@ -282,6 +321,7 @@ function createReader({dataDir,mcDir}={}){
    csv3:tail(fsCsv('3m'),30000),
    csv15:tail(fsCsv('15m'),30000),
    csv1:tail(fsCsv('1h'),30000),
-   csv4:tail(fsCsv('4h'),100000)});
+   csv4:tail(fsCsv('4h'),100000),
+   liveCsv1:liveTf('1h'),liveCsv4:liveTf('4h')});
 }
-module.exports={build,parseMcbConfirmed,confirmed1h,confirmed4h,rangeZone,recordedRanges,createReader};
+module.exports={build,parseMcbConfirmed,confirmed1h,confirmed4h,oppositeLiveSignal,lastNativeConfirmed,rangeZone,recordedRanges,createReader};

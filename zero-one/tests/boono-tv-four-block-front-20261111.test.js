@@ -59,7 +59,7 @@ test('Revised TV02 PDF: five ordered flat rubrics with recorded Daily/Big ranges
  const titles=['MCB15 · DIRECTEUR','MCB3 · TACTIQUE','LIEU STRUCTUREL','CHAÎNE CAUSALE','POSITION'];
  const order=titles.map(x=>html.indexOf(x));
  assert.ok(order.every((x,i)=>x>=0&&(i===0||x>order[i-1])));
- for(const name of ['Cross15','MF15','MA15','Cross3','MA3','BW4','E4 confirmé','DailyRange',
+ for(const name of ['Cross15','MF15','MA15','Cross3','MA3','BW4','E4Live','DailyRange',
    'BigRange','SOUS VAL','ABOVE POC','PHASE STRUCTURELLE','MFE','MAE','invalidation','MATURITÉ OFFENSIVE']){
   assert.ok(html.includes(name),name);
  }
@@ -106,7 +106,7 @@ test('Typographie BOONO-TV : sigles bleus, précédent gris, actuelle rouge/vert
   ['MF3 en hausse', /<span class="tv-indicator">MF3<\/span>\s*<span class="tv-prior">\+6,6<\/span>[\s\S]*?<b class="tv-current tv-up">\+9,0<\/b>/],
   ['Cross15 DN en rouge', /<span class="tv-indicator">Cross15<\/span>\s*<b class="tv-direction tv-down">DN<\/b>/],
   ['Cross3 UP en vert', /<span class="tv-indicator">Cross3<\/span>\s*<b class="tv-direction tv-up">UP<\/b>/],
-  ['E4 confirmé coloration', /<span class="tv-indicator">E4 confirmé<\/span>\s*<b class="tv-direction tv-down">DN<\/b>/],
+  ['E4 confirmé coloré selon le sens même si LBW négatif', /<b class="tv-native-label tv-down">E4<\/b>\s*<b class="tv-native-signal tv-down"[^>]*>-42,8<\/b>/],
   ['PM Live positif en vert', /<span class="tv-indicator">PM Live<\/span>\s*<b class="tv-result tv-up">\+19,2<\/b>/],
   ['P&L net négatif en rouge', /P&L net potentiel<\/b>\s*<b class="tv-result tv-down">-2,5<\/b>/],
  ];
@@ -174,7 +174,7 @@ test('TV02: cinq bandeaux de titres gris-bleuté et dénominations blanches sans
  assert.match(html,/class="tv-current tv-up"/);
 });
 
-test('TV place prints real 1h BW1/LBW1 directly under 4h and leaves E1 Live unproved',()=>{
+test('TV place prints real 1h BW1/LBW1 below 4h, native E1 event may be unavailable',()=>{
  const a=stub();
  a.place.h1={
   status:'CONFIRMED',
@@ -186,13 +186,13 @@ test('TV place prints real 1h BW1/LBW1 directly under 4h and leaves E1 Live unpr
  const place=html.match(/<section class="tv-state-block tv-place">([\s\S]*?)<\/section>/)?.[1];
  assert.ok(place,'place rendered');
  const pos4=place.indexOf('<b>4h</b>'),pos1=place.indexOf('<b>1h</b>'),
-       posE4=place.indexOf('E4 confirmé'),posDaily=place.indexOf('DailyRange');
- assert.ok(pos4>=0&&pos1>pos4&&posE4>pos1&&posDaily>posE4,
-  '1h must be immediately after 4h, before E4 confirmed and two ranges');
+       posE4=place.indexOf('tv-native-label tv-down">E4'),posDaily=place.indexOf('DailyRange');
+ assert.ok(pos4>=0&&posE4>pos4&&pos1>posE4&&posDaily>pos1,
+  '4h E4Live/E4 then 1h E1Live/E1, before registered ranges');
  assert.match(place,/<span class="tv-indicator">BW1<\/span>\s*<span class="tv-prior">-50,4<\/span>[\s\S]*?<b class="tv-current tv-down">-56,9<\/b>/);
  assert.match(place,/<span class="tv-indicator">LBW1<\/span>\s*<span class="tv-prior">-58,2<\/span>[\s\S]*?<b class="tv-current tv-down">-65,8<\/b>/);
- assert.match(place,/<span class="tv-indicator">E1 Live<\/span> —/);
- assert.match(place,/title="MCB1h : précédente et dernière bougies clôturées · source /);
+ assert.match(place,/<span class="tv-indicator">E1Live<\/span> —/);
+ assert.match(place,/title="MCB1h : BW\/LBW précédent et dernier confirmés · source /);
 });
 test('Missing 1h source must not reprint 4h measurements or invent E1 Live',()=>{
  const a=stub();
@@ -201,5 +201,5 @@ test('Missing 1h source must not reprint 4h measurements or invent E1 Live',()=>
  const h=browser().front.renderHtml(a);
  assert.match(h,/<b>1h<\/b>\s*<span class="tv-indicator">BW1<\/span> — \/ —/);
  assert.match(h,/<span class="tv-indicator">LBW1<\/span> — \/ —/);
- assert.match(h,/<span class="tv-indicator">E1 Live<\/span> —/);
+ assert.match(h,/<span class="tv-indicator">E1Live<\/span> —/);
 });

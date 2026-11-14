@@ -115,3 +115,9 @@ La surface de 900px consacrée aux cinq rubriques TV02 est désormais divisée e
 ## 12 novembre — Conversion PM3/PM5/PMLive et six qualités de marché
 
 Dans la quatrième rubrique, une ligne CONVERSION comporte maintenant PM3, PM5 et PMLive V5.4.3, leur opposition éventuelle CONTESTED, puis le marché classé selon les six qualités **FAIBLE/MÉDIAN/FORT × PRODUCTIF/IMPRODUCTIF** de l'étude BOONOLAB du 7 novembre. Cette qualification utilise l'AUDIT d'une heure glissante et les seuils historiques expérimentaux, **sans impact décisionnel**. Le rendu garde deux lignes compactes entre la chaîne E3/E15 et la phase structurelle pour respecter les cinq sections fixes de 180px. La passation complète est dans knowledge/BOONO_TV_conversion_six_qualites_marche_2026-11-12.md et le registre OD-20261112-008.
+
+## Actualisation du 14 novembre — E1/E4 Live opposé et confirmé persistant
+
+**Référence active :** knowledge/BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_2026-11-14.md et OD-20261114-001.
+
+Les lignes MCB4h et MCB1h affichent à présent **E4Live/E4** et **E1Live/E1** directement sur les lignes du LIEU STRUCTUREL. Le dernier marqueur natif UP/DN confirmé est conservé avec sa valeur LBW et ses dates de preuve. Le Live disparaît dès qu'une confirmation du même événement est disponible, et ne réapparaît que si un nouveau marqueur natif **opposé** au confirmé est observé sur une bougie encore ouverte et fraîche. Les libellés E et leurs valeurs sont verts en UP / rouges en DN, **indépendamment du signe de LBW**. Les sources sont les fichiers CSV TradingView clos et intrabar 1h/4h, contrôlés par asOf et mtime. À la lecture vérifiée, E4 UP ≈ −95,0 et E1 UP ≈ −79,7 ; leur Live est « — ». Cette évolution remplace les anciennes observations historiques « E1Live toujours — » mais ne crée aucune autorité de trading. Les deux ranges et les cinq zones fixes de 180px demeurent inchangés.

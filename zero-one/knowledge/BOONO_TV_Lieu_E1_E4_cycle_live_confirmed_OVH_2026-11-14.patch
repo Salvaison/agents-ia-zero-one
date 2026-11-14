@@ -1,0 +1,117 @@
+--- a/scene/tv-living-state.js
++++ b/scene/tv-living-state.js
+@@ -176,26 +176,43 @@
+        signed(pct,1)+' % · depuis '+clean(ref)+' '+signed(dist)+' $</div>';
+    };
+    const h4=p.h4||{},h1=p.h1||{};
+-   const h4Row=h4.status==='CONFIRMED'?
+-     '<div class="tv-reading"><b>4h</b> '+indicator('BW4')+' '+
+-       pair(h4.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW4')+
+-       ' '+pair(h4.lbw,{past:'previous',next:'confirmed'})+
+-       ' · '+indicator('E4 Live')+' —</div>':
+-     '<div class="tv-reading"><b>4h</b> — · données confirmées indisponibles</div>';
+-   const h1Row=h1.status==='CONFIRMED'?
+-     '<div class="tv-reading" title="MCB1h : précédente et dernière bougies clôturées · source '+
+-       clean(time(h1.sourceAt))+' · disponible '+clean(time(h1.availableAt))+'">'+
+-       '<b>1h</b> '+indicator('BW1')+' '+
+-       pair(h1.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW1')+
+-       ' '+pair(h1.lbw,{past:'previous',next:'confirmed'})+
+-       ' · '+indicator('E1 Live')+' —</div>':
+-     '<div class="tv-reading"><b>1h</b> '+indicator('BW1')+' — / —　'+
+-       indicator('LBW1')+' — / — · '+indicator('E1 Live')+' —</div>';
+-   const e4ConfirmedRow=h4.status==='CONFIRMED'?
+-     '<div class="tv-reading">'+indicator('E4 confirmé')+' '+
+-       (h4.event?signal(h4.event.direction)+' · '+clean(time(h4.event.availableAt))+
+-        ' · '+indicator('LBW4')+' '+signed(h4.event.lbw):
+-        '— · aucun signal confirmé documenté')+'</div>':'';
++   // Native confirmed E stays visible. Live is a fresh, unconfirmed event
++   // opposite to the most recent confirmed E; same-side Live extinguishes.
++   // The printed value is the LBW at the E crossing, not the sign of the
++   // direction: an UP E can legitimately have a negative numeric level.
++   const nativeE=(label,event,isLive=false)=>{
++     const e=event&&polarity(event.direction)!=='neutral'?event:null;
++     if(!e)return indicator(label)+' —';
++     const side=polarity(e.direction);
++     const tip=label+' '+(isLive?'provisoire':'confirmé')+' '+direction(e.direction)+
++       ' · LBW '+fmt(e.lbw,1)+
++       ' · BW au croisement '+fmt(e.nativeValue,1)+
++       ' · bougie '+time(e.sourceAt)+
++       ' · '+(isLive?'observé':'disponible')+' '+time(isLive?e.observedAt:e.availableAt);
++     return '<b class="tv-native-label tv-'+side+'">'+clean(label)+'</b>'+
++       ' <b class="tv-native-signal tv-'+side+'" title="'+clean(tip)+'">'+
++       clean(fmt(e.lbw,1))+'</b>';
++   };
++   const mcbLine=(tf,h,liveKey='live')=>{
++     const n=tf==='4h'?'4':'1';
++     if(h.status!=='CONFIRMED')return '<div class="tv-reading"><b>'+tf+
++       '</b> '+indicator('BW'+n)+' — / —　'+indicator('LBW'+n)+' — / —'+
++       ' · '+nativeE('E'+n+'Live',null,true)+' · '+nativeE('E'+n,null)+'</div>';
++     const live=h[liveKey]||null;
++     // The bridge already filters this; avoid color duplication on a
++     // malformed legacy payload with same-direction Live and confirmed.
++     const opposite=live&&h.event&&live.direction!==h.event.direction?live:null;
++     return '<div class="tv-reading" title="MCB'+tf+
++       ' : BW/LBW précédent et dernier confirmés · source '+
++       clean(time(h.sourceAt))+' · disponible '+clean(time(h.availableAt))+'">'+
++       '<b>'+tf+'</b> '+indicator('BW'+n)+' '+
++       pair(h.bw,{past:'previous',next:'confirmed'})+'　'+indicator('LBW'+n)+
++       ' '+pair(h.lbw,{past:'previous',next:'confirmed'})+
++       ' · '+nativeE('E'+n+'Live',opposite,true)+
++       ' · '+nativeE('E'+n,h.event)+'</div>';
++   };
++   const h4Row=mcbLine('4h',h4);
++   const h1Row=mcbLine('1h',h1);
+    const locationHead=(pos?.direction?
+        '<b class="tv-direction tv-'+polarity(pos.direction)+'">'+
+          clean(String(pos.direction).toUpperCase())+'</b>':p.candidate?
+@@ -241,7 +258,6 @@
+        tag('3','LIEU STRUCTUREL',locationHead)+
+        h4Row+
+        h1Row+
+-       e4ConfirmedRow+
+        rangeRow(p.recordedRanges?.daily,'DailyRange')+
+        rangeRow(p.recordedRanges?.big,'BigRange')+
+        '</section>',
+
+--- a/scene/tv-living-state.css
++++ b/scene/tv-living-state.css
+@@ -283,3 +283,18 @@
+ #statePanel .tv-five .tv-causal .tv-structural-phase{
+  margin-top:2px;padding-top:2px
+ }
++
++
++/* OD-20261114-001: confirmed native E retains its own UP/DN color; a
++   genuine fresh opposite Live shares the same palette, blank is neutral. */
++#statePanel .tv-five .tv-place .tv-native-signal.tv-up,
++#statePanel .tv-five .tv-place .tv-native-label.tv-up{
++ color:#39f3a4;font-weight:950
++}
++#statePanel .tv-five .tv-place .tv-native-signal.tv-down,
++#statePanel .tv-five .tv-place .tv-native-label.tv-down{
++ color:#ff6178;font-weight:950
++}
++#statePanel .tv-five .tv-place .tv-native-signal.tv-neutral{
++ color:#cedbe2;font-weight:780
++}
+
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -15,7 +15,7 @@
+ </script>
+ <link rel="stylesheet" href="/styles.css">
+ <link rel="stylesheet" href="/boono-v2.css?v=OD20261107-002">
+-<link rel="stylesheet" href="/tv-living-state.css?v=OD20261112-008">
++<link rel="stylesheet" href="/tv-living-state.css?v=OD20261114-001">
+ </head>
+ <body>
+ <main id="scene">
+@@ -113,7 +113,7 @@
+ <script src="/boono-charts.js"></script>
+ <script src="/tv-mini-conversion.js"></script>
+ <script src="/chart-views.js?v=OD20261112-005"></script>
+-<script src="/tv-living-state.js?v=OD20261112-008"></script>
++<script src="/tv-living-state.js?v=OD20261114-001"></script>
+ <script src="/app.js?v=OD20261106-011"></script>
+ <script src="/layout-editor.js"></script>
+ <script src="/radio-preview.js"></script>

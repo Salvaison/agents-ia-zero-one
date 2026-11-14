@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-14T10:42:54.272906+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Pont boono-tv Amsterdam relancé seul ; HTTP OVH studio/lecteur mobile 200, V5 frais ; moteurs PAPER non modifiés et validation visuelle propriétaire ouverte",
+  "evidence": "Vérifications du proxy 3091/3092 et PM2 Amsterdam",
+  "previousEventSha256": "cc5f63721b4fe85c6e5281ff753a55779dd26dc3bab921937e30fdf302398b16"
+}
