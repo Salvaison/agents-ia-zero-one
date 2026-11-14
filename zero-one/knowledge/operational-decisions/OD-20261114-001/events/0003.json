@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-14T07:35:39+00:00",
+  "status": "TESTE",
+  "description": "Snapshot financier au 14/11 08h18 CET rapproche: V494 187 clotures -296.0207, V543 240 clotures -205.9698 dont V5.4.3 161 clotures -83.045; variation 12/11 17h a 14/11 08h18 V494 17 sorties -86.1105 et V543 10 sorties +33.2613; appariement des shadow recent verifie; liens KB et doc de reprise valides. Aucun test de moteur ni changement de politique, tests analytiques seulement",
+  "evidence": "Contrôles calcul Python sur data/v494-paper-trades.ndjson et data/v52-paper-trades.ndjson avec cutoff figé ; /tmp/boonolab_handoff_shadows_20261114.py ; /tmp/boonolab_handoff_regimes_20261114.py ; /tmp/boonolab_handoff_market_20261114.py ; MD 2 fichiers, 0 lien local manquant ; boono-decision-archive.py verify --id OD-20261114-001 validé",
+  "previousEventSha256": "3e7090a6141445b3f38352d60cb40d792cff4ff4975ed7c778361796e9911bde"
+}

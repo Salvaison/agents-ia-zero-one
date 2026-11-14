@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261114-001",
+  "title": "Passation finale BOONOLAB V494 V543 PAPER et shadows bilan et recherche future",
+  "createdAtUtc": "2026-11-14T07:32:22+00:00",
+  "authorization": "Utilisateur demande bilan final complet et passation vers une nouvelle discussion; documentation uniquement, aucune modification PAPER",
+  "reference": "Discussion BOONOLAB Novembre 2026, contrôle Amsterdam 14/11 08h18 CET, analyses KB des 7 et 12 novembre",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2a80bfb75968ce76a28f2a3a41a88c8fbcf7f313a98c1dd6674329aa40159fbd",
+      "bytes": 466
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "45785f3c5cc0355c8311bf3ef0b75936749581a8b6ef5fce07ac58c436da747e",
+      "bytes": 2350
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "ae123a17041f60175a54438f764430388203421afcfccb1ac0cfca8d67a7586e",
+      "bytes": 2145
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-14T07:32:22+00:00",
+  "status": "AUTORISE",
+  "description": "Recherche, inventaire et publication de passation demandés par utilisateur; aucune expérimentation de politique ni changement de seuil autorisé ici",
+  "evidence": "01-demande-utilisateur-integrale; 02-prompt-operationnel-integral; 03-origine-et-justification",
+  "previousEventSha256": null
+}

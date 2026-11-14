@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-14T07:32:41+00:00",
+  "status": "DOCUMENTE",
+  "description": "Rapport de passation rédigé avec bilan figé V494 V543, meilleures et pires campagnes, shadows, régimes, limitations et recommandations; prompt nouveau chat séparé; aucune politique modifiée",
+  "evidence": "zero-one/knowledge/BOONOLAB_PASSATION_FINALE_494_543_SHADOWS_2026-11-14.md; zero-one/knowledge/BOONOLAB_PASSATION_PROMPT_REPRISE_2026-11-14.md; ledgers Amsterdam à 08h18 CET",
+  "previousEventSha256": "1096f4783d9eaff6ef1fa0926690aaa6e5c783f31c04c45aa36512126e771202"
+}
