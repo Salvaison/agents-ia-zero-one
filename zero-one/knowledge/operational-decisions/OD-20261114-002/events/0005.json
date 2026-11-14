@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-11-14T10:44:42.788967+00:00",
+  "status": "RECTIFICATION_IDENTIFIANT_DE_REGISTRE",
+  "description": "Le numéro OD-20261114-001 était déjà attribué à la passation BOONOLAB V494/V543. La présente modification BOONO-TV a été reclassée sous OD-20261114-002, et les fichiers originaux du registre -001 ont été rétablis à l identique. Les changements UI, sources et preuves de tests ne sont pas affectés.",
+  "evidence": "Contrôle du manifeste Git antérieur au commit f362b0d, SHA des originaux et commit correctif.",
+  "previousEventSha256": "010f1bf46bf213554b206214d542baf2a89b57b377a0d0cec211df786b2d391e"
+}

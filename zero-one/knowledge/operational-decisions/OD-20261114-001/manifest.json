@@ -1,23 +1,23 @@
 {
   "schemaVersion": 1,
   "decisionId": "OD-20261114-001",
-  "title": "BOONO-TV Lieu structurel E1/E4 native Live oppose et confirmation",
-  "createdAtUtc": "2026-11-14T10:42:54.272906+00:00",
-  "authorization": "Proposition explicite du propriétaire le 14 novembre 2026",
-  "reference": "BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_2026-11-14.md",
+  "title": "Passation finale BOONOLAB V494 V543 PAPER et shadows bilan et recherche future",
+  "createdAtUtc": "2026-11-14T07:32:22+00:00",
+  "authorization": "Utilisateur demande bilan final complet et passation vers une nouvelle discussion; documentation uniquement, aucune modification PAPER",
+  "reference": "Discussion BOONOLAB Novembre 2026, contrôle Amsterdam 14/11 08h18 CET, analyses KB des 7 et 12 novembre",
   "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
   "files": {
     "01-demande-utilisateur-integrale.txt": {
-      "sha256": "cb13113d6c55e85143bb63e30f4cbaeb245e21768f57c802c1b9dc939ac18ec5",
-      "bytes": 652
+      "sha256": "2a80bfb75968ce76a28f2a3a41a88c8fbcf7f313a98c1dd6674329aa40159fbd",
+      "bytes": 466
     },
     "02-prompt-operationnel-integral.txt": {
-      "sha256": "714af8854144e7cba400134ec0974f301ed727451f3b39c73718f7407fbf21fd",
-      "bytes": 1779
+      "sha256": "45785f3c5cc0355c8311bf3ef0b75936749581a8b6ef5fce07ac58c436da747e",
+      "bytes": 2350
     },
     "03-origine-et-justification.md": {
-      "sha256": "0b205e401f8a55fe95c27662c6361f01d71b8b1168c73d9b2c212ba4ba7d19bf",
-      "bytes": 1872
+      "sha256": "ae123a17041f60175a54438f764430388203421afcfccb1ac0cfca8d67a7586e",
+      "bytes": 2145
     }
   }
 }

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-14T10:42:54.272906+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Lecture des CSV natifs 1h/4h clos et intrabar avec provenance, état Live seulement contradictoire et dynamique ; affichage inline coloré sur OVH",
+  "evidence": "boono-tv/tv-living-state.js, scene/tv-living-state.js/.css, patch OVH de l index",
+  "previousEventSha256": "2bbb3763004f4b301adce2d4d6f76e993b9e6289e071c3378cbd976c26d43d23"
+}

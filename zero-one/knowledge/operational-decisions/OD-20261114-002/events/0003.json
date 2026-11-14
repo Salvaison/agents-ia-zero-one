@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-14T10:42:54.272906+00:00",
+  "status": "TESTE",
+  "description": "49 tests Node validés, dont neuf scénarios du cycle et cas stale/futur ; Chromium 1920x1080, cinq zones 180px sans overflow, sens UP vert avec LBW négatif",
+  "evidence": "tests/boono-tv-higher-tf-event-lifecycle-20261114.test.js et suite UI, capture de validation locale",
+  "previousEventSha256": "5735cedb8d628966d1fc4ccabaf1f376f24595c6b8f26bc65812e63ef6e0d61d"
+}

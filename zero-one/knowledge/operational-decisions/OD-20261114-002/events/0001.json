@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-14T10:42:54.272906+00:00",
+  "status": "AUTORISE",
+  "description": "Proposition propriétaire : confirmer E4/E1 éteint Live, puis seul Live opposé se réarme",
+  "evidence": "Texte intégral de la demande et niveaux exemples",
+  "previousEventSha256": null
+}

@@ -1,6 +1,6 @@
 # BOONO-TV — LIEU STRUCTUREL : cycle natif E1/E4 Live → confirmé
 
-**Date :** 14 novembre 2026 · **Décision :** OD-20261114-001
+**Date :** 14 novembre 2026 · **Décision :** OD-20261114-002
 **Statut :** implémenté sur Amsterdam et OVH, vérifié en tests et par aperçu Chrome ; appréciation finale de l'utilisateur dans la scène complète ouverte.
 **Autorité :** affichage documentaire, aucune décision de trading ni ordre modifié.
 
@@ -62,7 +62,7 @@ Les autres conventions de l'État vivant sont intactes : BW/LBW précédent en g
 - `boono-tv/tv-living-state.js` (VPS Amsterdam) : fonctions pures `lastNativeConfirmed`, `oppositeLiveSignal`, `confirmedTf` et lecture sous cache mtime/size des deux CSV intra-bougie. Seul le pont PM2 `boono-tv` a été redémarré pour servir les champs supplémentaires dans `/api/snapshot`.
 - `scene/tv-living-state.js` (runtime OVH) : `E4Live/E4` et `E1Live/E1` incorporés aux lignes respectives ; libellés + chiffres colorés par sens du marqueur, non par signe du chiffre. L'ancien sous-panneau séparé E4 confirmé a été supprimé pour conserver la hauteur utile.
 - `scene/tv-living-state.css` (runtime OVH) : couleurs UP `#39f3a4` et DN `#ff6178` ciblées uniquement sur `#statePanel .tv-five .tv-place`.
-- `scene/index.html` sur OVH : cache-bust spécifique aux JS/CSS de l'État vivant, version `OD20261114-001`. Le patch exact extrait du runtime OVH est archivé dans `knowledge/BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_OVH_2026-11-14.patch`. **Ne pas remplacer le runtime OVH entier** par la copie historique du dépôt.
+- `scene/index.html` sur OVH : cache-bust spécifique aux JS/CSS de l'État vivant, version `OD20261114-002`. Le patch exact extrait du runtime OVH est archivé dans `knowledge/BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_OVH_2026-11-14.patch`. **Ne pas remplacer le runtime OVH entier** par la copie historique du dépôt.
 
 **Tests :** 49 tests Node des interfaces et des contrats de source, notamment neuf nouveaux tests couvrant opposition Live, confirmation qui l'éteint, réapparition opposée, exclusion des bougies futures, observations périmées, double marqueur contradictoire, couleur native et compatibilité avec les anciennes données.
 

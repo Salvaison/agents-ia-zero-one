@@ -1,9 +1,1 @@
-Je trouve l'état vivant de BoonoTv particulièrement réussi ici avec une petite amélioration du lieu structurelle, avec le codage coleur bien sur
-
-**3LIEU STRUCTURELSHORT · ATTENTE UP**
-**4h BW4** -83,5 / -82,1　**LBW4** -82,7 / -81,4 · **E4Live** — · **E4** -95,0
-1h BW1 -69,2 / -64,5　LBW1 -65,9 / -58,9 · E1Live —  · E1 —
-DailyRange · triplet VAL/POC/VAH non enregistré
-BigRange VAH → VAL · BELOW POC -95,5 % · depuis VAH -17 393,7 $
-
-L'idée est que quand un événement est confirmé la valeur live s'éteint en signe de confirmations de cette dernière et attend l'arrivée d'un nouveau signal contradictoire au confirmé
+Boucle cette discussion avec une dernière analyse des derniers trades et fait la liste de toutes les observations et compréension aquise sur les 2 moteurs 494, 543 et les shadows, fait l'inventaire de leurs point fort et de leur point faible, de quel sont les conditions de marchés qui leur sont favorables contra défavorable et quel sont tes recommendations, en vue d'une passation vers une nouvelle discussion où nous allons tenter d'améliorer les résultats

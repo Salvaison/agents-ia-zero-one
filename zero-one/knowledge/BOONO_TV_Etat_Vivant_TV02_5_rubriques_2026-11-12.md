@@ -118,6 +118,6 @@ Dans la quatrième rubrique, une ligne CONVERSION comporte maintenant PM3, PM5 e
 
 ## Actualisation du 14 novembre — E1/E4 Live opposé et confirmé persistant
 
-**Référence active :** knowledge/BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_2026-11-14.md et OD-20261114-001.
+**Référence active :** knowledge/BOONO_TV_Lieu_E1_E4_cycle_live_confirmed_2026-11-14.md et OD-20261114-002.
 
 Les lignes MCB4h et MCB1h affichent à présent **E4Live/E4** et **E1Live/E1** directement sur les lignes du LIEU STRUCTUREL. Le dernier marqueur natif UP/DN confirmé est conservé avec sa valeur LBW et ses dates de preuve. Le Live disparaît dès qu'une confirmation du même événement est disponible, et ne réapparaît que si un nouveau marqueur natif **opposé** au confirmé est observé sur une bougie encore ouverte et fraîche. Les libellés E et leurs valeurs sont verts en UP / rouges en DN, **indépendamment du signe de LBW**. Les sources sont les fichiers CSV TradingView clos et intrabar 1h/4h, contrôlés par asOf et mtime. À la lecture vérifiée, E4 UP ≈ −95,0 et E1 UP ≈ −79,7 ; leur Live est « — ». Cette évolution remplace les anciennes observations historiques « E1Live toujours — » mais ne crée aucune autorité de trading. Les deux ranges et les cinq zones fixes de 180px demeurent inchangés.
