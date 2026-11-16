@@ -85,9 +85,8 @@ function paintTradeBrackets(canvas,spans,opts){
   const a=Math.max(t0,Number(z.entryTs)),b=Math.min(t1,Number(z.drawEndTs));
   if(!(b>a))continue;
   const x1=xx(a),x2=xx(b),ww=Math.max(1,x2-x1);
-  // One engine, one side: V494 at the upper edge, V543 at the lower.
-  const isV543=z.engine==='V543';
-  const y=isV543?bottom-5:top,edge=isV543?bottom-13:top+13;
+  // V494 is retired: only V543 brackets remain on the lower edge.
+  const y=bottom-5,edge=bottom-13;
   ctx.fillStyle='rgba(135,206,250,.93)';
   ctx.fillRect(x1,y,ww,5);
   ctx.strokeStyle='rgba(135,206,250,.88)';ctx.lineWidth=1;
@@ -166,7 +165,7 @@ function drawCompletedTrades(s){
  const holder=Q('#completedTradesList'),summary=Q('#tradeEngineSummary');
  if(!holder||!summary)return;
  const closed=(Array.isArray(s?.trades)?s.trades:[])
-  .filter(x=>x?.paper===true&&['V494','V543'].includes(x.engine)&&
+  .filter(x=>x?.paper===true&&x.engine==='V543'&&
     Number.isFinite(Number(x.exitTs))&&Number(x.exitTs)>0)
   .sort((a,b)=>Number(b.exitTs)-Number(a.exitTs));
  tag('#tradesCompletedCount',String(closed.length));
@@ -176,7 +175,7 @@ function drawCompletedTrades(s){
  };
  const tone=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'na':
   Number(v)>0?'up':Number(v)<0?'down':'';
- summary.innerHTML=['V494','V543'].map(engine=>{
+ summary.innerHTML=['V543'].map(engine=>{
   const rows=closed.filter(x=>x.engine===engine);
   const measured=rows.filter(x=>x.netPnlUsd!==null&&
     x.netPnlUsd!==undefined&&Number.isFinite(Number(x.netPnlUsd)));
@@ -209,7 +208,7 @@ function onSnapshot(s){
  lastSnapshot=s;
  // Amsterdam PAPER ledgers supersede the obsolete local V4 marker file.
  if(Array.isArray(s?.trades)){
-  events=s.trades.filter(e=>Number.isFinite(Number(e.entryTs))&&
+  events=s.trades.filter(e=>e.engine==='V543'&&Number.isFinite(Number(e.entryTs))&&
    ['long','short'].includes(e.direction)).slice(-160);
   lastMarkerVersion='PAPER_LIVE';
  }
@@ -228,7 +227,7 @@ async function refreshMarkers(){
   const version=String(data.generatedAt||'');
   if(version===lastMarkerVersion)return;
   lastMarkerVersion=version;
-  events=data.events.filter(e=>Number.isFinite(Number(e.entryTs))&&['long','short'].includes(e.direction)).slice(-150);
+  events=data.events.filter(e=>e.engine==='V543'&&Number.isFinite(Number(e.entryTs))&&['long','short'].includes(e.direction)).slice(-150);
   if(lastSnapshot){
    drawTrio(lastSnapshot);
    // Reflect new markers on floating waves as soon as the read-only file updates.

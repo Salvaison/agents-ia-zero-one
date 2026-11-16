@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261116-002",
+  "title": "Étude E1 E4 21 jours, shadow Lieu V543, correctif Watch 30s et retrait V494 de BOONO-TV",
+  "createdAtUtc": "2026-11-16T13:00:23+00:00",
+  "authorization": "Recherche 21 jours, nouveau shadow, correction UI Watch et résultats V494 BOONO-TV demandés explicitement ; aucune modification PAPER V543",
+  "reference": "Discussion BOONOLAB 16/11/2026, ordre post OD-20261116-001, ledgers et MCB Amsterdam, Watch/OVH",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f441984b4bfa404df2108da548eb04078f66326d2fbe2be17201faa2f917403f",
+      "bytes": 1430
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "1f10a401d0bb261a67a6f55cfa26cd9ce3a63338a655f40b0ffcbb6428dc29f3",
+      "bytes": 1251
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "aacb00be06b42da3dd14ad3db16259b197d243a3c7673cbf41c3fa8f74abc390",
+      "bytes": 743
+    }
+  }
+}

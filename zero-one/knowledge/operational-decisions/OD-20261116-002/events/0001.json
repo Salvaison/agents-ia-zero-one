@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-16T13:00:23+00:00",
+  "status": "DOCUMENTE",
+  "description": "Étude 403 entrées sur 21 jours, résultats E1/E4 par sens/phase/marché, contexte LBW15, limites Big/DailyRange et concept V5.5 documentés",
+  "evidence": "knowledge/BOONOLAB_E1_E4_LIEU_REGIMES_3_SEMAINES_2026-11-16.md ; data/boonolab-e1e4-historical-20261116.json ; archive /root/boonolab-e1e4-place-21d-20261116T125634Z ; knowledge/BOONO_Watch_TV_refresh_et_V494_retrait_2026-11-16.md",
+  "previousEventSha256": null
+}

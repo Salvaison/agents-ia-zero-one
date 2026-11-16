@@ -1547,6 +1547,26 @@ app.get('/api/shadows/v494-elastic',requireAuth,async(req,res)=>{
  sendUiJson(req,res,payload);
 });
 
+// BOONOLAB V543 independent as-of shadows. Both have ZERO PAPER authority.
+function boonolabReadReadonlyShadow(file,version,req,res){
+ try{
+  const state=JSON.parse(fs.readFileSync(path.join(__dirname,'../data',file),'utf8'));
+  if(state.version!==version||state.decisionImpact!==false||
+     state.brokerOrdersEnabled!==false||state.mode!=='SHADOW_ONLY')
+   throw Error('SHADOW_CONTRACT_INVALID');
+  const age=Date.now()-Number(state.asOf||0);
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,{...state,ageMs:age,
+   status:age>=0&&age<95000?'DATA_RECENT':'SOURCE_STALE'});
+ }catch(e){res.status(503).json({error:'Observatoire BOONOLAB indisponible',detail:e.message});}
+}
+app.get('/api/shadows/boonolab-e1e4-place',requireAuth,(req,res)=>
+ boonolabReadReadonlyShadow('boonolab-place-e1e4-shadow-summary.json',
+  'boonolab-e1e4-place-shadow-v0.1',req,res));
+app.get('/api/shadows/boonolab-lbw15-s1',requireAuth,(req,res)=>
+ boonolabReadReadonlyShadow('v543-lbw15-s1-shadow-summary.json',
+  'boonolab-v543-lbw15-s1-v0.1',req,res));
+
 // V494 timestamped state layer: authenticated compact status and on-demand
 // paginated transitions or 30-second snapshots, separate from ticker/Elastic.
 app.get('/api/shadows/v494-state-layer',requireAuth,(req,res)=>{
@@ -3770,9 +3790,18 @@ app.get('/', requireAuth, (req, res) => {
     <span style="display:block;font-size:12px;opacity:.78;margin:5px 0;">Chronologie stable pendant le refresh de 30 s · consultation manuelle dans un onglet séparé · protection de position en shadow.</span>
     <a href="/boonolab-observatoire" target="_blank" rel="noopener noreferrer" style="font-weight:700;color:#217e9e;text-decoration:underline;">Ouvrir l’observatoire BOONOLAB (lecture sans rafraîchissement)</a>
   </div>
-  <div id="shadowV494Dual" class="shadow-dual-panel"><div class="shadow-empty">Shadow Entrée / Sortie V4.9.4 · lecture du résumé…</div></div>
-  <div id="shadowV494Elastic" class="shadow-dual-panel"><div class="shadow-empty">Elastic V4.9.4 · lecture des qualités et transferts…</div></div>
-  <div id="shadowV494States" class="shadow-dual-panel"><div class="shadow-empty">Chronologie des états Elastic · lecture des couches horodatées…</div></div>
+  <details id="shadowPlaceE1E4Details" class="shadow-dual-panel" open>
+   <summary style="cursor:pointer;padding:10px;font-weight:750;">LIEU STRUCTUREL · E1/E4 + BIGRANGE / DAILYRANGE · SHADOW</summary>
+   <div id="shadowPlaceE1E4Live" style="padding:9px 12px;">Chargement du lieu structurel…</div>
+  </details>
+  <details id="shadowV543S1Details" class="shadow-dual-panel">
+   <summary style="cursor:pointer;padding:10px;font-weight:750;">S1 · TRAJECTOIRE LBW15 · SHADOW V543</summary>
+   <div id="shadowV543S1Live" style="padding:9px 12px;">Chargement de S1…</div>
+  </details>
+  <details id="shadowV494Archives" class="shadow-dual-panel">
+   <summary style="cursor:pointer;padding:10px;">V494 / ELASTIC / A-B-C-D · ARCHIVES ARRÊTÉES LE 16/11</summary>
+   <div class="shadow-empty">Résultats conservés dans la Knowledge Base et les archives d’Amsterdam. Aucun de ces moteurs n’est LIVE.</div>
+  </details>
   <div id="shadowLive"><div class="shadow-empty">Chargement des shadows…</div></div>
 </div>
 </div>
@@ -6222,6 +6251,9 @@ function renderShadows(data){
   shadowLastData=data;
   const root=document.getElementById('shadowLive'),win=document.getElementById('shadowWindow');
   if(!root)return;
+  // Preserve the reader's scroll when refreshing the 30s SHADOW content.
+  const preservePageY=window.scrollY;
+  const previousOccScroll=root.querySelector('#shadowOccurrencesList')?.scrollTop||0;
   const w=data.sampleWindow||{},cur=data.current||{},stats=data.stats||{};
   if(win){
     const mins=Number(w.minutes);
@@ -6468,7 +6500,12 @@ function renderShadows(data){
     statHtml+admissionStatsHtml+elasticStatsHtml+live15Reliability+live15ActionStats+tpSummary+occurrencePanel+journalHtml;
   if(shadowSelectedOccurrenceKey){
     renderShadowOccurrences(data,shadowSelectedOccurrenceKey,shadowSelectedOccurrenceLabel,false,null);
+    const list=root.querySelector('#shadowOccurrencesList');
+    if(list)list.scrollTop=previousOccScroll;
   }
+  // Restore at the same paint, not from a delayed request that could undo
+  // a user-initiated scroll. No scrollIntoView on automatic refresh.
+  if(Math.abs(window.scrollY-preservePageY)>1)window.scrollTo(0,preservePageY);
 }
 document.addEventListener('click',function(ev){
   if(ev.target&&ev.target.closest&&ev.target.closest('#shadowOccurrencesClose')){
@@ -7061,13 +7098,70 @@ async function loadV494DualShadow(){
  }finally{v494DualShadowPending=false;}
 }
 
+let boonolabV543PlacePending=false;
+async function loadBoonolabV543PlaceCards(){
+ if(boonolabV543PlacePending||document.hidden)return;
+ const placeEl=document.getElementById('shadowPlaceE1E4Live');
+ const s1El=document.getElementById('shadowV543S1Live');
+ if(!placeEl&&!s1El)return;
+ boonolabV543PlacePending=true;
+ const get=async url=>{
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  return res.json();
+ };
+ const [place,s1]=await Promise.allSettled([
+  get('/api/shadows/boonolab-e1e4-place'),
+  get('/api/shadows/boonolab-lbw15-s1')]);
+ const fmt=x=>x===undefined||x===null?'—':shadowFmt(x,1);
+ const desc=x=>escTrade(String(x===undefined||x===null?'—':x));
+ if(placeEl){
+  if(place.status==='fulfilled'){
+   const d=place.value,a=d.latest||{},e1=a.e1||{},e4=a.e4||{},
+    p=a.place||{},big=p.big||null,daily=p.daily||null,reg=a.market||{};
+   placeEl.innerHTML='<div class="shadow-secondary">'+
+    (d.status==='DATA_RECENT'?'SOURCE FRAÎCHE':'SOURCE FIGÉE')+
+    ' · E1/E4 confirmés = clôtures des bougies 1h / 4h, heure de première observation non historisée</div>'+
+    '<div class="shadow-main">E1 '+desc((e1.direction||'—').toUpperCase())+
+     ' · E4 '+desc((e4.direction||'—').toUpperCase())+
+     ' · '+desc(a.alignment)+'</div>'+
+    '<div class="shadow-secondary">LBW1 '+fmt(e1.lbw)+' · LBW4 '+fmt(e4.lbw)+
+      ' · dernier E1 connu '+desc(shadowDateTime(e1.knownAtProxy))+
+      ' · E4 '+desc(shadowDateTime(e4.knownAtProxy))+'</div>'+
+    '<div class="shadow-secondary"><b>BigRange</b> '+(big?
+      'VAL '+fmt(big.val)+' · POC '+fmt(big.poc)+' · VAH '+fmt(big.vah)+
+      ' · '+desc(big.outside)+' · position '+fmt(big.positionPct)+' % · vs POC '+fmt(big.fromPocUsd)+' $':
+      'triplet absent ou non disponible à cette heure')+'</div>'+
+    '<div class="shadow-secondary"><b>DailyRange</b> '+(daily?
+      'VAL '+fmt(daily.val)+' · POC '+fmt(daily.poc)+' · VAH '+fmt(daily.vah)+
+      ' · '+desc(daily.outside):'triplet non enregistré')+'</div>'+
+    '<div class="shadow-secondary"><b>Marché</b> '+desc(reg.label)+' · '+desc(reg.review)+
+     ' · direction 2h '+desc(reg.twoHourDirection)+'</div>'+
+    '<div class="shadow-secondary">Aucune règle PAPER. Le POC/VAL/VAH est un lieu de prix enregistré, non une mesure de profondeur L2.</div>';
+  }else placeEl.textContent='LIEU E1/E4 : source temporairement indisponible, aucune autorité PAPER.';
+ }
+ if(s1El){
+  if(s1.status==='fulfilled'){
+   const d=s1.value,x=d.latest||{};
+   s1El.innerHTML='<div class="shadow-secondary">'+
+    (d.status==='DATA_RECENT'?'SOURCE FRAÎCHE':'SOURCE FIGÉE')+
+    ' · observation sans veto ni sortie</div>'+
+    '<div class="shadow-main">'+desc(x.classification)+'</div>'+
+    '<div class="shadow-secondary">Parent '+desc(x.parent)+' · natif confirmé '+
+      desc(x.e15ConfirmedDirection)+' · cross15 '+desc(x.cross15Direction)+
+      ' · Δ LBW15 / 3m '+fmt(x.lbwDelta3m)+
+      ' · Δ 15m '+fmt(x.lbwDelta15m)+'</div>'+
+    '<div class="shadow-secondary">Admission '+desc(x.proposedAdmission)+
+      ' · position '+desc(x.proposedPosition)+'</div>';
+  }else s1El.textContent='S1 LBW15 : source temporairement indisponible, aucune autorité PAPER.';
+ }
+ boonolabV543PlacePending=false;
+}
 async function loadShadows(){
   const root=document.getElementById('shadowLive');
   if(!root)return;
-  // Independent compact requests: never block the two V494 panels on legacy data.
-  loadV494DualShadow();
-  loadV494ElasticShadow();
-  loadV494StateLayer();
+  // New SHADOW cards refresh content without replacing their <details> roots.
+  loadBoonolabV543PlaceCards();
   try{
     const res=await fetch('/api/shadows',{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
@@ -8247,6 +8341,10 @@ async function loadTrades() {
       !!stateEl.querySelector('#execution-lab-details[open]');
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
     const legacyWasOpen=!!stateEl.querySelector('#v4-legacy-details[open]');
+    // BOONOLAB 16/11: mount once; the 30s refresh must NEVER detach the
+    // reading DOM, otherwise open observatories and the scroll anchor vanish.
+    // Children are refreshed by their own live loaders below.
+    if(!stateEl.querySelector('#v52-live')||!stateEl.querySelector('#v5-structure-details'))
     stateEl.innerHTML =
       '<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER · lecture de la décision en cours…</div>'+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+

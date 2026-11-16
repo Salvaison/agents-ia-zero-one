@@ -1,0 +1,11 @@
+Aussi je voudrais que tu fasses une recherche ciblée sur les 3 dernières semaines de quel était la position des E4 et E1 confirmé lors des admissions de trades pour voir si il y a une corrélation positive à trouver, aussi je crois que tu pouurais faire un shadow à ce sujet. Ceci en relation avec le travail acccompli pour LIEU de l'état vivant de BoonoTv qui avec les E4, E1 confirmé plus leur position dans le bigRange et le dailyRange, donne un bonne aperçu de position structurel et évolution de la liquidité. La question est de mettre en relation la structure mcb avec sa position structurel de prix et de liquidité pour éventuellement mettre en évidence de meilleure opportunité.
+
+Un travail important pour cette nouvelle version du moteur sera aussi d'empêcher les trades dans les marché faibles et surtout les marchés contradictoires
+
+"Leur caractère commun : la réaction tactique 3m peut devancer le réalignement stratégique." Est ce que que cette capacité ne serait pas une prolongation des observations de lbw15
+
+"Ce serait la base d'une prochaine version V5" Oui parce que 543 a à mon avis lui aussi démontrer ses limites et il est temps d'essayer autre chose
+
+Il y a aussi un problème avec l'interface qui toutes les 30secondes reviens en haut de page et aussi ferme les observatoir de l'interface pour revenir en default
+
+Il faut aussi enlever les résultats des trades de 494 dans BoonoTv

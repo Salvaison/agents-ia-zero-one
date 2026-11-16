@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-16T13:00:23+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Shadow boono-e1e4-place-shadow et config-server en ligne, TV runtime OVH affiche V543 seulement ; aucune nouvelle version PAPER V5.5 mise en service, validation navigatrice 30s et reconstructions DailyRange à poursuivre",
+  "evidence": "PM2 jlist, fichiers summary E1E4/S1; curl 200 OVH chart views et index, curl Watch 302 login; aucun ordre broker",
+  "previousEventSha256": "e6a386f557683fc16d78db18e25762130616decbd4fd5ddc9c0aa1edcdae39f9"
+}

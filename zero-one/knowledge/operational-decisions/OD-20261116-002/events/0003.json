@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-16T13:00:23+00:00",
+  "status": "TESTE",
+  "description": "Étude 403 trades, jointure bar close as-of, 71 régimes V5 réellement couverts ; tests E1/E4 4/4 et Watch/S1/observateur 25/25, syntaxe JS, GET OVH HTTP 200, Watch protégé 302 sans auth ; QA de défilement navigateur réel non effectuée",
+  "evidence": "node --test tests/attention/boonolab-place-e1e4-shadow.test.js tests/ui/boonolab-v543-shadow-refresh-20261116.test.js tests/ui/watch-old-panels-retired.test.js tests/attention/... ; node --check ; curl OVH; PM2 ; JSON shadow",
+  "previousEventSha256": "bdd64f5f722ffb13d1343ed527328089d8a0f73e65e91f4ce8a2f6bebb2d2d25"
+}

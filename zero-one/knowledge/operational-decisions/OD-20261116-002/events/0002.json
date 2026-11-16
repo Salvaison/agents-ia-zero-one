@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-16T13:00:23+00:00",
+  "status": "IMPLEMENTE",
+  "description": "S1 préservé, nouveau shadow E1/E4/Lieu actifs en observation; Watch DOM mount-once + scroll stable et API authentifiées, TV OVH tableau/marqueurs V543 only ; V543 PAPER inchangé",
+  "evidence": "modules/attention/boonolab-place-e1e4-shadow*.js ; scripts/boonolab_e1e4_3week_study.py ; modules/config-server.js ; zero-one/boono-tv/scene/chart-views.js ; backup Watch/OVH",
+  "previousEventSha256": "8738db893402323bd0f548d8aabcb43a5afb74fc03cc0a925b082a965c61a7ff"
+}
