@@ -32,8 +32,13 @@ function inputs(){
   throw Error('BOONOLAB_OBSERVER_STALE_AS_OF');
  const native=readRecentNdjson(FILE.native,250).filter(e=>
   Number.isFinite(Number(e.observedAt))&&e.observedAt<=asOf);
+ const elastic=json(FILE.elastic,{});
+ const elasticAt=Number(elastic?.asOf);
+ const elasticFresh=Number.isFinite(elasticAt)&&elasticAt<=asOf&&
+  asOf-elasticAt<=90000;
  return {audit:recent,paper,analysis,asOf,last,native,
-   elasticState:json(FILE.elastic,{})};
+  // V494 PAPER is retired. NEVER report frozen Elastic as a live vote.
+  elasticState:elasticFresh?elastic:{}};
 }
 function initial(){return {version:'boonolab-observer-runner-v0.1',
   decisionImpact:false,brokerOrdersEnabled:false,lastAt:0,

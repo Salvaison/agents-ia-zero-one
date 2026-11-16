@@ -151,3 +151,12 @@ test('Watch endpoint remains authenticated and reader never replaces an open vie
  assert.doesNotMatch(script,/\b(setInterval|setTimeout)\s*\(|new\s+(WebSocket|EventSource)\b/);
  assert.doesNotThrow(()=>new (require('node:vm').Script)(script));
 });
+
+test('MCB3 is sourced from current structural54.mcb3.direction, not UNKNOWN',()=>{
+ const input=paperInput();input.readings.structural54.mcb3={
+  direction:'short',latestPivot:{availableAt:T-180000}};
+ const out=chron.snapshot({asOf:T,price:77012,analysis:input,elasticState:{}});
+ assert.equal(out.states.MCB3.status,'short');
+ assert.equal(out.states.CONVERSION.v494Quality,null);
+ assert.equal(out.decisionImpact,false);
+});

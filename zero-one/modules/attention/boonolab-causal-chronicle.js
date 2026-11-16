@@ -21,7 +21,7 @@ function snapshot({asOf,price,analysis,regime,threat,elasticState}={}){
   MCB15:{status:s.director||'UNKNOWN',phase:s.phase||null,
    parent:s.campaignId||null,e15Live:s.oppositeLive15?.direction||null,
    sourceAt:n(s.structuralOrigin?.availableAt)},
-  MCB3:{status:s.mcb3Direction||'UNKNOWN',
+  MCB3:{status:s.mcb3?.direction||s.mcb3Direction||'UNKNOWN',
    sourceAt:n(s.mcb3?.latestPivot?.availableAt)},
   FLOW:{status:flow3===flow15&&['UP','DN'].includes(flow3)?
     'MF3_MF15_'+flow3:flow3==='UNKNOWN'||flow15==='UNKNOWN'?
@@ -53,7 +53,7 @@ function snapshot({asOf,price,analysis,regime,threat,elasticState}={}){
  const statesFlat={};
  for(const f of FAMILIES)statesFlat[f]=states[f];
  return {version:VERSION,asOf,price,states:statesFlat,
-  source:'V543_READONLY+V494_ELASTIC_READONLY+AUDIT',
+  source:'V543_READONLY+FRESH_ELASTIC_IF_AVAILABLE+AUDIT',
   decisionImpact:false,brokerOrdersEnabled:false};
 }
 function changeKey(f,v){

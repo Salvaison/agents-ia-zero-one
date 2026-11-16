@@ -7,6 +7,8 @@ const {latest}=require('./runner-v543');
 const decision=require('./decision-v543');
 const causal=require('./v53-causal');
 const model=require('./campaign-hold-shadow');
+// Retired virtual policies remain in state/archive, but are not advanced.
+const ACTIVE_POLICIES=Object.freeze(['STRUCTURE_ONLY','EARLY_INVALIDATION']);
 const {appendRotatingNdjson}=require('../v3lab/storage/rotating-ndjson');
 const ROOT=path.resolve(__dirname,'../..'),DATA=path.join(ROOT,'data');
 const PAPER=path.join(DATA,'v52-paper-state.json');
@@ -78,9 +80,9 @@ function main(){
    const result=model.step(state,{paperState:paper,now:ts,
     price:px,input:args,tickFresh,
     decide:(p,v)=>evalPosition(p,v,args,ts,paper,age),
-    territoryStop:p=>provedTerritory(p,args,ts)});
+    territoryStop:p=>provedTerritory(p,args,ts),activePolicies:ACTIVE_POLICIES});
    state=result.state;
-   const forks=Object.values(state.variants);
+   const forks=Object.values(state.variants).filter(v=>ACTIVE_POLICIES.includes(v.policy));
    // Permanent 5s read-only trace: future replays can reproduce actual shadow
    // sampling rather than hallucinate 5s fills from 30s historical snapshots.
    if(paper.position||forks.some(v=>v.position)||result.events.length){
@@ -101,7 +103,7 @@ function main(){
    for(const e of result.events)
     appendRotatingNdjson(EVENTS,e,{maxBytes:2*1024*1024,maxSegments:8});
    if(result.events.length||now-lastSave>=30000){
-    atomic(STATE,state);atomic(SUMMARY,model.summary(state));lastSave=now;
+    atomic(STATE,state);atomic(SUMMARY,model.summary(state,ACTIVE_POLICIES));lastSave=now;
    }
    if(result.events.length)
     console.log('[V543 HOLD SHADOW] '+JSON.stringify(result.events.slice(-4)));
@@ -114,7 +116,7 @@ function main(){
  stream.on('error',e=>console.error('[V543 HOLD SHADOW STREAM] '+e.message));
  stream.start();
  console.log('[V543 HOLD SHADOW] '+JSON.stringify({version:model.VERSION,
-  mode:'READ_ONLY_SHADOW',brokerOrdersEnabled:false,
+  mode:'READ_ONLY_SHADOW',activePolicies:ACTIVE_POLICIES,brokerOrdersEnabled:false,
   decisionImpact:false,startedAt:state.startedAt,
   lastObservationAt:state.lastObservationAt}));
  setInterval(loop,5000);

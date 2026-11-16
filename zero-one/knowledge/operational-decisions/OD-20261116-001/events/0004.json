@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-16T12:22:33+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "S1 + observateur ON, V543 PAPER ON ; V494 PAPER et dual/Elastic STOPPED ; 2 forks V543 actifs. Décision LBW15 PAPER non promue, V545 non déployé",
+  "evidence": "pm2 jlist, résumés JSON as-of, archive V494 FLAT et fork hold",
+  "previousEventSha256": "00fbf912c72221b703e446f7071284dc1caacb2a895b8174267ceff640afbd4f"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-16T12:22:33+00:00",
+  "status": "DOCUMENTE",
+  "description": "Rapports patrimoniaux et techniques V494/V543 S1 rédigés, H0/H1, limites et permissions",
+  "evidence": "knowledge/BOONOLAB_V494_ARRET_HERITAGE_2026-11-16.md ; knowledge/BOONOLAB_V543_S1_LBW15_SHADOW_NETTOYAGE_2026-11-16.md",
+  "previousEventSha256": null
+}

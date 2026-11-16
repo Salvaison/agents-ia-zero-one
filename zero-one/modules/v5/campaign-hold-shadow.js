@@ -105,7 +105,7 @@ function reconcileBaseline(state,paper){
    x.baselineNetUsd=state.baselines[String(x.originTradeNo)].netPnlUsd;
 }
 function step(state,{paperState,now,price,input={},tickFresh=true,
-  decide=()=>null,territoryStop=()=>null}={}){
+  decide=()=>null,territoryStop=()=>null,activePolicies=POLICIES}={}){
  if(!state||state.version!==VERSION||state.brokerOrdersEnabled!==false)
   throw Error('SHADOW_VERSION_OR_BROKER_REJECTED');
  const ts=n(now),px=n(price);
@@ -113,6 +113,10 @@ function step(state,{paperState,now,price,input={},tickFresh=true,
   return {state,events:[],status:'DUPLICATE_OR_BAD_TICK'};
  state.lastObservationAt=ts;
  const events=[];
+ if(!Array.isArray(activePolicies)||activePolicies.some(k=>!POLICIES.includes(k)))
+  throw Error('SHADOW_UNKNOWN_ACTIVE_POLICY');
+ const activeVariants=Object.values(state.variants)
+  .filter(v=>activePolicies.includes(v.policy));
  const paper=paperState||{};
  reconcileBaseline(state,paper);
  const live=paper.position;
@@ -121,7 +125,7 @@ function step(state,{paperState,now,price,input={},tickFresh=true,
    live.entryAt!==state.lastAcceptedPaperEntryAt){
   state.lastAcceptedPaperEntryAt=live.entryAt;
   const no=(n(paper.completed)||0)+1;
-  for(const v of Object.values(state.variants)){
+  for(const v of activeVariants){
    if(v.position){
     v.blockedReentries++;v.blockedTradeNos.push(no);
     if(v.blockedTradeNos.length>80)v.blockedTradeNos=v.blockedTradeNos.slice(-80);
@@ -130,7 +134,7 @@ function step(state,{paperState,now,price,input={},tickFresh=true,
    }else begin(v,live,no,ts,state,events);
   }
  }
- for(const v of Object.values(state.variants)){
+ for(const v of activeVariants){
   const p=v.position;if(!p)continue;
   const d=side(p.direction),move=d*(px-p.entryPrice);
   p.lastPrice=px;
@@ -202,9 +206,12 @@ function step(state,{paperState,now,price,input={},tickFresh=true,
  }
  return {state,events,status:'OBSERVED'};
 }
-function summary(state){
+function summary(state,activePolicies=POLICIES){
+ if(!Array.isArray(activePolicies)||activePolicies.some(k=>!POLICIES.includes(k)))
+  throw Error('SHADOW_UNKNOWN_SUMMARY_POLICY');
  const variants={};
  for(const [k,v] of Object.entries(state.variants)){
+  if(!activePolicies.includes(k))continue;
   const comparable=v.records.filter(x=>x.baselineNetUsd!==null);
   variants[k]={open:v.position?{tradeNo:v.position.originTradeNo,
      entryPrice:v.position.entryPrice,direction:v.position.direction,
@@ -221,6 +228,8 @@ function summary(state){
  }
  return {version:VERSION,startedAt:state.startedAt,
   lastObservationAt:state.lastObservationAt,brokerOrdersEnabled:false,
-  decisionImpact:false,variants,lastEvents:state.events.slice(-6)};
+  decisionImpact:false,variants,
+  retiredVariants:Object.keys(state.variants).filter(k=>!activePolicies.includes(k)),
+  lastEvents:state.events.slice(-6)};
 }
 module.exports={VERSION,POLICIES,initial,migrate,pnl,step,summary};

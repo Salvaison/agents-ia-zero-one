@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261116-001",
+  "title": "Retrait V494 PAPER, S1 LBW15 SHADOW et simplification des forks V543",
+  "createdAtUtc": "2026-11-16T12:22:32+00:00",
+  "authorization": "Utilisateur du 16 novembre : arrêt V494, activation S1 shadow, retrait des forks virtuels non prioritaires ; aucune politique PAPER chiffrée validée",
+  "reference": "Discussion BOONOLAB 16/11/2026, passation 14/11, audit Amsterdam V494/V543 et KB",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2c2fdca4cf4f330ac221a546d7377706bae64e7ab5d324ef108ead3df2521f81",
+      "bytes": 852
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "40c00efe1cf2b1fda2121db5b2e086dd057be6cbded3aea8619520f18837bd69",
+      "bytes": 760
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "6e91eb22816ce8715870bc7312311425ac08612342e82f97263ba231ff332c4a",
+      "bytes": 651
+    }
+  }
+}

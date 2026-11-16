@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-16T12:22:33+00:00",
+  "status": "IMPLEMENTE",
+  "description": "V494 PAPER FLAT stoppé, dual et Elastic stoppés ; S1 indépendant installé ; hold-shadow réduit à 2 forks ; MCB3/qualité Elastic stale corrigés ; V543 PAPER inchangé",
+  "evidence": "PM2, modules/attention/v543-lbw15-s1*, modules/v5/campaign-hold-shadow*, modules/attention/boonolab-*, archives SHA-256 /root/boonolab-*20261116*",
+  "previousEventSha256": "56847837f1cc0c6e2f44588e62a3f3febdf309d239172ca11fe8a83758ad47c7"
+}

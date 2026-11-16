@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-16T12:22:33+00:00",
+  "status": "TESTE",
+  "description": "S1 6/6 ; hold-shadow+S1 29/29 ; observatoire+S1 14/14 ; process et JSON vérifiés, absence de broker ; aucune promesse de rentabilité",
+  "evidence": "node --test ciblés ; PM2 status ; data/v543-lbw15-s1-shadow-summary.json ; data/v543-campaign-hold-shadow-summary.json ; MANIFEST archives",
+  "previousEventSha256": "8a9da85d72aaaa99034995a05eb6fe809b985325b4f027cfcb657c97d52a8b91"
+}
