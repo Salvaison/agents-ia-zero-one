@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-16T13:35:42+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Décideur indépendant V5.5, nouveau ledger PAPER 1000 USD / 1500 notionnel, runner à ticks publics, résumé campagnes E15, Watch API+État vivant/Historique/Vagues ; V494 arrêté non migré, V543 séparé",
+  "evidence": "modules/v5/decision-v55.js ; modules/v5/paper-v55.js ; modules/v5/runner-v55.js ; modules/config-server.js ; data/v55-paper-state.json ; data/v55-paper-summary.json",
+  "previousEventSha256": "90148cda604fef49cd18f3263d92cd74476d76c617d37d4fd06a1a549e157b8d"
+}

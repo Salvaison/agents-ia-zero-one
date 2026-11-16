@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-16T13:35:42+00:00",
+  "status": "DOCUMENTE",
+  "description": "Constitution V5.5, mémoire, admission, protection, place/régime, risque/frais, limites et source en KB, autorisation initiale conservée",
+  "evidence": "knowledge/BOONOLAB_V55_MOTEUR_PAPER_REMPLACE_V494_2026-11-16.md ; 01-demande-utilisateur-integrale.txt ; 02-prompt-operationnel-integral.txt ; 03-origine-et-justification.md",
+  "previousEventSha256": null
+}

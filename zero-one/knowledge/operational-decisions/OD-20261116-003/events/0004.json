@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-16T13:35:42+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "PM2 boono-v55-paper ONLINE séparé de boono-v543-paper ONLINE; boono-v494-paper STOPPED; nouveau capital PAPER 1000, zéro transfert, Watch config-server redémarré ; aucun broker financé, performances futures à mesurer",
+  "evidence": "PM2 saved dump, data/v55-paper-state.json, data/v52-paper-state.json, config-server HTTP 302 sans session, documentation/KB, aucun fichier BOONO-TV modifié",
+  "previousEventSha256": "79eac10f6132e9e3fe432a4a0807feebd598e2179f395a4b49db440c0bfc23ba"
+}

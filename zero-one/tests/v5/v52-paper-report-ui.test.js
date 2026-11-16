@@ -23,7 +23,7 @@ function clientSegment(first,last,extra={}){
  vm.createContext(ctx);vm.runInContext(browser.slice(i,j),ctx);return ctx;
 }
 function serverRoutes(){
- const i=server.indexOf('const PAPER_LEDGER_PATHS='),j=server.indexOf('// Two active PAPER ledgers',i);
+ const i=server.indexOf('const PAPER_LEDGER_PATHS='),j=server.indexOf('// Active PAPER comparators in Waves',i);
  assert(i>0&&j>i);
  const routes={};
  const c={fs,path,__dirname:path.resolve(__dirname,'../../modules'),
@@ -36,12 +36,14 @@ function serverRoutes(){
 }
 const mockRes=()=>({code:200,status(x){this.code=x;return this},set(){return this},
  json(v){this.data=v;return this}});
-test('both PAPER ledgers have independent read-only history and report routes',()=>{
+test('V543 and V55 have independent PAPER history, with V494 archive retained',()=>{
  const r=serverRoutes();
  const list=mockRes();r['/api/paper-history']({},list);
  assert.equal(list.code,200);
  assert.equal(list.data.v52.brokerOrdersEnabled,false);
  assert.equal(list.data.v493.brokerOrdersEnabled,false);
+ assert.equal(list.data.v55.brokerOrdersEnabled,false);
+ assert.equal(list.data.v55.engine,'v55');
  assert.ok(Array.isArray(list.data.v52.trades));
  const first=(list.data.v52.trades||[])[0];
  if(first){
@@ -75,12 +77,12 @@ test('V5.2 history is visible before collapsed baseline and old V4 history',()=>
  assert.ok(text.includes('RAPPORT'));
 });
 test('Waves reports are restored for both engines and share readable overlay',()=>{
- assert.ok(browser.includes("if(t.source==='V52_PAPER'||t.source==='V493_PAPER')"));
+ assert.ok(browser.includes("['V52_PAPER','V55_PAPER','V493_PAPER'].includes(t.source)"));
  assert.ok(browser.includes('waveTradeReportBtn'));
  assert.ok(browser.includes("fetch('/api/paper-trade-report/'"));
  assert.ok(browser.includes('document.body.appendChild(ov)'));
  assert.ok(browser.includes('data-paper-report'));
- assert.ok(browser.includes("paperTradeVersion(t.source==='V52_PAPER'?'v52':'v493',t)"),
+ assert.ok(browser.includes("t.source==='V55_PAPER'?'v55':'v493',t)"),
   'Waves selection must also use the trade actual originating policy version');
  const c=clientSegment('function renderPaperTradeReport(data){','async function waveOpenTradeReport(tradeNo) {');
  const html=c.renderPaperTradeReport({engine:'v52',tradeNo:2,status:'CLOSED',
@@ -114,11 +116,11 @@ test('history loads only on explicit tab navigation, never by a 30s history time
  assert.ok(browser.includes('id="paperHistoryPanel"'));
 });
 test('PAPER report key regexes survive server-side JS template processing',()=>{
- assert.ok(browser.includes('const paper=String(tradeNo).match(/^(V52|V493):(\\d+)$/);'));
- assert.ok(browser.includes('if(/^(V52|V493):[1-9]\\d*$/.test(key))waveOpenTradeReport(key);'));
- const report=/^(V52|V493):(\d+)$/;
- const click=/^(V52|V493):[1-9]\d*$/;
- for(const k of ['V52:77','V52:78','V493:26','V493:27']){
+ assert.ok(browser.includes('const paper=String(tradeNo).match(/^(V52|V55|V493):(\\d+)$/);'));
+ assert.ok(browser.includes('if(/^(V52|V55|V493):[1-9]\\d*$/.test(key))waveOpenTradeReport(key);'));
+ const report=/^(V52|V55|V493):(\d+)$/;
+ const click=/^(V52|V55|V493):[1-9]\d*$/;
+ for(const k of ['V52:77','V52:78','V55:1','V55:27','V493:26','V493:27']){
   assert.ok(report.test(k));assert.ok(click.test(k));
  }
  for(const k of ['V52:0','V493:not_a_number','V493:27x']){
@@ -131,6 +133,7 @@ test('real trade policy labels are kept across V5.4.2 and V4.9.4 migrations',()=
  assert.equal(v('v52',{entryPolicyVersion:'v5.4.3-causal-offensive-maturity-paper-v1'}),'V5.4.3');
  assert.equal(v('v52',{entryPolicyVersion:'v5.4.1-structural-e3-territory-paper-v1'}),'V5.4.1');
  assert.equal(v('v493',{engine:'V4.9.4'}),'V4.9.4');
+ assert.equal(v('v55',{entryPolicyVersion:'v5.5-structural-place-regime-paper-v1'}),'V5.5');
  assert.equal(v('v493',{engine:'V4.9.3'}),'V4.9.3');
  const c=clientSegment('function renderPaperHistoryGroup(','async function loadPaperHistoryPanel(){');
  const html=c.renderPaperHistoryGroup({completed:1,netUsd:1,

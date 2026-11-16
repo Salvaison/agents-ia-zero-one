@@ -672,6 +672,34 @@ app.get('/api/v52',requireAuth,(req,res)=>{
   sendUiJson(req,res,summary);
  }catch(e){res.status(503).json({error:'V5.4.3 PAPER indisponible',detail:e.message});}
 });
+// V5.5 — genuine second PAPER engine, replacing stopped V494 in Watch.
+// Read summary and state ONLY; broker/strategy code never called by this API.
+app.get('/api/v55-paper',requireAuth,(req,res)=>{
+ try{
+  const f=path.join(__dirname,'../data/v55-paper-state.json');
+  const p=path.join(__dirname,'../data/v55-paper-summary.json');
+  const state=JSON.parse(fs.readFileSync(f,'utf8'));
+  const view=JSON.parse(fs.readFileSync(p,'utf8'));
+  if(state.version!=='v5.5-paper-ledger-v1.0'||
+     view.policyVersion!=='v5.5-structural-place-regime-paper-v1'||
+     state.mode!=='PAPER_ONLY'||state.brokerOrdersEnabled!==false||
+     view.brokerOrdersEnabled!==false||state.startedAt!==view.startedAt)
+   throw Error('V55_PAPER_SOURCE_UNTRUSTED');
+  const age=Date.now()-Number(state.lastObservationAt||0);
+  const a=state.latestAnalysis?.readings?.structural55||{},ctx=a.context||{};
+  const evidence={phase:state.latestAnalysis?.phase||null,
+   reason:state.latestAnalysis?.reason||null,
+   parent:a.parent||null,candidate:a.candidate||null,
+   lbw15Delta3m:ctx.delta3??null,lbw15Delta15m:ctx.delta15??null,
+   e1:ctx.e1?.direction||null,e4:ctx.e4?.direction||null,
+   bigRange:ctx.place?.big||null,dailyRange:ctx.place?.daily||null,
+   regime:ctx.market?.label||null,marketReview:ctx.market?.review||null,
+   territory:a.territory?.kind||null,marketGate:a.marketGate?.reason||null};
+  res.set('Cache-Control','private,no-store');
+  sendUiJson(req,res,{...view,status:age>=0&&age<=95000?'PAPER_RECENT':'PAPER_SOURCE_STALE',
+   ageMs:age,evidence,ledgerVersion:state.version});
+ }catch(e){res.status(503).json({error:'V5.5 PAPER indisponible',detail:e.message});}
+});
 app.get('/api/v493',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','no-store');
   sendUiJson(req,res,v52PaperSummary('v494-paper-state.json','V4.9.4'));}
@@ -723,7 +751,7 @@ app.get('/api/execution-lab',requireAuth,(req,res)=>{
 // Read-only per-engine PAPER history and full reports, always behind Amsterdam session.
 // Read only the selected historical report, not the complete position contexts on refresh.
 const PAPER_LEDGER_PATHS=Object.freeze({
- v52:'v52-paper-state.json',v493:'v494-paper-state.json'
+ v52:'v52-paper-state.json',v55:'v55-paper-state.json',v493:'v494-paper-state.json'
 });
 function paperLedgerRead(kind){
  const name=PAPER_LEDGER_PATHS[kind];
@@ -767,7 +795,7 @@ function paperHistoryView(kind){
 app.get('/api/paper-history',requireAuth,(req,res)=>{
  try{res.set('Cache-Control','private,no-store');
   sendUiJson(req,res,{version:'paper-comparison-history-v1',
-   v52:paperHistoryView('v52'),v493:paperHistoryView('v493')});}
+   v52:paperHistoryView('v52'),v55:paperHistoryView('v55'),v493:paperHistoryView('v493')});}
  catch(e){res.status(503).json({error:'Historique PAPER indisponible',detail:e.message});}
 });
 function paperMarkout(trade,rows){
@@ -800,7 +828,8 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
   const state=paperLedgerRead(engine);
   let trade=(state.history||[]).find(t=>Number(t.tradeNo)===number)||null;
   if(!trade&&number<=Number(state.completed||0)){
-   const f=path.join(__dirname,'../data',engine==='v52'?'v52-paper-trades.ndjson':'v494-paper-trades.ndjson');
+   const f=path.join(__dirname,'../data',engine==='v52'?'v52-paper-trades.ndjson':
+     engine==='v55'?'v55-paper-trades.ndjson':'v494-paper-trades.ndjson');
    trade=readRecentNdjson(f,300).find(t=>Number(t.tradeNo)===number)||null;
   }
   if(!trade){
@@ -816,7 +845,8 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
   let exitEvidence=null;
   try{
    const log=path.join(__dirname,'../data',engine==='v52'?
-     'v52-paper-decisions.ndjson':'v494-paper-decisions.ndjson');
+     'v52-paper-decisions.ndjson':engine==='v55'?
+     'v55-paper-decisions.ndjson':'v494-paper-decisions.ndjson');
    const ev=readRecentNdjson(log,3000);
    exitEvidence=ev.slice().reverse().find(x=>
      x.tradeEvent&&Number(x.tradeEvent.tradeNo)===number&&
@@ -830,11 +860,11 @@ app.get('/api/paper-trade-report/:engine/:tradeNo',requireAuth,(req,res)=>{
    notes:{markout:'Observations postérieures à la sortie : analyses rétrospectives, jamais des connaissances à l’entrée'}});
  }catch(e){res.status(503).json({error:'Rapport PAPER indisponible',detail:e.message});}
 });
-// Two active PAPER ledgers replace stopped V5.1 archival spans in Waves.
-// Names kept independent: V5.2 magenta, V4.9.3 blue.
+// Active PAPER comparators in Waves: V543 magenta, V55 blue.
+// Retired V494 remains available only in archived PAPER reports.
 function waveUiComparePaperTrades(startTs,endTs) {
  const entries=[['v52-paper-state.json','V52_PAPER'],
-                ['v494-paper-state.json','V493_PAPER']];
+                ['v55-paper-state.json','V55_PAPER']];
  const out=[];
  for(const [file,source] of entries){
   let s;try{s=JSON.parse(fs.readFileSync(path.join(__dirname,'../data',file),'utf8'));}catch(_){continue;}
@@ -4358,7 +4388,7 @@ function waveTradeSpans(events,endTs) {
   });
 }
 function waveV5TradeSpans(trades,endTs){
- return (trades||[]).filter(t=>t&&['V52_PAPER','V493_PAPER'].includes(t.source)&&
+ return (trades||[]).filter(t=>t&&['V52_PAPER','V55_PAPER','V493_PAPER'].includes(t.source)&&
    Number.isSafeInteger(Number(t.trade))&&Number(t.trade)>0&&
    Number.isFinite(Number(t.entryTs))&&Number(t.entryTs)>0&&
    (t.exitTs===null||t.exitTs===undefined||
@@ -4373,7 +4403,7 @@ function waveV5TradeSpans(trades,endTs){
 }
 function wavePaperPaintColor(z){
  // Reserved, non-overlapping 10px track per PAPER engine on all three graphs.
- return z.source==='V493_PAPER'?
+ return ['V55_PAPER','V493_PAPER'].includes(z.source)?
    {fill:'#87cde9',line:'rgba(25,105,160,.83)',lane:'top'}:
    {fill:'#e98bc2',line:'rgba(156,31,111,.86)',lane:'bottom'};
 }
@@ -4412,7 +4442,7 @@ function wavePaintV5Bands(canvas,zones,t0,t1,padding){
      ctx.moveTo(xx,top);ctx.lineTo(xx,top+h);
    }
    ctx.stroke();
-   // Tapping the upper/lower track uniquely selects V4.9.3/V5, even
+   // Tapping the upper/lower track uniquely selects V55/V543, even
    // when their time intervals overlap. Visual height stays exactly 10px.
    const pad=Math.max(0,(12-width)/2);
    hit.push({x1,x2,hitX1:x1-pad,hitX2:x2+pad,
@@ -4450,9 +4480,11 @@ function waveSelectedTradeSpan() {
   if(waveSelectedTradeId===null||!waveReplayData||!waveReplayData.frames||!waveReplayData.frames.length)return null;
   const endTs=Number(waveReplayData.frames[waveReplayData.frames.length-1].ts);
   if(String(waveSelectedTradeId).startsWith('V52:')||
+     String(waveSelectedTradeId).startsWith('V55:')||
      String(waveSelectedTradeId).startsWith('V493:')){
     return waveV5TradeSpans(waveReplayData.v5PaperTrades||[],endTs)
-      .find(function(z){const prefix=z.source==='V52_PAPER'?'V52:':'V493:';
+      .find(function(z){const prefix=z.source==='V52_PAPER'?'V52:':
+        z.source==='V55_PAPER'?'V55:':'V493:';
         return prefix+z.trade===String(waveSelectedTradeId);})||null;
   }
   return waveTradeSpans(waveReplayData.events||[],endTs)
@@ -4462,15 +4494,16 @@ function waveRenderTradePanel() {
   const el=document.getElementById('waveTradePanel'); if(!el)return;
   const t=waveSelectedTradeSpan();
   if(!t){
-    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V4.9.4</b> · <b style="color:#9c1f6f">rose V5.4.3 / archives V5.2–V5.4.2</b>. Toucher la bande supérieure V4.9.3 ou inférieure V5 pour lire le trade.</span>';
+    el.innerHTML='<span class="muted">Simulations comparées · <b style="color:#1969a0">bleu V5.5</b> · <b style="color:#9c1f6f">rose V5.4.3 / archives V5.2–V5.4.2</b>. Toucher la bande supérieure V5.5 ou inférieure V5.4.3 pour lire le trade.</span>';
     return;
   }
-  if(t.source==='V52_PAPER'||t.source==='V493_PAPER'){
+  if(['V52_PAPER','V55_PAPER','V493_PAPER'].includes(t.source)){
     const end=t.exitTs?'Sortie '+waveParis(t.exitTs)+' @ '+waveNum(t.exitPrice,1):
       'POSITION OUVERTE · bande prolongée jusqu’au LIVE';
     const pnl=t.netPnlUsd===null?'—':(t.netPnlUsd>=0?'+':'')+waveNum(t.netPnlUsd,2)+' $';
     el.innerHTML='<span class="info"><span class="head" style="color:'+(t.source==='V52_PAPER'?'#9c1f6f':'#1969a0')+'">'+
-      paperTradeVersion(t.source==='V52_PAPER'?'v52':'v493',t)+' PAPER #'+
+      paperTradeVersion(t.source==='V52_PAPER'?'v52':
+       t.source==='V55_PAPER'?'v55':'v493',t)+' PAPER #'+
       escTrade(t.trade)+' · '+escTrade(String(t.direction||'').toUpperCase())+'</span>'+
       'Entrée '+waveParis(t.entryTs)+' @ '+waveNum(t.entryPrice,1)+' · '+end+
       ' · PNL net '+pnl+' · '+escTrade(t.exitReason||'paper simulé')+
@@ -4537,6 +4570,32 @@ function renderPaperTradeReport(data){
   '</div>';
  html+=value('MOTIF ENTRÉE ·',safe(ec.phase||t.entryReason||t.entryHypothesis||'—')+
   (ec.prognosis?' · '+safe(ec.prognosis):''));
+ if(data.engine==='v55'&&Object.keys(ec).length){
+  const e1=ec.e1||{},e4=ec.e4||{},br=ec.bigRange||{},
+    dr=ec.dailyRange||{},market=ec.market||{},c=ec.conversion||{},
+    terr=ec.territory||{},checks=ec.checks||{};
+  html+=value('AUTORITÉ MCB15 / LBW15 ·',
+    'Parent '+safe(ec.parent)+' · phase '+safe(ec.phase)+
+    ' · LBW15 Δ3m '+n(ec.lbw15Delta3m)+' · Δ15m '+n(ec.lbw15Delta15m)+
+    ' · requalification '+safe(checks.reentryQualified?'oui':'non'));
+  html+=value('E1 / E4 CONFIRMÉS ·',
+    'E1 '+safe(e1.direction)+' connu au plus tôt '+date(e1.knownAtProxy)+
+    ' · E4 '+safe(e4.direction)+' connu au plus tôt '+date(e4.knownAtProxy)+
+    ' · clôture bougie, observation native exacte non garantie');
+  html+=value('LIEU STRUCTUREL À L’ENTRÉE ·',
+    'BigRange '+(br.val!=null?
+     'VAL '+n(br.val)+' · POC '+n(br.poc)+' · VAH '+n(br.vah)+
+     ' · '+safe(br.outside)+' · '+n(br.positionPct)+' %':'non enregistré')+
+    ' · DailyRange '+(dr.val!=null?'POC '+n(dr.poc)+' · '+safe(dr.outside):'absent'));
+  html+=value('MARCHÉ / CONVERSION ·',
+    safe(market.label)+' · '+safe(ec.marketGate?.reason)+
+    ' · PM3 directionnel '+n(c.pm3Directional)+
+    ' · PM5 '+n(c.pm5Directional)+' · Live '+n(c.pmLiveDirectional)+
+    ' · territoire '+safe(terr.kind));
+  html+=value('STOP INITIAL ·',
+    n(t.entryInvalidation||t.invalidationPrice)+' $ BTC'+
+    ' · campagne source '+safe(ec.structureParentId||'—'));
+ }
  if(v52&&Object.keys(ec).length){
   html+=value('PHASE À L’ENTRÉE ·','Trajectoire 15m '+safe(m.trajectory)+
    ' · LBW15 '+n(m.lbw)+' · extrême 45m '+n(m.extreme45m)+
@@ -4622,9 +4681,10 @@ async function waveOpenTradeReport(tradeNo) {
   title.textContent='#'+tradeNo+' · chargement du rapport…';
   body.innerHTML='<div class="wave-report-loading">Chargement du rapport complet depuis Amsterdam…</div>';
   try{
-    const paper=String(tradeNo).match(/^(V52|V493):(\\d+)$/);
+    const paper=String(tradeNo).match(/^(V52|V55|V493):(\\d+)$/);
     if(paper){
-      const kind=paper[1]==='V52'?'v52':'v493',number=Number(paper[2]);
+      const kind=paper[1]==='V52'?'v52':paper[1]==='V55'?'v55':'v493',
+       number=Number(paper[2]);
       const res=await fetch('/api/paper-trade-report/'+kind+'/'+number,{cache:'no-store'});
       if(!res.ok)throw Error('HTTP '+res.status);
       const report=await res.json();
@@ -4656,9 +4716,12 @@ function waveSelectTradeAtPointer(ev,canvas) {
     const x1=z.hitX1??z.x1,x2=z.hitX2??z.x2;
     return x>=x1&&x<=x2&&y>=z.y1&&y<=z.y2;
   });
-  const zone=hits.find(z=>z.source==='V52_PAPER')||hits.find(z=>z.source==='V493_PAPER')||hits[0];
+  const zone=hits.find(z=>z.source==='V52_PAPER')||
+   hits.find(z=>z.source==='V55_PAPER')||hits.find(z=>z.source==='V493_PAPER')||hits[0];
   if(!zone)return false;
-  waveSelectedTradeId=zone.source==='V52_PAPER'?'V52:'+zone.trade.trade:zone.source==='V493_PAPER'?'V493:'+zone.trade.trade:String(zone.trade.trade);
+  waveSelectedTradeId=zone.source==='V52_PAPER'?'V52:'+zone.trade.trade:
+   zone.source==='V55_PAPER'?'V55:'+zone.trade.trade:
+   zone.source==='V493_PAPER'?'V493:'+zone.trade.trade:String(zone.trade.trade);
   waveRenderTradePanel();
   return true;
 }
@@ -5474,7 +5537,7 @@ document.addEventListener('click',function(e){
  const b=e.target&&e.target.closest?e.target.closest('[data-paper-report]'):null;
  if(!b)return;
  const key=String(b.getAttribute('data-paper-report')||'');
- if(/^(V52|V493):[1-9]\\d*$/.test(key))waveOpenTradeReport(key);
+ if(/^(V52|V55|V493):[1-9]\\d*$/.test(key))waveOpenTradeReport(key);
 });
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'){waveCloseTradeReport();waveCloseInfo();}});
 
@@ -8144,9 +8207,58 @@ async function loadV493Panel(){
  }catch(e){if(el)el.textContent='V4.9.4 indisponible : '+e.message;}
  finally{v493Pending=false;}
 }
+// New second PAPER: V55 replaces retired V494; V494 remains archived on demand.
+let v55PaperPending=false;
+async function loadV55PaperPanel(){
+ const el=document.getElementById('v55-paper-live');
+ const tab=document.getElementById('tab2-statev2');
+ if(!el||!tab?.classList.contains('active')||document.hidden||v55PaperPending)return;
+ v55PaperPending=true;
+ try{
+  const r=await fetch('/api/v55-paper',{cache:'no-store',
+    signal:AbortSignal.timeout(12000)});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const x=await r.json(),p=x.position||null,e=x.evidence||{},
+    big=e.bigRange||{},market=e.regime||'UNKNOWN';
+  if(x.mode!=='PAPER_ONLY'||x.brokerOrdersEnabled!==false||
+    x.ledgerVersion!=='v5.5-paper-ledger-v1.0')throw Error('PAPER_AUTHORITY_NOT_VERIFIED');
+  const fmt=v=>v===null||v===undefined||!Number.isFinite(Number(v))?
+    '—':Number(v).toFixed(1);
+  const n=x=>escTrade(String(x===null||x===undefined?'—':x));
+  const fresh=x.status==='PAPER_RECENT';
+  const pos=p?
+    '<div class="v5-row"><b>POSITION '+n(p.direction.toUpperCase())+
+      '</b> · entrée '+v5Time(p.entryAt)+' @ '+fmt(p.entryPrice)+
+      ' BTC$ · net latent estimé '+fmt(p.lastNetPnlUsd)+
+      ' $ · MFE '+fmt(p.mfePriceUsd)+' / MAE '+fmt(p.maePriceUsd)+
+      ' $ BTC · invalidation '+fmt(p.invalidationPrice)+'</div>':
+    '<div class="v5-row"><b>FLAT</b> · aucune position admise</div>';
+  el.innerHTML='<div class="v52-strip"><b>V5.5 · PAPER INDÉPENDANT</b>'+
+    '<span>'+Number(x.completed||0)+' clôtures · '+
+      Number(x.wins||0)+' gagnants · net '+fmt(x.realizedUsd)+
+      ' $ · equity '+fmt(x.equityUsd)+' $</span></div>'+
+    (!fresh?'<div class="v5-row v5-warn">SOURCE PÉRIMÉE · dernière décision affichée à titre historique</div>':'')+
+    '<div class="v5-row"><b>DÉCISION</b> '+n(x.latestDecision?.action)+
+      ' · '+n(x.latestDecision?.reason)+' · à '+v5Time(x.asOf)+'</div>'+
+    pos+
+    '<div class="v5-row"><b>STRUCTURE</b> parent '+n(e.parent)+
+     ' · phase '+n(e.phase)+' · E1 '+n(e.e1)+' · E4 '+n(e.e4)+
+     ' · Δ LBW15 3/15m '+fmt(e.lbw15Delta3m)+' / '+fmt(e.lbw15Delta15m)+'</div>'+
+    '<div class="v5-row"><b>LIEU</b> BigRange '+(big.val!=null?
+     'VAL '+fmt(big.val)+' · POC '+fmt(big.poc)+' · VAH '+fmt(big.vah)+
+     ' · '+n(big.outside):'non disponible')+
+     ' · DailyRange '+(e.dailyRange?'enregistré':'non enregistré')+'</div>'+
+    '<div class="v5-row"><b>MARCHÉ</b> '+n(market)+
+     ' · '+n(e.marketReview)+' · admission '+n(e.marketGate)+
+     ' · prix '+n(e.territory)+'</div>'+
+    '<div class="v52-muted">Remplace V494 PAPER arrêté. Nouveau capital simulé 1 000 $, notionnel 1 500 $, frais taker 0,05 % par côté ; plafond adverse 500 $ de prix BTC.'+
+    ' Pas de broker financé. Résultats non validés hors échantillon.</div>';
+ }catch(err){el.textContent='V5.5 PAPER · source indisponible : '+err.message;}
+ finally{v55PaperPending=false;}
+}
 setInterval(loadV52PaperPanel,10000);
+setInterval(loadV55PaperPanel,10000);
 setInterval(loadExecutionLabPanel,15000);
-setInterval(loadV493Panel,30000);
 
 let v5StructuralLivePending=false;
 let v5StructuralLiveLast=null;
@@ -8227,8 +8339,9 @@ setInterval(loadV5StructureLive,30000);
 let paperHistoryPending=false;
 function renderPaperHistoryGroup(x,kind){
  const data=x||{},isV52=kind==='v52';
- const name=isV52?'V5.4.3':'V4.9.4',color=isV52?'#9c1f6f':'#1969a0';
- const prefix=isV52?'V52:':'V493:';
+ const name=isV52?'V5.4.3':kind==='v55'?'V5.5':'V4.9.4 ARCHIVÉ',
+   color=isV52?'#9c1f6f':'#1969a0';
+ const prefix=isV52?'V52:':kind==='v55'?'V55:':'V493:';
  const n=(v,d=1)=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d);
  const signed=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'—':
    (Number(v)>0?'+':'')+Number(v).toFixed(2);
@@ -8281,8 +8394,9 @@ async function loadPaperHistoryPanel(){
     '<span>HISTORIQUE DES SIMULATIONS</span><span class="v52-pill">PAPER · sans ordre financé</span></div>'+
     '<div class="v52-muted">Entrée, sortie, MFE, MAE et P&L net. Chaque RAPPORT ouvre les preuves complètes.</div>'+
     renderPaperHistoryGroup(d.v52,'v52')+
+    renderPaperHistoryGroup(d.v55,'v55')+
     '<details id="paperV493History" style="margin-top:9px;" '+(wasOpen?'open':'')+'>'+
-      '<summary style="font-weight:800;cursor:pointer;color:#1969a0;">V4.9.4 · Successeur du comparateur V4.9.3 ('+
+      '<summary style="font-weight:800;cursor:pointer;color:#1969a0;">ARCHIVE V494 arrêtée le 16/11 · ('+
         Number(d.v493?.completed||0)+' clôture(s))</summary>'+
        renderPaperHistoryGroup(d.v493,'v493')+'</details></div>';
  }catch(e){panel.textContent='Historique PAPER indisponible : '+e.message;}
@@ -8336,7 +8450,8 @@ async function loadTrades() {
     if (ld) living += '<div style="margin-top:7px;opacity:.7;"><b>Dernière décision journalisée</b> ' + escTrade(ld.action) + ' — ' + escTrade(ld.reason) + ' · ' + tradeTime(ld.ts) + '</div>';
     living += '</div></div>';
     const archiveWasOpen=!!stateEl.querySelector('#v5-paper-archive[open]');
-    const baselineWasOpen=!!stateEl.querySelector('#v493-details[open]');
+    const v55WasOpen=!stateEl.querySelector('#v55-paper-details')||
+      !!stateEl.querySelector('#v55-paper-details[open]');
     const labWasOpen=!stateEl.querySelector('#execution-lab-details')||
       !!stateEl.querySelector('#execution-lab-details[open]');
     const structureWasOpen=!!stateEl.querySelector('#v5-structure-details[open]');
@@ -8350,9 +8465,9 @@ async function loadTrades() {
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
         '<div id="execution-lab-live">Données du carnet en attente…</div></details>'+
-      '<details id="v493-details" class="v5-observer" '+(baselineWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V4.9.4 · ÉCOUTE TEMPORELLE · V4.9.3 FIGÉ EN SOURCE</summary>'+
-        '<div id="v493-live">Version historique chargement…</div></details>'+
+      '<details id="v55-paper-details" class="v5-observer" '+(v55WasOpen?'open':'')+'>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.5 · NOUVEAU PAPER · LBW15 / E1-E4 / LIEU / RÉGIME</summary>'+
+        '<div id="v55-paper-live">V5.5 PAPER · lecture de la décision en cours…</div></details>'+
       '<details id="v5-structure-details" class="v5-observer" '+(structureWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V5.4.3 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
         '<div id="v5-structure-live">V5.4.1 · structure en cours…</div></details>'+
@@ -8363,8 +8478,8 @@ async function loadTrades() {
         '<summary style="cursor:pointer;font-weight:800;">V4.10.10 · ARCHIVE ARRÊTÉE / CONTRÔLE HISTORIQUE</summary>'+
         liveCard+living+posHtml+'</details>';
     loadV52PaperPanel();
+    loadV55PaperPanel();
     loadExecutionLabPanel();
-    loadV493Panel();
     loadV5StructureLive();
     if(archiveWasOpen)loadV5PaperPanel();
     updateV3LivePriceDom();

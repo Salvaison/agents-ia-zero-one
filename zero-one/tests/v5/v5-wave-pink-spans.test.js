@@ -75,16 +75,16 @@ test('comparison spans have distinct colors and independent UTC trade identities
  assert.equal(hit[0].source,'V52_PAPER');
  assert.ok(hit[0].y1>hit[1].y2,'tapping pink cannot select overlapping blue trade');
 });
-test('Vagues overlays current V4.9.4 and V5.4.2 ledgers; older trades retain their archived policy versions',()=>{
+test('Vagues overlays current V5.5 and V5.4.3 PAPER; archived V494 remains recoverable',()=>{
  assert.ok(src.includes('waveUiComparePaperTrades(now-48*3600000,now)'));
  assert.ok(src.includes('waveUiComparePaperTrades(startTs,endTs)'));
- assert.ok(src.includes('V52_PAPER'));assert.ok(src.includes('V493_PAPER'));
+ assert.ok(src.includes('V52_PAPER'));assert.ok(src.includes('V55_PAPER'));
  assert.ok(src.includes('wavePaintV5Bands(canvas,v5Spans,t0,t1,'));
  assert.ok(src.includes('wavePaperPaintColor(z)'));
  assert.ok(src.includes('waveReplayData.showLegacyV4?waveTradeSpans'));
  assert.ok(src.includes('v5PaperTrades:live.v5PaperTrades||snapshot.v5PaperTrades||[]'));
  assert.ok(src.includes('v5PaperTrades:recent.v5PaperTrades||base.v5PaperTrades||[]'));
- assert.ok(src.includes('bleu V4.9.4'));assert.ok(src.includes('rose V5.4.3 / archives V5.2–V5.4.2'));
+ assert.ok(src.includes('bleu V5.5'));assert.ok(src.includes('rose V5.4.3 / archives V5.2–V5.4.2'));
 });
 test('overlapping positions keep their own 10px lane and preserve true entry/exit vertical markers',()=>{
  const {wavePaintV5Bands}=browserTools(),ctxLines=[],fills=[];
@@ -96,7 +96,7 @@ test('overlapping positions keep their own 10px lane and preserve true entry/exi
   fillRect(x,y,w,h){fills.push([this.fillStyle,x,y,w,h])}};
  const canvas={width:840,getBoundingClientRect:()=>({width:420,height:200}),getContext:()=>ctx};
  const spans=[
-  {source:'V493_PAPER',trade:7,entryTs:T-400000,exitTs:null,
+  {source:'V55_PAPER',trade:7,entryTs:T-400000,exitTs:null,
    drawEndTs:T,open:true},
   {source:'V52_PAPER',trade:15,entryTs:T-400000,exitTs:T-100000,
    drawEndTs:T-100000,open:false}
@@ -109,7 +109,7 @@ test('overlapping positions keep their own 10px lane and preserve true entry/exi
  const x=hit[0].x1+4;
  assert.ok(x>hit[1].x1&&x<hit[1].x2);
  assert.equal(hit.filter(z=>x>=z.hitX1&&x<=z.hitX2&&13>=z.y1&&13<=z.y2)[0].source,
-  'V493_PAPER','tap top lane selects blue V4.9.3 only');
+  'V55_PAPER','tap top lane selects blue V5.5 only');
  assert.equal(hit.filter(z=>x>=z.hitX1&&x<=z.hitX2&&175>=z.y1&&175<=z.y2)[0].source,
   'V52_PAPER','tap bottom lane selects pink V5 only');
  assert.equal(ctxLines.length,2);
@@ -152,5 +152,5 @@ test('price, Wave15 and Wave3 all use lanes, not shaded chart-height positions',
  assert.ok(!wave.includes('ctx.fillRect(x1,T,zoneW,h)'));
  assert.ok(!price.includes('tradeSpans:spans'));
  assert.ok(src.includes('Toucher la bande bleue en haut'));
- assert.ok(src.includes('bande supérieure V4.9.3 ou inférieure V5'));
+ assert.ok(src.includes('bande supérieure V5.5 ou inférieure V5.4.3'));
 });

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-16T13:35:42+00:00",
+  "status": "TESTE",
+  "description": "45 tests ciblés réussis sans échec, syntaxe Node valide, comptes V55/V543 indépendants, nouveau compte zéro trade FLAT démarré, risk dur, anti-churn, E15 contradiction, sorties, E1/E4 et régime, routes sous auth 302 login",
+  "evidence": "tests/v5/v55-independent-policy.test.js ; tests/ui/v55-watch-replacement.test.js ; tests/v5/v5-wave-pink-spans.test.js ; tests/v5/v52-paper-report-ui.test.js ; suite /tmp/boonolab-v55-release-tests.txt ; archive /root/boonolab-v55-pre-ui-rollout-20261116T133028Z",
+  "previousEventSha256": "9d88a09acdffb2955d88e9853ba43a42e9d095365d60107cae54afcae2f39b27"
+}

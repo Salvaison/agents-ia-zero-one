@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261116-003",
+  "title": "V5.5 PAPER indépendant succède à V494 arrêté, avec LBW15 Lieu E1/E4 et régime",
+  "createdAtUtc": "2026-11-16T13:35:42+00:00",
+  "authorization": "Utilisateur 16 novembre : remplacement PAPER V494 par moteur V5.5 avec évolutions proposées; aucun ordre broker financé et V543 PAPER inchangé",
+  "reference": "BOONOLAB discussions 14–16/11/2026; OD-20261116-001 et OD-20261116-002; audit 21j E1/E4, S1 LBW15 et législation interne PAPER-only",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2c7c897037b9d8ddd103db9705bd64e1e6c6891179f514b7981abb765a900f26",
+      "bytes": 413
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5c2d54404b472be9c8b59dc0e07d142bd49190915ce2af0ad8ac8139464d8543",
+      "bytes": 1590
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2198074ea7d9dff42c4a1a5ef28e00fc97c49944136aa81cc83f8fd3d2146d71",
+      "bytes": 613
+    }
+  }
+}
