@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-001",
+  "title": "Remise en service autonome du ticker Elastic 4x15 Watch, sans V494",
+  "createdAtUtc": "2026-11-17T23:27:01+00:00",
+  "authorization": "Utilisateur le 18 novembre 2026 : remise en service du ticker 4×15 Watch indépendant de V494 ; aucun changement PAPER ou ordre broker",
+  "reference": "Discussion BOONOLAB 17–18 novembre 2026, OD-20261116-001 V494 arrêté, OD-20261116-002 nouveau observateur, KB ticker du 10/11 et audits Bâton",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "88b01f00fdd9ec73cdde841df061e5f2fa29595b459c23d7e134f2b97d223bb5",
+      "bytes": 89
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "52567ccd012db7f84b17634dbc272e471970a3ceda427928805b93886908d19b",
+      "bytes": 1404
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "d9f79c920388604953e25bba10203eabf14cb00a9fde57b09e3f8814e46aa703",
+      "bytes": 602
+    }
+  }
+}

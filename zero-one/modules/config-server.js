@@ -46,6 +46,9 @@ const v494DualUiSummary=require('./attention/v494-dual-ui-summary');
 const v494ElasticUiSummary=require('./attention/v494-elastic-ui-summary');
 const v494ElasticVolume1m=require('./attention/v494-elastic-volume-1m');
 const elasticVolume1m=v494ElasticVolume1m.createProvider();
+// New independent, live ticker: never reads or restarts the V494 PAPER.
+const independentTickerVolume1m=require('./attention/boonolab-ticker4x15-volume-1m');
+const independentTickerVolumeProvider=independentTickerVolume1m.createProvider();
 const v494StateLayer=require('./attention/v494-elastic-state-layer');
 const v494StateHistory=require('./attention/v494-elastic-state-history');
 const boonoMarketHistory=require('./attention/boonolab-market-history');
@@ -1549,6 +1552,41 @@ app.get('/api/shadows', requireAuth, (req, res) => {
   } catch (e) {
     res.status(500).json({error:'shadows indisponibles',detail:e.message});
   }
+});
+
+// BOONOLAB independent 4×15m: observed Bâton quality/regime, plus actual
+// OKX CLOSED 1m BTC volume. No V494 PAPER, ledger or archived summary involved.
+app.get('/api/shadows/boonolab-ticker4x15',requireAuth,async(req,res)=>{
+ let packet;
+ try{
+  const f=path.join(__dirname,'../data/boonolab-ticker4x15-summary.json');
+  if(fs.statSync(f).size>256*1024)throw Error('TICKER_4X15_SUMMARY_OVERSIZE');
+  const raw=JSON.parse(fs.readFileSync(f,'utf8'));
+  if(raw.version!=='boonolab-ticker4x15-independent-v1'||
+     raw.mode!=='SHADOW_ONLY'||raw.decisionImpact!==false||
+     raw.brokerOrdersEnabled!==false||!Array.isArray(raw.quality4x15)||
+     raw.quality4x15.length!==4)
+   throw Error('TICKER_4X15_CONTRACT_INVALID');
+  const age=Date.now()-Number(raw.asOf||0);
+  if(!Number.isFinite(age)||age< -5000)
+   throw Error('TICKER_4X15_INVALID_ASOF');
+  packet={...raw,ageMs:age,status:age<=90000?'DATA_RECENT':'SOURCE_STALE'};
+ }catch(e){
+  res.status(503).json({error:'Ticker 4×15 indépendant indisponible',
+   detail:e.message});return;
+ }
+ // Volume is an independent public OKX observation, not an estimate
+ // copied from Bâton, and never a trading-authority input.
+ try{
+  packet.volume4x15=await independentTickerVolumeProvider.get(
+   packet.quality4x15,packet.asOf);
+ }catch(_){
+  packet.volume4x15={status:'UNAVAILABLE',
+   source:independentTickerVolume1m.SOURCE,decisionImpact:false,
+   brokerOrdersEnabled:false,windows:[]};
+ }
+ res.set('Cache-Control','private,no-store');
+ sendUiJson(req,res,packet);
 });
 
 // Independent Elastic v494 follow-up lab: read only the compact summary,
@@ -7552,9 +7590,9 @@ async function loadV5PaperPanel(){
 // Structural V5 is the *current* analysis; separate 30s low-bandwidth poll.
 // This never calls /api/trades and continues even when V4 state is stale.
 // V5.2 independently refreshed, very small payload. V4.9.3 runs behind it.
-// Autonomous V494 Elastic ticker remains strictly SHADOW, never a PAPER vote.
-// Reuse the authenticated, compact endpoint already used by SHADOWS. Only poll
-// while the main living panel is visible; rebuild from cache after UI refresh.
+// Autonomous ticker 4×15, independent from the retired V494 PAPER engine.
+// Only poll while the main living panel is visible; refresh from cache
+// after UI rerender without converting shadow data into trading authority.
 let miniTicker4x15Cache=null,miniTicker4x15Pending=false,miniTicker4x15RequestedAt=0;
 function renderMiniTicker4x15(packet){
  const root=document.getElementById('v52-mini-ticker');if(!root)return;
@@ -7640,7 +7678,7 @@ function renderMiniTicker4x15(packet){
    '<div class="v52-ticker-market">Régime marché : '+regimes+'</div></div>');
  }
  root.innerHTML=cards.join('');
- root.title=trusted?'TICKER ELASTIC V494 · SHADOW UNIQUEMENT · source '+
+ root.title=trusted?'TICKER 4×15 BOONOLAB INDÉPENDANT · SHADOW UNIQUEMENT · source '+
    time(packet.asOf)+' · lecture sans autorité de trading':
    'Ticker 4 × 15 minutes indisponible ou non vérifié';
 }
@@ -7651,12 +7689,12 @@ async function loadMiniTicker4x15(){
     miniTicker4x15Pending||Date.now()-miniTicker4x15RequestedAt<35000)return;
  miniTicker4x15Pending=true;miniTicker4x15RequestedAt=Date.now();
  try{
-  const response=await fetch('/api/shadows/v494-elastic',{cache:'no-store'});
+  const response=await fetch('/api/shadows/boonolab-ticker4x15',{cache:'no-store'});
   if(!response.ok)throw Error('HTTP '+response.status);
   const packet=await response.json();
   if(packet.mode!=='SHADOW_ONLY'||packet.decisionImpact!==false||
      packet.brokerOrdersEnabled!==false)
-    throw Error('ELASTIC_READ_ONLY_CONTRACT_MISMATCH');
+    throw Error('INDEPENDENT_TICKER_READ_ONLY_CONTRACT_MISMATCH');
   miniTicker4x15Cache=packet;
   renderMiniTicker4x15(packet);
  }catch(err){

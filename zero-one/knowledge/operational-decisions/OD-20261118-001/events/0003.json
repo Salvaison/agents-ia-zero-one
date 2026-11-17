@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-17T23:27:02+00:00",
+  "status": "TESTE",
+  "description": "34/34 tests ciblés PASS, reconstitution 4×15 causale, lacunes de couverture respectées, rendu DOM simulé des 4 cartes, vieux endpoint V494 conservé, provider OKX 1m réel COVERED, HTTP Watch 302 sans login",
+  "evidence": "tests/attention/boonolab-ticker4x15-independent.test.js ; tests/attention/boonolab-ticker4x15-watch.test.js ; tests V494 ticker/Elastic et Watch ; /tmp/boonolab-ticker4x15-release-tests.txt ; test provider direct",
+  "previousEventSha256": "1a36b8f69d734141e1f42622c5952de0623c789bb181b36cd4ea754a5c077df3"
+}

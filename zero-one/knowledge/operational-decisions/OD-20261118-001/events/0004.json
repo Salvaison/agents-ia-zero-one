@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-17T23:27:02+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "boono-ticker4x15-shadow ONLINE, config-server ONLINE, nouvelles dates/qualités et volume moyen OKX remontés, PM2 sauvegardé; V494 PAPER/Elastic arrêtés; V543/V55 PAPER en ligne et non modifiés; validation visuelle utilisateur encore ouverte",
+  "evidence": "pm2 jlist; data/boonolab-ticker4x15-summary.json ; route /api/shadows/boonolab-ticker4x15 sécurisée, source 1m OKX",
+  "previousEventSha256": "0b27e6adc88522d67e9f60573d1dfcd902ffe44f244dd5b170f9069eaec67986"
+}

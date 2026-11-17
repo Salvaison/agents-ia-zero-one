@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-17T23:27:02+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Nouveau moteur d’observation 4×15 en lecture seule; provider OKX 1m autonome; endpoint authentifié et mini ticker Watch reconnecté sans V494 PAPER",
+  "evidence": "modules/attention/boonolab-ticker4x15-independent.js ; modules/attention/boonolab-ticker4x15-runner.js ; modules/attention/boonolab-ticker4x15-volume-1m.js ; modules/config-server.js",
+  "previousEventSha256": "e74d331b5339c3de248c429daeb86350e7371408814e7b1aa45b2ca8ea012ba8"
+}
