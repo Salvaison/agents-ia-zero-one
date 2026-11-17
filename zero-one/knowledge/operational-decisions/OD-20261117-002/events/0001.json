@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-17T19:35:53+00:00",
+  "status": "AUTORISE",
+  "description": "Demande explicite de surveillance passive du rollover cette nuit, code tab2 non modifie, horloges UTC/Stockholm reconciliees",
+  "evidence": "01-demande-utilisateur-integrale.txt; modules/tab2-collector.js; horaire 2026-11-18T00:00Z=01:00 CET",
+  "previousEventSha256": null
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-17T19:40:27+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Sonde CDP read-only de rollover: memoire, DOM, heartbeat, CSV, événements tab2; plage borne du 17/11 22:50 UTC au 18/11 00:40 UTC",
+  "evidence": "zero-one/scripts/boono-rollover-observer-20261118.js; rapport knowledge/BOONO_TV_suivi_rollover_2026-11-18_preparation.md",
+  "previousEventSha256": "160cdeabd18e9dc83f0852d6e04f35f38006bd02b59ce76deacb52bc392a2dc4"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-17T19:40:27+00:00",
+  "status": "TESTE",
+  "description": "node --check et probe CDP immediate reussis; TF15 et OKX, 397 MiB heap, 13 DOM docs, 37258 nodes, 9896 listeners; CSV et heartbeat lus sans écriture",
+  "evidence": "Probe 2026-11-17T19:38:49Z, avant rollover, resultat constatable dans conversation; aucune preuve de rollover complet pour le moment",
+  "previousEventSha256": "980b6038804c436022504959c84f3a69737f1f880b1a14641303723c5a8eb52a"
+}

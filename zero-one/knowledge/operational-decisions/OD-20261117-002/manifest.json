@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261117-002",
+  "title": "Observation passive du rollover 15m 1h 4h Daily retour 15m a minuit UTC",
+  "createdAtUtc": "2026-11-17T19:35:53+00:00",
+  "authorization": "Demande utilisateur explicite de surveillance du rollover complet cette nuit",
+  "reference": "Conversation maintenance BOONO Systems du 17 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6449c1dd297b174c746471f7304c70ef233922c9c244c55ab6a38c4b13fd4287",
+      "bytes": 93
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "f3bd5c201c4ce26e2396d81d2161cbe0d40ddb4d8e0156c7c303c23e65659831",
+      "bytes": 1460
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "96cde7bf42143df01032f7f143b2cb71dc6db8e1c7220744190ea8fbeeb00e7d",
+      "bytes": 2067
+    }
+  }
+}

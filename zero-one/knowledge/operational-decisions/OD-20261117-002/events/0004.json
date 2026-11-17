@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-17T19:40:27+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Timer systemd transient one-shot actif, declenchement prevu 2026-11-17T22:50:00Z, sortie automatique 2026-11-18T00:40:00Z; service de collecte pas encore demarre",
+  "evidence": "systemctl show boono-rollover-observer-20261118.timer ActiveState=active NextElapseUSecRealtime=Tue 2026-11-17 22:50 UTC; collecteur PM2 online; automation ChatGPT a 02h CET creee avec succes",
+  "previousEventSha256": "fda5b4a17c5d85403b1331abb33d1e932ee8598111d1f1f574d52a934e52838e"
+}
