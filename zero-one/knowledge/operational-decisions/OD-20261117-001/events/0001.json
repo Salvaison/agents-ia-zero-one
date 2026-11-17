@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-17T18:58:33+00:00",
+  "status": "AUTORISE",
+  "description": "Proprietaire demande correction redessins graphiques BOONO-TV et enquete read-only memoire TradingView 15m; pas de recyclage ni modification PAPER",
+  "evidence": "01-demande-utilisateur-integrale.txt; 02-prompt-operationnel-integral.txt; audit du 17/11",
+  "previousEventSha256": null
+}

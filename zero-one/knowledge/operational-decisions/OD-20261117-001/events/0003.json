@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-17T19:06:08+00:00",
+  "status": "TESTE",
+  "description": "Test fonctions 3 panneaux PASS, rotations 25/15/5 maintenues; reduction 10-13.5% de drawPrice/drawWave, aucune erreur. Enquete CDP read-only: 15m recharge Page.navigate avec documents DOM 11 a 13 apres cycle 1h",
+  "evidence": "OVH tests/OD-20261117-001-rotation-before.json, -after.json, -render-only-visible-result.txt ; Amsterdam tests/boono-tv-collector-memory-audit-20261117.js ; rapport knowledge/BOONO_TV_optimisation_rotations_et_collecteur_15m_2026-11-17.md",
+  "previousEventSha256": "7331139df6bd3910959e87371c03d3b47aa5967c72227b6584762408a9e0e0ba"
+}

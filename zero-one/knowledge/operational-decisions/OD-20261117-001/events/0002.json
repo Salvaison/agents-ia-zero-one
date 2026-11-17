@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-17T19:06:08+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Correction sur OVH et Git: chart-views ne dessine que panneau actif, garde dernier snapshot et rafraichit a la bascule; cache-buster HTML, sauvegardes et SHA identiques",
+  "evidence": "OVH backups/OD-20261117-001, SHA runtime+Git 2bc6a2fd48036677666c41b0149195bf754594b094051968496730cb86b64684, index.html?v=OD20261117-001",
+  "previousEventSha256": "34eff61455937953222f1c0c7786e9648b3b6e59c55db961cfe8ed5020d2885d"
+}

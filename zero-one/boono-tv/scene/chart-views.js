@@ -213,8 +213,11 @@ function onSnapshot(s){
   lastMarkerVersion='PAPER_LIVE';
  }
  tag('#pricePanelLive',nf(s?.market?.price,1)+' USDT');
- drawTrio(s);
- drawCompletedTrades(s);
+ // Record the newest factual snapshot for every panel, but draw only the
+ // one actually visible. setView() already renders the cached snapshot
+ // immediately when Graphiques or Trades becomes active.
+ if(active==='charts')drawTrio(s);
+ else if(active==='trades')drawCompletedTrades(s);
 }
 async function refreshMarkers(){
  if(Array.isArray(lastSnapshot?.trades))return;
@@ -229,8 +232,10 @@ async function refreshMarkers(){
   lastMarkerVersion=version;
   events=data.events.filter(e=>e.engine==='V543'&&Number.isFinite(Number(e.entryTs))&&['long','short'].includes(e.direction)).slice(-150);
   if(lastSnapshot){
-   drawTrio(lastSnapshot);
-   // Reflect new markers on floating waves as soon as the read-only file updates.
+   // Markers are cached while the graph panel is hidden. Its next
+   // activation uses the freshest markers via setView('charts').
+   if(active==='charts')drawTrio(lastSnapshot);
+   // The physical floating waves remain independent of the rotating panels.
    if(typeof window.renderMarketCurtain==='function')
     window.renderMarketCurtain(lastSnapshot.series?.mcb3||[],lastSnapshot.series?.mcb15||[]);
   }

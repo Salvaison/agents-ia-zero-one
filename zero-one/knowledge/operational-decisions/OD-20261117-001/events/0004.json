@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-17T19:06:08+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "JS optimisé servi sur OVH et via tunnel Chromebook; studio HTTP 200; collecteurs et PAPER non redemarres ni changes; validation perceptuelle ChromeOS encore ouverte",
+  "evidence": "OVH boono-studio active et HTTP 200, Penguin curl 8310 nouveau script et HTML cache-bust ; SHA avant/apres, rapport technique",
+  "previousEventSha256": "a22f33ffa37aa9fb217ea81af7756c475614dc4b6a400f9748d13a1910a79b48"
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261117-001",
+  "title": "Maintenance BOONO-TV : eliminations redessins invisibles et diagnostic memoire TradingView 15m",
+  "createdAtUtc": "2026-11-17T18:58:33+00:00",
+  "authorization": "Demande explicite utilisateur de resoudre les redessins et enqueter sur le collecteur, 17/11/2026",
+  "reference": "Conversation BOONO Systems maintenance hebdomadaire 17 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "c06e31f483c04fe8be4c70daed1fd24b3e5d7959b70ee242089b51ec0c397491",
+      "bytes": 1326
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8baa5be0b1dc806eacb6bc2bdf5ac6e3eab8254354d8f0c242625172a520d3f7",
+      "bytes": 2086
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2d4d632804e2505f427c7cb2c48a5900d20aee0036f4b7ada4d95df8f204f5a1",
+      "bytes": 2166
+    }
+  }
+}

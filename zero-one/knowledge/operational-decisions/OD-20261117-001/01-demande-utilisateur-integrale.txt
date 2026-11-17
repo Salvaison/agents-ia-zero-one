@@ -1,0 +1,24 @@
+lternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[19:44:43]  - 🔌 Connected to Desktop Commander MCP
+[19:44:43] ⏳ Connecting to Remote MCP https://mcp.desktopcommander.app
+[19:44:43]    - 🔌 Connected to Remote MCP
+[19:44:43] 💾 Found persisted session for device 746a2e5a-2128-4d4e-a79a-fb74c7fb12ef
+[19:44:43]    - ✅ Session restored
+[19:44:44] ✅ Channel subscribed
+[19:44:44] 🔌 Device marked as online
+[19:44:44] 👋 Presence tracked (device 746a2e5a-2128-4d4e-a79a-fb74c7fb12ef)
+[19:44:44] ✅ Device ready (device 746a2e5a-2128-4d4e-a79a-fb74c7fb12ef)
+[19:44:44] ✅ Device ready:
+[19:44:44]    - User:         boono@live.se
+[19:44:44]    - Device ID:    746a2e5a-2128-4d4e-a79a-fb74c7fb12ef
+[19:44:44]    - Device Name:  penguin
+[19:44:44]    - Version:      0.3.3
+
+[19:44:44] ✅ Desktop Commander Remote is connected
+
+"Pendant les 49 secondes d'essai, nous avons comptabilisé environ 89 appels au dessin du prix et 178 au dessin des vagues, pour l'ensemble de la scène.
+
+Cela n'explique pas forcément toute la lenteur, mais c'est une véritable occasion d'optimisation : le navigateur accomplit davantage de travail graphique que nécessaire." problème à résoudre
+
+"L'onglet TradingView à 866 Mo mérite une véritable enquête de consommation." OUI
