@@ -1,0 +1,15 @@
+[Unit]
+Description=BOONO-TV — private ChromeOS-to-Penguin studio tunnel (eth0:8310)
+Wants=network-online.target
+After=network-online.target boono-tv-studio-tunnel.service
+
+[Service]
+Type=simple
+Environment=AUTOSSH_GATETIME=0
+Environment=AUTOSSH_POLL=30
+ExecStart=/home/boono70/.local/bin/boono-tv-crostini-ip-tunnel.sh
+Restart=always
+RestartSec=8
+
+[Install]
+WantedBy=default.target

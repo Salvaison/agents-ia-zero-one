@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T21:22:52+00:00",
+  "status": "TESTE",
+  "description": "Endpoint IP 8310 initialement refuse, maintenant HTTP 200 sur scene, health et snapshot; ancien 127.0.0.1:8310 et noVNC 6080 restent HTTP 200; SHA identiques au depot",
+  "evidence": "rapport knowledge/BOONO_TV_Crostini_IP_tunnel_8310_2026-11-18.md; 085446d5 script; 756a06b3 service",
+  "previousEventSha256": "d096d51f47e977c15bf4d0b2ed61a84443a41ee83a67c79dd3f527fb6e45f406"
+}

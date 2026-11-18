@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T21:22:54+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Systemd Penguin boono-tv-crostini-ip-tunnel enabled active, autossh en ligne, HTTP 200 sur IP privee; affichage ChromeOS pas encore confirme par proprietaire",
+  "evidence": "systemctl --user is-enabled/active, ss -lntp 100.115.92.26:8310, curl HTTP 200",
+  "previousEventSha256": "4b37e247fb4d4842343d849df639fbcd52f4fa118f6ddd6ddabab2b059d97f4b"
+}

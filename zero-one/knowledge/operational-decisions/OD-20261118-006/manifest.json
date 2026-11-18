@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-006",
+  "title": "BOONO-TV — restauration accès privé ChromeOS par tunnel Penguin eth0",
+  "createdAtUtc": "2026-11-18T21:20:57+00:00",
+  "authorization": "Demande de restaurer BOONO-TV après rétablissement noVNC via IP Penguin",
+  "reference": "Conversation BOONO-Systems, 18 novembre 2026, accès noVNC et BOONO-TV",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f712a93f672c456777cb2eb2f09a20aa75e2457308b940a6e11d103659002c8f",
+      "bytes": 34
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "b69e300ff4bd2847262fdcfacfbcb4deaf773b9cb1161ffc2017f343ede5ff43",
+      "bytes": 1097
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e179c5a9a42ccaccd4aa6ae5297b284fbff8ee3ff6e798b43cfc29dd862907b7",
+      "bytes": 1653
+    }
+  }
+}

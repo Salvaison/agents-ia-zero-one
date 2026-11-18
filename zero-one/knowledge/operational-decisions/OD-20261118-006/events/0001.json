@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-18T21:20:57+00:00",
+  "status": "AUTORISE",
+  "description": "Utilisateur demande rétablissement de BOONO-TV, sans altération du trading ni du studio; créer uniquement accès privé tunnel",
+  "evidence": "01-demande-utilisateur-integrale.txt; 02-prompt-operationnel-integral.txt",
+  "previousEventSha256": null
+}

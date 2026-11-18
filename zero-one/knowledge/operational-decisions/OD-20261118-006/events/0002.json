@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-18T21:22:50+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Second tunnel autossh sur IP eth0 Penguin seulement; script dynamique et unite systemd --user persistants; 127.0.0.1:8310 et noVNC 6080 inchanges",
+  "evidence": "scripts/boono-tv-crostini-ip-tunnel.sh; scripts/systemd/boono-tv-crostini-ip-tunnel.service; unite Penguin boono-tv-crostini-ip-tunnel enabled active",
+  "previousEventSha256": "6c338676b51b76dc46d20d6517e770a3af766f1d9722565ec4fc56ff0b8fe79d"
+}
