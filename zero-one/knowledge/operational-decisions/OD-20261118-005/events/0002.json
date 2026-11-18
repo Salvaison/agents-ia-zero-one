@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-18T20:13:45+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Service Desktop Commander 0.3.4 installe sous opt, unite systemd et surveillance logique toutes les 3 minutes",
+  "evidence": "Backup ancienne unite OD-20261118-005, scripts systemd versionnes, script boono-dc-health-check.py",
+  "previousEventSha256": "f782b2a9c71d73de58aca1856cb87df7dce1853680a39eba88824584d2ea464b"
+}

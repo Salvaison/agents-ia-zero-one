@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-18T19:59:45+00:00",
+  "status": "AUTORISE",
+  "description": "Maintenance DC demandée, sauvegarde et migration service seul, préservation console en secours, trading exclu",
+  "evidence": "Source 01, consigne 02 et rapport incident BOONO_Systems_incident_DC_auth_2026-11-18.md",
+  "previousEventSha256": null
+}

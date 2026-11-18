@@ -1,0 +1,21 @@
+[Unit]
+Description=Desktop Commander Remote MCP device
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+Environment=HOME=/root
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/desktop-commander/managed-0.3.4/node_modules/@wonderwhy-er/desktop-commander/dist/index.js remote
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+KillMode=control-group
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=BOONO Systems — verify logical Remote MCP connection (Desktop Commander)
+After=desktop-commander-remote.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /usr/local/sbin/boono-dc-health-check.py
+Nice=15
+StandardOutput=journal
+StandardError=journal

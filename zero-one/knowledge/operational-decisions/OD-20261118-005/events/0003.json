@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T20:13:49+00:00",
+  "status": "TESTE",
+  "description": "Nouvel agent authentifie, session restauree, vrais appels distants verifies apres fermeture session manuelle, watchdog selftest PASS et controle ONLINE",
+  "evidence": "Journal service 18 novembre 20h01, 20h03 UTC, PPID 708447 PGID 708384; journal watchdog 20h10 UTC",
+  "previousEventSha256": "0bdcd532a7882bdc76d84413807d2b9b6d3248ac4ca85756ca489891b9d6552e"
+}

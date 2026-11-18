@@ -1,0 +1,12 @@
+[Unit]
+Description=BOONO Systems — Desktop Commander remote connectivity watchdog
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=3min
+AccuracySec=15s
+RandomizedDelaySec=0
+Unit=boono-dc-health-check.service
+
+[Install]
+WantedBy=timers.target

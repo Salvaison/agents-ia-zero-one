@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T20:13:51+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Un agent Desktop Commander 0.3.4 systemd actif et demarrage automatique, controleur de connexion actif; validation a long terme restant ouverte",
+  "evidence": "systemctl is-active et is-enabled, rapport BOONO_Systems_DC_034_migration_supervision_2026-11-18.md",
+  "previousEventSha256": "0695170c3f84e4b4d8e7f63edaedc542d7cebe59de3ae1224f4316122cc245a7"
+}

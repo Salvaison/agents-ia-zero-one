@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-005",
+  "title": "Desktop Commander Amsterdam : migration durable 0.3.4 et reprise automatique",
+  "createdAtUtc": "2026-11-18T19:59:45+00:00",
+  "authorization": "Accord explicite du propriétaire oui fait qqch à DC suite au diagnostic et à la proposition de remplacement",
+  "reference": "Conversation maintenance BOONO Systems 18 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "34d1e8bd20f8ff2af4edf0a702590907629e573b62af0d2a65e83c436f3344ea",
+      "bytes": 19
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "ed49b73615285d72f13b0ae3b6dceb6d8222ae0512a0a320a88f856c7b76f2cb",
+      "bytes": 1407
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "f76c1c8591e9a068e499c2f37e2d0020fe88ade526a0d6e565f20e0d1bee249e",
+      "bytes": 1842
+    }
+  }
+}
