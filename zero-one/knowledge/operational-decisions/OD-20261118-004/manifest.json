@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-004",
+  "title": "V551 moteur PAPER autonome MCB3-first / MCB15-campagne remplace V55 artefact et diffuse Watch/BOONO-TV",
+  "createdAtUtc": "2026-11-18T17:07:46+00:00",
+  "authorization": "18 novembre 2026 : utilisateur autorise V551 autonome, archive V55 et affichage dans Watch et BOONO-TV; PAPER uniquement, aucun financement ni transfert de compte, autres travaux Composer exclus",
+  "reference": "BOONOLAB_V551_MCB3_MCB15_PAPER_REMPLACE_V55_2026-11-18.md ; OD-20261118-002 et OD-20261118-003 ; constitution 22/10/2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "106b072f9b2e9769932e27aebdf5ca252fd287469d074560e9cc97b064cc02b4",
+      "bytes": 855
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "f69a8ffabe368381a5c0828b3073d62a001ff7060c6a91fcfc8ff216468fbe32",
+      "bytes": 1755
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "e7fcbe71ec7744e2e3dc54b2a32ba21105eb9d625fb9c01b51a92272ca072653",
+      "bytes": 700
+    }
+  }
+}

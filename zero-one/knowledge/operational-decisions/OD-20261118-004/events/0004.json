@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T17:07:47+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "boono-v551-paper ONLINE nouvelle equity 1000$ sans transfert, boono-v55-paper STOPPED, boono-v543-paper ONLINE, trois shadows tactiques obsolètes STOPPED; config-server et boono-tv Amsterdam ONLINE, studio OVH et radio ONLINE; Watch actif V551 et historique V55 archivé, BOONO-TV snapshot engine551 frais et marques V551/V543 actives; réussite économique à évaluer après nouveaux vrais trades",
+  "evidence": "pm2 jlist / pm2 save ; data/v551-paper-{state,summary}.json ; data/v55-paper-state.json ; /api/v551-paper ; /api/snapshot relay Amsterdam→OVH ; /root/boonolab-archives/OBSOLETE_V55_SHADOWS_20261118T164036Z/",
+  "previousEventSha256": "9e465716befea5cf6e749a051271cba484afbd6756edb7b53d4c363a77265840"
+}

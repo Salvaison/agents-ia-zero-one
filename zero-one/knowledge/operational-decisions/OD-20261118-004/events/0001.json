@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-18T17:07:47+00:00",
+  "status": "DOCUMENTE",
+  "description": "Précision du mandat : V551 architecture propre et signatures E15/LBW15/Cross3 répétées/Cross15/PM/E3/E15 comme hypothèses, et V55 bâclé retiré. Archives horodatées SHA256 et sauvegardes OVH documentées",
+  "evidence": "knowledge/BOONOLAB_V551_MCB3_MCB15_PAPER_REMPLACE_V55_2026-11-18.md ; /root/boonolab-archives/V55_RETIRED_20261118T162419Z/",
+  "previousEventSha256": null
+}

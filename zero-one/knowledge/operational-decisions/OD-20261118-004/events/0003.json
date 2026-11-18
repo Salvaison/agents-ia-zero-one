@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T17:07:47+00:00",
+  "status": "TESTE",
+  "description": "67 tests régressions V551/Watch et V55 historiques/BOONO-TV réussis, zéro échec; tests clés Cross3 premier, E15/Cross15 causal, PM après Cross3, comptes isolés, hard risk et frais, rapport Watch sécurisé, snapshot OVH réellement relayé et son bandeau rendu VM; aucune P&L contrefactuelle inventée",
+  "evidence": "tests/v551/independent-policy.test.js ; tests/v551/watch-tv-integration.test.js ; tests/ui/v55-watch-replacement.test.js ; /tmp/v551-extended-tests.txt et /tmp/v551-causal-tests.txt ; HTTP 302/login ; OVH HTTP200 + bandeau VM",
+  "previousEventSha256": "5e62a7f8240677191b1271f4fba732333bbb3e5bda9cdebdf151184fee890cd7"
+}
