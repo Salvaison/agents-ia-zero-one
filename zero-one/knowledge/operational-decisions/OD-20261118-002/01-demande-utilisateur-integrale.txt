@@ -1,0 +1,5 @@
+"avec une invalidation structurelle à **64 735,70 $**, soit **458,70 $** de risque en déplacement BTC.
+
+V5.5 applique une autre méthode de construction du stop, fondée sur les huit dernières bougies 3m confirmées. C'est cette différence qu'il faut examiner : **nous pouvons avoir de bonnes preuves d'entrée, mais un contrat de risque qui ne sait plus définir un stop admissible dans la volatilité." mais c'est ridicule ce truc, ça sort d'où? et finalement on a ça!"**V5.5 finit par entrer à 17h27, mais PM Live n'apporte plus que +5 $ dans le sens SHORT**, malgré des PM3/PM5 très favorables, correspondant à un mouvement largement déjà accompli. L'admission paraît économiquement moins fraîche."
+
+"**S1 v0.2 à mémoire de campagne**" Oui

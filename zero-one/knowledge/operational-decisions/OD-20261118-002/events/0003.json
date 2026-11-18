@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T00:23:08+00:00",
+  "status": "TESTE",
+  "description": "45 tests ciblés passés; stop 64737.2$ sur swing 64714.8$ à prix 64277$ (460.2$) et refus plus tard à >500$; états parent/candidat/position distincts; relecture AS-OF historique du 17/11 avec trous explicités; migration préserve 17 trades et état",
+  "evidence": "tests/v5/v55-independent-policy.test.js ; tests/attention/v543-lbw15-s1-v02.test.js ; tests/ui/s1-v02-watch-v55-causal-stop.test.js ; tests/attention/v543-lbw15-s1.test.js ; /tmp/s1-v02-v55-fix-tests.txt ; /tmp/s1-v02-replay17.json ; sauvegarde V55 pré-migration",
+  "previousEventSha256": "a2174f6a27efc452db6db95f5f732430e6be06b603d6334394b2e3f43880045a"
+}

@@ -2,7 +2,7 @@
 // V5.5 PAPER only: isolated state and accounting. Never loads a broker.
 // New zeroed ledger; V494 and V543 remain immutable independent histories.
 const VERSION='v5.5-paper-ledger-v1.0';
-const POLICY='v5.5-structural-place-regime-paper-v1';
+const POLICY='v5.5-structural-place-regime-paper-v1.1';
 const NOTIONAL=1500,INITIAL=1000,TAKER=.0005,HARD_RISK_BTC_USD=500;
 const num=x=>x===null||x===undefined||x===''?null:Number.isFinite(Number(x))?Number(x):null;
 const round=x=>Math.round(x*10000)/10000;
@@ -20,9 +20,21 @@ function initial(now=Date.now()){
 function migrate(x,now=Date.now()){
  if(!x)return initial(now);
  if(x.version!==VERSION||x.mode!=='PAPER_ONLY'||x.brokerOrdersEnabled!==false||
-  x.policyVersion!==POLICY||x.retiredPredecessor!=='V494_PAPER_STOPPED_AND_ARCHIVED_20261116')
+  x.retiredPredecessor!=='V494_PAPER_STOPPED_AND_ARCHIVED_20261116')
   throw Error('V55_LEDGER_UNTRUSTED_OR_CROSS_ENGINE_MIGRATION_REFUSED');
- return x;
+ if(x.policyVersion===POLICY)return x;
+ if(x.policyVersion==='v5.5-structural-place-regime-paper-v1'&&!x.position){
+  // One explicit flat-only PAPER policy migration. Preserve ALL equity,
+  // fees, consumed keys, history, timestamps and trade numbering.
+  const before=x.policyVersion;
+  x={...x,policyVersion:POLICY,
+   policyMigration:{from:before,to:POLICY,at:now,
+    reason:'REPLACE_UNAPPROVED_LAST_8_3M_STOP_WITH_ASOF_CONFIRMED_STRUCTURE',
+    capitalTransferred:false,priorHistoryPreserved:true,
+    brokerOrdersEnabled:false}};
+  return x;
+ }
+ throw Error('V55_ACTIVE_POSITION_POLICY_CHANGE_REFUSED_OR_UNKNOWN_MIGRATION');
 }
 function pnl(pos,price){
  const gross=(price-pos.entryPrice)*sign(pos.direction)*NOTIONAL/pos.entryPrice;

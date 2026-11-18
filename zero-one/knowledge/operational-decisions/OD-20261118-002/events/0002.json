@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-18T00:23:08+00:00",
+  "status": "IMPLEMENTE",
+  "description": "V55 v1.1 utilise sélection pure de swing/retest structurel as-of; migration flat-only sans aucun effacement; S1 v0.2 shadow indépendant en parallèle S1 v0.1 avec référentiels parent, tactique, position et mémoire des contres/reprises; API et panneau Watch S1 v0.2",
+  "evidence": "modules/v5/decision-v55.js ; modules/v5/paper-v55.js ; modules/attention/v543-lbw15-s1-v02.js ; modules/attention/v543-lbw15-s1-v02-runner.js ; modules/config-server.js ; scripts/boonolab-s1-v02-replay-20261117.js",
+  "previousEventSha256": "f51851f7abd60de913c7bcd00ca289bdacf6d40ce5fe1ebca233ef8627cc35eb"
+}

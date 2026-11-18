@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-002",
+  "title": "S1 LBW15 v0.2 mémoire campagne et correction V5.5 stop structurel causal v1.1",
+  "createdAtUtc": "2026-11-18T00:23:08+00:00",
+  "authorization": "18 novembre 2026 : contestation du stop mécanique huit bougies V5.5, approbation explicite S1 v0.2 mémoire de campagne ; PAPER seulement, aucune exécution financée",
+  "reference": "BOONOLAB 17–18/11/2026 trades #14/#15 V5.5, #272/#273 V543; OD-20261116-003 V5.5 initial, OD-20261116-002 S1 v0.1, KB de la présente opération",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "664ad8cb79a00741f53bb19587ec99ec45db2c8ad59ef8e3b30d401c77f617ce",
+      "bytes": 761
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5fef379a2f228687b3402ddd4ff25086fc696393829ef189cb2ef2ce044fc441",
+      "bytes": 1400
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "1ace95961fce5d6d8316a8fb41356dbc9bc0b1570b43753b6986fcd516a44075",
+      "bytes": 711
+    }
+  }
+}

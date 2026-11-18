@@ -3,7 +3,9 @@
 // V543 is used as read-only evidence extraction, not as trading authority.
 // 4 authorities: admission, position protection, strategic transfer, re-entry.
 const PLACE=require('../attention/boonolab-place-e1e4-shadow');
-const VERSION='v5.5-structural-place-regime-paper-v1';
+// Pure causal swing/retest selector, NOT the V543 trading decision.
+const STRUCTURAL_PLACE=require('./decision-v522').structuralPlace;
+const VERSION='v5.5-structural-place-regime-paper-v1.1';
 const MIN=60000,THREE=3*MIN,FIFTEEN=15*MIN,HOUR=60*MIN;
 const num=x=>x===null||x===undefined||x===''?null:Number.isFinite(Number(x))?Number(x):null;
 const round=x=>x===null?null:Math.round(x*100)/100;
@@ -92,18 +94,34 @@ function provenTerritory(input,now,price,dir,base){
  return {validated:false,kind:'NO_RECENT_DEFENDED_3M_TERRITORY',
   level:null,availableAt:null,median3mRangeUsd:round(scale)};
 }
-function initialStop(input,now,price,dir,territory){
- const b=closed3(input,now).slice(-8),d=side(dir);
- if(b.length<5)return {available:false,reason:'STOP_NEEDS_5_CONFIRMED_3M'};
- const level=d===1?Math.min(...b.map(x=>x.low)):
-  Math.max(...b.map(x=>x.high));
- const buffer=Math.max(12,Math.min(35,(territory.median3mRangeUsd||80)*.15));
- const stop=round(level-d*buffer),distance=round(d*(price-stop));
- return {available:stop>0&&distance>=30&&distance<500,
-  price:stop,distanceUsd:distance,
-  reference:'V55_LAST_8_CONFIRMED_3M_PRICE_EXTREME',
-  availableAt:b.at(-1).ts+THREE,sourceAt:b.at(-1).ts,
-  reason:distance>0&&distance<500?'CAUSAL_STOP':'NOT_SURVIVABLE'};
+function initialStop(input,now,price,dir,territory,
+ levelsMtime=null,base=null){
+ // Explicit structural invalidation: a confirmed and as-of known 3m swing,
+ // defended retest, or confirmed 15m reference, never a mechanical
+ // highest/lowest of the last eight candles. Keep the 500 BTC$ hard cap.
+ const levels=levelsMtime!==null&&levelsMtime<=now?
+  (input.levels||[]):[];
+ const place=STRUCTURAL_PLACE({now,price,dir,
+  bars3:input.bars3||[],bars15:input.bars15||[],
+  levels,medianRange:territory.median3mRangeUsd||null,
+  base:base||{}});
+ const x=place.invalidation;
+ if(!x||num(x.price)===null||num(x.distanceUsd)===null||
+    num(x.confirmedAvailableAt)===null||
+    x.confirmedAvailableAt>now||x.distanceUsd>=500)
+  return {available:false,price:null,distanceUsd:null,
+   reference:null,sourceAt:null,availableAt:null,
+   reason:'NO_CONFIRMED_CAUSAL_STRUCTURE_WITHIN_500_BTC',
+   minVolatilityDistance:place.minVolatilityDistance,
+   candidateCount:place.validCandidates,
+   source:'PURE_CAUSAL_3M_15M_SWING_RETEST_ASOF'};
+ return {available:true,price:x.price,
+  distanceUsd:x.distanceUsd,reference:x.reference,
+  sourceAt:x.sourceTs,availableAt:x.confirmedAvailableAt,
+  underlyingLevel:x.underlyingLevel,
+  acceptedRetest:x.acceptedRetest||null,
+  reason:'CAUSAL_STOP',kind:x.kind,
+  source:'PURE_CAUSAL_3M_15M_SWING_RETEST_ASOF'};
 }
 function marketGate(ctx,dir,territory,conv,now){
  const m=ctx.market||{};
@@ -138,7 +156,7 @@ function evaluate({input,base,now,price,position=null,lastExit=null,
  const candidate=cross.direction||null,sign=side(candidate);
  const contextData=context(input,now,price,candidate,regime,levelsMtime);
  const territory=sign?provenTerritory(input,now,price,candidate,base):{validated:false};
- const inv=sign?initialStop(input,now,price,candidate,territory):null;
+ const inv=sign?initialStop(input,now,price,candidate,territory,levelsMtime,base):null;
  const native15=st.nativeE15||{},native3=st.nativeE3||{},
   nc=native15.confirmed||{},n3c=native3.confirmed||{},n3l=native3.live||{};
  const parent=st.director||null;

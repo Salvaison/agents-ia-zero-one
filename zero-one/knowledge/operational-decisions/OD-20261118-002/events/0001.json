@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-18T00:23:08+00:00",
+  "status": "DOCUMENTE",
+  "description": "L’erreur de stop arbitraire huit dernières bougies est reconnue, origine assistant 16/11 et distinction de la vraie règle de risque 500$; S1 v0.2 et limites de la relecture 17/11 documentés",
+  "evidence": "knowledge/BOONOLAB_S1_V02_MEMOIRE_CAMPAGNE_ET_V55_STOP_CAUSAL_2026-11-18.md; demande utilisateur intégrale et prompt archivé",
+  "previousEventSha256": null
+}

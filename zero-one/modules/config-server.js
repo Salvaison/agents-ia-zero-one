@@ -684,7 +684,9 @@ app.get('/api/v55-paper',requireAuth,(req,res)=>{
   const state=JSON.parse(fs.readFileSync(f,'utf8'));
   const view=JSON.parse(fs.readFileSync(p,'utf8'));
   if(state.version!=='v5.5-paper-ledger-v1.0'||
-     view.policyVersion!=='v5.5-structural-place-regime-paper-v1'||
+     !['v5.5-structural-place-regime-paper-v1',
+       'v5.5-structural-place-regime-paper-v1.1'].includes(state.policyVersion)||
+     view.policyVersion!==state.policyVersion||
      state.mode!=='PAPER_ONLY'||state.brokerOrdersEnabled!==false||
      view.brokerOrdersEnabled!==false||state.startedAt!==view.startedAt)
    throw Error('V55_PAPER_SOURCE_UNTRUSTED');
@@ -1634,6 +1636,9 @@ app.get('/api/shadows/boonolab-e1e4-place',requireAuth,(req,res)=>
 app.get('/api/shadows/boonolab-lbw15-s1',requireAuth,(req,res)=>
  boonolabReadReadonlyShadow('v543-lbw15-s1-shadow-summary.json',
   'boonolab-v543-lbw15-s1-v0.1',req,res));
+app.get('/api/shadows/boonolab-lbw15-s1-v02',requireAuth,(req,res)=>
+ boonolabReadReadonlyShadow('v543-lbw15-s1-v02-shadow-summary.json',
+  'boonolab-v543-lbw15-s1-v0.2',req,res));
 
 // V494 timestamped state layer: authenticated compact status and on-demand
 // paginated transitions or 30-second snapshots, separate from ticker/Elastic.
@@ -3865,6 +3870,10 @@ app.get('/', requireAuth, (req, res) => {
   <details id="shadowV543S1Details" class="shadow-dual-panel">
    <summary style="cursor:pointer;padding:10px;font-weight:750;">S1 · TRAJECTOIRE LBW15 · SHADOW V543</summary>
    <div id="shadowV543S1Live" style="padding:9px 12px;">Chargement de S1…</div>
+  </details>
+  <details id="shadowV543S1V02Details" class="shadow-dual-panel" open>
+   <summary style="cursor:pointer;padding:10px;font-weight:750;">S1 v0.2 · MÉMOIRE DE CAMPAGNE LBW15 · SHADOW V543</summary>
+   <div id="shadowV543S1V02Live" style="padding:9px 12px;">Chargement de S1 v0.2…</div>
   </details>
   <details id="shadowV494Archives" class="shadow-dual-panel">
    <summary style="cursor:pointer;padding:10px;">V494 / ELASTIC / A-B-C-D · ARCHIVES ARRÊTÉES LE 16/11</summary>
@@ -7204,16 +7213,18 @@ async function loadBoonolabV543PlaceCards(){
  if(boonolabV543PlacePending||document.hidden)return;
  const placeEl=document.getElementById('shadowPlaceE1E4Live');
  const s1El=document.getElementById('shadowV543S1Live');
- if(!placeEl&&!s1El)return;
+ const s2El=document.getElementById('shadowV543S1V02Live');
+ if(!placeEl&&!s1El&&!s2El)return;
  boonolabV543PlacePending=true;
  const get=async url=>{
   const res=await fetch(url,{cache:'no-store'});
   if(!res.ok)throw Error('HTTP '+res.status);
   return res.json();
  };
- const [place,s1]=await Promise.allSettled([
+ const [place,s1,s2]=await Promise.allSettled([
   get('/api/shadows/boonolab-e1e4-place'),
-  get('/api/shadows/boonolab-lbw15-s1')]);
+  get('/api/shadows/boonolab-lbw15-s1'),
+  get('/api/shadows/boonolab-lbw15-s1-v02')]);
  const fmt=x=>x===undefined||x===null?'—':shadowFmt(x,1);
  const desc=x=>escTrade(String(x===undefined||x===null?'—':x));
  if(placeEl){
@@ -7255,6 +7266,33 @@ async function loadBoonolabV543PlaceCards(){
     '<div class="shadow-secondary">Admission '+desc(x.proposedAdmission)+
       ' · position '+desc(x.proposedPosition)+'</div>';
   }else s1El.textContent='S1 LBW15 : source temporairement indisponible, aucune autorité PAPER.';
+ }
+ if(s2El){
+  if(s2.status==='fulfilled'){
+   const d=s2.value,x=d.latest||{},p=x.references?.parent||{},
+     c=x.references?.candidate||{},pos=x.references?.position||{},
+     camp=d.currentCampaign||{},counter=x.counter||null;
+   const review=pos.opposedFamilies?.join(' + ')||'—';
+   s2El.innerHTML='<div class="shadow-secondary">'+
+    (d.status==='DATA_RECENT'?'SOURCE FRAÎCHE':'SOURCE FIGÉE')+
+    ' · SHADOW seulement · aucune modification des admissions/sorties PAPER</div>'+
+    '<div class="shadow-main">Parent '+desc(x.parent)+' · '+desc(x.phase)+
+      ' · candidat '+desc(x.candidate)+' · position '+desc(x.positionDirection)+'</div>'+
+    '<div class="shadow-secondary"><b>LBW15 PAR RÉFÉRENTIEL</b> '+
+      'Parent Δ15 '+fmt(p.signed15m)+' · candidat Δ15 '+fmt(c.signed15m)+
+      ' · position Δ15 '+fmt(pos.signed15m)+'</div>'+
+    '<div class="shadow-secondary">Parent E15 '+desc(x.parentId)+
+      ' · attaques '+fmt(x.counterattacks)+' · reprises '+fmt(x.resumptions)+
+      ' · prix conservé depuis premier relevé '+fmt(x.parentProgressUsd)+' $</div>'+
+    (counter?'<div class="shadow-secondary"><b>CONTRE-ATTAQUE</b> depuis '+
+       desc(shadowDateTime(counter.startedAt))+
+       ' · excursion adverse max '+fmt(counter.peakOppositeUsd)+' $ BTC'+
+       ' · '+(counter.endedAt?'terminée':'en observation')+'</div>':'')+
+    '<div class="shadow-secondary">Admission '+desc(x.proposedAdmission)+
+      ' · protection '+desc(x.proposedPosition)+
+      ' · familles adverses de la position '+desc(review)+'</div>'+
+    '<div class="shadow-secondary">Le parent change uniquement lorsqu’un nouveau E15 parent est observé ; ce classement ne garantit ni un trade ni un P&L.</div>';
+  }else s2El.textContent='S1 v0.2 : mémoire temporairement indisponible, aucune autorité PAPER.';
  }
  boonolabV543PlacePending=false;
 }

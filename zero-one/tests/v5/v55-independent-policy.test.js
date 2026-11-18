@@ -19,6 +19,10 @@ function fixture({direction='long',marketLabel='DIRECTIONNEL_PRODUCTIF',
    lt_blue_wave:-50+sign*i,bue_wave:-53+sign*i,
    money_flow:sign*2,wt1_cross_up:null,wt1_cross_dn:null};
  });
+ // A genuinely confirmed and local causal swing on the protective side.
+ // Merely taking the last eight candles is no longer a valid stop source.
+ if(direction==='long')bars3[20].low=price-180;
+ else bars3[20].high=price+180;
  const base={
   version:'v5.4.3-causal-offensive-maturity-paper-v1',
   quality:'DATA_OK',candidate:direction,phase:'STRUCTURAL_CONTINUATION',
@@ -179,4 +183,38 @@ test('BigRange price location tightens a counter-macro admission, never alone',(
  assert.equal(d.checks.placeProofOk,false);
  assert.equal(d.action,'WAIT');
  assert.equal(d.reason,'WAIT_V55_OUTSIDE_VALUE_AREA_COUNTERTREND_UNPROVEN');
+});
+
+test('V55 structural invalidation is a confirmed swing, not an 8 candle extreme',()=>{
+ const p=fixture();
+ const d=decision.evaluate(p);
+ assert.equal(d.action,'ENTER_LONG',d.reason);
+ assert.equal(d.invalidation.kind,'CAUSAL_SWING');
+ assert.equal(d.invalidation.reference,'MCB3_CONFIRMED_SWING_LOW');
+ assert.equal(d.invalidation.available,true);
+ assert.equal(d.invalidation.source,'PURE_CAUSAL_3M_15M_SWING_RETEST_ASOF');
+ assert.notEqual(d.invalidation.reference,'V55_LAST_8_CONFIRMED_3M_PRICE_EXTREME');
+ assert.equal(d.invalidation.availableAt<=p.now,true);
+});
+test('old V55 policy transitions only when flat and retains old account and trade lineage',()=>{
+ const old=paper.initial(NOW-100000);
+ old.policyVersion='v5.5-structural-place-regime-paper-v1';
+ old.completed=3;old.realizedUsd=-42;old.equityUsd=958;
+ old.feesUsd=4.5;old.usedKeys=['OLD_CROSS'];old.history=[{tradeNo:3}];
+ const migrated=paper.migrate(old,NOW);
+ assert.equal(migrated.policyVersion,paper.POLICY);
+ assert.equal(migrated.completed,3);assert.equal(migrated.realizedUsd,-42);
+ assert.equal(migrated.equityUsd,958);assert.equal(migrated.history.length,1);
+ assert.deepEqual(migrated.usedKeys,['OLD_CROSS']);
+ assert.equal(migrated.policyMigration.from,'v5.5-structural-place-regime-paper-v1');
+ const active={...old,position:{direction:'short',entryPrice:65000}};
+ assert.throws(()=>paper.migrate(active,NOW),/ACTIVE_POSITION_POLICY_CHANGE_REFUSED/);
+});
+test('a previous close bar cannot be used if its confirmation is still in the future',()=>{
+ const p=fixture();
+ const x=decision.initialStop({...p.input,
+  bars3:p.input.bars3.map(b=>({...b,ts:b.ts+2*60*60000}))},
+  p.now,p.price,'long',{median3mRangeUsd:75},p.levelsMtime,p.base);
+ assert.equal(x.available,false);
+ assert.equal(x.reason,'NO_CONFIRMED_CAUSAL_STRUCTURE_WITHIN_500_BTC');
 });

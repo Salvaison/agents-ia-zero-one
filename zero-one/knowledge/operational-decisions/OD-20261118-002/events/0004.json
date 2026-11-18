@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T00:23:08+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "V55 PAPER v1.1 ONLINE après migration FLAT contrôlée, historique préservé (17 trades / equity 970.9447 USD / fees 25.5169 USD au gel); S1 v0.2 et v0.1 SHADOW ONLINE simultanément; Watch config-server ONLINE avec auth; BOONO-TV et V543 PAPER inchangés",
+  "evidence": "data/v55-paper-state.json policyMigration; data/v543-lbw15-s1-v02-shadow-summary.json; pm2 saved; HTTP 302 /login routes authentifiées et source fraîche",
+  "previousEventSha256": "95c1b51776dda864d790c233d209146394cdc02f3eaa26302d9985d2652db13a"
+}
