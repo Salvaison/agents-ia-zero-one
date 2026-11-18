@@ -1,0 +1,8 @@
+{
+  "sequence": 5,
+  "recordedAtUtc": "2026-11-18T01:02:45+00:00",
+  "status": "DOCUMENTE",
+  "description": "Audit 18/11: rollover UTC complet confirme sans perte MCB, 659 mesures passives/0 echec, 15m retabli a +77.836s, croissance memoire/DOM et champs secondaires 1h incomplets documentes; aucune action sur collecteurs et moteurs",
+  "evidence": "zero-one/knowledge/BOONO_TV_audit_rollover_complet_2026-11-18.md; preuves locales data/system-audits/rollover-2026-11-18/ sha256 listes dans le rapport",
+  "previousEventSha256": "c09d3dba53a5b9bfe8be0ce42fb09cf3830a18a9930650fd7b1b3d3b61b776eb"
+}
