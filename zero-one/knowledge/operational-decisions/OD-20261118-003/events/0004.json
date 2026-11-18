@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T15:47:13+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "boono-mcb3-first-mcb15-shadow ONLINE, résumé récent, Watch config-server ONLINE avec route auth 302/login hors session, PM2 sauvegardé; V55/V543 PAPER et S1 v0.2 inchangés",
+  "evidence": "pm2 jlist ; data/boonolab-mcb3-first-mcb15-shadow-summary.json ; /api/shadows/boonolab-mcb3-wave",
+  "previousEventSha256": "8ce60f98c4d9737477cef05571b4761138c5aeaab66d682668bcab3d90d7c10e"
+}

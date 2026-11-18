@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T15:47:13+00:00",
+  "status": "TESTE",
+  "description": "53 tests ciblés passés, replay as-of 209 décisions et 41 trous >90s ; cross15 LONG clôturé 15h45 puis retour SHORT, 34 Cross3 vs 1 parent; aucun P&L contrefactuel SHADOW inventé",
+  "evidence": "tests/attention/boonolab-mcb3-first-mcb15-shadow.test.js ; tests/ui/boonolab-mcb3-wave-shadow-watch.test.js ; /tmp/boonolab-mcb3-first-release-tests.txt ; /tmp/boonolab-mcb3-first-replay-20261117.json",
+  "previousEventSha256": "6273390f97177cf0f2ff72c892255ed58f1cde89baabcd341132b0f1650b7260"
+}

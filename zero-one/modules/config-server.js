@@ -1639,6 +1639,10 @@ app.get('/api/shadows/boonolab-lbw15-s1',requireAuth,(req,res)=>
 app.get('/api/shadows/boonolab-lbw15-s1-v02',requireAuth,(req,res)=>
  boonolabReadReadonlyShadow('v543-lbw15-s1-v02-shadow-summary.json',
   'boonolab-v543-lbw15-s1-v0.2',req,res));
+// MCB3-first, MCB15 waveform judge: prospective interpretation, NO PAPER.
+app.get('/api/shadows/boonolab-mcb3-wave',requireAuth,(req,res)=>
+ boonolabReadReadonlyShadow('boonolab-mcb3-first-mcb15-shadow-summary.json',
+  'boonolab-mcb3-first-mcb15-wave-shadow-v0.1',req,res));
 
 // V494 timestamped state layer: authenticated compact status and on-demand
 // paginated transitions or 30-second snapshots, separate from ticker/Elastic.
@@ -3874,6 +3878,10 @@ app.get('/', requireAuth, (req, res) => {
   <details id="shadowV543S1V02Details" class="shadow-dual-panel" open>
    <summary style="cursor:pointer;padding:10px;font-weight:750;">S1 v0.2 · MÉMOIRE DE CAMPAGNE LBW15 · SHADOW V543</summary>
    <div id="shadowV543S1V02Live" style="padding:9px 12px;">Chargement de S1 v0.2…</div>
+  </details>
+  <details id="shadowMcb3WaveDetails" class="shadow-dual-panel">
+   <summary style="cursor:pointer;padding:10px;font-weight:750;">BOONOLAB · MCB3 PREMIER SIGNAL / MCB15 JUGE LA CAMPAGNE · SHADOW</summary>
+   <div id="shadowMcb3WaveLive" style="padding:9px 12px;">Chargement de la hiérarchie MCB3 → MCB15…</div>
   </details>
   <details id="shadowV494Archives" class="shadow-dual-panel">
    <summary style="cursor:pointer;padding:10px;">V494 / ELASTIC / A-B-C-D · ARCHIVES ARRÊTÉES LE 16/11</summary>
@@ -7214,17 +7222,19 @@ async function loadBoonolabV543PlaceCards(){
  const placeEl=document.getElementById('shadowPlaceE1E4Live');
  const s1El=document.getElementById('shadowV543S1Live');
  const s2El=document.getElementById('shadowV543S1V02Live');
- if(!placeEl&&!s1El&&!s2El)return;
+ const waveEl=document.getElementById('shadowMcb3WaveLive');
+ if(!placeEl&&!s1El&&!s2El&&!waveEl)return;
  boonolabV543PlacePending=true;
  const get=async url=>{
   const res=await fetch(url,{cache:'no-store'});
   if(!res.ok)throw Error('HTTP '+res.status);
   return res.json();
  };
- const [place,s1,s2]=await Promise.allSettled([
+ const [place,s1,s2,wave]=await Promise.allSettled([
   get('/api/shadows/boonolab-e1e4-place'),
   get('/api/shadows/boonolab-lbw15-s1'),
-  get('/api/shadows/boonolab-lbw15-s1-v02')]);
+  get('/api/shadows/boonolab-lbw15-s1-v02'),
+  get('/api/shadows/boonolab-mcb3-wave')]);
  const fmt=x=>x===undefined||x===null?'—':shadowFmt(x,1);
  const desc=x=>escTrade(String(x===undefined||x===null?'—':x));
  if(placeEl){
@@ -7293,6 +7303,50 @@ async function loadBoonolabV543PlaceCards(){
       ' · familles adverses de la position '+desc(review)+'</div>'+
     '<div class="shadow-secondary">Le parent change uniquement lorsqu’un nouveau E15 parent est observé ; ce classement ne garantit ni un trade ni un P&L.</div>';
   }else s2El.textContent='S1 v0.2 : mémoire temporairement indisponible, aucune autorité PAPER.';
+ }
+ if(waveEl){
+  if(wave.status==='fulfilled'){
+   const d=wave.value,x=d.latest||{},st=x.structural||{},
+      opp=x.opportunity||{},cam=d.campaign||{},
+      place=opp.placeContext||{},liq=opp.liquidityContext||{};
+   const recent=(d.recentEvents||[]).slice(-3).reverse().map(e=>
+     '<div class="shadow-secondary">'+
+      desc(shadowDateTime(e.at))+' · '+desc(e.type)+
+      (e.classification?' · '+desc(e.classification):'')+
+     '</div>').join('');
+   waveEl.innerHTML='<div class="shadow-secondary">'+
+     (d.status==='DATA_RECENT'?'SOURCE FRAÎCHE':'SOURCE FIGÉE')+
+     ' · INTERPRÉTATION SEULEMENT · AUCUN ORDRE NI VETO PAPER</div>'+
+     '<div class="shadow-main">MCB3 '+desc(st.mc3Direction)+' · Parent MCB15 '+
+       desc(st.parent)+' · '+desc(st.m15Verdict)+'</div>'+
+     '<div class="shadow-secondary"><b>15M</b> Croisement clôturé '+
+       desc(st.confirmed15Direction)+' · Live '+desc(st.live15Direction)+
+       ' · '+desc(st.confirmedCrossStatus)+
+       ' · LBW/BW écart '+fmt(st.lbw15Gap)+
+       ' · variation 3m de l’écart '+fmt(st.gapSpeedDelta3)+
+       ' · Δ LBW15 / 15m '+fmt(st.lbw15Delta15m)+'</div>'+
+     '<div class="shadow-secondary"><b>MCB3</b> Cross '+desc(st.mc3Direction)+
+       ' · vague Live '+desc(st.mc3RawLiveDirection)+
+       ' · E3 natif confirmé '+desc(st.e3NativeConfirmed)+
+       ' · E15 natif '+desc(st.e15NativeConfirmed)+
+       ' · cohérence '+desc(opp.cross3VsLiveWave)+'</div>'+
+     '<div class="shadow-secondary"><b>MF15/MF3</b> '+desc(st.mfRelation)+
+       ' · MF15 '+desc(st.mf15)+' · MF3 '+desc(st.mf3)+'</div>'+
+     '<div class="shadow-secondary"><b>Prix/PM</b> 3m '+desc(opp.priceResponse)+
+       ' · PM Live '+desc(opp.pmImmediate)+
+       ' · volume Bâton '+fmt(liq.btcPerMinuteEstimate)+' BTC/min (estim.)'+
+       ' · régime '+desc(liq.marketRegime)+'</div>'+
+     '<div class="shadow-secondary"><b>Lieu</b> MA3 '+desc(place.ma3)+
+       ' · MA15 '+desc(place.ma15)+
+       ' · '+desc(place.nearest)+' '+fmt(place.nearestPrice)+
+       ' (repère non garanti)</div>'+
+     '<div class="shadow-secondary"><b>Mémoire</b> '+desc(d.phase)+
+       ' · tentatives 3m '+fmt(cam.tacticalAttempts)+
+       ' · contre-attaques '+fmt(cam.counterAttempts)+
+       ' · reprises '+fmt(cam.resumptions)+'</div>'+
+     '<div class="shadow-secondary">Un Cross3 ouvre une hypothèse ; MCB15 en juge la continuité. Un cross15 confirmé opposé impose un EXAMEN de la campagne, pas une liquidation automatique.</div>'+
+     recent;
+  }else waveEl.textContent='MCB3→MCB15 : source temporairement indisponible, aucune autorité PAPER.';
  }
  boonolabV543PlacePending=false;
 }

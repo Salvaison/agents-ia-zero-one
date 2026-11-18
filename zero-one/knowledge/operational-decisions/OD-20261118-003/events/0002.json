@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-18T15:47:13+00:00",
+  "status": "IMPLEMENTE",
+  "description": "SHADOW pur MCB3 initial, MCB15 Live/clôturé/gap/pentes/E15, MF15/MF3, PM/lieu/liquidité descriptifs, campagne persistante; runner indépendant, panneau Watch authentifié; aucun PAPER modifié",
+  "evidence": "modules/attention/boonolab-mcb3-first-mcb15-shadow.js ; modules/attention/boonolab-mcb3-first-mcb15-shadow-runner.js ; modules/config-server.js",
+  "previousEventSha256": "e416bae737d823023234e07a92112136131f1673a31af1f7e17721ec3c0078f0"
+}

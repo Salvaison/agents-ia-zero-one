@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-003",
+  "title": "MCB3 premier indicateur, MCB15 arbitre structurel, observatoire sans nouveaux seuils",
+  "createdAtUtc": "2026-11-18T15:47:13+00:00",
+  "authorization": "Utilisateur 18/11 : MCB3-first, MCB15 confirmation; rejet niveau certain; \"Voilà à toi de jouer!\" chantier SHADOW, aucune promotion PAPER non testée",
+  "reference": "BOONOLAB 17–18/11; V55 #14/#15, V543 #272/#273; orientation V5 22/10; KB BOONOLAB_MCB3_PREMIER_MCB15_CAMPAGNE_SHADOW_2026-11-18.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "e98bfa0fe9a988546b1a287be45cfaeafe4824263f653ed4dbc7d703608e31fd",
+      "bytes": 490
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "2a1fea50c25a58cd4051cfd470a55ed7c8905a8c53d95e27b04c32651ac5dfd8",
+      "bytes": 993
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "91a294233f2868cc9f405a3cebba0458b4fbd5aba12d9621ba36b808e49afa9a",
+      "bytes": 621
+    }
+  }
+}
