@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-18T22:15:37+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "boono-studio.service OVH seul redemarre, HTTP 200, endpoints prives IP Penguin actifs, ancien onglet BOONO TV noVNC recharge hors edition et video playing; validation de fluidite directe ChromeOS toujours ouverte",
+  "evidence": "OVH boono-studio PID 2045125; Penguin curl catalog 200 et mp4 206; Amsterdam CDP video playing 118 frames; KB",
+  "previousEventSha256": "17a88993f45ff6fe392b9901e439f1b32dd6aeb699cde36eb7d65c5adf383846"
+}

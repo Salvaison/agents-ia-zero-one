@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-18T22:15:31+00:00",
+  "status": "IMPLEMENTE",
+  "description": "OVH private preview guard accepte Host Crostini prive via SSH local; navigation Scenarios vers Live restaure windowVideo et 30fps; bouton Save avec timeout, cache bust; seules sources studio modifiees",
+  "evidence": "backups OVH OD-20261118-007; patch SHA 688166c6; KB BOONO_TV_private_video_ChromeOS_Composer_2026-11-18.md",
+  "previousEventSha256": "328caadaf523afba491f6c4a820a216fd16d6240f32a601622cfcc7d781998eb"
+}

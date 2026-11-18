@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-18T21:56:35+00:00",
+  "status": "AUTORISE",
+  "description": "Utilisateur signale video absente et Composer non repondant; corrections localisees middleware prive et navigation Scene Live",
+  "evidence": "01-demande-utilisateur-integrale.txt, tests HTTP 403 Host IP et baseline Puppeteer",
+  "previousEventSha256": null
+}

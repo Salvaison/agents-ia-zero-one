@@ -1,0 +1,9 @@
+# OD-20261118-007 — BOONO-TV vidéo privée et navigation Composer
+
+**Mandat utilisateur :** signalement d'une scène BOONO-TV directe accessible depuis ChromeOS mais sans vidéo, puis disparition de la vidéo et contrôles non réactifs après modification d'un chat dans le Composer de noVNC. Il demande implicitement une réparation dans la continuité de la maintenance déjà autorisée.
+
+**Causes vérifiées AVANT modification :** la route `/api/private/clemens-video/status`, le catalogue `/api/private/boono-media/catalog` et `/api/private/clemens-video/stream` renvoient HTTP **403** avec en-tête `Host: 100.115.92.26:8310`, mais HTTP 200/206 avec `Host: 127.0.0.1:3091`. Les deux navigations de noVNC et l'IP directe traversent les tunnels privés SSH jusqu'au serveur studio OVH lié à la boucle locale. Le module `window-local-video.js` ne se crée qu'en présence de `?windowVideo=clemens|houseparty|forest`. La page réelle dans Chrome Amsterdam était à `/?showcase=1&mediaPanel=1` et ne contenait aucun lecteur vidéo. Un test Puppeteer du même ancien URL a reproduit : clic Scène Live modifie URL vers `?showcase=1` sans charger de vidéo. Depuis l'atelier Scénarios, le lien Live correctement canonique fonctionne dans le test.
+
+**Frontière de sécurité :** conserver le serveur OVH à `127.0.0.1:3091` et les médias privés hors de ROOT/assets. Les autorisations additionnelles ne doivent pas permettre un Host arbitraire ni un réseau public, et les POST doivent toujours vérifier origine du même hôte, en-tête spécifique et schéma. Le port Crostini est une connexion SSH préalablement autorisée, le media reste sous accès privé.
+
+**Validation :** back-ups des scripts, pas d'écriture dans les fichiers de chat/vidéo/calibration ; tests des URLs, HTTP 403 pour Host arbitraire, HTTP 200/206 pour le seul Host privé, essais de rechargement init vidéo et retour aux onglets, risques de blocage auto-play selon ChromeOS ; avant/après et état final distinction.

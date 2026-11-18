@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261118-007",
+  "title": "BOONO-TV: acces video prive et sortie Composer vers Scene Live",
+  "createdAtUtc": "2026-11-18T21:56:35+00:00",
+  "authorization": "Demande de restauration video et controles Composer signalee le 18 novembre",
+  "reference": "Conversation BOONO Systems du 18 novembre 2026, video directe et retour chat",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "43f5659c0c31e035456d3a777e9c4b2b20042c1e21ab10125c554bbd3035635c",
+      "bytes": 258
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "011b34d226011005bfd52b2973528dca883e5405f7d6c40a43b5dc6c80941e2c",
+      "bytes": 1672
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "2cdda62210b7f9c5a64560540946bdaf2c7d12104d767c90863b2ac1c9826c93",
+      "bytes": 2005
+    }
+  }
+}

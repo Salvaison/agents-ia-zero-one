@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-18T22:15:35+00:00",
+  "status": "TESTE",
+  "description": "Tests purs 10 cas host; HTTP media 200/206 contre arbitraire 403; POST invalides 400 sans ecriture; 5 navigations en lecture 30fps sans JS errors; 3 clips playing; simulation POST echec bouton reactive; VNC CDP playing",
+  "evidence": "Tests OVH verify-OD20261118-007-* et copies Git; hash 3 configs inchanges; CDP BOONO TV video true playing",
+  "previousEventSha256": "79174ad519642fa6315f23b94660cc8d2fb7cfdd0caf55b5b3d420fb28c3c234"
+}
