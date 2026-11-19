@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-001",
+  "title": "V5.5.2 PAPER autonome : LBW15 pente Live première vigilance, passation V551 sans churn ni perte du ledger, Watch et BOONO-TV",
+  "createdAtUtc": "2026-11-19T10:38:57+00:00",
+  "authorization": "Utilisateur 19/11/2026 demande explicitement une nouvelle version V552 pour remplacer V551; PAPER uniquement, responsabilité sur comptabilité simulée, arrêt préalable V551; pas de trading financé",
+  "reference": "knowledge/BOONOLAB_V552_PENTE_LBW15_VIGILANCE_ET_PASSATION_2026-11-19.md ; knowledge/BOONOLAB_V551_PENTE_LBW15_LIVE_PREMIERE_VIGILANCE_2026-11-19.md ; OD-20261118-004",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "e57d27a733a339492dd84e9cfa524726acc656e28cfc1f5c245bf97b240ba140",
+      "bytes": 84
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "ec3e780c238bceda8e6956722b323bb28b7e41ea4b750377008f56ed731b8a21",
+      "bytes": 1555
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "bf6f33cfe3dad3c47325d9a3fffc3b5369de39ca0bf1823cfce93e97bc3fe50a",
+      "bytes": 711
+    }
+  }
+}

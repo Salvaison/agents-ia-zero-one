@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T10:38:58+00:00",
+  "status": "TESTE",
+  "description": "85 tests ciblés PASS 0 FAIL (V552 causal/migration + V551/V55 historiques + Watch/BOONO-TV). Replay as-of #1/#2/#4/#6 et faux croisements; entrée 3m marginale, MF15 lent, hard 500. Snapshot OVH réel DATA_RECENT et scène/JS vérifiés; authentification Watch 302/login sans session. Prix rétrospectifs pas de fills garantis",
+  "evidence": "tests/v552/*.test.js ; tests/v551/*.test.js ; /tmp/v552-final-extended-tests.txt ; /tmp/v552-asof-exits.json ; état PM2 ; HTTP OVH ; archive manifest SHA256",
+  "previousEventSha256": "dacdca5f14ab73f9b2f67b0cd9adb03514997498e64200499417841e40b2c60d"
+}

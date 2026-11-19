@@ -1,0 +1,107 @@
+--- a/scene/app.js
++++ b/scene/app.js
+@@ -622,12 +622,12 @@
+ }
+ // Compact, READ-ONLY second PAPER engine status. Never changes BOONO pose,
+  // rotations, mixer or the V543 Living State data source.
+-function renderV551TV(s){
+- const el=document.getElementById('v551TvStrip');
++function renderV552TV(s){
++ const el=document.getElementById('v552TvStrip');
+  if(!el)return;
+- const v=s?.engine551||{},p=v.position||null;
+- if(v.engine!=='V551'||v.status!=='DATA_RECENT'||v.brokerOrdersEnabled!==false){
+-  el.textContent='V5.5.1 PAPER · état temporairement indisponible';
++ const v=s?.engine552||{},p=v.position||null;
++ if(v.engine!=='V552'||v.status!=='DATA_RECENT'||v.brokerOrdersEnabled!==false){
++  el.textContent='V5.5.2 PAPER · état temporairement indisponible';
+   return;
+  }
+  const signed=n=>n===null||n===undefined||!Number.isFinite(Number(n))?'—':
+@@ -635,13 +635,13 @@
+  const parent=v.campaign?.direction?String(v.campaign.direction).toUpperCase():'—';
+  const pos=p?String(p.direction||'').toUpperCase()+' @ '+Number(p.entryPrice).toFixed(1)+
+   ' · latent '+signed(p.lastNetPnlUsd)+' $':'FLAT';
+- el.textContent='V5.5.1 PAPER · '+pos+' · '+String(v.completed||0)+
++ el.textContent='V5.5.2 PAPER · '+pos+' · '+String(v.completed||0)+
+   ' clôtures · net '+signed(v.realizedUsd)+' $ · Parent 15m '+parent+
+   ' · '+String(v.latestDecision?.action||'WAIT');
+ }
+ function render(s){
+  snapshot=s;
+- renderV551TV(s);
++ renderV552TV(s);
+  renderDeskMcbCollector(s);
+  if(dialogueEditActive){
+   // Preview mode is a STATIC scene plus editable robot/bubble. Keep price
+--- a/scene/chart-views.js
++++ b/scene/chart-views.js
+@@ -85,12 +85,12 @@
+   const a=Math.max(t0,Number(z.entryTs)),b=Math.min(t1,Number(z.drawEndTs));
+   if(!(b>a))continue;
+   const x1=xx(a),x2=xx(b),ww=Math.max(1,x2-x1);
+-  // V551 blue upper lane, V543 magenta lower lane: separated PAPER accounts.
+-  const v551=z.engine==='V551';
+-  const y=v551?pad.top:bottom-5,edge=v551?pad.top+13:bottom-13;
+-  ctx.fillStyle=v551?'rgba(135,206,250,.93)':'rgba(233,139,194,.90)';
++  // V552 blue upper lane, V543 magenta lower lane: separated PAPER accounts.
++  const v552=z.engine==='V552';
++  const y=v552?pad.top:bottom-5,edge=v552?pad.top+13:bottom-13;
++  ctx.fillStyle=v552?'rgba(135,206,250,.93)':'rgba(233,139,194,.90)';
+   ctx.fillRect(x1,y,ww,5);
+-  ctx.strokeStyle=v551?'rgba(135,206,250,.88)':'rgba(156,31,111,.86)';
++  ctx.strokeStyle=v552?'rgba(135,206,250,.88)':'rgba(156,31,111,.86)';
+   ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(x1+.4,y);ctx.lineTo(x1+.4,edge);
+   ctx.moveTo(x2-.4,y);ctx.lineTo(x2-.4,edge);ctx.stroke();
+@@ -167,7 +167,7 @@
+  const holder=Q('#completedTradesList'),summary=Q('#tradeEngineSummary');
+  if(!holder||!summary)return;
+  const closed=(Array.isArray(s?.trades)?s.trades:[])
+-  .filter(x=>x?.paper===true&&['V551','V543'].includes(x.engine)&&
++  .filter(x=>x?.paper===true&&['V552','V543'].includes(x.engine)&&
+     Number.isFinite(Number(x.exitTs))&&Number(x.exitTs)>0)
+   .sort((a,b)=>Number(b.exitTs)-Number(a.exitTs));
+  tag('#tradesCompletedCount',String(closed.length));
+@@ -177,7 +177,7 @@
+  };
+  const tone=v=>v===null||v===undefined||!Number.isFinite(Number(v))?'na':
+   Number(v)>0?'up':Number(v)<0?'down':'';
+- summary.innerHTML=['V551','V543'].map(engine=>{
++ summary.innerHTML=['V552','V543'].map(engine=>{
+   const rows=closed.filter(x=>x.engine===engine);
+   const measured=rows.filter(x=>x.netPnlUsd!==null&&
+     x.netPnlUsd!==undefined&&Number.isFinite(Number(x.netPnlUsd)));
+@@ -210,7 +210,7 @@
+  lastSnapshot=s;
+  // Amsterdam PAPER ledgers supersede the obsolete local V4 marker file.
+  if(Array.isArray(s?.trades)){
+-  events=s.trades.filter(e=>['V551','V543'].includes(e.engine)&&Number.isFinite(Number(e.entryTs))&&
++  events=s.trades.filter(e=>['V552','V543'].includes(e.engine)&&Number.isFinite(Number(e.entryTs))&&
+    ['long','short'].includes(e.direction)).slice(-160);
+   lastMarkerVersion='PAPER_LIVE';
+  }
+@@ -232,7 +232,7 @@
+   const version=String(data.generatedAt||'');
+   if(version===lastMarkerVersion)return;
+   lastMarkerVersion=version;
+-  events=data.events.filter(e=>['V551','V543'].includes(e.engine)&&Number.isFinite(Number(e.entryTs))&&['long','short'].includes(e.direction)).slice(-150);
++  events=data.events.filter(e=>['V552','V543'].includes(e.engine)&&Number.isFinite(Number(e.entryTs))&&['long','short'].includes(e.direction)).slice(-150);
+   if(lastSnapshot){
+    // Markers are cached while the graph panel is hidden. Its next
+    // activation uses the freshest markers via setView('charts').
+--- a/scene/index.html
++++ b/scene/index.html
+@@ -23,10 +23,10 @@
+ <section id="statePanel" class="glass left-panel">
+ <header class="state-head"><div><div class="brand">BOONO SYSTEMS</div><div class="sub">ÉTAT VIVANT — <span id="version">—</span></div><div class="tiny">SIMULATION · OKX · BTCUSDT</div></div><div class="clock"><b id="clock">--:--:--</b><span>UTC+2</span></div></header>
+ <div class="price-row"><div><span class="label">PRIX LIVE</span><strong id="price">—</strong></div><div id="freshness" class="tiny right">source live</div></div>
+-<div id="v551TvStrip" aria-live="polite" style="min-height:21px;padding:4px 10px;font-size:12px;letter-spacing:.01em;color:#b8eaff;border-bottom:1px solid rgba(130,202,233,.15);">V5.5.1 PAPER · données en attente…</div>
++<div id="v552TvStrip" aria-live="polite" style="min-height:21px;padding:4px 10px;font-size:12px;letter-spacing:.01em;color:#b8eaff;border-bottom:1px solid rgba(130,202,233,.15);">V5.5.2 PAPER · données en attente…</div>
+ <div id="stateRows" class="state-rows"></div>
+ <section id="leftChartTrio" class="chart-trio" aria-label="Vue analytique : prix et vagues MarketCipher" aria-hidden="true">
+-  <div class="trio-head"><strong>VUES ANALYTIQUES · BTCUSDT</strong><span>V551 + V543 PAPER · COURBES ET TRADES</span></div>
++  <div class="trio-head"><strong>VUES ANALYTIQUES · BTCUSDT</strong><span>V552 + V543 PAPER · COURBES ET TRADES</span></div>
+   <section class="trio-card trio-card-price"><header><strong>01 · PRIX / 3m</strong><span id="trioPriceLive">—</span></header><canvas id="trioPriceCanvas"></canvas></section>
+   <section class="trio-card trio-card-15"><header><strong>02 · MARKETCIPHER 15m</strong><span id="trioMcb15Value">—</span></header><canvas id="trioMcb15Canvas"></canvas></section>
+   <section class="trio-card trio-card-3"><header><strong>03 · MARKETCIPHER 3m</strong><span id="trioMcb3Value">—</span></header><canvas id="trioMcb3Canvas"></canvas></section>

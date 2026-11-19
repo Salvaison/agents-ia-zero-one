@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T10:38:58+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Code indépendant v552 source/decision/vigilance/paper/runner + migration explicite SHA256; VM source requise; arrêt V551 puis V552 seul online; Watch et bridge TV actifs V552; OVH écran V552 avec marques bleues, archive V551 séparée",
+  "evidence": "modules/v552/*.js ; scripts/boonolab-v552-handoff.js ; modules/config-server.js ; boono-tv/bridge.js ; scripts/v552-boono-tv-ovh-display.patch",
+  "previousEventSha256": "fc3b28b2aa7a1bfbdd352214fcd8cedbbf1a4a75b1acc6bd9c1cca9cec839b0f"
+}

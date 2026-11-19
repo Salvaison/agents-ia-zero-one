@@ -9,16 +9,16 @@ const runner551=fs.readFileSync(path.join(ROOT,'modules/v551/runner.js'),'utf8')
 const paper551=fs.readFileSync(path.join(ROOT,'modules/v551/paper.js'),'utf8');
 const oldRunner=fs.readFileSync(path.join(ROOT,'modules/v5/runner-v55.js'),'utf8');
 const oldPaper=fs.readFileSync(path.join(ROOT,'modules/v5/paper-v55.js'),'utf8');
-test('V551 replaces retired V55 in active Watch; V55 survives only as archive',()=>{
+test('V552 active, V551 and V55 remain archived with their original contracts',()=>{
  assert.ok(source.includes("app.get('/api/v551-paper',requireAuth"));
- assert.ok(source.includes('v551-paper-details'));
- assert.ok(source.includes("fetch('/api/v551-paper'"));
- assert.ok(source.includes('setInterval(loadV551PaperPanel,10000)'));
+ assert.ok(source.includes('v552-paper-details'));
+ assert.ok(source.includes("fetch('/api/v552-paper'"));
+ assert.ok(source.includes('setInterval(loadV552PaperPanel,10000)'));
  assert.ok(!source.includes('setInterval(loadV55PaperPanel,10000)'));
  assert.ok(source.includes('paperV55Archive'));
  assert.ok(source.includes("app.get('/api/v55-paper',requireAuth"));
 });
-test('V551/V543 active comparison and V55 archived ledgers remain independently readable',()=>{
+test('V552/V543 active comparison and V55 archived ledgers remain independently readable',()=>{
  assert.ok(source.includes("v551:'v551-paper-state.json'"));
  assert.ok(source.includes("v55:'v55-paper-state.json'"));
  assert.ok(source.includes("v551:paperHistoryView('v551')"));
@@ -28,17 +28,17 @@ test('V551/V543 active comparison and V55 archived ledgers remain independently 
  assert.ok(source.includes("engine==='v551'?'v551-paper-trades.ndjson'"));
  assert.ok(source.includes("'v551-paper-decisions.ndjson'"));
 });
-test('Waves show V551 blue and V543 magenta; no V55 archived spans in active timeline',()=>{
+test('Waves show V552 blue and V543 magenta; no V55 archived spans in active timeline',()=>{
  const a=source.indexOf('function waveUiComparePaperTrades(');
  const b=source.indexOf('// Retained read-only OHLC source',a);
  assert.ok(a>0&&b>a);
  const wave=source.slice(a,b);
- assert.ok(wave.includes("['v551-paper-state.json','V551_PAPER']"));
+ assert.ok(wave.includes("['v552-paper-state.json','V552_PAPER']"));
  assert.ok(wave.includes("['v52-paper-state.json','V52_PAPER']"));
  assert.ok(!wave.includes("['v55-paper-state.json','V55_PAPER']"));
- assert.ok(source.includes('bleu V5.5.1'));
- assert.ok(source.includes("zone.source==='V551_PAPER'?'V551:'"));
- assert.ok(source.includes("t.source==='V551_PAPER'?'v551':'v493'"));
+ assert.ok(source.includes('bleu V5.5.2'));
+ assert.ok(source.includes("zone.source==='V552_PAPER'?'V552:'"));
+ assert.ok(source.includes("t.source==='V552_PAPER'?'v552':'v493'"));
 });
 test('New engine does not import old decisions, ledgers, or broker; original source is preserved',()=>{
  assert.ok(runner551.includes("v551-paper-state.json"));
@@ -63,5 +63,5 @@ test('Client HTML remains valid after V551 integration, including historical V55
  const browser=vm.runInNewContext(tick+source.slice(a+6,b)+tick);
  assert.doesNotThrow(()=>new vm.Script(browser));
  assert.ok(browser.includes('V551|V55|V493'));
- assert.ok(browser.includes("String(waveSelectedTradeId).startsWith('V551:')"));
+ assert.ok(browser.includes("String(waveSelectedTradeId).startsWith('V552:')"));
 });

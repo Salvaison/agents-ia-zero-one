@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-19T10:38:58+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "boono-v552-paper ONLINE, boono-v551-paper STOPPED après migration unique; 11 tickets V551 conservés et LONG ouvert transféré avec ses frais/MFE/MAE, equity de départ 988.7444. Première clôture V552 #12 héritée, resultat -1.4695, nouvelle position SHORT. V543 reste online. Watch et BOONO-TV montrent V552 réel. BOONO-TV Composer/vidéos intacts.",
+  "evidence": "/root/boonolab-archives/V551_RETIRED_TO_V552_2026-11-19T10-30-05-448Z/MANIFEST.json ; data/v552-paper-state.json ; data/v552-paper-summary.json ; PM2 saved ; /api/v552-paper et /api/snapshot et OVH",
+  "previousEventSha256": "504fedd28c119ee15f67098020da77706438da23be48c8112a2569a5f77bdd24"
+}
