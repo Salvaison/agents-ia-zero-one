@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-010",
+  "title": "BOONO-TV : bulles par posture activables et bandeau musique/spectre agrandi",
+  "createdAtUtc": "2026-11-19T22:51:22+00:00",
+  "authorization": "Mandat explicite du propriétaire 19/11/2026 pour option bulle par posture et agrandissement visuel du bandeau musical",
+  "reference": "Conversation BOONO-TV du 19 novembre 2026, suite OD-20261119-009",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "16dbbdf33207186091242058eed069b162327bb013ec70b01980715bc6af284f",
+      "bytes": 232
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "639f772628fbb414eb32344586d10cba87d80bd81266c76852b9b3a7c93e2eb2",
+      "bytes": 1615
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "c383694a1a624a9d4e8eef8b651830f7d64fe9f30767ed8a2eee92549726c556",
+      "bytes": 1079
+    }
+  }
+}

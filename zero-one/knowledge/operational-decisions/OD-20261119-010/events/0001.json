@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T22:58:19+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Case Afficher la bulle par posture avec fallback true et validation booléenne dans Composer/timeline/API; bandeau bleu agrandi à 620×44, titre 25px, vrai canvas spectre 240×32",
+  "evidence": "OVH studio-server.js; scene/dialogue-editor.js; scene/storyboard-timeline.js; scene/music-ticker.js; scene/boono-v2.css; scene/styles.css; scene/index.html ; backups/20261119-bubbles-music",
+  "previousEventSha256": null
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T22:58:19+00:00",
+  "status": "TESTE",
+  "description": "Node syntax et contrat 12 postures validés, erreur de champ non booléen rejetée HTTP 400, Chrome headless : working bulle visible/masquée et texte/fenêtre conservés, thinking indépendant et Annuler ; titre et spectre réellement mesurés 620×44/240×32 avec 16 bandes et vidéo 30fps",
+  "evidence": "OVH tests/boono-bubble-choice-music-size-20261119.test.js et tests/boono-bubble-music-browser-20261119.test.js ; SHA du JSON user 16d06458... et calibration 7aaa265... inchangés",
+  "previousEventSha256": "0aab7ef3e985d448ef97cc2e43120dd903ace529b949288cf3ed447fd817aa60"
+}

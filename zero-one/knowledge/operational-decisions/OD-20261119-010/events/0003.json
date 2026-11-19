@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T22:58:19+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Service utilisateur boono-studio redémarré seul, nouveaux scripts/cache bust activés en studio privé; ancien comportement des 12 bulles conservé par défaut",
+  "evidence": "OVH systemctl --user boono-studio active, scène/js HTTP 200 et catalogue des quatre sources vidéo ready ; navigateur Chrome/Puppeteer validé",
+  "previousEventSha256": "0b23bae1cc571e104565248917e7f554a373e3c81a0ec902535206c8ed27d423"
+}

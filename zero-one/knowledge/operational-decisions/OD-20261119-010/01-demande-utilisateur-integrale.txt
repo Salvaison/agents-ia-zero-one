@@ -1,0 +1,1 @@
+Ok, c'est chouette, il manque un dernier truc, j'aimerais pouvoir sur chaque posture décider si je veux une bulle de dialogue ou non, j'aimerais aussi que tu agrandisse le bandeau avec l'histograme du son et le titre de la musique
