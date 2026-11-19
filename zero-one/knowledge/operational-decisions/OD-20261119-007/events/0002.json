@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T21:09:18+00:00",
+  "status": "TESTE",
+  "description": "Node syntax OK, test autonome deux calques vidéo/sources/fenêtres, ancien contrat 12 scénarios conservé, sources inconnues rejetées HTTP 400, assets privés MP4 HTTP 206, projections/scénarios inchangés",
+  "evidence": "OVH tests/boono-tv-desk-screen-accessories.test.js et vérifications locales HTTP ; navigateur graphique utilisateur non validé",
+  "previousEventSha256": "cfc0667e8224119b22bd64b9165fde9b742e5e84f9934055f2ff6a5cd69b78c2"
+}

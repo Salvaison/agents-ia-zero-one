@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T21:09:18+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Redémarrage ciblé boono-studio, scène privée HTTP 200 et scripts versionnés chargés ; vidéos désactivées par défaut jusqu’au choix et Enregistrer utilisateur",
+  "evidence": "OVH boono-studio active, 4 vidéos Viewer ready, GET scénarios 12, routes privées Range 206 et import fermé 404",
+  "previousEventSha256": "a9cac54e85501e1a597738ceb2dc10e70d0de224cfcb170f6e67f9505d867418"
+}

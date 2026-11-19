@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T21:09:18+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Deux accessoires d’écran indépendants, menus Circuit/BTC bleu par écran et fenêtres par posture ; panneaux video montés dans les deux projections calibrées, sans nouvelle rotation",
+  "evidence": "OVH: scene/desk-screen-accessories.js, storyboard-timeline.js, dialogue-editor.js, styles.css, index.html, studio-server.js ; sauvegarde backups/20261119-btc-screen-accessories",
+  "previousEventSha256": null
+}

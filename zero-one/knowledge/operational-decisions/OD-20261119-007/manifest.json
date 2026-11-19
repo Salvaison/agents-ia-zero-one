@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-007",
+  "title": "BOONO-TV : animations BTC séparées superposées temporairement aux deux écrans comme accessoires",
+  "createdAtUtc": "2026-11-19T20:59:26+00:00",
+  "authorization": "Demande explicite de l’utilisateur : deux animations BTC sur écrans Conversion/MC, temporaires comme accessoires et choisies séparément, 19/11/2026",
+  "reference": "Conversation BOONO-TV du 19 novembre 2026 ; OD-20261119-003",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "f53f40746b2457696854d7cb1efa2ffe524ecc4d2ce94a744c2f0d56a485aedf",
+      "bytes": 412
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "1f80bafa9969292639e498bc5d6b5ec1878f698c49ebc463e507f51d1127c67f",
+      "bytes": 1650
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0838649431fa4ac31cb0c321ae7cedcdd69911aa042dc2af3165488fd4686637",
+      "bytes": 1112
+    }
+  }
+}
