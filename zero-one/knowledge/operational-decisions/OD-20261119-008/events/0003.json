@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T21:51:30+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Service privé OVH boono-studio redémarré seul, nouveau réglage accessible dans Scénarios → Accessoires avec sauvegarde dédiée ; calibration des écrans d’origine intacte",
+  "evidence": "OVH boono-studio active, scène HTTP 200, scripts versionnés OD20261119-008, API GET privée 200 ; validation artistique finale noVNC utilisateur ouverte",
+  "previousEventSha256": "c08af43dc79f764c33bafaf9cec9cd895c1ce452b5bc0bcbcf254ce53a64b6c0"
+}

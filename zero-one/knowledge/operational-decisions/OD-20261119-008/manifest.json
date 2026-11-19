@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-008",
+  "title": "BOONO-TV : perspective editable à quatre coins pour chaque accessoire vidéo BTC",
+  "createdAtUtc": "2026-11-19T21:33:26+00:00",
+  "authorization": "Demande explicite du propriétaire de régler les deux panneaux vidéo Bitcoin en perspective comme les deux écrans, 19/11/2026",
+  "reference": "Conversation BOONO-TV 2026-11-19, suite OD-20261119-007",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ce93e8571be43d38c00f1929678c331be4846c2d59de869fb501950e1d1c3ae6",
+      "bytes": 92
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "523355a1b8c5b7277c1dbcd8e6390215a5c8711d15a7fab1cb3b4fb2ba1c5c51",
+      "bytes": 1969
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "b3a0a60256c5e7f728249619955e31bc26e3dbdda40757a8fc8d0c6957e43fbf",
+      "bytes": 1052
+    }
+  }
+}

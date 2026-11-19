@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T21:51:30+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Deux panneaux vidéos frères des écrans physiques, leurs matrices projectives personnalisables séparément via quatre poignées et nouvelles commandes dans Composer, fichier de perspective et API privée",
+  "evidence": "OVH runtime/boono-tv/scene/{desk-screen-accessories.js,dialogue-editor.js,styles.css,index.html} ; btc-desk-perspectives.js, studio-server.js ; sauvegardes ciblées",
+  "previousEventSha256": null
+}

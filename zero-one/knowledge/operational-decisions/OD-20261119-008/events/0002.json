@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T21:51:30+00:00",
+  "status": "TESTE",
+  "description": "Node/CSS, régresseur 12 scénarios, source H264 privée, HTTP 200/403/409/422 ; Chrome headless : alignement des deux écrans, quatre poignées par panneau, drag & cancel indépendants, save puis rechargement puis réinitialisation vérifiés",
+  "evidence": "OVH tests/boono-tv-desk-screen-accessories.test.js et tests Chrome via Puppeteer, config initiale null/null rétablie, projection-config et dialogue-script checksums préservés",
+  "previousEventSha256": "02a093da5f68e196888861c0901dad6754f0ff57a4e90c1eb7571a8fa9e060bd"
+}
