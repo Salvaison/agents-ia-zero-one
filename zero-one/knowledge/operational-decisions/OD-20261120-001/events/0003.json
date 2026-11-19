@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T23:18:05+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Service privé boono-studio actif après redémarrage ciblé ; logo 230px par défaut centré frontière et repositionnable via Composer, vieil accessoire BTC préservé",
+  "evidence": "OVH systemctl --user boono-studio active, scène et API 200, script/css versionnés OD20261120-001, contrôle Chrome réel",
+  "previousEventSha256": "9eab6b95659e4692faacef97d3c0056760c1a09d6baaaa0ae7fe3e8847b45b33"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T23:18:04+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Même deuxième logo BTC permanent déplacé de l’en-tête contraint vers la scène globale 1920x1080, accessible librement de part et d’autre d’État vivant/loft, taille max 420; nouvelle position active 605/425/230, ancien 323/4/78 sauvegardé",
+  "evidence": "OVH scene/btc-header-logo.js, scene/styles.css, btc-header-logo-config.js, scene/index.html, desk/btc-header-logo.json et backups/20261120-btc-floating-logo",
+  "previousEventSha256": null
+}

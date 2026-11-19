@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261120-001",
+  "title": "BOONO-TV : logo BTC permanent flottant entre État vivant et loft, taille agrandie",
+  "createdAtUtc": "2026-11-19T23:09:26+00:00",
+  "authorization": "Mandat utilisateur explicite du 20/11/2026 de repositionner logo permanent à cheval entre les deux panneaux à mi-hauteur, plus grand, ajustable personnellement",
+  "reference": "Conversation BOONO-TV 19-20 novembre 2026 ; OD-20261119-009 et OD-20261119-010",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "850bd097a9460314f2448a00825b366e05abfe856a2c1b9c2e581883d58e2f5e",
+      "bytes": 413
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "896ee55e0ce4f983c84b64ea1723fd4806a5454f7e5c4cc37d187afd40a75bbf",
+      "bytes": 2086
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "47a899cb9630de9647ad866646c3595d5faecbf5213e090fbcab487e888a7d9e",
+      "bytes": 1317
+    }
+  }
+}

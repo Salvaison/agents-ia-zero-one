@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T23:18:05+00:00",
+  "status": "TESTE",
+  "description": "Chrome 1920x1080: logo couvre les deux colonnes à x720, souris drag, resize 330, annulation, save et reload persistants; rétablissement x605/y425/230; Chrome 1366x768 drag sous scale; API HTTP 403/409/422; originaux/12 scénarios/calibration intacts",
+  "evidence": "OVH /tmp/test-btc-floating-logo-browser.js et image de contrôle /tmp/boono_logo_btc_across_border_live_20261120.png ; hashes scène conservés ; GET configuration privée 200",
+  "previousEventSha256": "c58595a70b703adb8fd779e3289a65232e62d3f3a57d6e13fbf7057ec61a78cc"
+}
