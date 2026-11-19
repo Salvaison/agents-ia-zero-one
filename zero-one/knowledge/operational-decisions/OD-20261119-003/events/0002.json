@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T16:19:28+00:00",
+  "status": "IMPLEMENTE",
+  "description": "9 nouveaux accessoires, 4e vidéo privée, copies des originaux et dérivés alpha/720p ; intégration OVH uniquement",
+  "evidence": "OVH private-media ; private-media-extensions.js, private-media-catalog.js, scene/accessory-sprites.js, storyboard-timeline.js, dialogue-editor.js ; backups ciblés 20261119",
+  "previousEventSha256": "a9a387cc40ae47baad26d146e776f1435d8267a00d2e581c507a16b0d78dbd6e"
+}

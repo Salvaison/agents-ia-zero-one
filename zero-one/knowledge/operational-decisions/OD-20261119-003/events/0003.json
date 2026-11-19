@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T16:19:28+00:00",
+  "status": "TESTE",
+  "description": "Codes JS valides ; tailles/sha, ffprobe, HTTP 206 assets/audio, 4 pistes ready, 12 scénarios préservés, POST import 404",
+  "evidence": "Contrôles distants OVH en conversation, service boono-studio active ; essai graphique navigateur encore ouvert",
+  "previousEventSha256": "894a3b455b1f372a9985c872d7847a7a221c1a289a0229be25595e7b75dc1015"
+}

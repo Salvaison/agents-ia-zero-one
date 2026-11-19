@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-003",
+  "title": "BOONO-TV : import Wonderwood et accessoires fournis en aperçu privé OVH",
+  "createdAtUtc": "2026-11-19T16:17:52+00:00",
+  "authorization": "Mandat utilisateur explicite 19/11/2026 de transférer ces médias sur OVH, clarification Wonderwood, Composer Accessoires et Video Viewer ; aperçu privé sans droit de diffusion publique",
+  "reference": "Conversation BOONO-TV 2026-11-19 ; knowledge/BOONO_TV_import_Wonderwood_accessoires_prives_2026-11-19.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "6f662342c71b52fc17e5563728065225cd1786c0feb7c742603c1dc2e9426acb",
+      "bytes": 431
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "3e7229770d28415f03977ab1df9fbed74df24859e230d5038dd0bfd65a93d2d8",
+      "bytes": 1665
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "746526cf6566a77965e8d5410ef588cbd736abc086f8b6f7733bd9a487e0862b",
+      "bytes": 1642
+    }
+  }
+}

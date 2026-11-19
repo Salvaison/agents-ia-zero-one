@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-19T16:19:29+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Service systemd utilisateur boono-studio redémarré seul ; catalogue et endpoints actifs localement, médias non activés par défaut",
+  "evidence": "curl HTTP 200 scène, API catalogue quatre ready, endpoints 206 et service systemd active ; aucune modification PAPER",
+  "previousEventSha256": "e44f4817516b2c1e28efb7605bee495b7e88bbeaba909a9f2a972b7aca8bfc22"
+}
