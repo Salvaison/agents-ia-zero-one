@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T22:20:54+00:00",
+  "status": "TESTE",
+  "description": "API HTTP 200, schémas et limites 403/409/422; test réel Chrome : nouvel objet distinct, drag, resize, cancel, sauvegarde, reload visible; restauration non placé; 12 scénarios et calibration physique inchangés",
+  "evidence": "OVH /tmp/test-header-btc-logo-browser.js ; SHA256 logo png 544a240..., scénario 455ff746... et projection 7aaa265... inchangés ; scène privée",
+  "previousEventSha256": "6605d5943d3d3bcf0f678ae9ba5be3aecd3802d8492868d7d98e865a362a2db5"
+}

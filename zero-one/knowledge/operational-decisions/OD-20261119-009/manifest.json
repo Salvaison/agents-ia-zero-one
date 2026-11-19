@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-009",
+  "title": "BOONO-TV : second logo BTC permanent réglable librement dans en-tête État vivant",
+  "createdAtUtc": "2026-11-19T22:12:37+00:00",
+  "authorization": "Mandat explicite propriétaire 19/11/2026 : deuxième logo BTC permanent dans en-tête de État vivant, emplacement choisi personnellement, original conservé",
+  "reference": "Conversation BOONO-TV du 19 novembre 2026, suite OD-20261119-006",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "374a1e713f4203849ec69eb591637eb14a97cf0523f0bdc486bc61a4866ad815",
+      "bytes": 336
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "6ebebb8cf732145f440b5c2a0807c27296de355f4ed32fd918f50412ae14f51b",
+      "bytes": 1734
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "d5e62af2cebd8e99d108bf2d19ff5e0366db526ae6c4f1f452aff13db971a396",
+      "bytes": 1015
+    }
+  }
+}

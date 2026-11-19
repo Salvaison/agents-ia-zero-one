@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T22:20:54+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Service boono-studio redémarré ciblé, contrôles en tête du Composer accessibles dans studio privé; logo volontairement non placé avant choix utilisateur; ancien BTC préservé",
+  "evidence": "systemctl --user is-active boono-studio; GET API logo 200 ; script statique version OD20261119-009, navigateur test Chrome headless",
+  "previousEventSha256": "6e7bc3d42dd22b7b005b5415938a7f25b0a742dcf668cb921e661ef9a65b1816"
+}

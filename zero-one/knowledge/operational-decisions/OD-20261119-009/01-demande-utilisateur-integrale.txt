@@ -1,0 +1,8 @@
+[Message utilisateur 1]
+C'est super et est-ce que l'on pourrait mettre un logo de Btc en permanence par dessus l'état vivant, dans l'entete?
+
+[Message utilisateur 2 — précision]
+je veux pouvoir le placé moi même
+
+[Message utilisateur 3 — précision]
+et ce sera un élément supplémentaire par rapport au logo btc deja existant

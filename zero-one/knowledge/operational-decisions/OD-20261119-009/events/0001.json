@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T22:20:54+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Deuxième objet BTC indépendant dans en-tête État vivant, placement manuel/échelle/visibilité, propre configuration JSON et API privée; ancien accessoire BTC par posture inchangé",
+  "evidence": "OVH studio-server.js + btc-header-logo-config.js + scene/btc-header-logo.js + styles.css/index.html ; desk/btc-header-logo.json, sauvegardes 20261119-btc-header-logo",
+  "previousEventSha256": null
+}
