@@ -24,7 +24,7 @@ const baseline=[
   live15BwRaw:3+i*.1,lastPrice:64000+i}))
 ];
 test('V552 is a new independent policy/ledger, no V543 or V551 decision imports',()=>{
- assert.equal(D.VERSION,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
+ assert.equal(D.VERSION,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2');
  assert.equal(P.VERSION,'v5.5.2-paper-ledger-v1');
  for(const file of ['source.js','decision.js','paper.js','runner.js','vigilance.js']){
   const s=fs.readFileSync(path.join(ROOT,'modules/v552',file),'utf8');
@@ -70,7 +70,7 @@ test('near horizontal LBW15 and BW15 is descriptive UNCERTAIN, not trade command
  assert.equal(r.phase,'POLARITY_UNCERTAIN');
  assert.equal(r.counterConvinces,false);
 });
-test('early exit needs owner-opposed Live, MCB3, PM, price AND slow MF15 and retained profit',()=>{
+test('early exit needs owner-opposed persistent Live plus reclaimed price, not MF15 approval',()=>{
  const pos={direction:'long',entryAt:T-800000,entryPrice:63800,
   mfePriceUsd:800};
  const o=mk(T,{price:64100,mcb3:{direction:'short'},
@@ -79,15 +79,16 @@ test('early exit needs owner-opposed Live, MCB3, PM, price AND slow MF15 and ret
   pm:{live:-20,p3:-80}});
  const attention={phase:'COUNTER_TRANSFER_PRODUCTIVE',
   watch:{at:T-30000,firstLiveAt:T-30000,challenger:'short'},
-  evidence:{priceFromLive:50},counterConvinces:true};
+  evidence:{priceFromLive:50},counterConvinces:true,
+  protectiveTransfer:true};
  const rv=D.positionReview(o,{campaign:{direction:'long'}},pos,attention);
  assert.equal(rv.action,'EXIT_LONG');
- assert.equal(rv.reason,'V552_LIVE15_MF_PRICE_PROTECT_ECONOMIC_GAIN');
+ assert.equal(rv.reason,'V552_LIVE15_STRUCTURAL_PRICE_PROTECT_ECONOMIC_GAIN');
  assert.equal(rv.positionReview.adversePrice,true);
  assert.equal(rv.positionReview.adverseMF,true);
  assert.equal(rv.positionReview.adversePM,true);
 });
-test('small MF15 bounce in deeply negative flow does not falsely close winning SHORT',()=>{
+test('SHORT holds when structural counter-attack is NOT requalified despite MF changes',()=>{
  const pos={direction:'short',entryAt:T-100000,entryPrice:65000,
   mfePriceUsd:500};
  const o=mk(T,{price:64600,mcb3:{direction:'long'},

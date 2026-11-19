@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-004",
+  "title": "V552 v1.2 : MF15/MF3 descriptifs et précurseurs, sans autorité de trading",
+  "createdAtUtc": "2026-11-19T17:37:50+00:00",
+  "authorization": "Utilisateur 19 novembre 2026 demande de corriger le veto MF15 sur V552 PAPER ; MF peut être précurseur à contre-courant, sans autorité sur MCB/prix/PM",
+  "reference": "knowledge/BOONOLAB_V552_V12_MF_DESCRIPTIF_SANS_VETO_2026-11-19.md ; knowledge/BOONOLAB_V552_AUDIT_SHORT_MANQUE_LBW15_1545_2026-11-19.md ; OD-20261119-002",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ebae950984165cd5f6f2a8ad5b1f2be9df4e4996fd303ba846ddc9e704a3e665",
+      "bytes": 228
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "8834a3f82bc2ccb3be210bef81396d0878eca86de0292a1533c675c3d352091d",
+      "bytes": 1252
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "9abc006dd5ad6eb9d613b9949b6c3187defc68a915f76e7f5aabbbf6b11346a9",
+      "bytes": 407
+    }
+  }
+}

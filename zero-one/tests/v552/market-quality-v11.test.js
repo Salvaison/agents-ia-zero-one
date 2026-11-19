@@ -33,7 +33,7 @@ test('12:45 LONG #14 is deferred: confirmation of cross15 is not proof of accept
  assert.equal(market.postCrossReclaim,false);
  assert.equal(market.deferNewEntry,true);
  assert.equal(result.action,'WAIT');
- assert.equal(result.reason,'V552_MARKET_POLARITY_CONTESTED_WAIT_PRICE_MF_ACCEPTANCE');
+ assert.equal(result.reason,'V552_MARKET_POLARITY_CONTESTED_WAIT_PRICE_STRUCTURE');
 });
 test('13:16 SHORT #15 is deferred by MF15 opposition and market unaccepted reversal',()=>{
  const {result,market}=find(15);
@@ -71,7 +71,7 @@ test('confirmed 15m opposite is a structural REVIEW, not mandatory exit with MF1
   evidence:{priceFromLive:-20}};
  const result=D.positionReview(o,{campaign:{direction:'long'}},pos,a);
  assert.equal(result.action,'HOLD');
- assert.equal(result.reason,'V552_CONFIRMED_15M_CONTEST_MF15_DEFENDS_POSITION');
+ assert.equal(result.reason,'V552_CONFIRMED_15M_CONTEST_PRICE_DEFENDS_POSITION');
  assert.equal(result.positionReview.confirmed15Review.slowMFConfirms,true);
  const fail=D.positionReview({...o,price:63800,
    mf:{slow:30,slope15:-2,slope3:-2},pm:{live:-12,p3:-80}},
@@ -97,35 +97,55 @@ test('market gate has no wall-clock 18/25m TTL, or broker import',()=>{
  assert.equal(txt.includes('Cross3 <= 18'),false);
 });
 
-test('explicit V552 v1 to v1.1 policy migration preserves the open PAPER position',()=>{
- const {build}=require('../../scripts/boonolab-v552-policy-v11-upgrade');
- const active=JSON.parse(fs.readFileSync(path.join(ROOT,'data/v552-paper-state.json')));
- assert.equal(active.policyVersion,
-  'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
- const frozen=JSON.parse(JSON.stringify(active));
- frozen.policyVersion='v5.5.2-lbw15-live-vigilance-campaign-paper-v1';
- delete frozen.policyRevision;
- const migrated=build(frozen,active.policyRevision.at,'test-old-sha');
- assert.equal(migrated.policyVersion,active.policyVersion);
+function frozenPolicyV11(){
+ const current=JSON.parse(fs.readFileSync(path.join(ROOT,'data/v552-paper-state.json')));
+ const f=JSON.parse(JSON.stringify(current));
+ if(f.policyVersion==='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2'){
+  f.policyVersion='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1';
+  f.policyRevision=current.policyRevision.previousPolicyRevision;
+  delete f.policyHistory;
+ }
+ assert.equal(f.policyVersion,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
+ return f;
+}
+test('explicit V552 v1.1 to v1.2 policy migration preserves account and open position',()=>{
+ const {build}=require('../../scripts/boonolab-v552-policy-v12-upgrade');
+ const frozen=frozenPolicyV11();
+ const migrated=build(frozen,frozen.lastObservationAt+1,'test-old-sha');
+ assert.equal(migrated.policyVersion,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2');
  assert.deepEqual(migrated.position,frozen.position);
  assert.deepEqual(migrated.history,frozen.history);
  assert.deepEqual(migrated.usedEpisodes,frozen.usedEpisodes);
  assert.equal(migrated.completed,frozen.completed);
  assert.equal(migrated.equityUsd,frozen.equityUsd);
  assert.equal(migrated.feesUsd,frozen.feesUsd);
- assert.equal(migrated.policyRevision.oldCompleted,active.completed);
+ assert.equal(migrated.policyRevision.oldCompleted,frozen.completed);
+ assert.equal(migrated.policyRevision.oldEquityUsd,frozen.equityUsd);
+ assert.equal(migrated.policyRevision.previousPolicyRevision.to,
+   'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
  assert.equal(migrated.brokerOrdersEnabled,false);
  assert.throws(()=>build({...frozen,engine:'V551'},Date.now(),'x'),/UNTRUSTED/);
 });
-test('read-only Watch endpoint serves actually migrated V552 v1.1 state with coherent source age',()=>{
+test('read-only Watch endpoint serves actually migrated V552 v1.2 state with coherent source age',()=>{
  const src=fs.readFileSync(path.join(ROOT,'modules/config-server.js'),'utf8');
  const a=src.indexOf("app.get('/api/v552-paper',requireAuth");
  const b=src.indexOf("app.get('/api/v493'",a);
  assert.ok(a>0&&b>a);
  const route=src.slice(a,b),handlers={};
  const vm=require('vm');
+ const old=frozenPolicyV11(),
+   staged=require('../../scripts/boonolab-v552-policy-v12-upgrade')
+    .build(old,old.lastObservationAt+1,'test-readonly-sha'),
+   stagedView=require('../../modules/v552/runner').summary(staged);
+ const stagedFs={readFileSync:(file,enc)=>{
+  if(file.endsWith('/data/v552-paper-state.json'))
+   return JSON.stringify(staged);
+  if(file.endsWith('/data/v552-paper-summary.json'))
+   return JSON.stringify(stagedView);
+  return fs.readFileSync(file,enc);
+ }};
  const env={app:{get:(k,auth,fn)=>{handlers[k]=fn}},
-  requireAuth:()=>{},fs,path,__dirname:path.join(ROOT,'modules'),
+  requireAuth:()=>{},fs:stagedFs,path,__dirname:path.join(ROOT,'modules'),
   Date,Number,Math,JSON,Error,
   sendUiJson:(_req,res,data)=>{res.body=data;return res}};
  vm.runInNewContext(route,env);
@@ -134,7 +154,7 @@ test('read-only Watch endpoint serves actually migrated V552 v1.1 state with coh
  handlers['/api/v552-paper']({},res);
  assert.equal(res.statusCode,200,JSON.stringify(res.body));
  assert.equal(res.body.policyVersion,
-  'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
+  'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2');
  assert.equal(res.body.engine,'V552');
  assert.equal(res.body.brokerOrdersEnabled,false);
  assert.ok(res.body.market);

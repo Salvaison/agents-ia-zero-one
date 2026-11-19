@@ -198,8 +198,9 @@ function assess(o,mem,position=null,samples=[]){
  const movingAway=liveOpp&&w?.consecutiveLive>=2&&
    w?.deepening&&gap!==null&&w.firstLiveGap!==null&&
    cs*(gap-w.firstLiveGap)>0;
- const counterConvinces=!!(w&&movingAway&&crossOpp&&counterPrice&&
-  (counterFlow||counterPM)&&counterPM);
+ // MF is retained as a diagnostic of participation/divergence only.
+ // An opposite MF may lead or lag MCB; it cannot veto a price translation.
+ const counterConvinces=!!(w&&movingAway&&crossOpp&&counterPrice&&counterPM);
  // Important separation: first convincing threat opens protection
  // REVIEW. A position EXIT needs a *recovered* counter-impulse:
  // challenger price broke a prior extreme after a pullback.
@@ -211,7 +212,8 @@ function assess(o,mem,position=null,samples=[]){
  if(counterConvinces)phase='COUNTER_TRANSFER_PRODUCTIVE';
  if(w)w.lastEvidence={
   asOf:o.at,phase,challenger,liveOpp,crossOpp,price3:round(price3),
-  mf3:round(mf3),mf15:round(mf15),pmNow:round(pmNow),
+  mf3:round(mf3),mf15:round(mf15),counterFlow,
+  mfAuthority:'DESCRIPTIVE_ONLY',pmNow:round(pmNow),
   gap,lbwSlope3:l,bwSlope3:b,gapSlope3:o.mcb15.gapSlope3,
   priceFromLive:progressFromLive,priceFromAnchor:progressFromAnchor,
   movingAway,counterConvinces,protectiveTransfer,

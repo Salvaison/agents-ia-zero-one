@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-19T17:37:51+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "V552 PM2 STOP avant migration v1.2, ledger version inchangée : 15 trades, equity 970.243 $, LONG entryAt 1795109117754, frais, MFE/MAE, clés conservés. V552/V543/Watch/BOONO-TV ONLINE, V551 STOPPED, HTTP Watch 302/login et OVH engine552 DATA_RECENT v1.2, aucun changement Composer",
+  "evidence": "/root/boonolab-archives/V552_V1_1_TO_V1_2_2026-11-19T17-30-58-543Z/MANIFEST.json ; /root/boonolab-archives/V552_V12_SOURCE_BEFORE_20261119T173057Z/ ; data/v552-paper-state.json policyRevision ; pm2 save ; /api/v552-paper ; OVH /api/snapshot",
+  "previousEventSha256": "f7ab76e6fe12948d2023df9c14f05d659f56622538154d3a4a01987dcfda4d06"
+}

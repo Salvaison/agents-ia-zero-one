@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T17:37:51+00:00",
+  "status": "TESTE",
+  "description": "102 tests étendus PASS 0 FAIL ; invariance de décision sous inversion/absence MF15/MF3, SHORT 15h55 admissible as-of, #14/#15 différés sur prix, #2 gagnant admis, hard risk 500 BTC$, protection/maintien sans veto MF. Limites de faux signaux et sans backtest complet documentées",
+  "evidence": "tests/v552/mf-descriptive-no-authority-v12.test.js ; tests/v552/market-quality-v11.test.js ; tests/v552/vigilance-policy.test.js ; /tmp/v552-mf-v12-live-tests.txt",
+  "previousEventSha256": "7c1609cbc281c1204bec031b6756d47a6917fc95f066cc1c3ad37336d0ccdf78"
+}

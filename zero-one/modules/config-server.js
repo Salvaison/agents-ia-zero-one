@@ -728,7 +728,7 @@ app.get('/api/v552-paper',requireAuth,(req,res)=>{
   const state=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/v552-paper-state.json'),'utf8'));
   const view=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/v552-paper-summary.json'),'utf8'));
   if(state.version!=='v5.5.2-paper-ledger-v1'||
-     state.policyVersion!=='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1'||
+     state.policyVersion!=='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2'||
      state.engine!=='V552'||state.mode!=='PAPER_ONLY'||
      state.brokerOrdersEnabled!==false||view.brokerOrdersEnabled!==false||
      view.version!==state.version||view.policyVersion!==state.policyVersion||
@@ -8474,7 +8474,7 @@ async function loadV552PaperPanel(){
     ' · LBW15 pente3 '+fmt(m15.slope3)+'</div>'+
     '<div class="v5-row"><b>MARCHÉ / ADMISSION</b> '+str(x.market?.kind)+
     ' · '+str(x.market?.deferNewEntry?'NOUVELLE ENTRÉE DIFFÉRÉE':'LECTURE EN COURS')+
-    ' · MF15 aligné '+str(x.market?.mfAligned)+
+    ' · MF15 descriptif '+str(x.market?.mfReading)+
     ' · territoire post-Cross15 '+str(x.market?.entryConfirmedSinceCross)+
     ' · '+str(x.market?.reason)+'</div>'+
     '<div class="v5-row"><b>LIQUIDITÉ</b> débit Bâton '+

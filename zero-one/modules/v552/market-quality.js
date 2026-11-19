@@ -63,8 +63,11 @@ function inspect(o,input,candidate,ep){
   marginal=s*o.pm.p3;
  const crossProgress=s*(o.price-last.price);
  const heldPrice= crossProgress>0 && livePM>0 && marginal>0;
+ // MF is DESCRIPTIVE, even when at a contrarian level: its slope can
+ // precede an MCB reversal. Price and MCB, not MF, qualify structure.
+ const priceEvidence=heldPrice&&(breakout||recovered);
  const flowProves=(flow15>0&&flow3>0)||(flowLevel>0&&flow3>0);
- const priceEvidence= heldPrice&&(breakout||(recovered&&flowProves));
+ // flowProves is retained for EXPLANATION ONLY; not used in priceEvidence.
  const prevTranslation=previous?sign(previous.direction)*
   (last.price-previous.price):null;
  const disputed=previous!==undefined&&prevTranslation<=0;
@@ -96,27 +99,45 @@ function inspect(o,input,candidate,ep){
   exhausted?'OLD_CROSS3_TRAVEL_NOT_REQUALIFIED':
   !priceEvidence?'CROSS15_TRANSFER_PRICE_NOT_YET_DEFENDED':
   'STRUCTURE_AND_PRICE_QUALIFIED';
- // Applies to an uncertain/recently failed polarity only; stable campaigns
- // can continue to use normal MCB3-first timing.
+ // MF15 is measured for diagnostic interpretation, not an admission gate.
+ // The same MCB/price/PM evidence must produce the SAME action if MF differs.
  const mfConflict=flowLevel<0||flow15<0;
  const mfAligned=flowLevel>0&&flow15>0;
- // When the previous 15m polarity FAILED to keep its territory, do not
- // immediately recycle its confirmed opposite as a new position.
- // Force an observed price re-acceptance, rather than a wall-clock delay.
- phase.entryPrudence=disputed||last.direction!==directionNow||exhausted;
  phase.mfConflict=mfConflict;
  phase.mfAligned=mfAligned;
- // Even outside repeated 15m crosses, a newly proposed position should
- // not fight BOTH the level and the trend of slow MF15.
- phase.slowMFUnambiguouslyOpposite=flowLevel<0&&flow15<0;
- phase.deferNewEntry=(phase.entryPrudence&&!priceEvidence)||
-  (phase.entryPrudence&&!mfAligned)||exhausted||
-  phase.slowMFUnambiguouslyOpposite;
+ phase.mfReading=flowLevel<0&&flow15>0?'MF15_SLOPE_LEADS_AGAINST_LEVEL':
+  flowLevel>0&&flow15<0?'MF15_SLOPE_WARNINGS_BEFORE_LEVEL_CROSS':
+  mfAligned?'MF15_COMPATIBLE':'MF15_CONTRARIAN_OR_UNCERTAIN';
+ // In contested 15m polarity, the last crossing must have produced more
+ // price movement than the *real PAPER round-trip fee break-even*.
+ // This is an economic observation, NOT an empirical 18/25min gate.
+ const feeBreakevenMove=o.price*0.001; // two 0.05% taker fees
+ const economicallyTranslated=crossProgress>feeBreakevenMove;
+ const structuralChain=o.mcb3.direction===directionNow&&
+   ((o.mcb15.direction===directionNow)||
+    (s*o.mcb15.slope3>0&&s*o.mcb15.gapSlope3>0));
+ const progressiveFromCross3=Number.isFinite(ep.crossPrice)&&
+  s*(o.price-ep.crossPrice)>0;
+ const transitionProved=priceEvidence&&economicallyTranslated&&
+  structuralChain&&progressiveFromCross3;
+ phase.feeBreakevenPriceMove=round(feeBreakevenMove);
+ phase.economicallyTranslated=economicallyTranslated;
+ phase.structuralChain=structuralChain;
+ phase.progressiveFromCross3=progressiveFromCross3;
+ phase.transitionProved=transitionProved;
+ phase.entryPrudence=disputed||last.direction!==directionNow||exhausted;
+ phase.slowMFUnambiguouslyOpposite=flowLevel<0&&flow15<0; // descriptive only
+ phase.deferNewEntry=exhausted||
+  (phase.entryPrudence&&!transitionProved);
  if(phase.deferNewEntry){
   phase.reason=exhausted?'OLD_CROSS3_TRAVEL_NOT_REQUALIFIED':
-   !mfAligned||phase.slowMFUnambiguouslyOpposite?'MF15_LEVEL_OR_SLOPE_OPPOSES_NEW_ADMISSION':
    !priceEvidence?'POST_CROSS15_PRICE_NOT_YET_DEFENDED':
-   phase.reason;
+   !economicallyTranslated?'PRICE_MOVE_DOES_NOT_YET_COVER_TAKER_FEES':
+   !structuralChain?'MCB3_MCB15_WAVE_NOT_YET_ALIGNED':
+   !progressiveFromCross3?'CROSS3_PRICE_NOT_YET_TRANSLATED':
+   'STRUCTURAL_TRANSFER_PRICE_NOT_YET_ACCEPTED';
+ }else if(phase.entryPrudence){
+  phase.reason='MCB_PRICE_CONVERSION_TERRITORY_ACCEPTED_MF_OBSERVATIONAL';
  }
  return phase;
 }

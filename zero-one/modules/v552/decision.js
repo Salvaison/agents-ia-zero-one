@@ -7,7 +7,7 @@
 const src=require('./source');
 const vigilance=require('./vigilance');
 const marketQuality=require('./market-quality');
-const VERSION='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1';
+const VERSION='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2';
 const MIN=60000;
 const val=src.val,side=d=>d==='long'?1:d==='short'?-1:0;
 const dir=x=>x>0?'long':x<0?'short':null;
@@ -216,17 +216,17 @@ function ownMemoryStep(mem,o){
  if(cam.transfer){
   const t=cam.transfer,target=t.direction;
   // The observed confirmed crossing may be a violent failed attempt.
-  // Acceptance is observed only if its own price AND MF/PM concur
-  // while the 15m wave remains across BW. It is not an age timer.
+  // Acceptance requires observed PRICE and PM Live while the CLOSED and
+  // LIVE 15m waves remain across BW. MF is read independently as context.
   const priceSupports=side(target)*(o.price-t.priceAtFirstObservation)>0;
-  const flowSupports=signed(o.mf.slope15,target)>0||
-   signed(o.mf.slope3,target)>0;
   const pmSupports=signed(o.pm.live,target)>0;
+  // A change of MF sign is NEVER required to recognize a transfer:
+  // it may anticipate or lag the price/MCB structure.
   if(wave.direction===target&&live===target&&
-     priceSupports&&(flowSupports||pmSupports)){
+     priceSupports&&pmSupports){
    emit(o.at,'MCB15','TRANSFER_ACCEPTED',{
     from:d,to:target,crossAt:t.at,price:o.price,
-    acceptance:'CLOSED_WAVE_PLUS_PRICE_AND_FLOW_OR_CONVERSION'});
+    acceptance:'CLOSED_WAVE_PLUS_PRICE_AND_PM_LIVE_MF_DESCRIPTIVE'});
    cam.direction=target;cam.id=target+'|TRANSFER:'+t.at;
    cam.sourceAt=t.at;cam.knownAt=t.at;
    cam.originPrice=t.priceAtFirstObservation;
@@ -269,7 +269,8 @@ function qualify(o,mem,position=null,attention=null,market=null){
   (closed===d||wav.direction===d||m15>0):
   ((wav.direction===d||m15>0)&&
    (wav.gapSlope3!==null&&signed(wav.gapSlope3,d)>0));
- const speedAlignment=mf3>0||mf15>0;
+ // MF15/MF3 explain a divergence, but cannot independently grant or veto
+ // an MCB3-led entry. Conversion is the current price response.
  const conversion=pm!==null&&pm>0;
  const turnaround=d!==parent;
  // Don't mistake an old PM3 response for fresh conversion. The present
@@ -279,17 +280,16 @@ function qualify(o,mem,position=null,attention=null,market=null){
  // Marginal 3m price must still be productive NOW, not only since the
  // ancient Cross3. No absolute PM dollar threshold, no 18/25m clock.
  const marginalProgress=marginalPrice!==null&&marginalPrice>0;
- const support=turnaround?
-  waveSupports&&mf3>0&&conversion&&priceRetained&&live3Aligned&&marginalProgress:
-  waveSupports&&speedAlignment&&conversion&&priceRetained&&live3Aligned&&marginalProgress;
+ const support=waveSupports&&conversion&&priceRetained&&
+  live3Aligned&&marginalProgress;
  const uncertain=attention?.phase==='POLARITY_UNCERTAIN';
- // In indecisive BW15/LBW15, no reverse trading purely because a closed
- // Cross15 has inverted. MF15 and MF3 must agree and the marginal price
- // translation (last 3m) must still support the new episode.
- const uncertainProof=mf15>0&&mf3>0&&
-  signed(o.pm.p3,d)>0&&pm>0&&cross0>=0;
+ // Uncertain BW15/LBW15: require MCB3 + MCB15 and a current translated
+ // price. MF15 and MF3 stay visible even when contrary or precursory.
+ const uncertainProof=waveSupports&&live3Aligned&&
+  marginalProgress&&conversion&&priceRetained;
  const MF='MF15_'+(mf15>0?'FAV':mf15<0?'OPP':'FLAT')+
-  '_MF3_'+(mf3>0?'FAV':mf3<0?'OPP':'FLAT');
+  '_MF3_'+(mf3>0?'FAV':mf3<0?'OPP':'FLAT')+
+  '_DESCRIPTIVE_NO_VETO';
  const context={waveSupports,m15,m3,mf15,mf3,
   pm,pm3,cross0,MF,conversionObserved:conversion,
   live3Aligned,priceRetained,marginalPrice,marginalProgress,
@@ -300,6 +300,7 @@ function qualify(o,mem,position=null,attention=null,market=null){
   previousPolarityRetained:market?.priorPolarityRetained??null,
   currentCrossPriceDefended:market?.entryConfirmedSinceCross??null,
   MF15Conflict:market?.mfConflict??null,
+  MF15Reading:market?.mfReading||null,
   lastCross15At:market?.lastConfirmedCross?.at??null,
   marketAdmissionDeferred:market?.deferNewEntry||false,
   priceSincePente15:attention?.evidence?.priceFromAnchor??null,
@@ -330,11 +331,11 @@ function qualify(o,mem,position=null,attention=null,market=null){
  const admissible=support&&!marketDeferred&&(!uncertain||uncertainProof);
  ep.status=admissible?'ADMISSIBLE':'OBSERVING_CAUSAL_CONFIRMATIONS';
  return {action:admissible?'ENTER_'+d.toUpperCase():'WAIT',
-  reason:marketDeferred?'V552_MARKET_POLARITY_CONTESTED_WAIT_PRICE_MF_ACCEPTANCE':
+  reason:marketDeferred?'V552_MARKET_POLARITY_CONTESTED_WAIT_PRICE_STRUCTURE':
    admissible?turnaround?'V552_REVERSAL_TACTIC_WITH_15M_CONVERSION':
    'V552_MCB3_CONTINUATION_15M_SUPPORTS':
    uncertain&&!uncertainProof?'V552_POLARITY_UNCERTAIN_DEFER_NEW_ENTRY':
-   'V552_EPISODE_WATCH_MF_PM_PRICE',
+   'V552_EPISODE_WATCH_MCB_PM_PRICE',
   candidate:d,context};
 }
 
@@ -366,19 +367,19 @@ function positionReview(o,mem,position,attention){
     0.0005*1500*o.price/position.entryPrice):null;
  const economicGainAtRisk=mfe!==null&&giveback>movement&&
   movement>0&&netAtCurrentPrice!==null&&netAtCurrentPrice>0;
- // A single LIVE crossover is only a WATCH. A local early exit needs
- // corroboration from slow MF15 and the economic giveback of this position.
- // A rapid reversal without such proof may still close at confirmed Cross15,
- // or at the independent hard risk. The naive V551 tactically triggered exit
- // is deliberately NOT resurrected.
- // MF15 level and its small live slope must tell a consistent story
- // BEFORE exercising EARLY exit authority. A slight upward bounce of an
- // otherwise deeply negative MF15 is not a new LONG campaign.
+ // A single LIVE cross is WATCH only. An early protective EXIT requires
+ // a reclaimed counter-attack of MCB/price PLUS an economic giveback.
+ // MF level or slope may precede the reversal; it must NOT veto nor
+ // grant EXIT. The old V551 immediate tactical exit is not resurrected.
+ // MF readings remain on the position report strictly for interpretation.
  const slowFlowTerritory=signed(o.mf.slow,oppositeDirection);
  const slowFlowAffirms=slowFlowTerritory!==null&&slowFlowTerritory>0&&
   mf15Counter!==null&&mf15Counter>0;
- const earlyProtect=counterConvinces&&
-  slowFlowAffirms&&economicGainAtRisk;
+ // MF level or slope is never a switch for protective exits.
+ // Require the structural/price counter-attack to reclaim territory after
+ // a respiration: a single LIVE 15m or fleeting MF impulse cannot close it.
+ const structuralRecovery=attention?.protectiveTransfer===true;
+ const earlyProtect=counterConvinces&&structuralRecovery&&economicGainAtRisk;
  const riskReview={movement,relative,confirmedOpposite,
   liveOpposite,adversePrice,adverseMF,adversePM,
   gap15:g15,parentSupports,
@@ -388,16 +389,19 @@ function positionReview(o,mem,position,attention){
   priceConservedSinceLive:evidence?.priceFromLive??null,
   counterConvinces,protectiveTransfer:!!attention?.protectiveTransfer,
   mf15Counter,slowFlowTerritory,slowFlowAffirms,
+  mfAuthority:'DESCRIPTIVE_NO_ENTRY_OR_EXIT_VETO',
+  structuralRecovery,
   netAtCurrentPrice,mfe,giveback,economicGainAtRisk,earlyProtect};
  if(earlyProtect&&!parentSupports){
   return {action:'EXIT_'+held.toUpperCase(),
-   reason:'V552_LIVE15_MF_PRICE_PROTECT_ECONOMIC_GAIN',
+   reason:'V552_LIVE15_STRUCTURAL_PRICE_PROTECT_ECONOMIC_GAIN',
    positionReview:riskReview};
  }
  if(confirmedOpposite){
   // Confirmed opposite cross15 is a HIGH-PRIORITY structural review,
-  // NOT a mandatory exit when MF15, held-price and parent still confirm
-  // the active position. Risk cap remains sovereign.
+  // not mandatory liquidation if the held parent and PRICE are defended.
+  // MF15/MF3 can disagree or lead, never granting/vetoing HOLD/EXIT.
+  // Independent PAPER hard risk remains sovereign.
   const mf15LevelHeld=signed(o.mf.slow,held);
   const mf15SlopeHeld=signed(o.mf.slope15,held);
   const price3Held=signed(o.pm.p3,held);
@@ -412,9 +416,9 @@ function positionReview(o,mem,position,attention){
   riskReview.confirmed15Review={
    slowMFConfirms,heldTerritory,isNativeHeld,counterLacksPrice,
    mf15LevelHeld,mf15SlopeHeld,price3Held};
-  if(isNativeHeld&&slowMFConfirms&&heldTerritory&&counterLacksPrice){
+  if(isNativeHeld&&heldTerritory&&counterLacksPrice){
    return {action:'HOLD',
-    reason:'V552_CONFIRMED_15M_CONTEST_MF15_DEFENDS_POSITION',
+    reason:'V552_CONFIRMED_15M_CONTEST_PRICE_DEFENDS_POSITION',
     positionReview:riskReview};
   }
   return {action:'EXIT_'+held.toUpperCase(),
@@ -495,7 +499,7 @@ function evaluate(mem,input,price,now,position=null){
    protectiveTransfer:attention.protectiveTransfer
   },
   contracts:{origin:'MCB3_FIRST',campaign:'MCB15_DIRECTOR_JUDGE',
-   validation:'MF15_MF3_AND_PM_PRICE_WITHIN_WAVE',
+   validation:'MCB3_MCB15_PRICE_PM_MF_OBSERVATIONAL',
    risk:'HARD_500_BTC_PRICE_USD_ON_FRESH_TICK',
    levels:'PRICE_REFERENCE_NOT_STOP_ORACLE',
    thresholdPolicy:'NO_FIXED_MINUTES_OR_PM_DOLLAR_GATE',

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T17:37:51+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Politique unique V552 v1.2 : MF15/MF3 descriptifs sans veto d’entrée ni permission de transfert/maintien/protection ; MCB3/15, prix, PM et défense structurale décident ; Watch MF15 descriptif ; script de migration v1.1→v1.2 conservant position et policyHistory",
+  "evidence": "modules/v552/market-quality.js ; modules/v552/decision.js ; modules/v552/vigilance.js ; modules/config-server.js ; scripts/boonolab-v552-policy-v12-upgrade.js",
+  "previousEventSha256": "35ff320ac3240371844c2814b6a062f85078acb3e76f13c84b242eb6c500bb39"
+}
