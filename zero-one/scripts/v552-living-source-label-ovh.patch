@@ -1,0 +1,29 @@
+--- a/scene/app.js
++++ b/scene/app.js
+@@ -29,7 +29,7 @@
+ setInterval(clock,1000);clock();
+ function renderState(s){
+  const l=s.living||{},th=l.thesis||{},bg=l.background||{},sig=l.signal||{},st=l.setup||{},sr=l.structure||{},e15=l.e15||{},m3=l.mcb3||{},mf=l.mf15||{},pm=l.pm||{},tk=l.ticker||{},cx=l.context||{},rk=l.risk||{},ac=l.action||{},v3=l.v3Shadow||{};
+- versionEl.textContent=s.version||'—';
++ versionEl.textContent=s.engine552?.status==='DATA_RECENT'?'MCB V5.4.3 · PAPER V5.5.2 + V5.4.3':(s.version||'—');
+  const market=s.market||{},confirmed=market.fresh===true&&
+    Number.isFinite(Number(market.price))&&Number(market.price)>0;
+  priceEl.textContent=confirmed?fmt(market.price,1):'—';
+@@ -646,7 +646,7 @@
+  if(dialogueEditActive){
+   // Preview mode is a STATIC scene plus editable robot/bubble. Keep price
+   // source independent, but never rebuild large canvas/SVG graphs each 5s.
+-  versionEl.textContent=s.version||'—';
++  versionEl.textContent=s.engine552?.status==='DATA_RECENT'?'MCB V5.4.3 · PAPER V5.5.2 + V5.4.3':(s.version||'—');
+   window.BoonoTVChronologyLatest=s.chronology?.latest||null;
+   if(!editorVisualInitialized){
+    editorVisualInitialized=true;
+@@ -708,7 +708,7 @@
+ function boolProof(ok,waiting=false){return ok?'good':(waiting?'warn':'bad')}
+ function renderState(s){
+  const l=s.living||{},th=l.thesis||{},bg=l.background||{},sig=l.signal||{},st=l.setup||{},sr=l.structure||{},e15=l.e15||{},m3=l.mcb3||{},mf=l.mf15||{},pm=l.pm||{},tk=l.ticker||{},cx=l.context||{},rk=l.risk||{},ac=l.action||{},v3=l.v3Shadow||{},pos=s.market?.position||{},last=l.lastDecision||{};
+- versionEl.textContent=s.version||'—';
++ versionEl.textContent=s.engine552?.status==='DATA_RECENT'?'MCB V5.4.3 · PAPER V5.5.2 + V5.4.3':(s.version||'—');
+  const feed=s.market||{};
+  const fresh=feed.fresh===true&&feed.price!==null&&feed.price!==undefined&&Number.isFinite(Number(feed.price))&&Number(feed.price)>0;
+  priceEl.textContent=fresh?fmt(feed.price,1):'—';

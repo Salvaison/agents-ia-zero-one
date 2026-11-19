@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T18:42:26+00:00",
+  "status": "TESTE",
+  "description": "105 tests ciblés PASS 0 FAIL ; JS Watch VM compilation/ordre DOM et APIs séparées, snapshot OVH engine552 DATA_RECENT, titre BOONO-TV 3 branches, studio et radio actifs",
+  "evidence": "/tmp/v552-primary-watch-source-tests.txt ; /api/v552-paper HTTP 302 /login ; OVH node --check scene/app.js ; pm2 jlist",
+  "previousEventSha256": "b52f5791255f168ea3cf7113eb1b7492ee3ece6e8dd3381511419dadea7e536d"
+}

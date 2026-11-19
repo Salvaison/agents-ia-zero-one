@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T18:42:26+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Watch V552 PAPER premier, V543 comparateur MCB sourcé, ticker/conversion préservés; BOONO-TV titre MCB V543/PAPER V552+V543; aucun changement décisions/ledgers/vidéos",
+  "evidence": "modules/config-server.js ; tests/v5/v5-live-structure-main-ui.test.js ; scripts/v552-living-source-label-ovh.patch ; /home/ubuntu/boono-tv-studio/runtime/boono-tv/scene/app.js",
+  "previousEventSha256": "0f91874a2aef69a74dae6e5f3c3d0b809a54d28a11bd6ad14704363101bd0fc2"
+}

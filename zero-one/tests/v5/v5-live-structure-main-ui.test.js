@@ -36,13 +36,22 @@ test('live V5 structure renders current market separately from frozen paper arch
  assert.ok(!html.includes('POSITION PAPER FIGÉE'));
  assert.ok(!html.includes('HYPOTHÈSE SHORT observé'));
 });
-test('V5.2 PAPER is primary, shared Elastic is visible and older observers are collapsed',()=>{
- const first=s.indexOf('<div id="v52-live" class="v5-observer v52-main">');
- const archive=s.indexOf('<details id="v5-paper-archive"');
- const baseline=s.indexOf('<details id="v493-details"');
- const structure=s.indexOf('<details id="v5-structure-details"');
- assert.ok(first>0&&baseline>first&&structure>baseline&&archive>structure);
- assert.ok(s.includes('renderElasticObserverV05(current)'));
+test('V552 PAPER is primary, V543 MCB comparator remains explicitly sourced and archives collapsed',()=>{
+ const anchor=s.indexOf('stateEl.innerHTML =',s.indexOf('async function loadTrades()'));
+ const active=s.indexOf('<details id="v552-paper-details"',anchor);
+ const comparator=s.indexOf('<div id="v52-live" class="v5-observer v52-main">',anchor);
+ const executionLab=s.indexOf('<details id="execution-lab-details"',anchor);
+ const structure=s.indexOf('<details id="v5-structure-details"',anchor);
+ const archive=s.indexOf('<details id="v5-paper-archive"',anchor);
+ assert.ok(anchor>0&&active>anchor&&comparator>active&&
+   executionLab>comparator&&structure>executionLab&&archive>structure);
+ assert.ok(s.includes('V5.4.3 · COMPARATEUR PAPER / LECTURE MCB'));
+ assert.ok(s.includes('V5.5.2 · DÉCISION ACTIVE'));
+ assert.ok(s.includes('renderV52Living(data)'));
+ assert.ok(s.includes('loadMiniConversionCandles()'));
+ assert.ok(s.includes('loadMiniTicker4x15()'));
+ assert.ok(s.includes("fetch('/api/shadows/boonolab-ticker4x15'"));
+ assert.ok(s.includes('setInterval(loadV552PaperPanel,10000)'));
  assert.ok(s.includes('setInterval(loadV52PaperPanel,10000)'));
  assert.ok(s.includes('setInterval(loadV5StructureLive,30000)'));
  assert.ok(s.includes("fetch('/api/v52'"));

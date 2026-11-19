@@ -3822,7 +3822,7 @@ app.get('/', requireAuth, (req, res) => {
 <span class="tab" data-tab2="boono">BOONO</span>
 </div>
 <div class="tab-panel active" id="tab2-statev2">
-<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER — connexion au moteur décisionnel…</div>
+<div class="v5-observer">ÉTAT VIVANT · V5.5.2 PAPER ACTIF · V5.4.3 COMPARATEUR — chargement…</div>
 </div>
 <div class="tab-panel" id="tab2-historyv2">
 <div id="paperHistoryPanel">Chargement de l’historique PAPER…</div>
@@ -8059,7 +8059,7 @@ function renderV52Living(data){
  const inv=a.invalidation||{};
  const status=stale?'DÉGRADÉ':act;
  const card=
-  '<div class="v52-primary"><span>BOONO V5.4.3 · ÉTAT VIVANT</span>'+
+  '<div class="v52-primary"><span>V5.4.3 · COMPARATEUR PAPER / LECTURE MCB</span>'+
   '<span class="v52-pill '+(stale?'warn':theme)+'">'+f(status)+'</span></div>'+
   '<div class="v52-strip"><b class="v53-btc-price">BTC '+n(a.price??data.position?.lastPrice)+' $</b>'+
   '<span>relevé '+v5Time(data.updatedAt)+' · '+age+'s · PAPER 0$</span></div>'+
@@ -8336,7 +8336,7 @@ async function loadV52PaperPanel(){
   renderV52Living(data);
   loadMiniConversionCandles();
   loadMiniTicker4x15();
- }catch(e){if(el)el.textContent='V5.4.3 PAPER · indisponible : '+e.message;}
+ }catch(e){if(el)el.textContent='V5.4.3 COMPARATEUR · indisponible : '+e.message;}
  finally{v52Pending=false;}
 }
 // Independent experiment: book-estimated X-Perp fills for the SAME PAPER signals.
@@ -8705,16 +8705,17 @@ async function loadTrades() {
     // Children are refreshed by their own live loaders below.
     if(!stateEl.querySelector('#v52-live')||!stateEl.querySelector('#v5-structure-details'))
     stateEl.innerHTML =
-      '<div id="v52-live" class="v5-observer v52-main">V5.4.3 PAPER · lecture de la décision en cours…</div>'+
+      '<div class="v5-observer" style="padding:7px 10px;font-weight:800;">ÉTAT VIVANT · V5.5.2 PAPER · V5.4.3 COMPARATEUR</div>'+
+      '<details id="v552-paper-details" class="v5-observer" '+(v552WasOpen?'open':'')+'>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.5.2 · DÉCISION ACTIVE · PENTE LBW15 LIVE / VIGILANCE / CAMPAGNE</summary>'+
+        '<div id="v552-paper-live">V5.5.2 PAPER · lecture de la décision en cours…</div></details>'+
+      '<div id="v52-live" class="v5-observer v52-main">V5.4.3 · COMPARATEUR PAPER · lecture MCB indépendante…</div>'+
       '<details id="execution-lab-details" class="v5-observer" '+(labWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">EXÉCUTION LAB · A / B / C · X-PERP · PAPER UNIQUEMENT</summary>'+
         '<div id="execution-lab-live">Données du carnet en attente…</div></details>'+
-      '<details id="v552-paper-details" class="v5-observer" '+(v552WasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V5.5.2 · PENTE LBW15 LIVE / VIGILANCE / CAMPAGNE · PAPER</summary>'+
-        '<div id="v552-paper-live">V5.5.2 PAPER · lecture de la décision en cours…</div></details>'+
       '<details id="v5-structure-details" class="v5-observer" '+(structureWasOpen?'open':'')+'>'+
-        '<summary style="cursor:pointer;font-weight:800;">V5.4.3 · STRUCTURE DIRECTRICE · SOURCE DU MOTEUR</summary>'+
-        '<div id="v5-structure-live">V5.4.1 · structure en cours…</div></details>'+
+        '<summary style="cursor:pointer;font-weight:800;">V5.4.3 · OBSERVATION STRUCTURELLE DU COMPARATEUR (SOURCE V543)</summary>'+
+        '<div id="v5-structure-live">V5.4.3 · structure en cours…</div></details>'+
       '<details id="v5-paper-archive" class="v5-observer" '+(archiveWasOpen?'open':'')+'>'+
         '<summary style="cursor:pointer;font-weight:800;">V5.1 PAPER · ARCHIVE ARRÊTÉE · 22 trades clôturés</summary>'+
         '<div id="v5-paper-live">Historique PAPER sur demande…</div></details>'+

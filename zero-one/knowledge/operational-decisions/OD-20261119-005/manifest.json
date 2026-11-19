@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-005",
+  "title": "État vivant V552 primaire, V543 comparateur sourcé ; MF arbitre secondaire non déployé",
+  "createdAtUtc": "2026-11-19T18:42:26+00:00",
+  "authorization": "19 novembre 2026 : clarification utilisateur MF conditionnel et ancien État vivant V5.4.3 ; correction UI uniquement, aucune nouvelle politique de trading",
+  "reference": "knowledge/BOONOLAB_ETAT_VIVANT_SOURCES_V552_V543_ET_MF_STATUT_2026-11-19.md ; knowledge/BOONOLAB_V552_MF_ARBITRE_SECONDAIRE_EN_INCERTITUDE_2026-11-19.md ; OD-20261119-004",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "a3545f249dc7f80d0115bf3b4df203a801b517c454dc07e6b6f89cc04b267f56",
+      "bytes": 283
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "7774f8322f493b4afecc2bdd9196eee44ed2a411fc8d068f3a3b5ed6e256c8d2",
+      "bytes": 871
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "916cf87eae58cba536de5c5552f4e874c14c9e5b637397f46c179c8c4bc0314c",
+      "bytes": 461
+    }
+  }
+}

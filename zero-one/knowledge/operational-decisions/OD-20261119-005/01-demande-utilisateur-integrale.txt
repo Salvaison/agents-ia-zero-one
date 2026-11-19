@@ -1,0 +1,1 @@
+« Je n'ai pas encore modifié les décisions PAPER : V552 v1.2 reste actif ... Cette autorité conditionnelle doit être éprouvée » je comprends pas, c'est un shadow ou c'est actif dans les décisions de 552 et pourquoi est il encore inscrit dans l'interface "état vivant 5.4.3"

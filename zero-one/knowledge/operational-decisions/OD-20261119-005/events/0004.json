@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-19T18:42:26+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "config-server redémarré ONLINE et PM2 sauvegardé ; Watch affiche V552 en premier sans renommer V543 ; titre OVH modifié sans relancer vidéo ; V552 v1.2 et V543 PAPER ONLINE, V551 STOPPED, trading inchangé",
+  "evidence": "/root/boonolab-archives/V552_WATCH_LABEL_BEFORE_20261119T183437Z/config-server.js ; /home/ubuntu/boono-tv-studio/backups/V552_LIVING_SOURCE_LABEL_20261119T183519Z/app.js ; data/v552-paper-state.json",
+  "previousEventSha256": "066338492cf3debea2314be5af50ae9c7a701a0d601e3257cc6f38845953b0a2"
+}
