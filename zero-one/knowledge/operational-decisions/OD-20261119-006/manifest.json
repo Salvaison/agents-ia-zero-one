@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-006",
+  "title": "BOONO-TV : agrandir Like/Subscribe et intégrer symbole Bitcoin PNG alpha depuis GIMP",
+  "createdAtUtc": "2026-11-19T20:19:13+00:00",
+  "authorization": "Mandat utilisateur explicite 19 novembre 2026 : modifier deux animations, exporter et transférer le symbole BTC GIMP en aperçu privé",
+  "reference": "Conversation BOONO-TV du 19/11/2026, suite OD-20261119-003",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "3fc1b86c2dd2770c0d3d4b8823fe49107199b7adbd2c4d66aaba23a8d4600c1d",
+      "bytes": 290
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "7c832390c8a8d3b9d221850fec44b72867a3b715bca7ca04f5278dcba6390d1e",
+      "bytes": 1526
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "d4f66896008cc6227af0f8b824ef31ce22d5884686cd6a694aced34180ec5593",
+      "bytes": 1256
+    }
+  }
+}

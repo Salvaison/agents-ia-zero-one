@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T20:30:47+00:00",
+  "status": "TESTE",
+  "description": "XCF et masque vérifiés, quatre coins PNG transparents, aperçu sombre, empreintes identiques, node --check OK, JSON 12 scénarios préservés, HTTP 200 PNG et 404 import temporaire",
+  "evidence": "GIMP 3 via batch, GdkPixbuf alpha 1920x1920, SHA 544a2403905008566f46784b9a18649dfe794197f44d8f1225847851a675e914, tests API OVH ; validation visuelle navigateur utilisateur ouverte",
+  "previousEventSha256": "4775ae67a65b7645fe161656f4107cee8266d26525bd2e0683215b25c8247ddb"
+}

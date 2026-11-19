@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T20:30:47+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Export du XCF depuis la session GIMP vers PNG RGBA, transfert privé SHA identique, raccordement btcSymbolAlpha ; deux animations redimensionnées 256x144 ; 23 positions seulement ajustées",
+  "evidence": "OVH studio-server.js/private-media-extensions.js/scene/{accessory-sprites.js,styles.css,dialogue-editor.js,storyboard-timeline.js,index.html}, desk/dialogue-script.json ; rapport KB 2026-11-19",
+  "previousEventSha256": null
+}

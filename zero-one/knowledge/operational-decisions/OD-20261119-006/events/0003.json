@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T20:30:47+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Extension média et scène actualisées en service privé OVH, PNG btcSymbolAlpha disponible et Like/Subscribe augmentés ; aucune activation nouvelle automatique",
+  "evidence": "systemctl --user boono-studio active, scène/API Composer 200, 4 vidéos ready, upload fermé ; sauvegardes ciblées conservées",
+  "previousEventSha256": "b49cf99af074110b20b53390d9ee28eca3e6ac6a711d9cb193c3cb05996b9f60"
+}
