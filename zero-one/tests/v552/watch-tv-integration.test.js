@@ -19,7 +19,7 @@ test('V552 has its own strictly protected read-only PAPER endpoint',()=>{
  assert.ok(a>0&&b>a);
  const v=src.slice(a,b);
  for(const expected of ['v552-paper-state.json','v552-paper-summary.json',
-  'v5.5.2-paper-ledger-v1','v5.5.2-lbw15-live-vigilance-campaign-paper-v1',
+  'v5.5.2-paper-ledger-v1','v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1',
   "state.engine!=='V552'","state.mode!=='PAPER_ONLY'",
   'state.brokerOrdersEnabled!==false',
   'view.asOf!==state.lastObservationAt'])
@@ -90,5 +90,11 @@ test('real V552 ledger when deployed preserves migration authority',()=>{
  assert.equal(s.brokerOrdersEnabled,false);
  assert.equal(s.migratedFrom.engine,'V551');
  assert.equal(s.pre552Completed,s.migratedFrom.oldCompleted);
- assert.equal(s.policyVersion,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1');
+ assert.ok(['v5.5.2-lbw15-live-vigilance-campaign-paper-v1',
+  'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1'].includes(s.policyVersion));
+ if(s.policyVersion.endsWith('v1.1')){
+  assert.equal(s.policyRevision.from,
+   'v5.5.2-lbw15-live-vigilance-campaign-paper-v1');
+  assert.equal(s.policyRevision.priorPolicyClosedTradesPreserved,true);
+ }
 });

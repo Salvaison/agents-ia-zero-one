@@ -24,7 +24,7 @@ const baseline=[
   live15BwRaw:3+i*.1,lastPrice:64000+i}))
 ];
 test('V552 is a new independent policy/ledger, no V543 or V551 decision imports',()=>{
- assert.equal(D.VERSION,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1');
+ assert.equal(D.VERSION,'v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1');
  assert.equal(P.VERSION,'v5.5.2-paper-ledger-v1');
  for(const file of ['source.js','decision.js','paper.js','runner.js','vigilance.js']){
   const s=fs.readFileSync(path.join(ROOT,'modules/v552',file),'utf8');

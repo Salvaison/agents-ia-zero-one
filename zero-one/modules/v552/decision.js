@@ -6,7 +6,8 @@
 // is an event signature to OBSERVE, never an inflexible entry checklist.
 const src=require('./source');
 const vigilance=require('./vigilance');
-const VERSION='v5.5.2-lbw15-live-vigilance-campaign-paper-v1';
+const marketQuality=require('./market-quality');
+const VERSION='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.1';
 const MIN=60000;
 const val=src.val,side=d=>d==='long'?1:d==='short'?-1:0;
 const dir=x=>x>0?'long':x<0?'short':null;
@@ -255,7 +256,7 @@ function ownMemoryStep(mem,o){
  mem.lastAsOf=o.at;
  return {events,firstCross};
 }
-function qualify(o,mem,position=null,attention=null){
+function qualify(o,mem,position=null,attention=null,market=null){
  const cam=mem.campaign,ep=mem.episode;
  if(!cam||!ep)return {action:'WAIT',reason:'NO_MCB3_EPISODE',candidate:null};
  const d=ep.direction,parent=cam.direction;
@@ -294,6 +295,13 @@ function qualify(o,mem,position=null,attention=null){
   live3Aligned,priceRetained,marginalPrice,marginalProgress,
   uncertain,uncertainProof,
   vigilancePhase:attention?.phase||'UNKNOWN',
+  marketPhase:market?.kind||'UNKNOWN',
+  marketReason:market?.reason||'UNKNOWN',
+  previousPolarityRetained:market?.priorPolarityRetained??null,
+  currentCrossPriceDefended:market?.entryConfirmedSinceCross??null,
+  MF15Conflict:market?.mfConflict??null,
+  lastCross15At:market?.lastConfirmedCross?.at??null,
+  marketAdmissionDeferred:market?.deferNewEntry||false,
   priceSincePente15:attention?.evidence?.priceFromAnchor??null,
   pmFavourableSamples:attention?.watch?.pmFavourable??null,
   pmAdverseSamples:attention?.watch?.pmAdverse??null,
@@ -315,10 +323,15 @@ function qualify(o,mem,position=null,attention=null){
   return {action:'WAIT',reason:'MCB3_WAVE_NO_LONGER_ALIGNED',
    candidate:d,context};
  }
- const admissible=support&&(!uncertain||uncertainProof);
+ // Persistent historical context of failed/undecided 15m polarities has
+ // FIRST authority over new entries, independent of current instant slope.
+ // A recent 15m confirmation is NOT permission to reverse automatically.
+ const marketDeferred=!!market?.deferNewEntry;
+ const admissible=support&&!marketDeferred&&(!uncertain||uncertainProof);
  ep.status=admissible?'ADMISSIBLE':'OBSERVING_CAUSAL_CONFIRMATIONS';
  return {action:admissible?'ENTER_'+d.toUpperCase():'WAIT',
-  reason:admissible?turnaround?'V552_REVERSAL_TACTIC_WITH_15M_CONVERSION':
+  reason:marketDeferred?'V552_MARKET_POLARITY_CONTESTED_WAIT_PRICE_MF_ACCEPTANCE':
+   admissible?turnaround?'V552_REVERSAL_TACTIC_WITH_15M_CONVERSION':
    'V552_MCB3_CONTINUATION_15M_SUPPORTS':
    uncertain&&!uncertainProof?'V552_POLARITY_UNCERTAIN_DEFER_NEW_ENTRY':
    'V552_EPISODE_WATCH_MF_PM_PRICE',
@@ -382,8 +395,28 @@ function positionReview(o,mem,position,attention){
    positionReview:riskReview};
  }
  if(confirmedOpposite){
-  // Closed 15m is a strong local exit authority, but not a new
-  // permission to reverse; the candidate SHORT/LONG must stand alone.
+  // Confirmed opposite cross15 is a HIGH-PRIORITY structural review,
+  // NOT a mandatory exit when MF15, held-price and parent still confirm
+  // the active position. Risk cap remains sovereign.
+  const mf15LevelHeld=signed(o.mf.slow,held);
+  const mf15SlopeHeld=signed(o.mf.slope15,held);
+  const price3Held=signed(o.pm.p3,held);
+  const isNativeHeld=mem.campaign?.direction===held;
+  const heldTerritory=(movement>0&&price3Held!==null&&price3Held>0);
+  const slowMFConfirms=mf15LevelHeld!==null&&mf15LevelHeld>0&&
+    mf15SlopeHeld!==null&&mf15SlopeHeld>0;
+  const counterLacksPrice= !attention?.counterConvinces&&
+    (attention?.evidence?.priceFromLive===null||
+     attention?.evidence?.priceFromLive===undefined||
+     attention.evidence.priceFromLive<=0);
+  riskReview.confirmed15Review={
+   slowMFConfirms,heldTerritory,isNativeHeld,counterLacksPrice,
+   mf15LevelHeld,mf15SlopeHeld,price3Held};
+  if(isNativeHeld&&slowMFConfirms&&heldTerritory&&counterLacksPrice){
+   return {action:'HOLD',
+    reason:'V552_CONFIRMED_15M_CONTEST_MF15_DEFENDS_POSITION',
+    positionReview:riskReview};
+  }
   return {action:'EXIT_'+held.toUpperCase(),
    reason:'V552_CONFIRMED_15M_POSITION_EXIT',
    positionReview:riskReview};
@@ -416,13 +449,15 @@ function evaluate(mem,input,price,now,position=null){
  o._newCross3=firstCross||null;
  if(!mem.vigilance)mem.vigilance=vigilance.initial();
  const attention=vigilance.assess(o,mem.vigilance,position,input.samples);
+ const market=marketQuality.inspect(o,input,
+  mem.episode?.direction||o.mcb3.direction,mem.episode);
  for(const e of attention.events||[]){
   trace(mem,e.at,'ATTENTION',e.type,{
    price:e.price,phase:attention.phase,reason:e.cause||null});
  }
  let candidate=position?position.direction:mem.episode?.direction||null;
  let assessment=position?positionReview(o,mem,position,attention):
-   qualify(o,mem,null,attention);
+   qualify(o,mem,null,attention,market);
  if(!o.healthy){
   if(!position||assessment.action.startsWith('ENTER'))
    assessment={action:'WAIT',reason:'SOURCE_NOT_FRESH_OR_CONFIRMED',
@@ -448,6 +483,8 @@ function evaluate(mem,input,price,now,position=null){
   recentEvents:events,causalTrace:mem.trace.slice(-20),
   readings:details,qualification:assessment.context||null,
   positionReview:assessment.positionReview||null,
+  market:{...market,entryAuthority:'NEW_ADMISSION_ONLY',
+   positionExitAuthority:false},
   vigilance:{
    version:mem.vigilance.version,phase:attention.phase,
    evidence:attention.evidence,watch:attention.watch,

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-19T12:49:22+00:00",
+  "status": "DOCUMENTE",
+  "description": "Lancement de diagnostic sur screenshot V552 #14 LONG net -5.5394, 12h45→13h15, entrée inverse 10 sec après #13 SHORT; observation que POLARITY_UNCERTAIN instantanée et CROSS15 confirmé EXIT général détruisent l’intention initiale de vigilance LBW15 Live. Contrat corrigé et limites in-sample documentés",
+  "evidence": "knowledge/BOONOLAB_V552_V11_POLARITE_CONTESTEE_ADMISSION_ET_SORTIES_2026-11-19.md",
+  "previousEventSha256": null
+}

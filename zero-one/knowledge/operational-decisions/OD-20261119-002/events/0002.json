@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-19T12:49:22+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Module pure lecture market-quality.js as-of des croisements 15m et défense de prix, admission différée sous polarité contestée et MF15 contraire, sortie Cross15 confirmée conditionnée au maintien MF15/prix/parent. V552 décision v1.1, même ledger, Watch MARCHÉ/ADMISSION, script de révision à l’arrêt du même moteur",
+  "evidence": "modules/v552/market-quality.js ; modules/v552/decision.js ; modules/v552/runner.js ; modules/config-server.js ; scripts/boonolab-v552-policy-v11-upgrade.js",
+  "previousEventSha256": "2c2aebb6de767086a4247b988fcb2df6520c34847574c0a815c9eea4e14e3a21"
+}

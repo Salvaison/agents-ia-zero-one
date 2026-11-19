@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-19T12:49:22+00:00",
+  "status": "TESTE",
+  "description": "95 tests étendus PASS 0 FAIL incluant as-of #14/#15 différés, #2 gagnant toujours admissible, maintien MF15 sur cross15 opposé quand prix conservé, migration avec position sans perte de compte, route Watch authentifiée en simulation, BOONO-TV inchangé. Contre-exemple #6 gagnant différé documenté ; aucune performance prévisionnelle prétendue",
+  "evidence": "tests/v552/market-quality-v11.test.js ; tests/v552/vigilance-policy.test.js ; tests/v552/watch-tv-integration.test.js ; /tmp/v552-v11-extended-tests.txt ; /tmp/v552-v11-upgrade-dry.json",
+  "previousEventSha256": "c6b8e35cc31d3e985fe8a4035ac11900f580b482f9e20bb7728b62ea68aea211"
+}

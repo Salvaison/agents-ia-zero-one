@@ -32,6 +32,8 @@ function summary(s){
   latestDecision:s.decision,decision:s.decision,lastAction:s.lastAction,
   campaign:s.memory.campaign,episode:s.memory.episode,
   vigilance:s.latestAnalysis?.vigilance||null,
+  market:s.latestAnalysis?.market||null,
+  policyRevision:s.policyRevision||null,
   causalTrace:s.memory.trace.slice(-25),
   latestReadings:latest.readings?{
    mcb3:latest.readings.mcb3,mcb15:latest.readings.mcb15,
@@ -111,6 +113,14 @@ function main(){
     append(FILES.decisions,{ts,price,decision:d.action,reason:d.reason,
      campaignId:d.campaignId,episodeId:d.episode?.id,
      qualification:d.qualification,causalTrace:d.recentEvents,
+     marketQuality:d.market?{
+      kind:d.market.kind,reason:d.market.reason,
+      priorPolarityRetained:d.market.priorPolarityRetained,
+      postCrossReclaim:d.market.postCrossReclaim,
+      currentCrossPriceDefended:d.market.entryConfirmedSinceCross,
+      deferNewEntry:d.market.deferNewEntry,
+      mfAligned:d.market.mfAligned,
+      lastCross15At:d.market.lastConfirmedCross?.at||null}:null,
      vigilance:d.vigilance?{
       phase:d.vigilance.phase,evidence:d.vigilance.evidence,
       watchAt:d.vigilance.watch?.at||null,

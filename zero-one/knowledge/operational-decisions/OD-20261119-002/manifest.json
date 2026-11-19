@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261119-002",
+  "title": "V552 v1.1 corrige churn : polarités 15m contestées, admissions et sortie Cross15 non automatique",
+  "createdAtUtc": "2026-11-19T12:49:22+00:00",
+  "authorization": "Utilisateur 19 novembre 2026 critique le comportement V552 PAPER et demande implicitement correction du moteur unique à partir du cas #14; modification de sa politique simulée seulement, aucune exécution financée",
+  "reference": "knowledge/BOONOLAB_V552_V11_POLARITE_CONTESTEE_ADMISSION_ET_SORTIES_2026-11-19.md ; OD-20261119-001 ; image utilisateur du 19/11 13.16.26",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "05565c82e35a5a2939a2f532422a98465ca9cc65e2eba29aed6959e62139031a",
+      "bytes": 438
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "5a9e0470a047211fd30808ec003f52e31f26d3d91501103077b58e196f9237a1",
+      "bytes": 1689
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "bd80ed5b2684ed2dc473b75cdac6e939e7e0abad0f0aa817634046e0377b73cc",
+      "bytes": 611
+    }
+  }
+}

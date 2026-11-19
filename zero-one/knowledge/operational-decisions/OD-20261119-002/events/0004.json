@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-19T12:49:22+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "STOP contrôlé boono-v552-paper avant snapshot SHA256 et sauvegarde d’état; migration unique de policyVersion v1 vers v1.1 en conservant 14 clôtures, equity 976.4501, frais et SHORT ouvert. PM2 boono-v552-paper redémarré ONLINE, boono-v551-paper STOPPED, V543 PAPER ONLINE; config-server ONLINE et /api/v552-paper 302/login sans session. Pas de moteur parallèle ni changement de BOONO-TV/Composer",
+  "evidence": "/root/boonolab-archives/V552_V1_TO_V1_1_2026-11-19T12-42-09-717Z/MANIFEST.json ; data/v552-paper-state.json policyRevision ; data/v552-paper-summary.json ; pm2 save ; route Watch",
+  "previousEventSha256": "ace789a237a8aa0193bbd67a690e7c6947314e2225683a06680b1a8ee582b293"
+}
