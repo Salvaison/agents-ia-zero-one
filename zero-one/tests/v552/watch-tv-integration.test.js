@@ -38,11 +38,11 @@ test('Watch active report, 15m vigilance and new policy economic counters compil
  assert.ok(js.includes('newPolicyNetUsd'));
  assert.ok(!js.includes('function loadV551PaperPanel()'));
 });
-test('active waves V552/V543 only; V551 and V55 remain historic archives',()=>{
+test('active waves V553/V543 only; V551 and V55 remain historic archives',()=>{
  const i=src.indexOf('function waveUiComparePaperTrades(');
  const j=src.indexOf('function waveUiComparePaperTrades(',i+20);
  const w=src.slice(i,j<0?i+2500:j);
- assert.ok(w.includes("['v552-paper-state.json','V552_PAPER']"));
+ assert.ok(w.includes("['v553-paper-state.json','V553_PAPER']"));
  assert.ok(w.includes("['v52-paper-state.json','V52_PAPER']"));
  assert.ok(!w.includes("['v551-paper-state.json'"));
  assert.ok(w.includes("t.historicalPolicy)continue"));
@@ -50,7 +50,7 @@ test('active waves V552/V543 only; V551 and V55 remain historic archives',()=>{
  assert.ok(js.includes("renderPaperHistoryGroup(d.v552,'v552')"));
  assert.ok(js.includes("renderPaperHistoryGroup(d.v551,'v551')"));
  assert.ok(js.includes('paperV551Archive'));
- assert.ok(js.includes("String(waveSelectedTradeId).startsWith('V552:')"));
+ assert.ok(js.includes("String(waveSelectedTradeId).startsWith('V553:')"));
 });
 test('separate trade reports for V552 new policy and V551 old records',()=>{
  assert.ok(src.includes("v552:'v552-paper-state.json'"));
@@ -61,13 +61,13 @@ test('separate trade reports for V552 new policy and V551 old records',()=>{
  assert.ok(js.includes('V552|V551|V55|V493'));
  assert.ok(js.includes('VERSION DE DÉCISION / PASSATION'));
 });
-test('Amsterdam TV relay V552 ONLY and dedicated API data',()=>{
+test('Amsterdam TV relay V553 ACTIVE and dedicated API data',()=>{
  for(const q of ["v552paper: path.join(DATA, 'v552-paper-state.json')",
   "v552summary: path.join(DATA, 'v552-paper-summary.json')",
-  "latestPaperLedgerTrades(PATHS.trades552,'V552')",
-  "['V552',v552State],['V543',v543State]",
-  'engine552:boonoTvV552State(',
-  "source:'V552_PAPER_LEDGER_READ_ONLY'"])
+  "latestPaperLedgerTrades(PATHS.trades553,'V553')",
+  "['V553',v553State],['V543',v543State]",
+  'engine553:boonoTvV553State(',
+  "source:'V553_PAPER_LEDGER_READ_ONLY'"])
   assert.ok(bridge.includes(q),q);
  assert.equal(bridge.includes('engine551:boonoTvV551State'),false);
 });

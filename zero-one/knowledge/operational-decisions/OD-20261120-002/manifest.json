@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261120-002",
+  "title": "V553 autonome : chaîne causale Live, régulation du marché et passation PAPER depuis V552",
+  "createdAtUtc": "2026-11-20T16:05:28+00:00",
+  "authorization": "Instruction explicite utilisateur le 20 novembre 2026 de réaliser le moteur V553 pour remplacer V552 ; uniquement PAPER, aucun ordre broker financé",
+  "reference": "knowledge/BOONOLAB_V553_RECONSTRUCTION_LIVE_PASSATION_2026-11-20.md ; knowledge/BOONOLAB_V552_CONTRAT_CHAINE_CAUSALE_PAR_TRADE_LIVE_2026-11-20.md ; knowledge/BOONOLAB_AUDIT_V552_V543_SHADOWS_24H_2026-11-19_20.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "e7888e94366ea069d551ba53c91d16b715c6932b9449b3a5153f555db81a92d6",
+      "bytes": 55
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "6766423747e2401cd2c6b24a612127994017839f9cc3f499faa102bede938b15",
+      "bytes": 1935
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "43500b3beaec6080b9e275659dbbea93ed3e8d7e74b96a3f0de25d82c42a53e1",
+      "bytes": 592
+    }
+  }
+}

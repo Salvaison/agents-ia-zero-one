@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-20T16:05:28+00:00",
+  "status": "TESTE",
+  "description": "123 tests PASS 0 FAIL après bascule ; cas #21/#22 risque anticipé as-of, faux Cross15 Live #20/#24 non liquidés, SHORT du 19/11 15h53:44 dans le marché contesté, invariants de migration et chaîne causale ; routes Watch/DOM et BOONO-TV, lectures données fraîches Amsterdam/OVH ; pas une preuve de P&L positif",
+  "evidence": "/tmp/v553-posthandoff-all-tests-final.txt ; tests/v553/causal-engine.test.js ; tests/v553/watch-tv-integration.test.js ; tests/helpers/asof-audit-14d.js",
+  "previousEventSha256": "8e773da6b98f9248b90051f21a424acde48f45eff3f917977e377e84b3fbb162"
+}

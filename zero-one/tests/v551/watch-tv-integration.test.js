@@ -33,11 +33,11 @@ test('V551 real account route enforces exact independent PAPER contract',()=>{
  assert.equal(res.payload.mode,'PAPER_ONLY');
  assert.equal(res.payload.ledgerVersion,'v5.5.1-paper-ledger-v1');
 });
-test('active Waves reads V552 and V543, never V55 or V494 live',()=>{
+test('active Waves reads V553 and V543, never V55 or V494 live',()=>{
  const start=server.indexOf('function waveUiComparePaperTrades');
  const stop=server.indexOf('function ',start+10);
  const x=server.slice(start,stop);
- assert.ok(x.includes("['v552-paper-state.json','V552_PAPER']"));
+ assert.ok(x.includes("['v553-paper-state.json','V553_PAPER']"));
  assert.ok(x.includes("['v52-paper-state.json','V52_PAPER']"));
  assert.ok(!x.includes("['v55-paper-state.json'"));
  assert.ok(!x.includes("['v494-paper-state.json'"));
@@ -53,9 +53,9 @@ test('V55 archived history retained; V551 separately listed and report files ind
  assert.ok(js.includes("renderPaperHistoryGroup(d.v551,'v551')"));
  assert.ok(js.includes('id="paperV55Archive"'));
  assert.ok(js.includes("renderPaperHistoryGroup(d.v55,'v55')"));
- assert.ok(js.includes("['v551','v552'].includes(data.engine)"));
+ assert.ok(js.includes("['v551','v552','v553'].includes(data.engine)"));
 });
-test('Watch panel shows V552 active, while V551 and V55 are archived',()=>{
+test('Watch panel shows V553 active, while V551 and V55 are archived',()=>{
  const js=appJs();
  assert.ok(js.includes('function loadV552PaperPanel()'));
  assert.ok(js.includes("fetch('/api/v552-paper'"));
@@ -65,7 +65,7 @@ test('Watch panel shows V552 active, while V551 and V55 are archived',()=>{
  assert.ok(js.includes('LIQUIDITÉ'));
  assert.ok(!js.includes('function loadV55PaperPanel()'));
  assert.ok(!js.includes('V5.5 · NOUVEAU PAPER'));
- assert.ok(js.includes("String(waveSelectedTradeId).startsWith('V552:')"));
+ assert.ok(js.includes("String(waveSelectedTradeId).startsWith('V553:')"));
  assert.doesNotThrow(()=>new vm.Script(js));
 });
 test('V551 technical and PAPER modules are independent from V543 and V55 policy files',()=>{
@@ -82,13 +82,13 @@ test('V551 technical and PAPER modules are independent from V543 and V55 policy 
  assert.equal(s.brokerOrdersEnabled,false);
  assert.equal(s.startPolicy,'NEW_1000_USD_NO_V55_V543_ACCOUNT_TRANSFER');
 });
-test('Amsterdam BOONO-TV snapshot includes active V552/V543 and excludes retired V551',()=>{
+test('Amsterdam BOONO-TV snapshot includes active V553/V543 and excludes retired V551',()=>{
  assert.ok(bridge.includes("v552paper: path.join(DATA, 'v552-paper-state.json')"));
- assert.ok(bridge.includes("latestPaperLedgerTrades(PATHS.trades552,'V552')"));
+ assert.ok(bridge.includes("latestPaperLedgerTrades(PATHS.trades553,'V553')"));
  assert.ok(!bridge.includes('latestPaperLedgerTrades(PATHS.trades494'));
- assert.ok(bridge.includes("['V552',v552State],['V543',v543State]"));
- assert.ok(bridge.includes('engine552:boonoTvV552State('));
- assert.ok(bridge.includes("source:'V552_PAPER_LEDGER_READ_ONLY'"));
+ assert.ok(bridge.includes("['V553',v553State],['V543',v543State]"));
+ assert.ok(bridge.includes('engine553:boonoTvV553State('));
+ assert.ok(bridge.includes("source:'V553_PAPER_LEDGER_READ_ONLY'"));
  assert.ok(bridge.includes('brokerOrdersEnabled:false'));
 });
 test('Retired V55 remains FLAT and PM2 is stopped, V551 initial ledger is distinct',()=>{

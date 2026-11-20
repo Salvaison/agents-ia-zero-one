@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'../..');
 const watch=fs.readFileSync(path.join(root,'modules/config-server.js'),'utf8');
 const tv=fs.readFileSync(path.join(root,'boono-tv/scene/chart-views.js'),'utf8');
 test('30-second Watch update does not remount the opened structural observatory',()=>{
- const marker="if(!stateEl.querySelector('#v52-live')||!stateEl.querySelector('#v5-structure-details'))";
+ const marker="!stateEl.querySelector('#v553-paper-details')";
  assert.ok(watch.includes(marker));
  assert.ok(watch.includes('const preservePageY=window.scrollY;'));
  assert.ok(watch.includes('const previousOccScroll=root.querySelector'));

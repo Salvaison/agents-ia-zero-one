@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-20T16:05:28+00:00",
+  "status": "DOCUMENTE",
+  "description": "Diagnostic V552 du 19–20/11, cahier des charges V553 chaîne causale propre à chaque opportunité, centralité LBW15 pente Live/Cross15 Live et autorité d admission du marché ; portée, limites et protocole documentés",
+  "evidence": "knowledge/BOONOLAB_V553_RECONSTRUCTION_LIVE_PASSATION_2026-11-20.md ; knowledge/BOONOLAB_V552_CONTRAT_CHAINE_CAUSALE_PAR_TRADE_LIVE_2026-11-20.md",
+  "previousEventSha256": null
+}

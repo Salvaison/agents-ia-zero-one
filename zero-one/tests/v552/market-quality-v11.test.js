@@ -2,6 +2,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path');
 const S=require('../../modules/v552/source'),
+ H=require('../helpers/asof-audit-14d'),
  D=require('../../modules/v552/decision'),
  M=require('../../modules/v552/market-quality');
 const ROOT=path.resolve(__dirname,'../..');
@@ -11,7 +12,7 @@ function find(no){
   (state.completed+1===no&&state.position?
     {...state.position,tradeNo:no,direction:state.position.direction}:null);
  assert.ok(t,'missing trade #'+no);
- const input=S.load(t.entryAt);
+ const input=H.load(S,t.entryAt);
  const o=D.sensor(input,t.entryAt,t.entryPrice);
  const cross=parseInt(t.episodeId?.split(':').at(-1),10);
  const audit=input.samples.find(x=>x.ts===cross);
@@ -80,7 +81,7 @@ test('confirmed 15m opposite is a structural REVIEW, not mandatory exit with MF1
 });
 test('structural market reads ONLY 15m closed before as-of and snapshots that predate now',()=>{
  const good=find(14),x=good.o;
- const input=S.load(good.t.entryAt);
+ const input=H.load(S,good.t.entryAt);
  const last=M.closedCrosses(input.bars.m15,good.t.entryAt).crosses.at(-1);
  assert.ok(last.at<=good.t.entryAt);
  assert.ok(last.at>1795080000000);

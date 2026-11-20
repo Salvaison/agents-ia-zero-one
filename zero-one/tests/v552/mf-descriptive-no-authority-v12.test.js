@@ -3,6 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path');
 const ROOT=path.resolve(__dirname,'../..');
 const S=require('../../modules/v552/source'),
+ H=require('../helpers/asof-audit-14d'),
  D=require('../../modules/v552/decision'),
  M=require('../../modules/v552/market-quality'),
  P=require('../../modules/v552/paper');
@@ -10,7 +11,7 @@ const version='v5.5.2-lbw15-live-vigilance-campaign-paper-v1.2';
 const at=Date.parse('2026-11-19T15:55:14.653+01:00');
 const atCross=Date.parse('2026-11-19T15:53:14.643+01:00');
 function observed(atTime=at){
- const input=S.load(atTime);
+ const input=H.load(S,atTime);
  const row=input.samples.at(-1);
  const o=D.sensor(input,atTime,row.lastPrice);
  return {input,o};

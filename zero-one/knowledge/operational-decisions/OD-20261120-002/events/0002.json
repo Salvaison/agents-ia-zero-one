@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-20T16:05:28+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Nouvelle politique V553 sous modules/v553 avec source MCB/Bâton, marché, décision causale indépendante, ledger PAPER V553, runner dédié ; script de handoff V552→V553 à SHA256 ; Watch API V553, Vagues V553+V543, archives V552, BOONO-TV bridge engine553 et patch OVH scène ; 500 $ BTC hard risk, 0.05% taker et compte cumulatif",
+  "evidence": "modules/v553 ; scripts/boonolab-v553-handoff.js ; scripts/boonolab-v553-replay-asof.js ; modules/config-server.js ; boono-tv/bridge.js ; scripts/v553-ovh-scene-display.patch",
+  "previousEventSha256": "4e83822123ce470a9a8642325cb63f970c745773e0a9c33e7c290f2c9424fbe2"
+}

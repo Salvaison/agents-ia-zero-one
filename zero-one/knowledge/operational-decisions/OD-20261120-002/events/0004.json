@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-20T16:05:29+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "V552 STOPPED avant migration de ledger, SHA256 figé 46c2e3f846c33270f187a4216dc07131e0c3a211e45ea4a4da85663acc421630 ; 31 clôtures, 892.6541 USD equity, 47.2612 USD frais, LONG ouvert transféré ; V553 ONLINE, V552/V551 stopped, V543 PAPER online, config-server et boono-tv online, OVH engine553 DATA_RECENT, studio/radio active, PM2 save. Premier exit V553 #32 du LONG hérité au hard risk -13.6619 $ → 878.9922 $ réalisé ; n est PAS une entrée V553 ni une preuve de meilleure protection",
+  "evidence": "/root/boonolab-archives/V552_RETIRED_TO_V553_2026-11-20T14-38-27-434Z/MANIFEST.json ; data/v553-paper-state.json migratedFrom ; data/v552-paper-state.json frozen ; /api/v553-paper ; OVH /api/snapshot ; pm2 save",
+  "previousEventSha256": "69e7d40b1fcc1fd8de1433828058f516b997680c488b9bcba7b9dd896d6647c5"
+}
