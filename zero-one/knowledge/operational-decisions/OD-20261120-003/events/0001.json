@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-20T16:25:55+00:00",
+  "status": "DOCUMENTE",
+  "description": "Message de source V543 stale localisé en scène BOONO-TV. V543 DATA_DEGRADED alors que prix OKX récent, MCB3/15 confirmé ancien malgré mtime live récent; incident et limites diagnostiqués et documentés",
+  "evidence": "knowledge/BOONOLAB_INCIDENT_ETAT_VIVANT_V543_MCB_STALE_V553_FRAICHEUR_2026-11-20.md",
+  "previousEventSha256": null
+}

@@ -23,8 +23,8 @@ for(const n of fs.readdirSync(archiveFolder).filter(n=>
 for(const x of auditLive)archived.set(x.ts,x);
 const audit=[...archived.values()].sort((a,b)=>a.ts-b.ts);
 function loadAt(ts){
- const x=S.load(ts);
  const a=audit.filter(r=>r.ts<=ts).slice(-1000);
+ const x=S.load(ts,{auditRows:a});
  x.samples=a;x.current=a.at(-1)||null;
  x.healthy=!!x.current&&ts-x.current.ts>=0&&
   ts-x.current.ts<=65000&&x.bars.m3.length>=8&&

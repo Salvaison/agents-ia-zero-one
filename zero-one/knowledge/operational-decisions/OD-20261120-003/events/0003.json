@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-20T16:25:56+00:00",
+  "status": "TESTE",
+  "description": "128 tests PASS 0 FAIL ; rétablissement V543 quality DATA_OK, Amsterdam et OVH tvLiving DATA_RECENT, V553 PAPER qualité DATA_OK après rattrapage ; simulation de source MCB périmée interdit nouvelle entrée mais laisse hard risk gérable, report d âge source jusqu au panneau Watch",
+  "evidence": "/tmp/v553-mcb-source-health-extended.txt ; tests/v553/candle-source-health.test.js ; Amsterdam /api/snapshot ; OVH /api/snapshot",
+  "previousEventSha256": "7757ac8792bbd1a19550ecb6a428928263c8bd28d1488a69942602a8c22ba47f"
+}

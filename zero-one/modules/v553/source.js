@@ -40,16 +40,43 @@ function parseAudit(file){
  if(!Array.isArray(rows))throw Error('V553_BAD_AUDIT');
  return rows.filter(x=>val(x.ts)!==null&&val(x.lastPrice)!==null).sort((a,b)=>a.ts-b.ts);
 }
-function load(asOf=Date.now()){
+// An up-to-date FILE MTIME is not evidence of a current MCB candle.
+// TV can keep rewriting an OLD live bar while websocket heartbeats continue.
+// These limits are ONE expected closed candle plus 2 min collector/settling
+// tolerance, not a strategy threshold and never an entry permission.
+const CANDLE_HEALTH='v553-mcb-bar-timestamp-freshness-safety-v1';
+function confirmedHealth(bars,asOf){
+ const detail={};
+ let valid=true;
+ for(const [tf,period] of [['m3',PERIOD.m3],['m15',PERIOD.m15]]){
+  const latest=bars[tf]?.at(-1)||null;
+  const knownAt=latest?latest.ts+period:null;
+  const age=knownAt===null?Infinity:asOf-knownAt;
+  const limit=period+2*MIN;
+  const fresh=Number.isFinite(age)&&age>=0&&age<=limit;
+  detail[tf]={knownAt,ageMs:Number.isFinite(age)?age:null,
+   maxAgeMs:limit,fresh};
+  if(!fresh)valid=false;
+ }
+ return {version:CANDLE_HEALTH,valid,detail,
+  source:'CONFIRMED_CSV_BAR_CONTENT_TIME_NOT_FILE_MTIME'};
+}
+function load(asOf=Date.now(),{auditRows=null}={}){
  const bars={};
  for(const tf of ['m3','m15','h1','h4'])
   bars[tf]=cached(FILES[tf],parseCsv).filter(x=>x.ts+PERIOD[tf]<=asOf);
- const samples=cached(FILES.audit,parseAudit).filter(x=>x.ts<=asOf).slice(-1000);
+ const sampleSource=Array.isArray(auditRows)?
+  auditRows:cached(FILES.audit,parseAudit);
+ const samples=sampleSource.filter(x=>x.ts<=asOf).slice(-1000);
  const current=samples.at(-1)||null;
- return {asOf,samples,bars,current,
-  healthy:!!current&&asOf-current.ts>=0&&asOf-current.ts<=65000&&
+ const confirmed=confirmedHealth(bars,asOf);
+ const auditFresh=!!current&&asOf-current.ts>=0&&
+  asOf-current.ts<=65000;
+ return {asOf,samples,bars,current,confirmedHealth:confirmed,
+  healthy:auditFresh&&confirmed.valid&&
    bars.m3.length>=8&&bars.m15.length>=5,
-  source:'RAW_MCB_CSV_AND_BATON_AUDIT_NO_V543_DECISION'};
+  source:'RAW_MCB_CSV_AND_BATON_AUDIT_NO_V543_DECISION',
+  sourceHealthVersion:CANDLE_HEALTH};
 }
 function sampleAt(samples,at,margin=90000){
  let l=0,r=samples.length;
@@ -76,4 +103,4 @@ function closedWave(rows){
    {direction,from:prior,at:x.ts,knownAt:x.ts+15*MIN}:null,
   knownAt:x.ts+15*MIN,sourceAt:x.ts,lbw:x.lbw,bw:x.bw,mf:x.mf};
 }
-module.exports={MIN,PERIOD,FILES,val,load,parseCsv,parseAudit,sampleAt,nativeLast,closedWave};
+module.exports={MIN,PERIOD,FILES,val,load,parseCsv,parseAudit,sampleAt,nativeLast,closedWave,confirmedHealth,CANDLE_HEALTH};

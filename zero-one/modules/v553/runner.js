@@ -32,6 +32,7 @@ function summary(s){
    inheritedFrom:s.position.inheritedFrom||null,
    hardRisk:'500_BTC_USD_ADVERSE_PRICE_MOVE'}:null,
   latestDecision:s.decision,lastAction:s.lastAction,
+  confirmedSourceHealth:d.confirmedSourceHealth||null,
   parentE15:s.memory.e15,opportunity:s.memory.opportunity,
   threat:s.memory.threat,
   market:d.market||null,vigilance:d.vigilance||null,

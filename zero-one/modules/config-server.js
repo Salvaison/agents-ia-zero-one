@@ -8483,11 +8483,19 @@ async function loadV553PaperPanel(){
   const tr=(d.causalTrace||[]).slice(-9).map(x=>
     '<span>'+text(x.family)+' '+text(x.type)+
     ' '+v5Time(x.at)+'</span>').join(' → ');
+  const sourceHealth=d.confirmedSourceHealth||null;
+  const mc3=sourceHealth?.detail?.m3||{},mc15=sourceHealth?.detail?.m15||{};
+  const sourceWarning=sourceHealth?.valid===false?
+    '<div class="v5-row v5-warn"><b>MCB CONFIRMÉ PÉRIMÉ</b> · âge 3m '+
+    f(mc3.ageMs===null?null:mc3.ageMs/60000)+' min / 15m '+
+    f(mc15.ageMs===null?null:mc15.ageMs/60000)+
+    ' min · nouvelles admissions V553 refusées jusqu’au rétablissement des bougies</div>':'';
   el.innerHTML='<div class="v52-strip"><b>V5.5.3 · PAPER AUTONOME ACTIF</b>'+
     '<span>'+Number(d.newPolicyClosed||0)+' clôtures V553 · net depuis passation '+
       f(d.newPolicyNetUsd)+' $ · equity totale '+f(d.equityUsd)+' $'+
       ' · '+Number(d.pre553Completed||0)+' clôtures historiques</span></div>'+
    (d.status!=='PAPER_RECENT'?'<div class="v5-row v5-warn">SOURCE V553 NON RÉCENTE · vérification nécessaire</div>':'')+
+   sourceWarning+
    '<div class="v5-row"><b>DÉCISION V553</b> '+
      text(d.latestDecision?.action)+' · '+text(d.latestDecision?.reason)+
      ' · '+v5Time(d.asOf)+'</div>'+

@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-20T16:25:55+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Relance contrôlée collecteur-tab2 et collecteur-3m seulement, rattrapage des bougies confirmées TradingView ; V553 source.confirmedHealth vérifie timestamp réel de fin de bougie 3m/15m et suspend les admissions si périmé ; affichage Watch explicite et replays archivés stables",
+  "evidence": "modules/v553/source.js ; modules/v553/decision.js ; modules/v553/runner.js ; modules/config-server.js ; scripts/boonolab-v553-replay-asof.js ; tests/v553/candle-source-health.test.js",
+  "previousEventSha256": "a2660911a18de4f2ae91324b4fd27dec1abaf59bde3ea04c5a6328e0c5e9a101"
+}

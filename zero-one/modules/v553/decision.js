@@ -42,6 +42,7 @@ function sensor(input,now,price){
   lbwAtExtreme:bar?.lbw??null}:null;
  return {asOf:now,at:now,price,auditAt:current.ts,
   healthy:input.healthy,brokerOrdersEnabled:false,
+  confirmedSourceHealth:input.confirmedHealth||null,
   mcb3:{direction:direction(gap3),gap:rnd(gap3),
    native:n3,lbw:num(current.liveLbw),bw:num(current.liveBw)},
   mcb15:{direction:direction(gap15),gap:rnd(gap15),
@@ -301,6 +302,7 @@ function evaluate(memory,input,price,ts,position=null){
  memory.lastAsOf=ts;
  const d={version:VERSION,asOf:ts,price,mode:'PAPER_ONLY',
   brokerOrdersEnabled:false,quality:o.healthy?'DATA_OK':'DATA_DEGRADED',
+  confirmedSourceHealth:o.confirmedSourceHealth,
   action:r.action,reason:r.reason,
   candidate:memory.opportunity?.direction||null,
   parentE15:memory.e15,

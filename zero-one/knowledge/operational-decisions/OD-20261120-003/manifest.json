@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261120-003",
+  "title": "Incident État vivant V543 stale : rétablissement collecteurs MCB et protection fraîcheur V553",
+  "createdAtUtc": "2026-11-20T16:25:55+00:00",
+  "authorization": "Signalement direct utilisateur du 20/11/2026 de la panne État vivant ; réparation opérationnelle ciblée et safety fail-closed de la provenance MCB, PAPER uniquement",
+  "reference": "knowledge/BOONOLAB_INCIDENT_ETAT_VIVANT_V543_MCB_STALE_V553_FRAICHEUR_2026-11-20.md ; OD-20261120-002",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "60082e1c8c1fdb8cc4700e33ca1c0c88d0b584110e9ba171f6173997cc7127ed",
+      "bytes": 151
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "decd4ff450ba0a3aa8e4a0b8bf710ed1a4e3042c1e641a4373e13d80d6e777ad",
+      "bytes": 1693
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "8857589c60333645dca1fb99213fd35efabd8a78a96e3d3e1718002f6badccf6",
+      "bytes": 646
+    }
+  }
+}

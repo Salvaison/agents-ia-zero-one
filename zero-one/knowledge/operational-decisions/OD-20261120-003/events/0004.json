@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-20T16:25:56+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Collecteurs TradingView 3m/tab2 relancés et en ligne, bougies 3m/15m rattrapées sans fabrication de données ; V553 et config-server redémarrés avec même ledger, SHORT en cours et frais intacts ; V543 PAPER/boono-tv online, V552 stopped, sécurité MCB confirmée v553-mcb-bar-timestamp-freshness-safety-v1 diffusée dans V553 summary/Watch ; aucune modification du Composer ni du flux OVH",
+  "evidence": "/root/boonolab-archives/V553_CANDLE_FRESHNESS_SAFETY_BEFORE_20261120T161728Z/ ; /root/boonolab-archives/V553_MCB_FRESHNESS_ACTIVATION_20261120/pre-restart-v553-paper-state.json ; data/v553-paper-summary.json confirmedSourceHealth ; pm2 jlist ; OVH tvLiving DATA_RECENT",
+  "previousEventSha256": "1638ac4b370b2e5ea40d0488aa3de9b2d282d4d6b4b6455f2fa136ef482b52da"
+}
