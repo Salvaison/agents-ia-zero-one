@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261122-001",
+  "title": "BOONOLAB : SHADOW praticabilité et géométrie complète BW/LBW — temps et espace V553",
+  "createdAtUtc": "2026-11-22T18:35:05+00:00",
+  "authorization": "Demande utilisateur explicite du 22 novembre 2026 pour observer la praticabilité et quantifier les figures BW/LBW, SHADOW_ONLY sans changement de PAPER",
+  "reference": "knowledge/BOONOLAB_V553_SHADOW_PRACTICABILITE_GEOMETRIE_TEMPS_ESPACE_2026-11-22.md ; knowledge/BOONOLAB_V553_AUDIT_TRADES_62_66_MARCHE_NON_PRATICABLE_MULTI_TF_2026-11-22.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "b017a68bd2d6febc555b0a048edc2846ab104358d235ecf0fb7b7ec4c7fa361c",
+      "bytes": 549
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "d4c0ad7419e3a70d5daa7effea1ccbe642b639b31e9284afec0e669c0f31c809",
+      "bytes": 1495
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "8a89ae6bb690d5d63cb83fc0fd972dd092006a640576b53f25b9290db5997b89",
+      "bytes": 544
+    }
+  }
+}

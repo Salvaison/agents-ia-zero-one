@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-22T18:35:05+00:00",
+  "status": "TESTE",
+  "description": "153 tests PASS 0 FAIL ; invariants as-of, amplitude et angle normalisés (pas pixels), formes et cas #58/#65, absence de futur E1/E4/VAL, aucun import PAPER. Profil strict ferme 2,76 %, géométrie-conversion 13,53 %, variante large 23,63 %, mais #62-66 ne sont pas bloqués et #38/#56 gagnants le seraient : PAS de veto PAPER validé",
+  "evidence": "/tmp/boonolab-practicability-geometry-release-tests.txt ; tests/boonolab-market-practicability-shadow.test.js ; tests/boonolab-wave-geometry.test.js ; data/boonolab-practicability-shadow-replay-report.json",
+  "previousEventSha256": "03a15f5ef71f0fbb974cdc2537ab072f32277df26b77c42a55c633fcec99f18e"
+}

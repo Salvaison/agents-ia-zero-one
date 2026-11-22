@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-22T18:35:05+00:00",
+  "status": "DOCUMENTE",
+  "description": "Architecture de la forme complète des courbes LBW/BW et ses métriques, audit du contrat V553 (temps/espace, mesures vs autorité), hypothèses et contre-exemples explicités",
+  "evidence": "knowledge/BOONOLAB_V553_SHADOW_PRACTICABILITE_GEOMETRIE_TEMPS_ESPACE_2026-11-22.md",
+  "previousEventSha256": null
+}

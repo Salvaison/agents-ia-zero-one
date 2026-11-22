@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-22T18:35:05+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "SHADOW dans PM2 boono-market-regime-shadow EXISTANT ; état et summary prospective waveGeometry.version présent avec cadence fraîche, legacy market observer maintenu, V553 PAPER v5.5.3-live-causal-price-market-paper-v1 inchangé, V552 stopped, aucun ordre réel, aucun nouveau service",
+  "evidence": "data/boonolab-practicability-shadow-state.json ; data/boonolab-practicability-shadow-summary.json ; data/boonolab-wave-geometry-trade-cases-asof.json ; /root/boonolab-archives/BOONOLAB_WAVE_GEOMETRY_SHADOW_20261122",
+  "previousEventSha256": "d121f3c1a0685afa2da20d042783094e77e8d7a0ce2f2bc5e6b041ac2874da4a"
+}

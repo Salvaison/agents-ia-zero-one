@@ -31,8 +31,8 @@ function archive(){
  return all;
 }
 function load(source,asOf){
- const input=source.load(asOf),
-  sample=archive().filter(x=>x.ts<=asOf).slice(-1000);
+ const sample=archive().filter(x=>x.ts<=asOf).slice(-1000);
+ const input=source.load(asOf,{auditRows:sample});
  input.samples=sample;input.current=sample.at(-1)||null;
  input.healthy=!!input.current&&asOf-input.current.ts>=0&&
   asOf-input.current.ts<=65000&&

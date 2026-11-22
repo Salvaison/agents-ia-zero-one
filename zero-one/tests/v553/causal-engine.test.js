@@ -7,7 +7,8 @@ const D=require('../../modules/v553/decision'),
  S=require('../../modules/v553/source'),
  P=require('../../modules/v553/paper'),
  R=require('../../modules/v553/runner'),
- H=require('../../scripts/boonolab-v553-handoff');
+ H=require('../../scripts/boonolab-v553-handoff'),
+ Audit=require('../helpers/asof-audit-14d');
 const old=JSON.parse(fs.readFileSync(path.join(ROOT,'data/v552-paper-state.json')));
 function fakeMigration(){
  return P.fromV552(old,{sourceHash:'fixture-sha',
@@ -115,7 +116,9 @@ test('Live exits never depend on profitability or a second respiration',()=>{
 });
 test('market evidence is source-ASOF, entry only, retains the last contested state',()=>{
  const asOf=Date.parse('2026-11-20T08:40:00+01:00');
- const input=S.load(asOf);
+ // The active Bâton JSON is a rolling buffer, not a permanent historic.
+ // Use actual archived as-of 30s observations, never invented price data.
+ const input=Audit.load(S,asOf);
  assert.ok(input.samples.every(x=>x.ts<=asOf));
  assert.ok(input.bars.m15.every(x=>x.ts+900000<=asOf));
  const o=D.sensor(input,asOf,input.current.lastPrice);

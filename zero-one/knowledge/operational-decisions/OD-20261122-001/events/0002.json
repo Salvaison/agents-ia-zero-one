@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-22T18:35:05+00:00",
+  "status": "IMPLEMENTE",
+  "description": "SHADOW indépendant v0.1 pure fonction, trois portes exploratoires sans décision, backfill 6165 Bâtons as-of, ajout d une signature numérique 8h LBW/BW avec vitesses, accélération, angle normalisé, segments, prix/MF15 après Cross15 Live ; 30 études as-of ; service observateur existant réutilisé",
+  "evidence": "modules/attention/boonolab-market-practicability-shadow.js ; modules/attention/boonolab-wave-geometry.js ; modules/attention/boonolab-market-observer-runner.js ; scripts/boonolab-practicability-shadow-replay.js ; scripts/boonolab-wave-geometry-case-study.js",
+  "previousEventSha256": "b9b82b6d8064f2a87ed7beaaeddd456501a42bd421fe7a20dafe64ad89df833a"
+}
