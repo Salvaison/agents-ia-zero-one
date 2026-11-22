@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261122-002",
+  "title": "SHADOW interpréteur dynamique de la figure BW/LBW15 — phase, maturité et résolution prix",
+  "createdAtUtc": "2026-11-22T19:08:44+00:00",
+  "authorization": "Demande explicite du 22 novembre 2026 de transformer les métriques BW/LBW en interprétation de figure en SHADOW, sans modification PAPER",
+  "reference": "knowledge/BOONOLAB_V553_INTERPRETEUR_TRAJECTOIRE_BW_LBW_SHADOW_2026-11-22.md ; knowledge/BOONOLAB_V553_SHADOW_PRACTICABILITE_GEOMETRIE_TEMPS_ESPACE_2026-11-22.md",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "2a17fcbc2234dfed1279a49bd3315b07033b2ee494c2f9ffa9e7ab4c2ab86e17",
+      "bytes": 291
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "889a608597872190ca3c2073f390c5f41185180179cf4f6a67133a76911ed848",
+      "bytes": 1716
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "4edeca7ce7234713b1aaf12b9d8a8793a1fc4c4e5af4217d10ccb6e2b997ea51",
+      "bytes": 519
+    }
+  }
+}

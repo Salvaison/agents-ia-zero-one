@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-22T19:08:44+00:00",
+  "status": "DOCUMENTE",
+  "description": "Clarifie distinction mesure de la géométrie vs interprétation de la trajectoire entière observée : phases, risques de compression, rythme, lieu, prix résolu, contexte supérieur ; limites d observation 8h et angle normalisé",
+  "evidence": "knowledge/BOONOLAB_V553_INTERPRETEUR_TRAJECTOIRE_BW_LBW_SHADOW_2026-11-22.md",
+  "previousEventSha256": null
+}

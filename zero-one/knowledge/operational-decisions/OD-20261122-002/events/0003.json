@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-22T19:08:44+00:00",
+  "status": "TESTE",
+  "description": "164 tests PASS 0 FAIL dont ouverture faible accélérant contre grande séparation en refermeture, angles de même calibration, intensité relative P75, E1/E4 as-of, mémoire et migration additive et cas #38/#43/#58/#61/#62-66 ; pas de règle de trading ajoutée",
+  "evidence": "/tmp/boonolab-semantic-geometry-final-tests.txt ; tests/boonolab-wave-geometry-interpreter.test.js ; data/boonolab-geometry-interpreter-cases-asof.json",
+  "previousEventSha256": "af09cce722eadcfc0f6ef7e8ed23158418bce8144fd9d7c3dd7d03cced97fc0d"
+}

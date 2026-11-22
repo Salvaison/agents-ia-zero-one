@@ -98,6 +98,15 @@ function compute(audit,asOf){
  const envelope=Math.max(0,...all.map(x=>val(x)),...all.map(x=>bw(x)))-
   Math.min(0,...all.map(x=>val(x)),...all.map(x=>bw(x)));
  const amp=amplitude4&&amplitude4>0?amplitude4:envelope;
+ // Reference for the INTENSITY of the shape: actual 3m gap velocities
+ // along the last eight hours, not a fixed indicator-unit cutoff.
+ const coarse=downsample(all,3*MIN);
+ const pastGapSpeeds=coarse.slice(1).map((x,i)=>
+  Math.abs(velocity(x,coarse[i],gap))).filter(finite).sort((a,b)=>a-b);
+ const typicalSpeed=pastGapSpeeds.length?
+  pastGapSpeeds[Math.floor((pastGapSpeeds.length-1)*.5)]:null;
+ const p75GapSpeed=pastGapSpeeds.length?
+  pastGapSpeeds[Math.floor((pastGapSpeeds.length-1)*.75)]:null;
  const min=Math.min(...all.map(val)),max=Math.max(...all.map(val));
  const location=max>min?(val(last)-min)/(max-min):null;
  const low=all.find(x=>val(x)===min),high=all.find(x=>val(x)===max);
@@ -118,7 +127,11 @@ function compute(audit,asOf){
   ageMin:r((last.ts-lastCross.at)/MIN,2),
   angle:angleAt(all,crossPoint,
    range(all.filter(x=>x.ts>=crossPoint.ts-4*HOUR&&
-    x.ts<=crossPoint.ts),val)||amp)
+    x.ts<=crossPoint.ts),val)||amp),
+  // This separate angle uses the SAME as-of amplitude reference as the
+  // current angle. It is comparable inside this one snapshot, but was
+  // not necessarily the reference known at the original cross moment.
+  angleComparableAtCurrentScale:angleAt(all,crossPoint,amp)
  }:null;
  const after=lastCross?all.filter(x=>x.ts>=lastCross.at):[];
  const crossDirection=lastCross?lastCross.to:null;
@@ -155,6 +168,9 @@ function compute(audit,asOf){
    lbwSpeed15mPerMin:r(lbw15,4),bwSpeed15mPerMin:r(bw15,4),
    lbwSpeed60mPerMin:r(lbw60,4),bwSpeed60mPerMin:r(bw60,4),
    gapSpeed3mPerMin:r(v,4),gapSpeed15mPerMin:r(v15,4),
+   medianAbsGapSpeed3mObserved8h:r(typicalSpeed,4),
+   p75AbsGapSpeed3mObserved8h:r(p75GapSpeed,4),
+   gapSpeedVs8hP75:p75GapSpeed>0?r(Math.abs(v)/p75GapSpeed,3):null,
    lbwAccelPerMin2:r(lbwPrev3!==null&&lbw3!==null?
     (lbw3-lbwPrev3)/3:null,5),
    bwAccelPerMin2:r(bwPrev3!==null&&bw3!==null?
@@ -182,6 +198,7 @@ function compute(audit,asOf){
    }:null},
   caveats:[
    'Angle is normalized to observed 4h LBW amplitude and 15min horizontal unit, NOT a universal pixel angle',
+   'Historical cross angle can be re-expressed at CURRENT as-of amplitude for within-snapshot comparison; original cross-time angle may have a different scale',
    'Curvature is a discrete 3min-velocity difference, not a smooth derivative of price',
    'Trailing 8h is a limited observed curve, not guaranteed to be the complete MCB wave',
    'Crosses are 30s Bâton sign changes; near-zero jitter may generate several contacts',

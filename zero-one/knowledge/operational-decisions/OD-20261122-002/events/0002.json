@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-22T19:08:44+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Interpréteur pur geometry-v0.1 avec phases, hypothèses et récit en français, effet local Cross vers prix séparé du marché 30m, vitesse par rapport au P75 des 8h, même échelle de comparaison des angles, mémoire d épisodes/provenance et journal de transitions dans le SHADOW existant ; relecture 36 trades as-of",
+  "evidence": "modules/attention/boonolab-wave-geometry-interpreter.js ; modules/attention/boonolab-wave-geometry.js ; modules/attention/boonolab-market-practicability-shadow.js ; modules/attention/boonolab-market-observer-runner.js ; scripts/boonolab-geometry-interpreter-case-study.js",
+  "previousEventSha256": "b738432d3de19897b0ab9618b6f836d6f8e86b1b299dac473d0d318482345867"
+}

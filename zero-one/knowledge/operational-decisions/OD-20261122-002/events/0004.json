@@ -1,0 +1,8 @@
+{
+  "sequence": 4,
+  "recordedAtUtc": "2026-11-22T19:08:44+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "Après sauvegarde du SHADOW original, redémarrage ciblé de boono-market-regime-shadow seulement, boono-practicability state et summary alimentés avec waveInterpretation.version boonolab-wave-geometry-interpreter-v0.1, semantic memory et récits. V553 PAPER reste v5.5.3-live-causal-price-market-paper-v1 et V552 stopped, aucun ordre financé",
+  "evidence": "/root/boonolab-archives/SEMANTIC_WAVE_GEOMETRY_BEFORE_20261122T190124Z ; data/boonolab-practicability-shadow-state.json ; data/boonolab-practicability-shadow-summary.json ; pm2 jlist",
+  "previousEventSha256": "68ac19c7d75a1727891350660dcbe354c5c9ce932dc0270aefc7d921194da422"
+}

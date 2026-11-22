@@ -131,10 +131,18 @@ function practicabilityTick(x){
   covered:sample.coverage.ready,proposed:sample.proposed,
   measurements:sample.measurements,higher:sample.higher,
   place:sample.place,
-  waveGeometry:sample.waveGeometry},{
+  waveGeometry:sample.waveGeometry,
+  waveInterpretation:sample.waveInterpretation},{
    maxBytes:4*1024*1024,maxSegments:12});
  const changed=Object.keys(practical.VARIANTS).filter(key=>
   prior[key]?.proposedClosed!==sample.proposed[key].proposedClosed);
+ for(const e of state.semanticLastEvents||[]){
+  appendRotatingNdjson(FILE.practicabilityEvents,{
+   version:sample.waveInterpretation?.version,asOf:x.asOf,
+   ...e,source:'WAVE_GEOMETRY_SEMANTIC_SHADOW',
+   decisionImpact:false,brokerOrdersEnabled:false},
+   {maxBytes:4*1024*1024,maxSegments:12});
+ }
  if(changed.length)appendRotatingNdjson(FILE.practicabilityEvents,{
   version:practical.VERSION,asOf:x.asOf,type:'PROPOSED_ADMISSION_MARKET_CHANGED',
   changed,

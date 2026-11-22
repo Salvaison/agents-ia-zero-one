@@ -4,6 +4,7 @@
 // Three reversible observational gate HYPOTHESES, never trading authority.
 const place=require('./boonolab-place-e1e4-shadow');
 const waveShape=require('./boonolab-wave-geometry');
+const interpret=require('./boonolab-wave-geometry-interpreter');
 const VERSION='boonolab-market-practicability-geometry-shadow-v0.1';
 const MIN=60000,HALF=30*MIN,FOUR_HOURS=240*MIN;
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
@@ -114,26 +115,31 @@ function evaluate({audit=[],asOf,bars1h=[],bars4h=[],levels=null,
  if(Array.isArray(levels)&&finite(levelsMtime)&&levelsMtime<=asOf){
   range=place.ranges(levels,recent.lastPrice,levelsMtime,asOf);
  }
+ const higher={e1:{direction:e1.direction,knownAtProxy:e1.knownAtProxy,
+    lbw:e1.lbw,mf:e1.mf},
+   e4:{direction:e4.direction,knownAtProxy:e4.knownAtProxy,
+    lbw:e4.lbw,mf:e4.mf},slowDir,direction,
+   parentOpposition,priceWaveOpposition,mf15Neutral,unresolved};
+ const spatial=range&&{status:range.status,big:range.big,
+    sourceAt:range.sourceAt};
+ const waveInterpretation=interpret.interpret({waveGeometry,
+   measurements:{recent30m:recent,quick6m:quick},
+   higher,place:spatial});
  return {version:VERSION,asOf,mode:'SHADOW_ONLY',
   brokerOrdersEnabled:false,decisionImpact:false,
   authority:'OBSERVATION_ONLY_NO_V553_ADMISSION_OR_EXIT',
   coverage:{ready,samples30m:recent.n,
    asOfAgeMs:recent.lastAt===undefined?null:asOf-recent.lastAt},
-  waveGeometry,
+  waveGeometry,waveInterpretation,
   measurements:{recent30m:recent,quick6m:quick,
    baseline4h:{n:longer.n,efficiency:longer.efficiency,
     medianBtcSec:longer.medianBtcSec},
    volumeBtcSecRelative:longer.complete&&longer.medianBtcSec>0?
     rnd(recent.medianBtcSec/longer.medianBtcSec):null},
-  higher:{e1:{direction:e1.direction,knownAtProxy:e1.knownAtProxy,
-    lbw:e1.lbw,mf:e1.mf},
-   e4:{direction:e4.direction,knownAtProxy:e4.knownAtProxy,
-    lbw:e4.lbw,mf:e4.mf},slowDir,direction,
-   parentOpposition,priceWaveOpposition,mf15Neutral,unresolved},
+  higher,
   geometry:{slopeUnits:'MCB_VALUE_PER_MINUTE_NOT_CHART_PIXEL_ANGLE',
    curvatureUnits:'MCB_VALUE_PER_MINUTE_SQUARED_DIFFERENCE_OF_HALVES'},
-  place:range&&{status:range.status,big:range.big,
-   sourceAt:range.sourceAt},
+  place:spatial,
   proposed:results,
   caveats:['Exploratory thresholds, no calibration or live PAPER authority',
    'Sampled 30s sign flips may count jitter near zero, not native 15m closes',
@@ -147,13 +153,19 @@ function initial(startAt=0){return {version:VERSION,mode:'SHADOW_ONLY',
  lastAt:0,totalSamples:0,coveredSamples:0,
  variants:Object.fromEntries(Object.keys(VARIANTS).map(x=>[x,
   {rawClosed:0,proposedClosed:0,escape:0,entryClosed:0}])),
- last:null,latestHistory:[]};}
+ last:null,latestHistory:[],
+ semantic:interpret.initial(startAt),semanticLastEvents:[]};}
 function observe(state,sample){
  if(state.version!==VERSION||state.decisionImpact!==false||
   state.brokerOrdersEnabled!==false)throw Error('SHADOW_INVALID_STATE');
  if(sample.version!==VERSION||sample.decisionImpact!==false||
    sample.brokerOrdersEnabled!==false||sample.asOf<=state.lastAt)
   return false;
+ // Migrate additive SHADOW fields without changing old state version.
+ if(!state.semantic)state.semantic=interpret.initial(state.startedAt);
+ const semanticResult=interpret.observe(state.semantic,
+    sample.waveInterpretation);
+ state.semanticLastEvents=semanticResult.events;
  state.lastAt=sample.asOf;state.totalSamples++;
  if(sample.coverage.ready)state.coveredSamples++;
  for(const [name,r] of Object.entries(sample.proposed)){
@@ -167,7 +179,8 @@ function observe(state,sample){
   proposed:sample.proposed,
   measurements:sample.measurements,
   higher:sample.higher,place:sample.place,
-  waveGeometry:sample.waveGeometry};
+  waveGeometry:sample.waveGeometry,
+  waveInterpretation:sample.waveInterpretation};
  state.latestHistory.push({at:sample.asOf,
   ready:sample.coverage.ready,
   flags:Object.fromEntries(Object.entries(sample.proposed).map(([k,v])=>[k,
@@ -185,6 +198,14 @@ function summary(state){
    {...v,percentMarketClosed:covered?rnd(100*v.proposedClosed/covered,2):null,
     percentRawClosed:covered?rnd(100*v.rawClosed/covered,2):null}])),
   latest:state.last,latestHistory:state.latestHistory,
+  semantic:{version:state.semantic?.version||null,
+   lastAt:state.semantic?.lastAt||null,
+   phase:state.semantic?.last?.phase||null,
+   hypothesis:state.semantic?.last?.hypothesis||null,
+   activeEpisode:state.semantic?.activeEpisode||null,
+   completedEpisodes:state.semantic?.completedEpisodes?.length||0,
+   phaseDurationsMs:state.semantic?.phaseDurationsMs||{},
+   recentChanges:state.semantic?.changes?.slice(-10)||[]},
   note:'Time-sampled historical and prospective 30s scenarios, not trading authority; exposure to V553 entries is measured separately; no counterfactual PnL.'};
 }
 module.exports={VERSION,VARIANTS,feat,evaluate,initial,observe,summary};
