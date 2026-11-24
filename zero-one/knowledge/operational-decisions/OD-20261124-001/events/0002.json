@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-24T17:10:10+00:00",
+  "status": "TESTE",
+  "description": "66 tests réussis et replay 37/37",
+  "evidence": "/tmp/boono-trajectory-regression.log ; data/boonolab-trajectory-shadow-replay-20261124.json ; 11594 observations",
+  "previousEventSha256": "8ca02a627e35152069063eac842ced1860b95c0f35f855ca864b789e7cd75ad0"
+}

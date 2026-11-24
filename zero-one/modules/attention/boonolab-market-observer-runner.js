@@ -223,6 +223,10 @@ function main(){
    console.error('[BOONOLAB MARKET SHADOW ERROR] '+e.stack);}
   finally{busy=false;}
  }
+ // Independent source clock and state. Neither PAPER state nor legacy observer
+ // output is a prerequisite for the trajectory observer's individual ticks.
+ try{require('./boonolab-trajectory-shadow-runner').start();}
+ catch(e){console.error('[TRAJECTORY SHADOW START ONLY] '+(e.stack||e));}
  tick();setInterval(tick,10000);
 }
 if(require.main===module)main();

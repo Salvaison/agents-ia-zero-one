@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261124-001",
+  "title": "Trajectory Shadow indépendant des trades",
+  "createdAtUtc": "2026-11-24T17:02:38+00:00",
+  "authorization": "Validation explicite du propriétaire : réalisation des trois couches en SHADOW",
+  "reference": "Conversation BOONOTRADE du 24 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "66a606d3a6b9a9655371cbd3ca0b07f8a63a9dc198ba4bc43b2f80710692bb22",
+      "bytes": 1812
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "0eacc938ad635836dac61aba23900e1811a55d4e619f6d765af8566d40146a28",
+      "bytes": 2113
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "58a16105f6ad773fceb37c7ffeee75884b233a36c3b7d82a5d4c57a1f9e66b3c",
+      "bytes": 1742
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-24T17:10:09+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Trois couches indépendantes du marché + runner embarqué + replay",
+  "evidence": "modules/attention/boonolab-{wave-geometry-v02,trajectory-memory,wave-interpreter-v02,trajectory-shadow-runner}.js ; runner existant +4 lignes",
+  "previousEventSha256": null
+}

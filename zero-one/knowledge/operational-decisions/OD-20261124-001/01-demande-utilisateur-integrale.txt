@@ -1,0 +1,16 @@
+[Utilisateur — message précédent, intégral]
+"**La convergence des indicateurs peut aussi caractériser un mouvement arrivé à maturité." oui**
+
+"L'important n'est pas de fabriquer sept nouvelles conditions d'entrée. C'est de construire une **représentation commune** dans laquelle ces informations prennent leur signification les unes par rapport aux autres." oui et pour moi tout est inscrit dans la dynamique de ces lignes et ces vagues.
+
+Et que disent les shadows pour cette période?
+
+[Utilisateur — clarification suivante, intégrale]
+"Ce premier tableau est déjà très instructif : **l'accélération géométrique n'est absolument pas synonyme d'opportunité économique."** je ne suis pas si sûr, séparation qui se referme ou se ouvre mais depuis quel point? A y réflechir, ce calcul là n'est pas depuis le E15 confirmé ni le cross15 mais à partir  de lbw15pente et son changement de trajectoire vers cross15
+
+"Pourquoi ? Parce que le #320 exploite précisément l'affaiblissement de la figure haussière précédente pour préparer un SHORT." oui est c'est important comme compréension, pas forcément comme permission directe d'agir mais autant comme jalon dans la construction d'une conviction autour d'une hypothése, une manière de juger de la validité des signaux contradictoires, aussi de mesurer de la maturité d'un mouvement
+
+"Je crois que nous disposons déjà d'une grande partie du vocabulaire nécessaire. Il nous manque encore la capacité à relier toutes ces observations dans la continuité." oui je suis d'accord mais comment allons nous implémenter ça?
+
+[Utilisateur — autorisation intégrale]
+Oui réalise un tel shadow avec Wave geometry, trajectory memory et Wave interpreter. Je trouve intéressant l'idée que cette couche soit indépendante des trades

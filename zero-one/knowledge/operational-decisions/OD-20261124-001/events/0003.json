@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-24T17:10:10+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "SHADOW actif sans modification PAPER",
+  "evidence": "PM2 boono-market-regime-shadow PID 1332535 ; 2 observations live 959 bootstrap à 18h09 CET ; PIDs V543 138030/V553 909812 inchangés",
+  "previousEventSha256": "ba292cc0fb412341fba6ec159e56c570617d9eb574fcd54819abd0366fa83d49"
+}
