@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-28T16:35:29+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "V554 PAPER actif, V553 arrêté et archivé, LONG hérité intact",
+  "evidence": "17h32 CET ; PID 1753516 ; equity 677,2338 ; 192 clôtures historiques ; V543 et SHADOW inchangés ; PM2 save",
+  "previousEventSha256": "843e332f246ec3b76b214cfc979e8c7caf9624242b21861f22b674b10db7844a"
+}

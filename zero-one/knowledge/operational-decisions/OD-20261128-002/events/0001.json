@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-28T16:35:29+00:00",
+  "status": "IMPLEMENTE",
+  "description": "Passation continue V553 vers V554 PAPER, archive séparée, Watch et TV adaptés",
+  "evidence": "modules/v554/paper.js et paper-runner.js, scripts/boonolab-v554-handoff.js ; zero-one/knowledge/BOONOLAB_V554_PAPER_PASSATION_V553_ARTEFACT_2026-11-28.md",
+  "previousEventSha256": null
+}

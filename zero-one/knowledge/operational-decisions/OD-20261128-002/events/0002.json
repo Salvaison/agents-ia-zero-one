@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-28T16:35:29+00:00",
+  "status": "TESTE",
+  "description": "21/21 V554 et 16/16 régression V553 ciblée, parité financière, hashes 8/8, endpoints et JS",
+  "evidence": "zero-one/data/research-briefs/v554-promotion-20261128/ ; OVH snapshot V554 DATA_RECENT",
+  "previousEventSha256": "d57f9b3cd34991ca3231993f09d02c8654859d854af45fb656cb5f85b665191b"
+}

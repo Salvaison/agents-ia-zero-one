@@ -15,9 +15,9 @@ const livingTVReader=require('./tv-living-state').createReader({dataDir:DATA,mcD
 const PATHS = {
   state: path.join(DATA, 'trade-sim-v4-state.json'), // historical V4, NOT LIVE; no longer used by buildPayload
   v543paper: path.join(DATA, 'v52-paper-state.json'), // V5.4.3 PAPER analysis
-  v553paper: path.join(DATA, 'v553-paper-state.json'), // independent 5.5.3 live PAPER
-  v553summary: path.join(DATA, 'v553-paper-summary.json'),
-  trades553: path.join(DATA, 'v553-paper-trades.ndjson'),
+  v554paper: path.join(DATA, 'v554-paper-state.json'), // independent 5.5.4 live PAPER
+  v554summary: path.join(DATA, 'v554-paper-summary.json'),
+  trades554: path.join(DATA, 'v554-paper-trades.ndjson'),
   v552paper: path.join(DATA, 'v552-paper-state.json'), // frozen historical archive
   v552summary: path.join(DATA, 'v552-paper-summary.json'),
   trades552: path.join(DATA, 'v552-paper-trades.ndjson'),
@@ -247,10 +247,10 @@ function lastChronologyObservation(){
   }
   return null;
 }
-function currentPaperTrades(v543State,v553State){
-  const closed=[...latestPaperLedgerTrades(PATHS.trades553,'V553'),
+function currentPaperTrades(v543State,v554State){
+  const closed=[...latestPaperLedgerTrades(PATHS.trades554,'V554'),
     ...latestPaperLedgerTrades(PATHS.trades543,'V543')];
-  for(const [engine,ledger] of [['V553',v553State],['V543',v543State]]){
+  for(const [engine,ledger] of [['V554',v554State],['V543',v543State]]){
     if(ledger.brokerOrdersEnabled!==false||!ledger.position)continue;
     const pos=ledger.position,entry=Number(pos.entryAt);
     if(!Number.isFinite(entry)||entry<=0||
@@ -469,27 +469,28 @@ function boonoTvV552State(raw,summary){
   lastAction:summary.lastAction||null};
 }
 
-// V553 autonomous PAPER exposure, never inferred from V543 graphics.
-function boonoTvV553State(raw,summary){
+// V554 autonomous PAPER exposure, never inferred from V543 graphics.
+function boonoTvV554State(raw,summary){
  const at=Number(raw.lastObservationAt),age=Date.now()-at;
- const valid=raw.version==='v5.5.3-paper-ledger-v1'&&
-  raw.policyVersion==='v5.5.3-live-causal-price-market-paper-v1'&&
-  raw.engine==='V553'&&raw.brokerOrdersEnabled===false&&
+ const valid=raw.version==='v5.5.4-paper-ledger-v1'&&
+  raw.policyVersion==='v5.5.4-trajectory-synchronisation-shadow-v1'&&
+  raw.engine==='V554'&&raw.brokerOrdersEnabled===false&&
   raw.mode==='PAPER_ONLY'&&summary.version===raw.version&&
   summary.policyVersion===raw.policyVersion&&
   summary.startedAt===raw.startedAt&&
   summary.asOf===raw.lastObservationAt&&
   summary.brokerOrdersEnabled===false&&
-  raw.migratedFrom?.engine==='V552';
- if(!valid)return {engine:'V553',status:'UNAVAILABLE',
-  source:'V553_PAPER_READ_ONLY_NO_LEDGER',brokerOrdersEnabled:false};
- const fresh=Number.isFinite(at)&&age>=0&&age<=95000;
+  raw.migratedFrom?.engine==='V553';
+ if(!valid)return {engine:'V554',status:'UNAVAILABLE',
+  source:'V554_PAPER_READ_ONLY_NO_LEDGER',brokerOrdersEnabled:false};
+ const marketAge=Date.now()-Number(summary.marketSourceAt||0);
+ const fresh=Number.isFinite(at)&&age>=0&&age<=95000&&marketAge>=0&&marketAge<=95000;
  const completed=(raw.history||[]).filter(t=>!t.historicalPolicy);
- return {engine:'V553',status:fresh?'DATA_RECENT':'SOURCE_STALE',
-  source:'V553_PAPER_LEDGER_READ_ONLY',brokerOrdersEnabled:false,
+ return {engine:'V554',status:fresh?'DATA_RECENT':'SOURCE_STALE',
+  source:'V554_PAPER_LEDGER_READ_ONLY',brokerOrdersEnabled:false,
   asOf:at,ageMs:age,policyVersion:raw.policyVersion,
   completed:raw.newPolicyClosed||0,
-  historicalCompleted:raw.pre553Completed||0,
+  historicalCompleted:raw.pre554Completed||0,
   wins:completed.filter(t=>t.netPnlUsd>0).length,
   losses:completed.filter(t=>t.netPnlUsd<=0).length,
   equityUsd:raw.equityUsd,realizedUsd:raw.newPolicyNetUsd||0,
@@ -507,8 +508,8 @@ function normalizeV543Live() {
   const paper = readJson(PATHS.v543paper, {});
   const v552Paper=readJson(PATHS.v552paper,{});
   const v552Summary=readJson(PATHS.v552summary,{});
-  const v553Paper=readJson(PATHS.v553paper,{});
-  const v553Summary=readJson(PATHS.v553summary,{});
+  const v554Paper=readJson(PATHS.v554paper,{});
+  const v554Summary=readJson(PATHS.v554summary,{});
   const a = paper.latestAnalysis || {};
   const r = a.readings || {};
   const story = r.structural54 || {};
@@ -585,8 +586,8 @@ function normalizeV543Live() {
       ageMs:Number.isFinite(age)?age:null,fresh:analysisFresh,available:fresh},
     tvLiving:livingTVReader(paper),
     conversion:miniConversion(c),
-    trades:currentPaperTrades(paper,v553Paper),
-    engine553:boonoTvV553State(v553Paper,v553Summary),
+    trades:currentPaperTrades(paper,v554Paper),
+    engine554:boonoTvV554State(v554Paper,v554Summary),
     engine552:boonoTvV552State(v552Paper,v552Summary),
     chronology:{latest:lastChronologyObservation(),mcb3BwLbwCross:lastObservedMcb3Cross()},
     living, audit:[], // no obsolete V4 audit records in current TV state

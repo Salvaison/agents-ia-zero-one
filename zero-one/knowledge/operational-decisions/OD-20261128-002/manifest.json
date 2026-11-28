@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261128-002",
+  "title": "V554 PAPER remplace V553 artefact",
+  "createdAtUtc": "2026-11-28T16:31:02+00:00",
+  "authorization": "Remplacement explicite V553 par V554 en PAPER",
+  "reference": "OD-20261128-001 ; conversation du 28 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "ef75c459cda2b46f33cf668916d036f3bb4df17ddad6e3776e36cb6888f247eb",
+      "bytes": 65
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "44c68d5d0dc80b0899afc64dbc17e74385c6661a5c4460b060d5ffd0308e150d",
+      "bytes": 702
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "55171066c1c1e3f547e06eef35a5978b6ea810c892bb4a110b05374d733e6470",
+      "bytes": 531
+    }
+  }
+}
