@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "OD-20261128-001",
+  "title": "V554 Trajectory & Synchronisation — SHADOW économique autonome",
+  "createdAtUtc": "2026-11-28T15:36:31+00:00",
+  "authorization": "Validation explicite V554 ; pas de floor 120/90 ; service SHADOW parallèle conformément à la proposition",
+  "reference": "Conversation BOONOTRADE du 28 novembre 2026",
+  "recordPolicy": "IMMUTABLE_ORIGINALS_ADD_EVENTS_AND_NEW_DECISION_FOR_CHANGES",
+  "files": {
+    "01-demande-utilisateur-integrale.txt": {
+      "sha256": "bef773780953656faf07c703a1af0c8bfe4ed044384eaf8ffbf3bd1189c74c37",
+      "bytes": 262
+    },
+    "02-prompt-operationnel-integral.txt": {
+      "sha256": "9d2da5d1e8fb7928a55926d1a055545b3f3595e0400affdcbf81f11590c947cd",
+      "bytes": 2334
+    },
+    "03-origine-et-justification.md": {
+      "sha256": "0170e99eafbf09ad52caef43a293a94656473092cf4d6ea4c218261dac80ba10",
+      "bytes": 1603
+    }
+  }
+}

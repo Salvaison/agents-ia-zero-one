@@ -1,0 +1,8 @@
+{
+  "sequence": 1,
+  "recordedAtUtc": "2026-11-28T15:44:51+00:00",
+  "status": "IMPLEMENTE",
+  "description": "V554 marché/mémoire indépendants, décision et quatre comptes fictifs",
+  "evidence": "zero-one/modules/v554/{market,decision,account,runner}.js ; aucun floor ; hard risk 500 BTC",
+  "previousEventSha256": null
+}

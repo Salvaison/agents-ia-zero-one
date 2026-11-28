@@ -1,0 +1,8 @@
+{
+  "sequence": 2,
+  "recordedAtUtc": "2026-11-28T15:44:51+00:00",
+  "status": "TESTE",
+  "description": "13 tests spécifiques, 79 combinés, replay séquentiel 22061 observations",
+  "evidence": "zero-one/tests/v554/trajectory-sync.test.js ; zero-one/data/research-briefs/v554-20261128/",
+  "previousEventSha256": "28eb316d268d00cd47d32d302a92afe2b1da4a2affc8ad9f6b226b3ae00ef734"
+}

@@ -1,0 +1,8 @@
+{
+  "sequence": 3,
+  "recordedAtUtc": "2026-11-28T15:44:51+00:00",
+  "status": "MIS_EN_SERVICE",
+  "description": "V554 SHADOW autonome démarré, quatre comptes à plat, PM2 save",
+  "evidence": "PID 1749547 ; première observation 28/11 16:43:35 CET ; V543 1709411 / V553 1709500 / market-regime 1709476 inchangés",
+  "previousEventSha256": "35c1c4e1fee6e8738087d19a538ea22a9098f052b148707eb6c196b167cad2d8"
+}
